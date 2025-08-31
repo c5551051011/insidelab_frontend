@@ -1,5 +1,4 @@
-
-// data/models/lab.dart
+// lib/data/models/lab.dart
 class Lab {
   final String id;
   final String name;
@@ -16,6 +15,9 @@ class Lab {
   final String? website;
   final int? labSize;
   final Map<String, double>? ratingBreakdown;
+  final List<ResearchTopic>? researchTopics;
+  final List<Publication>? recentPublications;
+  final RecruitmentStatus? recruitmentStatus;
 
   Lab({
     required this.id,
@@ -33,51 +35,185 @@ class Lab {
     this.website,
     this.labSize,
     this.ratingBreakdown,
+    this.researchTopics,
+    this.recentPublications,
+    this.recruitmentStatus,
   });
 
   factory Lab.fromJson(Map<String, dynamic> json) {
     return Lab(
-      id: json['id'],
-      name: json['name'],
-      professorName: json['professorName'],
-      professorId: json['professorId'],
-      universityName: json['universityName'],
-      universityId: json['universityId'],
-      department: json['department'],
-      overallRating: json['overallRating'].toDouble(),
-      reviewCount: json['reviewCount'],
-      researchAreas: List<String>.from(json['researchAreas']),
-      tags: List<String>.from(json['tags']),
+      id: json['id'].toString(),
+      name: json['name'] ?? '',
+      professorName: json['professor_name'] ?? json['professor']?['name'] ?? '',
+      professorId: json['professor_id']?.toString() ?? json['professor']?['id']?.toString() ?? '',
+      universityName: json['university_name'] ?? json['university']?['name'] ?? '',
+      universityId: json['university_id']?.toString() ?? json['university']?['id']?.toString() ?? '',
+      department: json['department'] ?? '',
+      overallRating: (json['overall_rating'] ?? 0).toDouble(),
+      reviewCount: json['review_count'] ?? 0,
+      researchAreas: List<String>.from(json['research_areas'] ?? []),
+      tags: List<String>.from(json['tags'] ?? []),
       description: json['description'],
       website: json['website'],
-      labSize: json['labSize'],
-      ratingBreakdown: json['ratingBreakdown'] != null
-          ? Map<String, double>.from(json['ratingBreakdown'])
+      labSize: json['lab_size'],
+      ratingBreakdown: json['rating_breakdown'] != null
+          ? Map<String, double>.from(
+        (json['rating_breakdown'] as Map).map(
+              (key, value) => MapEntry(key, value.toDouble()),
+        ),
+      )
+          : null,
+      researchTopics: json['research_topics'] != null
+          ? List<ResearchTopic>.from(
+          json['research_topics'].map((x) => ResearchTopic.fromJson(x)))
+          : null,
+      recentPublications: json['recent_publications'] != null
+          ? List<Publication>.from(
+          json['recent_publications'].map((x) => Publication.fromJson(x)))
+          : null,
+      recruitmentStatus: json['recruitment_status'] != null
+          ? RecruitmentStatus.fromJson(json['recruitment_status'])
           : null,
     );
   }
-}
 
-
-// Lab model update to include toJson
-extension LabJson on Lab {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'name': name,
-      'professorName': professorName,
-      'professorId': professorId,
-      'universityName': universityName,
-      'universityId': universityId,
+      'professor_name': professorName,
+      'professor_id': professorId,
+      'university_name': universityName,
+      'university_id': universityId,
       'department': department,
-      'overallRating': overallRating,
-      'reviewCount': reviewCount,
-      'researchAreas': researchAreas,
+      'overall_rating': overallRating,
+      'review_count': reviewCount,
+      'research_areas': researchAreas,
       'tags': tags,
       'description': description,
       'website': website,
-      'labSize': labSize,
-      'ratingBreakdown': ratingBreakdown,
+      'lab_size': labSize,
+      'rating_breakdown': ratingBreakdown,
+      'research_topics': researchTopics?.map((x) => x.toJson()).toList(),
+      'recent_publications': recentPublications?.map((x) => x.toJson()).toList(),
+      'recruitment_status': recruitmentStatus?.toJson(),
+    };
+  }
+}
+
+// ResearchTopic 모델
+class ResearchTopic {
+  final String title;
+  final String description;
+  final List<String> keywords;
+  final String? fundingInfo;
+
+  ResearchTopic({
+    required this.title,
+    required this.description,
+    required this.keywords,
+    this.fundingInfo,
+  });
+
+  factory ResearchTopic.fromJson(Map<String, dynamic> json) {
+    return ResearchTopic(
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      keywords: List<String>.from(json['keywords'] ?? []),
+      fundingInfo: json['funding_info'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'description': description,
+      'keywords': keywords,
+      'funding_info': fundingInfo,
+    };
+  }
+}
+
+// Publication 모델
+class Publication {
+  final String title;
+  final List<String> authors;
+  final String venue;
+  final int year;
+  final String? url;
+  final String? abstract;
+  final int? citations;
+
+  Publication({
+    required this.title,
+    required this.authors,
+    required this.venue,
+    required this.year,
+    this.url,
+    this.abstract,
+    this.citations,
+  });
+
+  factory Publication.fromJson(Map<String, dynamic> json) {
+    return Publication(
+      title: json['title'] ?? '',
+      authors: List<String>.from(json['authors'] ?? []),
+      venue: json['venue'] ?? '',
+      year: json['year'] ?? DateTime.now().year,
+      url: json['url'],
+      abstract: json['abstract'],
+      citations: json['citations'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'authors': authors,
+      'venue': venue,
+      'year': year,
+      'url': url,
+      'abstract': abstract,
+      'citations': citations,
+    };
+  }
+}
+
+// RecruitmentStatus 모델
+class RecruitmentStatus {
+  final bool isRecruitingPhD;
+  final bool isRecruitingPostdoc;
+  final bool isRecruitingIntern;
+  final String? notes;
+  final DateTime? lastUpdated;
+
+  RecruitmentStatus({
+    required this.isRecruitingPhD,
+    required this.isRecruitingPostdoc,
+    required this.isRecruitingIntern,
+    this.notes,
+    this.lastUpdated,
+  });
+
+  factory RecruitmentStatus.fromJson(Map<String, dynamic> json) {
+    return RecruitmentStatus(
+      isRecruitingPhD: json['is_recruiting_phd'] ?? false,
+      isRecruitingPostdoc: json['is_recruiting_postdoc'] ?? false,
+      isRecruitingIntern: json['is_recruiting_intern'] ?? false,
+      notes: json['notes'],
+      lastUpdated: json['last_updated'] != null
+          ? DateTime.parse(json['last_updated'])
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'is_recruiting_phd': isRecruitingPhD,
+      'is_recruiting_postdoc': isRecruitingPostdoc,
+      'is_recruiting_intern': isRecruitingIntern,
+      'notes': notes,
+      'last_updated': lastUpdated?.toIso8601String(),
     };
   }
 }

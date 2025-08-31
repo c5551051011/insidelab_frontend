@@ -102,24 +102,3 @@ class Review {
     );
   }
 }
-
-// Review model update to include toJson
-extension ReviewJson on Review {
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'labId': labId,
-      'userId': userId,
-      'position': position,
-      'duration': duration,
-      'reviewDate': reviewDate.toIso8601String(),
-      'rating': rating,
-      'categoryRatings': categoryRatings,
-      'reviewText': reviewText,
-      'pros': pros,
-      'cons': cons,
-      'helpfulCount': helpfulCount,
-      'isVerified': isVerified,
-    };
-  }
-}

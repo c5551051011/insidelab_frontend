@@ -6,6 +6,8 @@ import 'core/router/app_router.dart';
 import 'data/providers/data_providers.dart';
 import 'data/repositories/lab_repository.dart';
 import 'data/repositories/review_repository.dart';
+import 'services/api_service.dart';
+import 'services/auth_service.dart';
 
 class InsideLabApp extends StatelessWidget {
   const InsideLabApp({Key? key}) : super(key: key);

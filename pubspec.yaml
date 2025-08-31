@@ -38,13 +38,17 @@ dependencies:
   form_builder_validators: ^11.0.0
 
   # Charts & Visualization
-  fl_chart: ^0.71.0
+  fl_chart: ^0.71.0  # 버전 다운그레이드
+  # radar_chart: ^2.0.0  # 필요시 추가
 
   # Animation
   animate_do: ^4.2.0
 
   # Icons
   font_awesome_flutter: ^10.6.0
+
+  # Fonts
+  google_fonts: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -54,20 +58,20 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Fonts
-  fonts:
-    - family: Inter
-      fonts:
-        - asset: assets/fonts/Inter-Regular.ttf
-          weight: 400
-        - asset: assets/fonts/Inter-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Inter-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Inter-Bold.ttf
-          weight: 700
-        - asset: assets/fonts/Inter-ExtraBold.ttf
-          weight: 800
+  # Google Fonts 패키지를 사용하므로 폰트 파일 불필요
+  # fonts:
+  #   - family: Inter
+  #     fonts:
+  #       - asset: assets/fonts/Inter-Regular.ttf
+  #         weight: 400
+  #       - asset: assets/fonts/Inter-Medium.ttf
+  #         weight: 500
+  #       - asset: assets/fonts/Inter-SemiBold.ttf
+  #         weight: 600
+  #       - asset: assets/fonts/Inter-Bold.ttf
+  #         weight: 700
+  #       - asset: assets/fonts/Inter-ExtraBold.ttf
+  #         weight: 800
 
   # Assets
   # assets:

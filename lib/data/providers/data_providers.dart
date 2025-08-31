@@ -5,6 +5,7 @@ import '../repositories/review_repository.dart';
 import '../models/lab.dart';
 import '../models/review.dart';
 import '../models/user.dart';
+import '../../services/auth_service.dart';
 
 // Lab Provider
 class LabProvider extends ChangeNotifier {

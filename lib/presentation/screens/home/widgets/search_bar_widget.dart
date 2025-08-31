@@ -1,4 +1,3 @@
-
 // presentation/screens/home/widgets/search_bar_widget.dart
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -22,28 +21,33 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
       width: searchWidth,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(50),
+        borderRadius: BorderRadius.circular(30),
         boxShadow: AppColors.elevatedShadow,
       ),
       child: Row(
         children: [
+          const SizedBox(width: 16),
           Expanded(
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: 'Search labs, professors, universities...',
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Search labs, professors, universities...',
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                ),
+                onSubmitted: (_) => _performSearch(),
               ),
-              onSubmitted: (_) => _performSearch(),
             ),
           ),
           Container(
-            margin: const EdgeInsets.all(4),
+            margin: const EdgeInsets.all(10),
             child: ElevatedButton(
               onPressed: _performSearch,
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical:20),
               ),
               child: const Text('Search'),
             ),
