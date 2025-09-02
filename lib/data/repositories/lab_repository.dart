@@ -1,6 +1,8 @@
 // data/repositories/lab_repository.dart
+import 'package:insidelab/services/lab_service.dart';
+
 import '../models/lab.dart';
-import '../../services/lab_service.dart';
+import '../../services/api_service.dart';
 
 abstract class LabRepository {
   Future<List<Lab>> getFeaturedLabs();

@@ -82,5 +82,3 @@ class RatingBreakdown extends StatelessWidget {
     return AppColors.error;
   }
 }
-
-

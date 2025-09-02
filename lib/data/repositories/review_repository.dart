@@ -1,8 +1,9 @@
 
-
 // data/repositories/review_repository.dart
+import 'package:insidelab/services/review_service.dart';
+
 import '../models/review.dart';
-import '../../services/review_service.dart';
+import '../../services/api_service.dart';  // ReviewService가 여기에 정의되어 있음
 
 abstract class ReviewRepository {
   Future<List<Review>> getReviewsByLab(String labId);

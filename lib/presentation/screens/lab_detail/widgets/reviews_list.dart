@@ -1,10 +1,14 @@
 
 // presentation/screens/lab_detail/widgets/reviews_list.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../data/models/review.dart';
+import '../../../../data/providers/data_providers.dart';
 import '../../../widgets/review_card.dart';
+import '../../../widgets/common/loading_widget.dart';
+import '../../../widgets/common/empty_state_widget.dart';
 
-class ReviewsList extends StatelessWidget {
+class ReviewsList extends StatefulWidget {
   final String labId;
 
   const ReviewsList({
@@ -13,10 +17,21 @@ class ReviewsList extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    // TODO: Replace with actual data from repository
-    final reviews = _getMockReviews();
+  State<ReviewsList> createState() => _ReviewsListState();
+}
 
+class _ReviewsListState extends State<ReviewsList> {
+  @override
+  void initState() {
+    super.initState();
+    // Load reviews when widget initializes
+    Future.microtask(() {
+      context.read<ReviewProvider>().loadLabReviews(widget.labId);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -42,79 +57,57 @@ class ReviewsList extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 20),
-            ...reviews.map((review) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: ReviewCard(review: review),
-              );
-            }).toList(),
+            Consumer<ReviewProvider>(
+              builder: (context, reviewProvider, child) {
+                final reviews = reviewProvider.getLabReviews(widget.labId);
+
+                if (reviewProvider.isLoading && reviews == null) {
+                  return const LoadingWidget(
+                    message: 'Loading reviews...',
+                  );
+                }
+
+                if (reviewProvider.error != null) {
+                  return Center(
+                    child: Text(
+                      'Error loading reviews: ${reviewProvider.error}',
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  );
+                }
+
+                if (reviews == null || reviews.isEmpty) {
+                  return EmptyStateWidget(
+                    icon: Icons.rate_review,
+                    title: 'No reviews yet',
+                    subtitle: 'Be the first to review this lab!',
+                    action: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/write-review',
+                          arguments: widget.labId,
+                        );
+                      },
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Write Review'),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: reviews.map((review) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: ReviewCard(review: review),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
           ],
         ),
       ),
     );
-  }
-
-  List<Review> _getMockReviews() {
-    return [
-      Review(
-        id: '1',
-        labId: labId,
-        userId: 'user1',
-        position: 'PhD Student',
-        duration: '3 years',
-        reviewDate: DateTime.now().subtract(const Duration(days: 7)),
-        rating: 5.0,
-        categoryRatings: {
-          'Research Environment': 5.0,
-          'Advisor Support': 4.5,
-          'Work-Life Balance': 4.0,
-          'Career Development': 5.0,
-          'Funding Availability': 4.5,
-        },
-        reviewText: 'Excellent research environment with cutting-edge projects. '
-            'The lab culture is very collaborative and supportive.',
-        pros: [
-          'Great mentorship',
-          'Well-funded',
-          'Industry connections',
-          'Publication opportunities',
-        ],
-        cons: [
-          'High competition',
-          'Steep learning curve',
-        ],
-        helpfulCount: 23,
-        isVerified: true,
-      ),
-      Review(
-        id: '2',
-        labId: labId,
-        userId: 'user2',
-        position: 'MS Student',
-        duration: '2 years',
-        reviewDate: DateTime.now().subtract(const Duration(days: 30)),
-        rating: 4.0,
-        categoryRatings: {
-          'Research Environment': 4.5,
-          'Advisor Support': 4.0,
-          'Work-Life Balance': 3.5,
-          'Career Development': 4.5,
-          'Funding Availability': 4.0,
-        },
-        reviewText: 'Good lab for ML research with access to great resources. '
-            'Sometimes workload can be heavy during conference deadlines.',
-        pros: [
-          'Industry connections',
-          'State-of-the-art equipment',
-          'Diverse research topics',
-        ],
-        cons: [
-          'Heavy workload',
-          'Limited advisor time',
-        ],
-        helpfulCount: 15,
-        isVerified: true,
-      ),
-    ];
   }
 }

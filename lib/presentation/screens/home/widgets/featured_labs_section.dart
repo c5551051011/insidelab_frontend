@@ -1,18 +1,33 @@
 
 // presentation/screens/home/widgets/featured_labs_section.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/lab.dart';
+import '../../../../data/providers/data_providers.dart';
 import '../../../widgets/lab_card.dart';
+import '../../../widgets/common/loading_widget.dart';
+import '../../../widgets/common/error_widget.dart';
 
-class FeaturedLabsSection extends StatelessWidget {
+class FeaturedLabsSection extends StatefulWidget {
   const FeaturedLabsSection({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    // TODO: Replace with actual data from repository
-    final featuredLabs = _getMockFeaturedLabs();
+  State<FeaturedLabsSection> createState() => _FeaturedLabsSectionState();
+}
 
+class _FeaturedLabsSectionState extends State<FeaturedLabsSection> {
+  @override
+  void initState() {
+    super.initState();
+    // Load featured labs when widget initializes
+    Future.microtask(() {
+      context.read<LabProvider>().loadFeaturedLabs();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -25,15 +40,48 @@ class FeaturedLabsSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 32),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth > 1200) {
-                return _buildGridView(featuredLabs, 3);
-              } else if (constraints.maxWidth > 800) {
-                return _buildGridView(featuredLabs, 2);
-              } else {
-                return _buildListView(featuredLabs);
+          Consumer<LabProvider>(
+            builder: (context, labProvider, child) {
+              if (labProvider.isLoading && labProvider.featuredLabs == null) {
+                return const LoadingWidget(
+                  message: 'Loading featured labs...',
+                );
               }
+
+              if (labProvider.error != null) {
+                return ErrorDisplayWidget(
+                  message: labProvider.error!,
+                  onRetry: () {
+                    labProvider.loadFeaturedLabs();
+                  },
+                );
+              }
+
+              final labs = labProvider.featuredLabs ?? [];
+
+              if (labs.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'No featured labs available',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                );
+              }
+
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth > 1200) {
+                    return _buildGridView(labs, 3);
+                  } else if (constraints.maxWidth > 800) {
+                    return _buildGridView(labs, 2);
+                  } else {
+                    return _buildListView(labs);
+                  }
+                },
+              );
             },
           ),
         ],
@@ -85,59 +133,5 @@ class FeaturedLabsSection extends StatelessWidget {
         );
       },
     );
-  }
-
-  List<Lab> _getMockFeaturedLabs() {
-    return [
-      Lab(
-        id: '1',
-        name: 'Stanford AI Lab',
-        professorName: 'Dr. Andrew Ng',
-        professorId: 'prof1',
-        universityName: 'Stanford University',
-        universityId: 'uni1',
-        department: 'Computer Science',
-        overallRating: 4.8,
-        reviewCount: 156,
-        researchAreas: ['Machine Learning', 'Deep Learning', 'Computer Vision'],
-        tags: ['Well Funded', 'Industry Connections', 'Flexible Hours'],
-        description: 'Leading AI research lab focused on deep learning and applications',
-        ratingBreakdown: {
-          'Research Environment': 4.8,
-          'Advisor Support': 4.6,
-          'Work-Life Balance': 4.2,
-          'Career Development': 4.9,
-          'Funding Availability': 4.7,
-        },
-      ),
-      Lab(
-        id: '2',
-        name: 'CMU Machine Learning Department',
-        professorName: 'Dr. Tom Mitchell',
-        professorId: 'prof2',
-        universityName: 'Carnegie Mellon University',
-        universityId: 'uni2',
-        department: 'Machine Learning',
-        overallRating: 4.9,
-        reviewCount: 203,
-        researchAreas: ['ML Theory', 'Statistical Learning', 'AI Systems'],
-        tags: ['Top Tier', 'Large Lab', 'Publication Heavy'],
-        description: 'World-renowned ML department with diverse research areas',
-      ),
-      Lab(
-        id: '3',
-        name: 'MIT CSAIL Vision Group',
-        professorName: 'Dr. Antonio Torralba',
-        professorId: 'prof3',
-        universityName: 'MIT',
-        universityId: 'uni3',
-        department: 'EECS',
-        overallRating: 4.7,
-        reviewCount: 98,
-        researchAreas: ['Computer Vision', '3D Vision', 'Scene Understanding'],
-        tags: ['Collaborative', 'Innovation Focused', 'Small Team'],
-        description: 'Cutting-edge computer vision research with industry impact',
-      ),
-    ];
   }
 }
