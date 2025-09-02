@@ -168,27 +168,61 @@ class ReviewProvider extends ChangeNotifier {
 class AuthProvider extends ChangeNotifier {
   User? _currentUser;
   bool _isAuthenticated = false;
+  bool _isLoading = false;
 
   // Getters
   User? get currentUser => _currentUser;
   bool get isAuthenticated => _isAuthenticated;
+  bool get isLoading => _isLoading;
 
   // Sign in
   Future<void> signIn(String email, String password) async {
-    // TODO: Implement actual authentication
-    await Future.delayed(const Duration(seconds: 1));
-
-    _currentUser = User(
-      id: 'user123',
-      email: email,
-      name: 'Test User',
-      isVerified: true,
-      joinedDate: DateTime.now(),
-      reviewCount: 5,
-      helpfulVotes: 23,
-    );
-    _isAuthenticated = true;
+    _isLoading = true;
     notifyListeners();
+
+    try {
+      // TODO: Implement actual authentication
+      await Future.delayed(const Duration(seconds: 1));
+
+      _currentUser = User(
+        id: 'user123',
+        email: email,
+        name: 'Test User',
+        isVerified: true,
+        joinedDate: DateTime.now(),
+        reviewCount: 5,
+        helpfulVotes: 23,
+      );
+      _isAuthenticated = true;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Sign up
+  Future<void> signUp(Map<String, String?> userData) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      // TODO: Implement actual registration using AuthService
+      await Future.delayed(const Duration(seconds: 1));
+
+      _currentUser = User(
+        id: 'user${DateTime.now().millisecondsSinceEpoch}',
+        email: userData['email']!,
+        name: userData['username']!,
+        isVerified: false, // New users need email verification
+        joinedDate: DateTime.now(),
+        reviewCount: 0,
+        helpfulVotes: 0,
+      );
+      _isAuthenticated = true;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   // Sign out

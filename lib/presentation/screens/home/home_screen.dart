@@ -1,7 +1,10 @@
 // presentation/screens/home/home_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/lab.dart';
+import '../../../data/providers/data_providers.dart';
+import '../../widgets/common/app_bar_widget.dart';
 import 'widgets/search_bar_widget.dart';
 import 'widgets/stats_section.dart';
 import 'widgets/featured_labs_section.dart';
@@ -69,15 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
         '🔬 InsideLab',
         style: TextStyle(color: AppColors.primary),
       ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            // TODO: Implement sign in
-          },
-          child: const Text('Sign In'),
-        ),
-        const SizedBox(width: 16),
-      ],
+      actions: InsideLabAppBar().buildDefaultActions(context),
     );
   }
 
