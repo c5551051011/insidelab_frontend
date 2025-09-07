@@ -6,6 +6,7 @@ import '../models/lab.dart';
 import '../models/review.dart';
 import '../models/user.dart';
 import '../../services/auth_service.dart';
+import '../../services/google_auth_service.dart';
 
 // Lab Provider
 class LabProvider extends ChangeNotifier {
@@ -169,11 +170,13 @@ class AuthProvider extends ChangeNotifier {
   User? _currentUser;
   bool _isAuthenticated = false;
   bool _isLoading = false;
+  String? _errorMessage;
 
   // Getters
   User? get currentUser => _currentUser;
   bool get isAuthenticated => _isAuthenticated;
   bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
 
   // Sign in
   Future<void> signIn(String email, String password) async {
@@ -225,10 +228,95 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // Sign in with Google
+  Future<void> signInWithGoogle() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final result = await GoogleAuthService.signInWithGoogle();
+      
+      if (result != null) {
+        _currentUser = User(
+          id: result['uid'],
+          email: result['email'] ?? '',
+          name: result['displayName'] ?? result['email']?.split('@')[0] ?? 'User',
+          isVerified: result['isEduEmail'] ?? false,
+          joinedDate: DateTime.now(),
+          reviewCount: 0,
+          helpfulVotes: 0,
+        );
+        _isAuthenticated = true;
+        
+        // Show verification notice if not edu email
+        if (!(result['isEduEmail'] ?? false)) {
+          _errorMessage = 'Please use your university email (.edu) for full verification';
+        }
+      }
+    } catch (error) {
+      _errorMessage = GoogleAuthService.getErrorMessage(error);
+      _isAuthenticated = false;
+      _currentUser = null;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Check current authentication status
+  Future<void> checkAuthStatus() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final userData = await GoogleAuthService.getCurrentUser();
+      
+      if (userData != null) {
+        _currentUser = User(
+          id: userData['uid'],
+          email: userData['email'] ?? '',
+          name: userData['displayName'] ?? userData['email']?.split('@')[0] ?? 'User',
+          isVerified: userData['isEduEmail'] ?? false,
+          joinedDate: DateTime.now(), // In real app, get from backend
+          reviewCount: 0, // In real app, get from backend
+          helpfulVotes: 0, // In real app, get from backend
+        );
+        _isAuthenticated = true;
+      } else {
+        _currentUser = null;
+        _isAuthenticated = false;
+      }
+    } catch (error) {
+      _currentUser = null;
+      _isAuthenticated = false;
+      _errorMessage = GoogleAuthService.getErrorMessage(error);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   // Sign out
   Future<void> signOut() async {
-    _currentUser = null;
-    _isAuthenticated = false;
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await GoogleAuthService.signOut();
+    } catch (error) {
+      _errorMessage = GoogleAuthService.getErrorMessage(error);
+    } finally {
+      _currentUser = null;
+      _isAuthenticated = false;
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // Clear error message
+  void clearError() {
+    _errorMessage = null;
     notifyListeners();
   }
 

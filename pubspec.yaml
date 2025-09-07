@@ -26,6 +26,9 @@ dependencies:
   # Data & Storage
   shared_preferences: ^2.2.2
 
+  # Authentication
+  google_sign_in: ^6.2.1
+
   # Utilities
   intl: ^0.19.0
   url_launcher: ^6.2.2

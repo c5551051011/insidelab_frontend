@@ -50,6 +50,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 24),
                 _buildSignUpButton(),
                 const SizedBox(height: 16),
+                _buildDivider(),
+                const SizedBox(height: 16),
+                _buildGoogleSignUpButton(),
+                const SizedBox(height: 16),
                 _buildSignInLink(),
                 const SizedBox(height: 32),
                 _buildPrivacyNote(),
@@ -453,6 +457,152 @@ class _SignUpScreenState extends State<SignUpScreen> {
             isError: true,
           );
         }
+      }
+    }
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: AppColors.textTertiary)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'OR',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(child: Divider(color: AppColors.textTertiary)),
+      ],
+    );
+  }
+
+  Widget _buildGoogleSignUpButton() {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        return SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: OutlinedButton.icon(
+            onPressed: authProvider.isLoading ? null : _signUpWithGoogle,
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppColors.textTertiary),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            icon: authProvider.isLoading
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.textSecondary,
+                    ),
+                  )
+                : Image.asset(
+                    'assets/icons/google_logo.png', // You'll need to add this asset
+                    height: 20,
+                    width: 20,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      Icons.account_circle,
+                      size: 20,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+            label: Text(
+              'Continue with Google',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _signUpWithGoogle() async {
+    if (!_agreedToTerms) {
+      Helpers.showSnackBar(
+        context,
+        'Please agree to the Terms of Service and Privacy Policy',
+        isError: true,
+      );
+      return;
+    }
+
+    final authProvider = context.read<AuthProvider>();
+    
+    try {
+      await authProvider.signInWithGoogle();
+      
+      if (mounted) {
+        if (authProvider.isAuthenticated) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              icon: const Icon(
+                Icons.check_circle,
+                size: 48,
+                color: AppColors.success,
+              ),
+              title: const Text('Welcome to InsideLab!'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Your Google account has been linked successfully.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  if (authProvider.currentUser?.isVerified == false)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.info, color: Colors.orange),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Note: For full verification, please use your university email (.edu)',
+                            style: TextStyle(fontSize: 14),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                  },
+                  child: const Text('Get Started'),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Helpers.showSnackBar(
+          context,
+          authProvider.errorMessage ?? 'Google Sign-Up failed. Please try again.',
+          isError: true,
+        );
+        authProvider.clearError();
       }
     }
   }

@@ -36,6 +36,10 @@ class _SignInScreenState extends State<SignInScreen> {
                 const SizedBox(height: 24),
                 _buildSignInButton(),
                 const SizedBox(height: 16),
+                _buildDivider(),
+                const SizedBox(height: 16),
+                _buildGoogleSignInButton(),
+                const SizedBox(height: 16),
                 _buildSignUpLink(),
               ],
             ),
@@ -184,6 +188,104 @@ class _SignInScreenState extends State<SignInScreen> {
             isError: true,
           );
         }
+      }
+    }
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: AppColors.textTertiary)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'OR',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Expanded(child: Divider(color: AppColors.textTertiary)),
+      ],
+    );
+  }
+
+  Widget _buildGoogleSignInButton() {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        return SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: OutlinedButton.icon(
+            onPressed: authProvider.isLoading ? null : _signInWithGoogle,
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppColors.textTertiary),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            icon: authProvider.isLoading
+                ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.textSecondary,
+                    ),
+                  )
+                : Image.asset(
+                    'assets/icons/google_logo.png', // You'll need to add this asset
+                    height: 20,
+                    width: 20,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      Icons.account_circle,
+                      size: 20,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+            label: Text(
+              'Continue with Google',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _signInWithGoogle() async {
+    final authProvider = context.read<AuthProvider>();
+    
+    try {
+      await authProvider.signInWithGoogle();
+      
+      if (mounted) {
+        if (authProvider.isAuthenticated) {
+          Navigator.pushReplacementNamed(context, '/');
+          
+          // Show edu email notice if needed
+          if (authProvider.errorMessage != null) {
+            Helpers.showSnackBar(
+              context,
+              authProvider.errorMessage!,
+              isError: false,
+            );
+            authProvider.clearError();
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Helpers.showSnackBar(
+          context,
+          authProvider.errorMessage ?? 'Google Sign-In failed. Please try again.',
+          isError: true,
+        );
+        authProvider.clearError();
       }
     }
   }

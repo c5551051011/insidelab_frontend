@@ -71,10 +71,10 @@ class InsideLabAppBar extends StatelessWidget implements PreferredSizeWidget {
               onSelected: (value) async {
                 switch (value) {
                   case 'profile':
-                  // TODO: Navigate to profile
+                    Navigator.pushNamed(context, '/profile');
                     break;
                   case 'my_reviews':
-                  // TODO: Navigate to my reviews
+                    Navigator.pushNamed(context, '/my-reviews');
                     break;
                   case 'logout':
                     await authProvider.signOut();
