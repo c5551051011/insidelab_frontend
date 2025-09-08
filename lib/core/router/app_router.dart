@@ -13,6 +13,7 @@ import '../../presentation/screens/services/cv_review_screen.dart';
 import '../../presentation/screens/services/mock_interview_screen.dart';
 import '../../presentation/screens/services/mentorship_marketplace_screen.dart';
 import '../../presentation/screens/services/timeline_manager_screen.dart';
+import '../../presentation/screens/marketplace/marketplace_screen.dart';
 import '../../data/models/lab.dart';
 
 class AppRouter {
@@ -30,6 +31,7 @@ class AppRouter {
   static const String mockInterview = '/mock-interview';
   static const String timelineManager = '/timeline-manager';
   static const String mentorshipMarketplace = '/mentorship-marketplace';
+  static const String marketplace = '/marketplace';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -99,6 +101,11 @@ class AppRouter {
       case mentorshipMarketplace:
         return MaterialPageRoute(
           builder: (_) => const MentorshipMarketplaceScreen(),
+        );
+
+      case marketplace:
+        return MaterialPageRoute(
+          builder: (_) => const MarketplaceScreen(),
         );
 
       case sopEditing:

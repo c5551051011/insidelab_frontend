@@ -57,6 +57,12 @@ class ServicesSection extends StatelessWidget {
         'route': '/',
       },
       {
+        'title': 'Service Marketplace',
+        'description': 'Browse and book services from verified graduate students and professionals. Get CV reviews, mock interviews, mentorship, and more.',
+        'imagePath': 'images/resume_image.png', // Reuse existing image temporarily
+        'route': '/marketplace',
+      },
+      {
         'title': 'CV & Resume Feedback',
         'description': 'Get your CV reviewed by experienced professionals and current graduate students. Receive detailed feedback to improve your academic profile.',
         'imagePath': 'images/resume_image.png',

@@ -117,11 +117,11 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
       children: [
         _buildNavItem(context, 'Reviews', '/'),
         const SizedBox(width: 32),
+        _buildNavItem(context, 'Marketplace', '/marketplace'),
+        const SizedBox(width: 32),
         _buildNavItem(context, 'Services', '/application-services'),
         const SizedBox(width: 32),
         _buildNavItem(context, 'Success Stories', '/'),
-        const SizedBox(width: 32),
-        _buildNavItem(context, 'Mock Interview', '/mock-interview'),
       ],
     );
   }
