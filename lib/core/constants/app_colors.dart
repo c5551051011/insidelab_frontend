@@ -87,6 +87,14 @@ class AppColors {
       offset: const Offset(0, 8),
     ),
   ];
+  
+  static List<BoxShadow> cardShadowNarrow = [
+    BoxShadow(
+      color: Color.fromRGBO(2, 6, 23, 0.06),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
+    ),
+  ];
 
   static List<BoxShadow> cardShadowHover = [
     BoxShadow(

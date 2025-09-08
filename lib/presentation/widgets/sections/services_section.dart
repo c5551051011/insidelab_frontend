@@ -53,19 +53,19 @@ class ServicesSection extends StatelessWidget {
       {
         'title': 'Professor & Lab Reviews',
         'description': 'Read honest reviews from current grad students about professors, research labs, and program culture. Make informed decisions about your graduate school applications.',
-        'imagePath': 'assets/images/service_reviews.jpg',
+        'imagePath': 'assets/images/review_image.png',
         'route': '/',
       },
       {
         'title': 'CV & Resume Feedback',
         'description': 'Get your CV reviewed by experienced professionals and current graduate students. Receive detailed feedback to improve your academic profile.',
-        'imagePath': 'assets/images/service_cv_feedback.jpg',
+        'imagePath': 'assets/images/resume_image.png',
         'route': '/cv-review',
       },
       {
         'title': 'Mock Interview Sessions',
         'description': 'Practice with experienced interviewers who know what graduate programs are looking for. Build confidence before your real interviews.',
-        'imagePath': 'assets/images/service_mock_interview.jpg',
+        'imagePath': 'assets/images/interview_image.png',
         'route': '/mock-interview',
       },
     ];
@@ -126,6 +126,7 @@ class ServicesSection extends StatelessWidget {
       );
     } else {
       return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: services.map((service) => Expanded(
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -153,12 +154,8 @@ class ServicesSection extends StatelessWidget {
       cursor: SystemMouseCursors.click,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        child: Card(
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          clipBehavior: Clip.antiAlias,
+        child: Material(
+          color: Colors.transparent,
           child: InkWell(
             onTap: () => Navigator.pushNamed(context, route),
             borderRadius: BorderRadius.circular(12),
@@ -166,7 +163,7 @@ class ServicesSection extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: AppColors.cardShadow,
+                boxShadow: AppColors.cardShadowNarrow,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

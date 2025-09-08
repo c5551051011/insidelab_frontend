@@ -13,7 +13,7 @@ class HeroSection extends StatelessWidget {
       height: screenSize.height * 0.9, // 90% of screen height
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/images/hero_background.jpg'),
+          image: AssetImage('assets/images/hero_background.png'),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
             Colors.transparent,

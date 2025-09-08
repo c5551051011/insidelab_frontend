@@ -127,67 +127,49 @@ class TestimonialsSection extends StatelessWidget {
 
   Widget _buildTestimonialCard(Map<String, dynamic> testimonial) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 360),
+      constraints: const BoxConstraints(
+        maxWidth: 360,
+        minHeight: 280,
+      ),
       child: Card(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: AppColors.border,
-            width: 1,
-          ),
         ),
-        child: Padding(
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppColors.border,
+              width: 1,
+            ),
+            boxShadow: AppColors.cardShadow,
+          ),
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // User info row
-              Row(
+              // User info
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Profile avatar
-                  CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppColors.primary,
-                    backgroundImage: AssetImage(testimonial['avatar']),
-                    onBackgroundImageError: (exception, stackTrace) {
-                      // Fallback handled by backgroundColor and child
-                    },
-                    child: Text(
-                      testimonial['name'].toString().split(' ').map((n) => n[0]).join(''),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+                  Text(
+                    testimonial['name'],
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      fontFamily: 'Inter',
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  
-                  // User info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          testimonial['name'],
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          testimonial['role'],
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                      ],
+                  const SizedBox(height: 2),
+                  Text(
+                    testimonial['role'],
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                      fontFamily: 'Inter',
                     ),
                   ),
                 ],
