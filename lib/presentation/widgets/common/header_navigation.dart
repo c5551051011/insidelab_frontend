@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/providers/data_providers.dart';
+import '../../../data/models/user.dart';
+import 'role_switcher.dart';
 
 class HeaderNavigation extends StatefulWidget implements PreferredSizeWidget {
   const HeaderNavigation({Key? key}) : super(key: key);
@@ -66,7 +68,21 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
               const Spacer(),
               if (MediaQuery.of(context).size.width >= 768) ...[
                 _buildDesktopMenu(context),
-                const SizedBox(width: 32),
+                const SizedBox(width: 24),
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, child) {
+                    final user = authProvider.currentUser;
+                    if (user?.canProvideServices == true) {
+                      return Row(
+                        children: [
+                          RoleSwitcher(showIcon: false),
+                          const SizedBox(width: 24),
+                        ],
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
                 _buildAuthButtons(context),
               ] else
                 _buildMobileMenuButton(context),
@@ -178,6 +194,8 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
   }
 
   Widget _buildUserMenu(BuildContext context, AuthProvider authProvider) {
+    final user = authProvider.currentUser;
+    
     return PopupMenuButton<String>(
       offset: const Offset(0, 40),
       child: Container(
@@ -188,19 +206,66 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
         ),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: AppColors.primary,
-              child: Text(
-                authProvider.currentUser?.email.substring(0, 1).toUpperCase() ?? 'U',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+            Stack(
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: AppColors.primary,
+                  child: Text(
+                    user?.email.substring(0, 1).toUpperCase() ?? 'U',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
-              ),
+                if (user?.isVerified == true)
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: AppColors.success,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: const Icon(
+                        Icons.check,
+                        size: 6,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  user?.displayName ?? 'User',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                if (user?.isVerified == true)
+                  Text(
+                    user!.verificationBadge,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: 4),
             const Icon(Icons.keyboard_arrow_down, size: 20),
           ],
         ),
@@ -213,6 +278,24 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
           case 'my_reviews':
             Navigator.pushNamed(context, '/my-reviews');
             break;
+          case 'verification':
+            Navigator.pushNamed(context, '/verification');
+            break;
+          case 'provider_dashboard':
+            Navigator.pushNamed(context, '/provider-dashboard');
+            break;
+          case 'my_services':
+            Navigator.pushNamed(context, '/my-services');
+            break;
+          case 'earnings':
+            Navigator.pushNamed(context, '/earnings');
+            break;
+          case 'switch_to_seeker':
+            _showRoleSwitchDialog(context, UserRole.seeker);
+            break;
+          case 'switch_to_provider':
+            _showRoleSwitchDialog(context, UserRole.provider);
+            break;
           case 'logout':
             await authProvider.signOut();
             if (context.mounted) {
@@ -221,39 +304,222 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
             break;
         }
       },
-      itemBuilder: (context) => [
+      itemBuilder: (context) => _buildMenuItems(user),
+    );
+  }
+
+  List<PopupMenuEntry<String>> _buildMenuItems(User? user) {
+    List<PopupMenuEntry<String>> items = [];
+    
+    // Profile section
+    items.addAll([
+      const PopupMenuItem(
+        value: 'profile',
+        child: Row(
+          children: [
+            Icon(Icons.person, size: 20),
+            SizedBox(width: 8),
+            Text('My Profile'),
+          ],
+        ),
+      ),
+      const PopupMenuItem(
+        value: 'my_reviews',
+        child: Row(
+          children: [
+            Icon(Icons.rate_review, size: 20),
+            SizedBox(width: 8),
+            Text('My Reviews'),
+          ],
+        ),
+      ),
+    ]);
+
+    // Verification section
+    if (user?.isVerified != true) {
+      items.add(
         const PopupMenuItem(
-          value: 'profile',
+          value: 'verification',
           child: Row(
             children: [
-              Icon(Icons.person, size: 20),
+              Icon(Icons.verified_user, size: 20),
               SizedBox(width: 8),
-              Text('My Profile'),
+              Text('Get Verified'),
             ],
           ),
         ),
-        const PopupMenuItem(
-          value: 'my_reviews',
-          child: Row(
-            children: [
-              Icon(Icons.rate_review, size: 20),
-              SizedBox(width: 8),
-              Text('My Reviews'),
-            ],
-          ),
-        ),
+      );
+    }
+
+    // Provider section (if verified)
+    if (user?.canProvideServices == true) {
+      items.addAll([
         const PopupMenuDivider(),
+        PopupMenuItem(
+          enabled: false,
+          child: Text(
+            'SERVICE PROVIDER',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
         const PopupMenuItem(
-          value: 'logout',
+          value: 'provider_dashboard',
           child: Row(
             children: [
-              Icon(Icons.logout, size: 20),
+              Icon(Icons.dashboard, size: 20),
               SizedBox(width: 8),
-              Text('Sign Out'),
+              Text('Provider Dashboard'),
             ],
           ),
         ),
-      ],
+        const PopupMenuItem(
+          value: 'my_services',
+          child: Row(
+            children: [
+              Icon(Icons.work, size: 20),
+              SizedBox(width: 8),
+              Text('My Services'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'earnings',
+          child: Row(
+            children: [
+              Icon(Icons.account_balance_wallet, size: 20),
+              SizedBox(width: 8),
+              Text('Earnings'),
+            ],
+          ),
+        ),
+      ]);
+    }
+
+    // Role switching (if verified and has multiple roles)
+    if (user?.isVerified == true && user?.roles.length == 1) {
+      items.addAll([
+        const PopupMenuDivider(),
+        if (user!.hasRole(UserRole.seeker))
+          const PopupMenuItem(
+            value: 'switch_to_provider',
+            child: Row(
+              children: [
+                Icon(Icons.swap_horiz, size: 20),
+                SizedBox(width: 8),
+                Text('Become Service Provider'),
+              ],
+            ),
+          ),
+        if (user.hasRole(UserRole.provider))
+          const PopupMenuItem(
+            value: 'switch_to_seeker',
+            child: Row(
+              children: [
+                Icon(Icons.swap_horiz, size: 20),
+                SizedBox(width: 8),
+                Text('Browse as Student'),
+              ],
+            ),
+          ),
+      ]);
+    }
+
+    // Logout
+    items.addAll([
+      const PopupMenuDivider(),
+      const PopupMenuItem(
+        value: 'logout',
+        child: Row(
+          children: [
+            Icon(Icons.logout, size: 20),
+            SizedBox(width: 8),
+            Text('Sign Out'),
+          ],
+        ),
+      ),
+    ]);
+
+    return items;
+  }
+
+  void _showRoleSwitchDialog(BuildContext context, UserRole targetRole) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          targetRole == UserRole.provider 
+            ? 'Switch to Service Provider Mode'
+            : 'Switch to Student Mode',
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              targetRole == UserRole.provider
+                ? 'You\'ll be able to offer services like mock interviews and CV reviews, manage your availability, and earn money.'
+                : 'You\'ll browse as a student looking for services, reviews, and guidance.',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            if (targetRole == UserRole.provider)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.verified, color: AppColors.success, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Verification confirmed! You can start offering services.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // TODO: Implement role switching logic
+              Navigator.pop(context);
+              // Navigate to appropriate dashboard
+              if (targetRole == UserRole.provider) {
+                Navigator.pushNamed(context, '/provider-dashboard');
+              } else {
+                Navigator.pushNamed(context, '/');
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(
+              targetRole == UserRole.provider ? 'Start Providing' : 'Browse Services'
+            ),
+          ),
+        ],
+      ),
     );
   }
 

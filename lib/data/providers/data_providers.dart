@@ -192,6 +192,11 @@ class AuthProvider extends ChangeNotifier {
         email: email,
         name: 'Test User',
         verificationStatus: VerificationStatus.verified,
+        isLabMember: true, // Enable lab member status
+        university: 'Test University',
+        department: 'Computer Science',
+        labName: 'AI Research Lab',
+        position: 'PhD Student',
         joinedDate: DateTime.now(),
         reviewCount: 5,
         helpfulVotes: 23,
