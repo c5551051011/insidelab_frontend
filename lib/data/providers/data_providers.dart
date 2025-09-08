@@ -191,7 +191,7 @@ class AuthProvider extends ChangeNotifier {
         id: 'user123',
         email: email,
         name: 'Test User',
-        isVerified: true,
+        verificationStatus: VerificationStatus.verified,
         joinedDate: DateTime.now(),
         reviewCount: 5,
         helpfulVotes: 23,
@@ -216,7 +216,7 @@ class AuthProvider extends ChangeNotifier {
         id: 'user${DateTime.now().millisecondsSinceEpoch}',
         email: userData['email']!,
         name: userData['username']!,
-        isVerified: false, // New users need email verification
+        verificationStatus: VerificationStatus.unverified, // New users need verification
         joinedDate: DateTime.now(),
         reviewCount: 0,
         helpfulVotes: 0,
@@ -242,7 +242,9 @@ class AuthProvider extends ChangeNotifier {
           id: result['uid'],
           email: result['email'] ?? '',
           name: result['displayName'] ?? result['email']?.split('@')[0] ?? 'User',
-          isVerified: result['isEduEmail'] ?? false,
+          verificationStatus: (result['isEduEmail'] ?? false) 
+            ? VerificationStatus.verified 
+            : VerificationStatus.unverified,
           joinedDate: DateTime.now(),
           reviewCount: 0,
           helpfulVotes: 0,
@@ -277,7 +279,9 @@ class AuthProvider extends ChangeNotifier {
           id: userData['uid'],
           email: userData['email'] ?? '',
           name: userData['displayName'] ?? userData['email']?.split('@')[0] ?? 'User',
-          isVerified: userData['isEduEmail'] ?? false,
+          verificationStatus: (userData['isEduEmail'] ?? false)
+            ? VerificationStatus.verified 
+            : VerificationStatus.unverified,
           joinedDate: DateTime.now(), // In real app, get from backend
           reviewCount: 0, // In real app, get from backend
           helpfulVotes: 0, // In real app, get from backend
