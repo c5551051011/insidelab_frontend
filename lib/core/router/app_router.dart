@@ -14,6 +14,10 @@ import '../../presentation/screens/services/mock_interview_screen.dart';
 import '../../presentation/screens/services/mentorship_marketplace_screen.dart';
 import '../../presentation/screens/services/timeline_manager_screen.dart';
 import '../../presentation/screens/marketplace/marketplace_screen.dart';
+import '../../presentation/screens/provider/provider_dashboard_screen.dart';
+import '../../presentation/screens/provider/my_services_screen.dart';
+import '../../presentation/screens/provider/booking_management_screen.dart';
+import '../../presentation/screens/provider/earnings_screen.dart';
 import '../../data/models/lab.dart';
 
 class AppRouter {
@@ -32,6 +36,10 @@ class AppRouter {
   static const String timelineManager = '/timeline-manager';
   static const String mentorshipMarketplace = '/mentorship-marketplace';
   static const String marketplace = '/marketplace';
+  static const String providerDashboard = '/provider-dashboard';
+  static const String myServices = '/my-services';
+  static const String bookingManagement = '/booking-management';
+  static const String earnings = '/earnings';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -106,6 +114,26 @@ class AppRouter {
       case marketplace:
         return MaterialPageRoute(
           builder: (_) => const MarketplaceScreen(),
+        );
+
+      case providerDashboard:
+        return MaterialPageRoute(
+          builder: (_) => const ProviderDashboardScreen(),
+        );
+
+      case myServices:
+        return MaterialPageRoute(
+          builder: (_) => const MyServicesScreen(),
+        );
+
+      case bookingManagement:
+        return MaterialPageRoute(
+          builder: (_) => const BookingManagementScreen(),
+        );
+
+      case earnings:
+        return MaterialPageRoute(
+          builder: (_) => const EarningsScreen(),
         );
 
       case sopEditing:
