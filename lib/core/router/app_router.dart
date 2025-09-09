@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../presentation/screens/home/home_screen.dart';
 import '../../presentation/screens/lab_detail/lab_detail_screen.dart';
 import '../../presentation/screens/search/search_screen.dart';
-import '../../presentation/screens/write_review/write_review_screen.dart';
+import '../../presentation/screens/reviews/write_review_screen.dart';
+import '../../presentation/screens/reviews/reviews_browse_screen.dart';
+import '../../presentation/screens/reviews/review_detail_screen.dart';
 import '../../presentation/screens/auth/sign_in_screen.dart';
 import '../../presentation/screens/auth/sign_up_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
@@ -19,12 +21,15 @@ import '../../presentation/screens/provider/my_services_screen.dart';
 import '../../presentation/screens/provider/booking_management_screen.dart';
 import '../../presentation/screens/provider/earnings_screen.dart';
 import '../../data/models/lab.dart';
+import '../../data/models/review.dart';
 
 class AppRouter {
   static const String home = '/';
   static const String labDetail = '/lab-detail';
   static const String search = '/search';
   static const String writeReview = '/write-review';
+  static const String browseReviews = '/browse-reviews';
+  static const String reviewDetails = '/review-details';
   static const String signIn = '/sign-in';
   static const String signUp = '/sign-up';
   static const String profile = '/profile';
@@ -61,9 +66,24 @@ class AppRouter {
         );
 
       case writeReview:
-        final lab = settings.arguments as Lab;
+        final labId = settings.arguments as String?;
         return MaterialPageRoute(
-          builder: (_) => WriteReviewScreen(lab: lab),
+          builder: (_) => WriteReviewScreen(labId: labId),
+        );
+
+      case browseReviews:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => ReviewsBrowseScreen(
+            initialQuery: args?['initialQuery'],
+            initialLabId: args?['initialLabId'],
+          ),
+        );
+
+      case reviewDetails:
+        final review = settings.arguments as Review;
+        return MaterialPageRoute(
+          builder: (_) => ReviewDetailScreen(review: review),
         );
 
       case signIn:

@@ -115,7 +115,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
   Widget _buildDesktopMenu(BuildContext context) {
     return Row(
       children: [
-        _buildNavItem(context, 'Reviews', '/'),
+        _buildNavItem(context, 'Labs', '/search'),
         const SizedBox(width: 32),
         _buildNavItem(context, 'Marketplace', '/marketplace'),
         const SizedBox(width: 32),
@@ -569,7 +569,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildMobileNavItem(context, 'Reviews', '/'),
+                        _buildMobileNavItem(context, 'Labs', '/search'),
                         _buildMobileNavItem(context, 'Services', '/application-services'),
                         _buildMobileNavItem(context, 'Success Stories', '/'),
                         _buildMobileNavItem(context, 'Mock Interview', '/mock-interview'),

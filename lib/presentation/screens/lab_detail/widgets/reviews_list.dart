@@ -50,7 +50,13 @@ class _ReviewsListState extends State<ReviewsList> {
                 ),
                 TextButton(
                   onPressed: () {
-                    // TODO: Show all reviews
+                    Navigator.pushNamed(
+                      context,
+                      '/browse-reviews',
+                      arguments: {
+                        'initialLabId': widget.labId,
+                      },
+                    );
                   },
                   child: const Text('View All'),
                 ),

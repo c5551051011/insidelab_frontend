@@ -72,7 +72,7 @@ class HeroSection extends StatelessWidget {
           Container(
             constraints: const BoxConstraints(maxWidth: 760),
             child: Text(
-              'Get insider reviews from current grad students, professional CV feedback, and mock interviews to ace your graduate school applications.',
+              'Search labs with detailed ratings, read honest reviews from current grad students, and find the perfect research environment for your goals.',
               style: TextStyle(
                 fontSize: isMobile ? 16 : 20,
                 color: AppColors.heroSubtext,
@@ -151,7 +151,7 @@ class HeroSection extends StatelessWidget {
 
   Widget _buildSecondaryButton(BuildContext context) {
     return ElevatedButton(
-      onPressed: () => Navigator.pushNamed(context, '/'),
+      onPressed: () => Navigator.pushNamed(context, '/search'),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,
         foregroundColor: AppColors.primary,
@@ -175,7 +175,7 @@ class HeroSection extends StatelessWidget {
         }),
       ),
       child: const Text(
-        'Browse Reviews',
+        'Search Labs',
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,

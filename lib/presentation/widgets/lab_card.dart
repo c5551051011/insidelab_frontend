@@ -37,6 +37,10 @@ class LabCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
+              if (lab.ratingBreakdown != null) ...[
+                _buildRatingBreakdown(),
+                const SizedBox(height: 16),
+              ],
               _buildTags(),
             ],
           ),
@@ -176,6 +180,82 @@ class LabCard extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Widget _buildRatingBreakdown() {
+    if (lab.ratingBreakdown == null || lab.ratingBreakdown!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Rating Breakdown',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ...lab.ratingBreakdown!.entries.map((entry) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 120,
+                  child: Text(
+                    entry.key,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                RatingStars(rating: entry.value, size: 14),
+                const SizedBox(width: 6),
+                Text(
+                  entry.value.toStringAsFixed(1),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+                Container(
+                  width: 60,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: entry.value / 5.0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: _getRatingColor(entry.value),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Color _getRatingColor(double rating) {
+    if (rating >= 4.5) return AppColors.success;
+    if (rating >= 3.5) return AppColors.warning;
+    return AppColors.error;
   }
 
   Widget _buildRecruitmentTag(String label, Color color) {
