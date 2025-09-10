@@ -111,7 +111,7 @@ class LabHeader extends StatelessWidget {
                       Navigator.pushNamed(
                         context,
                         '/write-review',
-                        arguments: lab,
+                        arguments: lab.id,
                       );
                     },
                     icon: const Icon(Icons.edit),
