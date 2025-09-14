@@ -247,19 +247,12 @@ class AuthProvider extends ChangeNotifier {
           id: result['uid'],
           email: result['email'] ?? '',
           name: result['displayName'] ?? result['email']?.split('@')[0] ?? 'User',
-          verificationStatus: (result['isEduEmail'] ?? false) 
-            ? VerificationStatus.verified 
-            : VerificationStatus.unverified,
+          verificationStatus: VerificationStatus.verified,
           joinedDate: DateTime.now(),
           reviewCount: 0,
           helpfulVotes: 0,
         );
         _isAuthenticated = true;
-        
-        // Show verification notice if not edu email
-        if (!(result['isEduEmail'] ?? false)) {
-          _errorMessage = 'Please use your university email (.edu) for full verification';
-        }
       }
     } catch (error) {
       _errorMessage = GoogleAuthService.getErrorMessage(error);
@@ -284,9 +277,7 @@ class AuthProvider extends ChangeNotifier {
           id: userData['uid'],
           email: userData['email'] ?? '',
           name: userData['displayName'] ?? userData['email']?.split('@')[0] ?? 'User',
-          verificationStatus: (userData['isEduEmail'] ?? false)
-            ? VerificationStatus.verified 
-            : VerificationStatus.unverified,
+          verificationStatus: VerificationStatus.verified,
           joinedDate: DateTime.now(), // In real app, get from backend
           reviewCount: 0, // In real app, get from backend
           helpfulVotes: 0, // In real app, get from backend
@@ -327,11 +318,5 @@ class AuthProvider extends ChangeNotifier {
   void clearError() {
     _errorMessage = null;
     notifyListeners();
-  }
-
-  // Verify edu email
-  Future<bool> verifyEduEmail(String email) async {
-    // Check if email ends with .edu
-    return email.toLowerCase().endsWith('.edu');
   }
 }

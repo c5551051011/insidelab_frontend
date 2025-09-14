@@ -8,9 +8,9 @@ class Validators {
     return emailRegex.hasMatch(email);
   }
 
-  // Edu email validation
+  // Edu email validation (removed .edu requirement for production)
   static bool isEduEmail(String email) {
-    return isValidEmail(email) && email.toLowerCase().endsWith('.edu');
+    return isValidEmail(email);
   }
 
   // Password validation

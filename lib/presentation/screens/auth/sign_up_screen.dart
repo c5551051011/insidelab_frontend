@@ -114,7 +114,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'University Email Required',
+                  'Verification Notice',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: AppColors.info,
@@ -122,7 +122,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Use your .edu email to verify you\'re a real student/researcher',
+                  'Use any valid email address to create your account',
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.info.withOpacity(0.8),
@@ -145,10 +145,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             decoration: const InputDecoration(
-              labelText: 'University Email',
-              hintText: 'your.name@university.edu',
-              prefixIcon: Icon(Icons.school),
-              helperText: 'Must be a valid .edu email address',
+              labelText: 'Email Address',
+              hintText: 'your.email@example.com',
+              prefixIcon: Icon(Icons.email),
+              helperText: 'Must be a valid email address',
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -156,9 +156,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
               }
               if (!Validators.isValidEmail(value)) {
                 return 'Please enter a valid email';
-              }
-              if (!Validators.isEduEmail(value)) {
-                return 'Please use a university email (.edu or equivalent)';
               }
               return null;
             },
@@ -561,25 +558,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
-                  if (authProvider.currentUser?.isVerified == false)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        children: [
-                          const Icon(Icons.info, color: Colors.orange),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Note: For full verification, please use your university email (.edu)',
-                            style: TextStyle(fontSize: 14),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
+                    child: Column(
+                      children: [
+                        Icon(Icons.check_circle, color: AppColors.success),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Your account is ready to use!',
+                          style: TextStyle(fontSize: 14),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
               actions: [
