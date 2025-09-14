@@ -29,10 +29,10 @@ class AppConstants {
   static const List<String> positions = [
     'PhD Student',
     'MS Student',
-    'Undergraduate',
+    'Undergrad',
     'PostDoc',
-    'Research Staff',
-    'Visiting Researcher',
+    'Research Assistant',
+    'faculty',
   ];
 
   // Duration Options
