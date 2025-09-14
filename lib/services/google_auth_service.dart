@@ -1,11 +1,16 @@
 import 'package:google_sign_in/google_sign_in.dart';
 
 class GoogleAuthService {
+  // TODO: Replace with your actual Google Client ID
+  static const String _webClientId = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: [
       'email',
       'profile',
     ],
+    // Configure client ID for different platforms
+    clientId: _webClientId,
   );
   
   static GoogleSignInAccount? _currentUser;

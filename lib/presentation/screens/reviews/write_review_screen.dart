@@ -1,6 +1,7 @@
 // presentation/screens/reviews/write_review_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/review.dart';
 import '../../../data/models/lab.dart';
@@ -25,12 +26,17 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   final _reviewTextController = TextEditingController();
   final _prosController = TextEditingController();
   final _consController = TextEditingController();
+  final _universityController = TextEditingController();
+  final _labController = TextEditingController();
 
   String? _selectedLabId;
+  String? _selectedUniversityId;
+  String? _selectedUniversityName;
+  String? _selectedLabName;
   String _position = 'PhD Student';
   String _duration = '1 year';
   double _overallRating = 4.0;
-  
+
   final Map<String, double> _categoryRatings = {
     'Mentorship': 4.0,
     'Research Environment': 4.0,
@@ -39,15 +45,74 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   };
 
   bool _isSubmitting = false;
+  bool _isCheckingAuth = true;
+  List<Map<String, dynamic>> _filteredUniversities = [];
+  List<Lab> _filteredLabs = [];
 
   @override
   void initState() {
     super.initState();
     _selectedLabId = widget.labId;
+    _checkAuthenticationStatus();
+  }
+
+  void _checkAuthenticationStatus() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    // Use WidgetsBinding to ensure this runs after the build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // First check if already authenticated
+      if (authProvider.isAuthenticated && authProvider.currentUser != null) {
+        if (mounted) {
+          setState(() {
+            _isCheckingAuth = false;
+          });
+          _initializeUniversityList();
+        }
+        return;
+      }
+
+      // If not authenticated, try to refresh auth status
+      try {
+        await authProvider.checkAuthStatus();
+
+        if (!authProvider.isAuthenticated) {
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/sign-in');
+            return;
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _isCheckingAuth = false;
+          });
+          _initializeUniversityList();
+        }
+      } catch (error) {
+        // If auth check fails, redirect to login
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/sign-in');
+        }
+      }
+    });
+  }
+
+  void _initializeUniversityList() {
+    _filteredUniversities = _getDemoUniversities();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isCheckingAuth) {
+      return Scaffold(
+        appBar: const HeaderNavigation(),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: const HeaderNavigation(),
       body: SingleChildScrollView(
@@ -65,6 +130,8 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _buildUniversitySelection(),
+                      const SizedBox(height: 24),
                       _buildLabSelection(),
                       const SizedBox(height: 24),
                       _buildPositionAndDuration(),
@@ -137,6 +204,96 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
     );
   }
 
+  Widget _buildUniversitySelection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'University *',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TypeAheadField<Map<String, dynamic>>(
+          controller: _universityController,
+          builder: (context, controller, focusNode) {
+            return TextField(
+              controller: controller,
+              focusNode: focusNode,
+              decoration: InputDecoration(
+                hintText: 'Search or type university name...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppColors.primary),
+                ),
+                suffixIcon: _universityController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _universityController.clear();
+                            _selectedUniversityId = null;
+                            _selectedUniversityName = null;
+                            _labController.clear();
+                            _selectedLabId = null;
+                            _selectedLabName = null;
+                            _filteredLabs.clear();
+                          });
+                        },
+                      )
+                    : const Icon(Icons.search),
+              ),
+            );
+          },
+          suggestionsCallback: (pattern) async {
+            if (pattern.isEmpty) return _getDemoUniversities();
+            return _getDemoUniversities().where((uni) =>
+                uni['name'].toLowerCase().contains(pattern.toLowerCase()) ||
+                uni['location'].toLowerCase().contains(pattern.toLowerCase())).toList();
+          },
+          itemBuilder: (context, suggestion) {
+            return ListTile(
+              title: Text(suggestion['name']),
+              subtitle: Text(suggestion['location']),
+            );
+          },
+          onSelected: (suggestion) {
+            setState(() {
+              _selectedUniversityId = suggestion['id'];
+              _selectedUniversityName = suggestion['name'];
+              _universityController.text = suggestion['name'];
+              _filteredLabs = _getLabsByUniversity(suggestion['id']);
+              // Clear lab selection when university changes
+              _labController.clear();
+              _selectedLabId = null;
+              _selectedLabName = null;
+            });
+          },
+          emptyBuilder: (context) => Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Text('University not found'),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: () => _showAddUniversityDialog(),
+                  child: const Text('Add New University'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildLabSelection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,52 +307,79 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: DropdownButton<String>(
-            value: _selectedLabId,
-            hint: const Text('Select a lab or professor'),
-            underline: const SizedBox(),
-            isExpanded: true,
-            items: _getDemoLabs().map((lab) {
-              return DropdownMenuItem<String>(
-                value: lab.id,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      lab.name,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    Text(
-                      '${lab.professorName} • ${lab.universityName}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+        TypeAheadField<Lab>(
+          controller: _labController,
+          builder: (context, controller, focusNode) {
+            return TextField(
+              controller: controller,
+              focusNode: focusNode,
+              enabled: _selectedUniversityId != null,
+              decoration: InputDecoration(
+                hintText: _selectedUniversityId != null
+                    ? 'Search or type lab/professor name...'
+                    : 'Please select a university first',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppColors.border),
                 ),
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedLabId = value;
-              });
-            },
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppColors.primary),
+                ),
+                suffixIcon: _labController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _labController.clear();
+                            _selectedLabId = null;
+                            _selectedLabName = null;
+                          });
+                        },
+                      )
+                    : const Icon(Icons.search),
+              ),
+            );
+          },
+          suggestionsCallback: (pattern) async {
+            if (_selectedUniversityId == null) return <Lab>[];
+            if (pattern.isEmpty) return _filteredLabs;
+            return _filteredLabs.where((lab) =>
+                lab.name.toLowerCase().contains(pattern.toLowerCase()) ||
+                lab.professorName.toLowerCase().contains(pattern.toLowerCase())).toList();
+          },
+          itemBuilder: (context, suggestion) {
+            return ListTile(
+              title: Text(suggestion.name),
+              subtitle: Text('Professor: ${suggestion.professorName}'),
+            );
+          },
+          onSelected: (suggestion) {
+            setState(() {
+              _selectedLabId = suggestion.id;
+              _selectedLabName = suggestion.name;
+              _labController.text = '${suggestion.name} - ${suggestion.professorName}';
+            });
+          },
+          emptyBuilder: (context) => Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Text('Lab/Professor not found'),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: () => _showAddLabDialog(),
+                  child: const Text('Add New Lab/Professor'),
+                ),
+              ],
+            ),
           ),
         ),
-        if (_selectedLabId == null)
+        if (_selectedLabId == null && _selectedUniversityId != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
-              'Please select a lab or professor',
+              'Please select or add a lab/professor',
               style: TextStyle(
                 fontSize: 12,
                 color: AppColors.error,
@@ -781,6 +965,108 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
     );
   }
 
+  List<Map<String, dynamic>> _getDemoUniversities() {
+    return [
+      {'id': 'uni1', 'name': 'Stanford University', 'location': 'Stanford, CA'},
+      {'id': 'uni2', 'name': 'MIT', 'location': 'Cambridge, MA'},
+      {'id': 'uni3', 'name': 'UC Berkeley', 'location': 'Berkeley, CA'},
+      {'id': 'uni4', 'name': 'Harvard University', 'location': 'Cambridge, MA'},
+      {'id': 'uni5', 'name': 'Carnegie Mellon University', 'location': 'Pittsburgh, PA'},
+      {'id': 'uni6', 'name': 'University of Washington', 'location': 'Seattle, WA'},
+    ];
+  }
+
+  List<Lab> _getLabsByUniversity(String universityId) {
+    final allLabs = _getDemoLabs();
+    return allLabs.where((lab) => lab.universityId == universityId).toList();
+  }
+
+  void _showAddUniversityDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add New University'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              decoration: const InputDecoration(labelText: 'University Name'),
+              onChanged: (value) => _selectedUniversityName = value,
+            ),
+            const SizedBox(height: 16),
+            const Text('This will be added to our database for review.'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (_selectedUniversityName?.isNotEmpty == true) {
+                setState(() {
+                  _selectedUniversityId = 'new_${DateTime.now().millisecondsSinceEpoch}';
+                  _universityController.text = _selectedUniversityName!;
+                  _filteredLabs = []; // No labs for new university initially
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddLabDialog() {
+    String? labName;
+    String? professorName;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add New Lab/Professor'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              decoration: const InputDecoration(labelText: 'Lab Name'),
+              onChanged: (value) => labName = value,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              decoration: const InputDecoration(labelText: 'Professor Name'),
+              onChanged: (value) => professorName = value,
+            ),
+            const SizedBox(height: 16),
+            const Text('This will be added to our database for review.'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (labName?.isNotEmpty == true && professorName?.isNotEmpty == true) {
+                setState(() {
+                  _selectedLabId = 'new_${DateTime.now().millisecondsSinceEpoch}';
+                  _selectedLabName = labName!;
+                  _labController.text = '$labName - $professorName';
+                });
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
   List<Lab> _getDemoLabs() {
     return [
       Lab(
@@ -826,11 +1112,20 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   }
 
   void _submitReview() async {
-    if (!_formKey.currentState!.validate() || _selectedLabId == null) {
-      if (_selectedLabId == null) {
+    if (!_formKey.currentState!.validate() ||
+        _selectedUniversityId == null ||
+        _selectedLabId == null) {
+      String errorMessage = '';
+      if (_selectedUniversityId == null) {
+        errorMessage = 'Please select a university';
+      } else if (_selectedLabId == null) {
+        errorMessage = 'Please select a lab or professor';
+      }
+
+      if (errorMessage.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a lab or professor'),
+          SnackBar(
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
           ),
         );
@@ -905,6 +1200,8 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
     _reviewTextController.dispose();
     _prosController.dispose();
     _consController.dispose();
+    _universityController.dispose();
+    _labController.dispose();
     super.dispose();
   }
 }

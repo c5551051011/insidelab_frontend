@@ -4,7 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8000/api/v1';
+  // TODO: Update this to your actual backend URL
+  static const String baseUrl = 'http://127.0.0.1:8000/api/v1';
   static String? _authToken;
 
   // Token management
@@ -68,11 +69,17 @@ class ApiService {
       {bool requireAuth = false}
       ) async {
     try {
+      print('Making POST request to: $baseUrl$endpoint');
+      print('Request data: ${json.encode(data)}');
+
       final response = await http.post(
         Uri.parse('$baseUrl$endpoint'),
         headers: await _getHeaders(requireAuth: requireAuth),
         body: json.encode(data),
       );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return json.decode(response.body);
@@ -80,6 +87,10 @@ class ApiService {
         throw ApiException(response.statusCode, response.body);
       }
     } catch (e) {
+      print('API Error: $e');
+      if (e is ApiException) {
+        rethrow;
+      }
       throw ApiException(0, e.toString());
     }
   }

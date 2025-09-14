@@ -39,6 +39,7 @@ dependencies:
   # Forms & Validation
   flutter_form_builder: ^9.1.1
   form_builder_validators: ^11.0.0
+  flutter_typeahead: ^5.2.0
 
   # Charts & Visualization
   fl_chart: ^0.71.0  # 버전 다운그레이드

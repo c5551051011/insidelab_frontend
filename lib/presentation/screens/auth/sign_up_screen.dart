@@ -24,6 +24,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   String? _selectedPosition;
   String? _department;
+  final _nameController = TextEditingController();
+  final _departmentController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreedToTerms = false;
@@ -183,6 +185,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
             },
           ),
           const SizedBox(height: 20),
+          TextFormField(
+            controller: _nameController,
+            decoration: const InputDecoration(
+              labelText: 'Full Name',
+              hintText: 'Enter your full name',
+              prefixIcon: Icon(Icons.person_outline),
+              helperText: 'Your real name (will not be shown publicly)',
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your name';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
           DropdownButtonFormField<String>(
             value: _selectedPosition,
             decoration: const InputDecoration(
@@ -204,6 +222,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
             validator: (value) {
               if (value == null) {
                 return 'Please select your position';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+          TextFormField(
+            controller: _departmentController,
+            decoration: const InputDecoration(
+              labelText: 'Department',
+              hintText: 'e.g., Computer Science, Biology',
+              prefixIcon: Icon(Icons.school),
+              helperText: 'Your academic department',
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your department';
               }
               return null;
             },
@@ -393,10 +427,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
         await authProvider.signUp({
           'email': _emailController.text.trim(),
           'username': _usernameController.text.trim(),
+          'name': _nameController.text.trim(),
           'password': _passwordController.text,
           'password_confirm': _confirmPasswordController.text,
           'position': _selectedPosition,
-          'department': _department,
+          'department': _departmentController.text.trim(),
         });
 
         if (mounted) {
@@ -448,11 +483,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
         }
       } catch (e) {
         if (mounted) {
+          final errorMessage = authProvider.errorMessage ??
+                              'Sign up failed. Please check your connection and try again.';
           Helpers.showSnackBar(
             context,
-            'Sign up failed. This email might already be registered.',
+            errorMessage,
             isError: true,
           );
+          authProvider.clearError();
         }
       }
     }
@@ -501,7 +539,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   )
                 : Image.asset(
-                    'assets/icons/google_logo.png', // You'll need to add this asset
+                    'icons/google_logo.png', // You'll need to add this asset
                     height: 20,
                     width: 20,
                     errorBuilder: (context, error, stackTrace) => Icon(
@@ -607,6 +645,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void dispose() {
     _emailController.dispose();
     _usernameController.dispose();
+    _nameController.dispose();
+    _departmentController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();

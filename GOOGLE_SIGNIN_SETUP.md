@@ -1,133 +1,88 @@
-# Google Sign-In Setup Instructions (Simplified Version)
+# Google Sign-In Setup Guide
 
-Your app now uses Google Sign-In directly without Firebase, making setup much simpler!
+## Overview
+To enable Google Sign-In for the InsideLab application, you need to configure Google Cloud Console and update the client IDs in your Flutter app.
 
-## Prerequisites
+## Step 1: Google Cloud Console Setup
 
-1. **Google Cloud Console Account**: You need access to [Google Cloud Console](https://console.cloud.google.com/)
+1. **Go to Google Cloud Console**: https://console.cloud.google.com/
+2. **Create or Select a Project**:
+   - Create a new project or select an existing one
+   - Note your project ID
 
-## Step 1: Create Google Cloud Project
+3. **Enable Google Sign-In API**:
+   - Go to "APIs & Services" > "Library"
+   - Search for "Google Sign-In API" and enable it
 
-### 1.1 Create New Project
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Click "Select a project" → "New Project"
-3. Enter project name: `insidelab-app`
-4. Create the project
+4. **Configure OAuth Consent Screen**:
+   - Go to "APIs & Services" > "OAuth consent screen"
+   - Choose "External" user type
+   - Fill in required fields:
+     - App name: "InsideLab"
+     - User support email: Your email
+     - App domain: Your domain (if applicable)
+     - Developer contact email: Your email
 
-### 1.2 Enable Google Sign-In API
-1. Navigate to **APIs & Services** → **Library**
-2. Search for "Google Sign-In"
-3. Click on **Google Sign-In API**
-4. Click **Enable**
+5. **Create OAuth 2.0 Credentials**:
+   - Go to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "OAuth 2.0 Client IDs"
+   - Application type: "Web application"
+   - Name: "InsideLab Web Client"
+   - Authorized origins: Add your domains:
+     - `http://localhost:3000` (for development)
+     - `https://yourdomain.com` (for production)
+   - Copy the generated Client ID
 
-## Step 2: Create OAuth Credentials
+## Step 2: Update Flutter Configuration
 
-### 2.1 Create OAuth 2.0 Client IDs
-1. Go to **APIs & Services** → **Credentials**
-2. Click **+ CREATE CREDENTIALS** → **OAuth 2.0 Client IDs**
+### Web Configuration
 
-### 2.2 Android Client ID
-1. **Application type**: Android
-2. **Name**: `InsideLab Android`
-3. **Package name**: `com.insidelab.app` (check `android/app/build.gradle`)
-4. **SHA-1 certificate**: Get it by running:
-   ```bash
-   cd android
-   ./gradlew signingReport
+1. **Update web/index.html**:
+   ```html
+   <!-- Replace YOUR_GOOGLE_CLIENT_ID with your actual Client ID -->
+   <meta name="google-signin-client_id" content="123456789-abcdefg.apps.googleusercontent.com">
    ```
-   Copy the SHA1 from the debug keystore
-5. Click **CREATE**
 
-### 2.3 iOS Client ID  
-1. **Application type**: iOS
-2. **Name**: `InsideLab iOS`
-3. **Bundle ID**: `com.insidelab.app` (check `ios/Runner/Info.plist`)
-4. Click **CREATE**
+2. **Update lib/services/google_auth_service.dart**:
+   ```dart
+   // Replace with your actual Google Client ID
+   static const String _webClientId = '123456789-abcdefg.apps.googleusercontent.com';
+   ```
 
-### 2.4 Web Client ID (Optional)
-1. **Application type**: Web application
-2. **Name**: `InsideLab Web`
-3. Click **CREATE**
+## Step 3: Test the Integration
 
-## Step 3: iOS Configuration (Optional)
+1. **Start your Flutter web app**:
+   ```bash
+   flutter run -d chrome
+   ```
 
-### 3.1 Configure iOS URL Schemes (if using iOS)
-1. Open Xcode: `open ios/Runner.xcworkspace`
-2. Select `Runner` → `Info` → `URL Types`
-3. Add a new URL Type:
-   - **Identifier**: `com.googleusercontent.apps.YOUR_REVERSED_CLIENT_ID`
-   - **URL Schemes**: Your reversed iOS client ID
+2. **Try Google Sign-In**:
+   - Go to sign-in or sign-up page
+   - Click "Continue with Google"
+   - Should open Google authentication flow
 
-**Example:**
-If your iOS client ID is: `123456789-abcdef.apps.googleusercontent.com`
-Then URL scheme is: `com.googleusercontent.apps.123456789-abcdef`
+## Troubleshooting
 
-## Step 4: Test the Setup
+### Common Issues:
 
-### 4.1 Run Flutter Dependencies
-```bash
-flutter pub get
-flutter clean
-```
+1. **"ClientID not set" Error**:
+   - Make sure both `web/index.html` and `google_auth_service.dart` have the correct Client ID
+   - Client ID format: `numbers-letters.apps.googleusercontent.com`
 
-### 4.2 Test on Device/Emulator
-```bash
-# Android
-flutter run
+2. **"origin_mismatch" Error**:
+   - Add your domain to "Authorized JavaScript origins" in Google Cloud Console
+   - For development: `http://127.0.0.1:PORT`
+   - For production: `https://yourdomain.com`
 
-# iOS (requires physical device for Google Sign-In)
-flutter run
-```
+## Current Status
 
-### 4.3 Verify Authentication
-1. Launch the app
-2. Go to Sign In screen
-3. Tap "Continue with Google"
-4. Complete Google authentication
-5. Check if user is signed in successfully
+✅ Google Sign-In configuration placeholders added
+⚠️  **Action Required**: Replace `YOUR_GOOGLE_CLIENT_ID` with your actual Google Client ID
 
-## Common Issues & Solutions
+## Files Modified
 
-### Android Issues
-- **Sign-in fails**: Verify SHA-1 certificate matches the one in Google Cloud Console
-- **Package name mismatch**: Check `android/app/build.gradle` applicationId matches OAuth client
-- **Network error**: Check internet connection and Google Cloud project settings
+- `web/index.html`: Added Google Sign-In meta tag
+- `lib/services/google_auth_service.dart`: Added client ID configuration
+- `lib/data/providers/data_providers.dart`: Added Google Sign-In backend integration
 
-### iOS Issues
-- **Sign-in popup doesn't appear**: Verify URL schemes are correctly configured in Xcode
-- **Invalid client error**: Check bundle ID matches the OAuth client
-- **Simulator issues**: Google Sign-In requires physical iOS device for testing
-
-### General Issues
-- **Google Sign-In not working**: Verify OAuth client IDs are created correctly
-- **Dependency conflicts**: Run `flutter clean` and `flutter pub get`
-
-## Security Notes
-
-1. **Restrict API keys in Google Cloud Console** for production
-2. **Use different Google Cloud projects for development/production**
-3. **Keep OAuth client secrets secure**
-
-## Educational Email Verification
-
-The app automatically detects educational emails (.edu, .ac.uk, etc.) and marks users as verified. Non-educational emails can still sign in but won't have full verification status.
-
-## Next Steps
-
-After Google Sign-In is working:
-1. Set up user profile sync with your backend
-2. Implement proper user role management  
-3. Add analytics and crash reporting
-4. Configure production Google Cloud environment
-
-## Support
-
-If you encounter issues:
-1. Check Google Cloud Console logs
-2. Review Flutter and Google Sign-In documentation
-3. Check Google Cloud Console for API quotas
-4. Test on physical devices for iOS
-
----
-
-**Important**: This simplified setup doesn't require Firebase configuration files!
+Once you complete the Google Cloud Console setup and update the Client IDs, Google Sign-In will work properly!
