@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../screens/home/widgets/search_bar_widget.dart';
 
 class HeroSection extends StatelessWidget {
   const HeroSection({Key? key}) : super(key: key);
@@ -39,8 +40,10 @@ class HeroSection extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildHeroContent(context, isMobile),
-                SizedBox(height: isMobile ? 40 : 56),
-                _buildHeroButtons(context, isMobile),
+                SizedBox(height: isMobile ? 32 : 40),
+                _buildSearchSection(context, isMobile),
+                SizedBox(height: isMobile ? 24 : 32),
+                _buildActionButtons(context, isMobile),
               ],
             ),
           ),
@@ -87,14 +90,38 @@ class HeroSection extends StatelessWidget {
     );
   }
 
-  Widget _buildHeroButtons(BuildContext context, bool isMobile) {
+  Widget _buildSearchSection(BuildContext context, bool isMobile) {
+    return Column(
+      children: [
+        // Search Bar
+        const SearchBarWidget(),
+        SizedBox(height: isMobile ? 12 : 16),
+        // Help Guide
+        Container(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: Text(
+            'Search by university, professor, lab name, or research area',
+            style: TextStyle(
+              fontSize: isMobile ? 14 : 16,
+              color: AppColors.heroSubtext.withOpacity(0.8),
+              height: 1.4,
+              fontFamily: 'Inter',
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, bool isMobile) {
     if (isMobile) {
       // Stack buttons vertically on mobile
       return Column(
         children: [
-          _buildSecondaryButton(context),
-          const SizedBox(height: 16),
-          _buildPrimaryButton(context),
+          _buildWriteReviewButton(context),
+          const SizedBox(height: 12),
+          _buildMockInterviewButton(context),
         ],
       );
     } else {
@@ -102,16 +129,53 @@ class HeroSection extends StatelessWidget {
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildSecondaryButton(context),
+          _buildWriteReviewButton(context),
           const SizedBox(width: 16),
-          _buildPrimaryButton(context),
+          _buildMockInterviewButton(context),
         ],
       );
     }
   }
 
-  Widget _buildPrimaryButton(BuildContext context) {
-    return OutlinedButton(
+  Widget _buildWriteReviewButton(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: () => Navigator.pushNamed(context, '/write-review'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        elevation: 2,
+      ).copyWith(
+        backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
+          if (states.contains(MaterialState.hovered)) {
+            return AppColors.primary.withOpacity(0.9);
+          }
+          return AppColors.primary;
+        }),
+        overlayColor: MaterialStateProperty.resolveWith<Color>((states) {
+          if (states.contains(MaterialState.hovered)) {
+            return Colors.white.withOpacity(0.1);
+          }
+          return Colors.transparent;
+        }),
+      ),
+      icon: const Icon(Icons.rate_review, size: 20),
+      label: const Text(
+        'Write Review',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'Inter',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMockInterviewButton(BuildContext context) {
+    return OutlinedButton.icon(
       onPressed: () => Navigator.pushNamed(context, '/mock-interview'),
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.heroText,
@@ -119,7 +183,7 @@ class HeroSection extends StatelessWidget {
           color: AppColors.heroText,
           width: 2,
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
@@ -138,44 +202,9 @@ class HeroSection extends StatelessWidget {
           return Colors.transparent;
         }),
       ),
-      child: const Text(
+      icon: const Icon(Icons.videocam, size: 20),
+      label: const Text(
         'Book Mock Interview',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          fontFamily: 'Inter',
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSecondaryButton(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () => Navigator.pushNamed(context, '/search'),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.primary,
-        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        elevation: 0,
-      ).copyWith(
-        backgroundColor: MaterialStateProperty.resolveWith<Color>((states) {
-          if (states.contains(MaterialState.hovered)) {
-            return Colors.grey[50]!;
-          }
-          return Colors.white;
-        }),
-        overlayColor: MaterialStateProperty.resolveWith<Color>((states) {
-          if (states.contains(MaterialState.hovered)) {
-            return AppColors.primary.withOpacity(0.05);
-          }
-          return Colors.transparent;
-        }),
-      ),
-      child: const Text(
-        'Search Labs',
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,

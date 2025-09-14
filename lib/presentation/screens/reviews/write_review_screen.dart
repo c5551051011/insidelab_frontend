@@ -207,90 +207,109 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   }
 
   Widget _buildPositionAndDuration() {
-    return Row(
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isNarrow = screenWidth < 600;
+
+    if (isNarrow) {
+      // Stack vertically on narrow screens
+      return Column(
+        children: [
+          _buildPositionDropdown(),
+          const SizedBox(height: 16),
+          _buildDurationDropdown(),
+        ],
+      );
+    } else {
+      // Side by side on wider screens
+      return Row(
+        children: [
+          Expanded(child: _buildPositionDropdown()),
+          const SizedBox(width: 16),
+          Expanded(child: _buildDurationDropdown()),
+        ],
+      );
+    }
+  }
+
+  Widget _buildPositionDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Your Position *',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.border),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: DropdownButton<String>(
-                  value: _position,
-                  underline: const SizedBox(),
-                  isExpanded: true,
-                  items: const [
-                    DropdownMenuItem(value: 'PhD Student', child: Text('PhD Student')),
-                    DropdownMenuItem(value: 'MS Student', child: Text('MS Student')),
-                    DropdownMenuItem(value: 'Undergrad', child: Text('Undergraduate Student')),
-                    DropdownMenuItem(value: 'PostDoc', child: Text('PostDoc')),
-                    DropdownMenuItem(value: 'Research Assistant', child: Text('Research Assistant')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _position = value!;
-                    });
-                  },
-                ),
-              ),
-            ],
+        Text(
+          'Your Position *',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Duration *',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.border),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: DropdownButton<String>(
-                  value: _duration,
-                  underline: const SizedBox(),
-                  isExpanded: true,
-                  items: const [
-                    DropdownMenuItem(value: '< 6 months', child: Text('Less than 6 months')),
-                    DropdownMenuItem(value: '6 months', child: Text('6 months')),
-                    DropdownMenuItem(value: '1 year', child: Text('1 year')),
-                    DropdownMenuItem(value: '2 years', child: Text('2 years')),
-                    DropdownMenuItem(value: '3 years', child: Text('3 years')),
-                    DropdownMenuItem(value: '4+ years', child: Text('4+ years')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _duration = value!;
-                    });
-                  },
-                ),
-              ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: DropdownButton<String>(
+            value: _position,
+            underline: const SizedBox(),
+            isExpanded: true,
+            items: const [
+              DropdownMenuItem(value: 'PhD Student', child: Text('PhD Student')),
+              DropdownMenuItem(value: 'MS Student', child: Text('MS Student')),
+              DropdownMenuItem(value: 'Undergrad', child: Text('Undergraduate Student')),
+              DropdownMenuItem(value: 'PostDoc', child: Text('PostDoc')),
+              DropdownMenuItem(value: 'Research Assistant', child: Text('Research Assistant')),
             ],
+            onChanged: (value) {
+              setState(() {
+                _position = value!;
+              });
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDurationDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Duration *',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: DropdownButton<String>(
+            value: _duration,
+            underline: const SizedBox(),
+            isExpanded: true,
+            items: const [
+              DropdownMenuItem(value: '< 6 months', child: Text('Less than 6 months')),
+              DropdownMenuItem(value: '6 months', child: Text('6 months')),
+              DropdownMenuItem(value: '1 year', child: Text('1 year')),
+              DropdownMenuItem(value: '2 years', child: Text('2 years')),
+              DropdownMenuItem(value: '3 years', child: Text('3 years')),
+              DropdownMenuItem(value: '4+ years', child: Text('4+ years')),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _duration = value!;
+              });
+            },
           ),
         ),
       ],
@@ -410,61 +429,134 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
 
   Widget _buildCategoryRatingRow(String category) {
     final rating = _categoryRatings[category]!;
-    return Row(
-      children: [
-        SizedBox(
-          width: 140,
-          child: Text(
-            category,
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isNarrow = screenWidth < 600;
+
+    if (isNarrow) {
+      // Stack vertically on narrow screens
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  category,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              RatingStars(rating: rating, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                rating.toStringAsFixed(1),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: List.generate(10, (index) {
+              final ratingValue = (index + 1) * 0.5;
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _categoryRatings[category] = ratingValue;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: rating == ratingValue ? AppColors.primary : Colors.transparent,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(
+                      color: rating == ratingValue ? AppColors.primary : AppColors.border,
+                    ),
+                  ),
+                  child: Text(
+                    ratingValue.toString(),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: rating == ratingValue ? Colors.white : AppColors.textTertiary,
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ),
+        ],
+      );
+    } else {
+      // Horizontal layout for wider screens
+      return Row(
+        children: [
+          SizedBox(
+            width: 140,
+            child: Text(
+              category,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          RatingStars(rating: rating, size: 20),
+          const SizedBox(width: 16),
+          Text(
+            rating.toStringAsFixed(1),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: AppColors.textPrimary,
             ),
           ),
-        ),
-        const SizedBox(width: 16),
-        RatingStars(rating: rating, size: 20),
-        const SizedBox(width: 16),
-        Text(
-          rating.toStringAsFixed(1),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const Spacer(),
-        Row(
-          children: List.generate(10, (index) {
-            final ratingValue = (index + 1) * 0.5;
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _categoryRatings[category] = ratingValue;
-                });
-              },
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 2),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: rating == ratingValue ? AppColors.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-                child: Text(
-                  ratingValue.toString(),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: rating == ratingValue ? Colors.white : AppColors.textTertiary,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Wrap(
+              spacing: 2,
+              children: List.generate(10, (index) {
+                final ratingValue = (index + 1) * 0.5;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _categoryRatings[category] = ratingValue;
+                    });
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 1),
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: rating == ratingValue ? AppColors.primary : Colors.transparent,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    child: Text(
+                      ratingValue.toString(),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: rating == ratingValue ? Colors.white : AppColors.textTertiary,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            );
-          }),
-        ),
-      ],
-    );
+                );
+              }),
+            ),
+          ),
+        ],
+      );
+    }
   }
 
   Widget _buildReviewText() {
@@ -517,70 +609,89 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   }
 
   Widget _buildProsCons() {
-    return Row(
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isNarrow = screenWidth < 600;
+
+    if (isNarrow) {
+      // Stack vertically on narrow screens
+      return Column(
+        children: [
+          _buildProsField(),
+          const SizedBox(height: 16),
+          _buildConsField(),
+        ],
+      );
+    } else {
+      // Side by side on wider screens
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: _buildProsField()),
+          const SizedBox(width: 16),
+          Expanded(child: _buildConsField()),
+        ],
+      );
+    }
+  }
+
+  Widget _buildProsField() {
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Pros',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.success,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _prosController,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: 'List the positive aspects (one per line)',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColors.success.withOpacity(0.3)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColors.success),
-                  ),
-                ),
-              ),
-            ],
+        Text(
+          'Pros',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.success,
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Cons',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.error,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _consController,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: 'List any drawbacks (one per line)',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColors.error.withOpacity(0.3)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: AppColors.error),
-                  ),
-                ),
-              ),
-            ],
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _prosController,
+          maxLines: 4,
+          decoration: InputDecoration(
+            hintText: 'List the positive aspects (one per line)',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColors.success.withOpacity(0.3)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColors.success),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildConsField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Cons',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.error,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _consController,
+          maxLines: 4,
+          decoration: InputDecoration(
+            hintText: 'List any drawbacks (one per line)',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColors.error.withOpacity(0.3)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColors.error),
+            ),
           ),
         ),
       ],
