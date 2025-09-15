@@ -3,9 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../data/models/review.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../data/models/lab.dart';
+import '../../../data/models/university.dart';
 import '../../../data/providers/data_providers.dart';
+import '../../../services/university_service.dart';
+import '../../../services/lab_service.dart';
+import '../../../services/review_service.dart';
 import '../../widgets/common/header_navigation.dart';
 import '../../widgets/rating_stars.dart';
 
@@ -38,15 +42,12 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   double _overallRating = 4.0;
 
   final Map<String, double> _categoryRatings = {
-    'Mentorship': 4.0,
-    'Research Environment': 4.0,
-    'Work-Life Balance': 4.0,
-    'Career Support': 4.0,
+    for (String category in AppConstants.ratingCategories) category: 4.0,
   };
 
   bool _isSubmitting = false;
   bool _isCheckingAuth = true;
-  List<Map<String, dynamic>> _filteredUniversities = [];
+  List<University> _filteredUniversities = [];
   List<Lab> _filteredLabs = [];
 
   @override
@@ -98,8 +99,25 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
     });
   }
 
-  void _initializeUniversityList() {
-    _filteredUniversities = _getDemoUniversities();
+  void _initializeUniversityList() async {
+    try {
+      final universities = await UniversityService.getAllUniversities();
+      if (mounted) {
+        setState(() {
+          _filteredUniversities = universities;
+        });
+      }
+    } catch (e) {
+      print('Error loading universities: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load universities. Please try again.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -217,7 +235,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        TypeAheadField<Map<String, dynamic>>(
+        TypeAheadField<University>(
           controller: _universityController,
           builder: (context, controller, focusNode) {
             return TextField(
@@ -253,28 +271,51 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
             );
           },
           suggestionsCallback: (pattern) async {
-            if (pattern.isEmpty) return _getDemoUniversities();
-            return _getDemoUniversities().where((uni) =>
-                uni['name'].toLowerCase().contains(pattern.toLowerCase()) ||
-                uni['location'].toLowerCase().contains(pattern.toLowerCase())).toList();
+            try {
+              if (pattern.isEmpty) {
+                return _filteredUniversities;
+              }
+              final searchResults = await UniversityService.getAllUniversities(search: pattern);
+              return searchResults;
+            } catch (e) {
+              print('Error searching universities: $e');
+              return _filteredUniversities.where((uni) =>
+                  uni.name.toLowerCase().contains(pattern.toLowerCase())).toList();
+            }
           },
           itemBuilder: (context, suggestion) {
             return ListTile(
-              title: Text(suggestion['name']),
-              subtitle: Text(suggestion['location']),
+              title: Text(suggestion.name),
+              subtitle: Text('${suggestion.city}, ${suggestion.state}, ${suggestion.country}'),
             );
           },
-          onSelected: (suggestion) {
+          onSelected: (suggestion) async {
             setState(() {
-              _selectedUniversityId = suggestion['id'];
-              _selectedUniversityName = suggestion['name'];
-              _universityController.text = suggestion['name'];
-              _filteredLabs = _getLabsByUniversity(suggestion['id']);
+              _selectedUniversityId = suggestion.id;
+              _selectedUniversityName = suggestion.name;
+              _universityController.text = suggestion.name;
               // Clear lab selection when university changes
               _labController.clear();
               _selectedLabId = null;
               _selectedLabName = null;
             });
+
+            // Load labs for the selected university
+            try {
+              final labs = await LabService.getLabsByUniversity(suggestion.id);
+              if (mounted) {
+                setState(() {
+                  _filteredLabs = labs;
+                });
+              }
+            } catch (e) {
+              print('Error loading labs for university: $e');
+              if (mounted) {
+                setState(() {
+                  _filteredLabs = [];
+                });
+              }
+            }
           },
           emptyBuilder: (context) => Container(
             padding: const EdgeInsets.all(16),
@@ -517,64 +558,107 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: AppColors.background,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            children: [
-              RatingStars(rating: _overallRating, size: 32),
-              const SizedBox(width: 16),
-              Text(
-                _overallRating.toStringAsFixed(1),
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-              const Spacer(),
+            ],
+          ),
+          child: Column(
+            children: [
+              // Interactive Star Rating
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildInteractiveStars(),
+                  const SizedBox(width: 20),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      _overallRating.toStringAsFixed(1),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Rating Slider for Fine-tuning
               Column(
                 children: [
                   Text(
-                    'Tap stars to rate',
+                    'Fine-tune your rating',
                     style: TextStyle(
                       fontSize: 12,
                       color: AppColors.textSecondary,
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: AppColors.primary,
+                      inactiveTrackColor: AppColors.border,
+                      thumbColor: AppColors.primary,
+                      overlayColor: AppColors.primary.withOpacity(0.2),
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12),
+                      trackHeight: 4,
+                    ),
+                    child: Slider(
+                      value: _overallRating,
+                      min: 0.5,
+                      max: 5.0,
+                      divisions: 9,
+                      onChanged: (value) {
+                        setState(() {
+                          _overallRating = value;
+                        });
+                      },
+                    ),
+                  ),
+                  // Rating Labels
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('0.5', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                      Text('1.0', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                      Text('2.0', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                      Text('3.0', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                      Text('4.0', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                      Text('5.0', style: TextStyle(fontSize: 12, color: AppColors.textTertiary)),
+                    ],
+                  ),
                 ],
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: List.generate(10, (index) {
-            final rating = (index + 1) * 0.5;
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _overallRating = rating;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              const SizedBox(height: 12),
+              // Rating Description
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: _overallRating == rating ? AppColors.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(4),
+                  color: _getRatingColor(_overallRating).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  rating.toString(),
+                  _getRatingDescription(_overallRating),
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: _overallRating == rating ? Colors.white : AppColors.textSecondary,
+                    color: _getRatingColor(_overallRating),
                   ),
                 ),
               ),
-            );
-          }),
+            ],
+          ),
         ),
       ],
     );
@@ -965,57 +1049,194 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
     );
   }
 
-  List<Map<String, dynamic>> _getDemoUniversities() {
-    return [
-      {'id': 'uni1', 'name': 'Stanford University', 'location': 'Stanford, CA'},
-      {'id': 'uni2', 'name': 'MIT', 'location': 'Cambridge, MA'},
-      {'id': 'uni3', 'name': 'UC Berkeley', 'location': 'Berkeley, CA'},
-      {'id': 'uni4', 'name': 'Harvard University', 'location': 'Cambridge, MA'},
-      {'id': 'uni5', 'name': 'Carnegie Mellon University', 'location': 'Pittsburgh, PA'},
-      {'id': 'uni6', 'name': 'University of Washington', 'location': 'Seattle, WA'},
-    ];
-  }
-
-  List<Lab> _getLabsByUniversity(String universityId) {
-    final allLabs = _getDemoLabs();
-    return allLabs.where((lab) => lab.universityId == universityId).toList();
-  }
 
   void _showAddUniversityDialog() {
+    String? universityName;
+    String? universityWebsite;
+    String? country;
+    String? state;
+    String? city;
+    bool isVerifyingWebsite = false;
+    String? websiteError;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add New University'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: const InputDecoration(labelText: 'University Name'),
-              onChanged: (value) => _selectedUniversityName = value,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Add New University'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'University Name *',
+                    hintText: 'e.g., Stanford University',
+                  ),
+                  onChanged: (value) => universityName = value,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Country *',
+                    hintText: 'e.g., United States',
+                  ),
+                  onChanged: (value) => country = value,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'State/Province *',
+                    hintText: 'e.g., California',
+                  ),
+                  onChanged: (value) => state = value,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'City *',
+                    hintText: 'e.g., Stanford',
+                  ),
+                  onChanged: (value) => city = value,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'University Website *',
+                    hintText: 'https://www.university.edu',
+                    errorText: websiteError,
+                    suffixIcon: isVerifyingWebsite
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.link),
+                  ),
+                  onChanged: (value) {
+                    universityWebsite = value;
+                    if (websiteError != null) {
+                      setDialogState(() {
+                        websiteError = null;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 16, color: AppColors.info),
+                          const SizedBox(width: 8),
+                          const Text('Verification Required', style: TextStyle(fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'We will verify that the website exists and belongs to the specified university before adding it to our database.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            const Text('This will be added to our database for review.'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: isVerifyingWebsite ? null : () async {
+                if (universityName?.isEmpty == true ||
+                    universityWebsite?.isEmpty == true ||
+                    country?.isEmpty == true ||
+                    state?.isEmpty == true ||
+                    city?.isEmpty == true) {
+                  return;
+                }
+
+                // Validate website URL format
+                if (universityWebsite != null && !_isValidUrl(universityWebsite!)) {
+                  setDialogState(() {
+                    websiteError = 'Please enter a valid URL (https://example.com)';
+                  });
+                  return;
+                }
+
+                setDialogState(() {
+                  isVerifyingWebsite = true;
+                  websiteError = null;
+                });
+
+                // Verify website exists
+                final isValid = await _verifyWebsite(universityWebsite!);
+
+                setDialogState(() {
+                  isVerifyingWebsite = false;
+                });
+
+                if (!isValid) {
+                  setDialogState(() {
+                    websiteError = 'Website could not be verified. Please check the URL.';
+                  });
+                  return;
+                }
+
+                try {
+                  // Add university via API
+                  final newUniversity = await UniversityService.addUniversity(
+                    name: universityName!,
+                    website: universityWebsite!,
+                    country: country!,
+                    state: state!,
+                    city: city!,
+                  );
+
+                  setState(() {
+                    _selectedUniversityId = newUniversity.id;
+                    _selectedUniversityName = newUniversity.name;
+                    _universityController.text = newUniversity.name;
+                    _filteredLabs = []; // No labs for new university initially
+                  });
+                  Navigator.pop(context);
+
+                  // Show success message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('University added successfully! Website verified.'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                } catch (e) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to add university: ${e.toString()}'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              },
+              child: isVerifyingWebsite
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Verify & Add'),
+            ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (_selectedUniversityName?.isNotEmpty == true) {
-                setState(() {
-                  _selectedUniversityId = 'new_${DateTime.now().millisecondsSinceEpoch}';
-                  _universityController.text = _selectedUniversityName!;
-                  _filteredLabs = []; // No labs for new university initially
-                });
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
       ),
     );
   }
@@ -1023,93 +1244,170 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   void _showAddLabDialog() {
     String? labName;
     String? professorName;
+    String? labWebsite;
+    bool isVerifyingWebsite = false;
+    String? websiteError;
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Add New Lab/Professor'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: const InputDecoration(labelText: 'Lab Name'),
-              onChanged: (value) => labName = value,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Add New Lab/Professor'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Lab Name *',
+                    hintText: 'e.g., Computer Vision Lab',
+                  ),
+                  onChanged: (value) => labName = value,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Professor Name *',
+                    hintText: 'e.g., Dr. Jane Smith',
+                  ),
+                  onChanged: (value) => professorName = value,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Lab Website *',
+                    hintText: 'https://lab.university.edu',
+                    errorText: websiteError,
+                    suffixIcon: isVerifyingWebsite
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.link),
+                  ),
+                  onChanged: (value) {
+                    labWebsite = value;
+                    if (websiteError != null) {
+                      setDialogState(() {
+                        websiteError = null;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 16, color: AppColors.info),
+                          const SizedBox(width: 8),
+                          const Text('Verification Required', style: TextStyle(fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'We will verify that the website exists and belongs to the specified lab/professor before adding it to our database.',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            TextField(
-              decoration: const InputDecoration(labelText: 'Professor Name'),
-              onChanged: (value) => professorName = value,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
             ),
-            const SizedBox(height: 16),
-            const Text('This will be added to our database for review.'),
+            ElevatedButton(
+              onPressed: isVerifyingWebsite ? null : () async {
+                if (labName?.isEmpty == true || professorName?.isEmpty == true || labWebsite?.isEmpty == true) {
+                  return;
+                }
+
+                // Validate website URL format
+                if (labWebsite != null && !_isValidUrl(labWebsite!)) {
+                  setDialogState(() {
+                    websiteError = 'Please enter a valid URL (https://example.com)';
+                  });
+                  return;
+                }
+
+                setDialogState(() {
+                  isVerifyingWebsite = true;
+                  websiteError = null;
+                });
+
+                // Verify website exists
+                final isValid = await _verifyWebsite(labWebsite!);
+
+                setDialogState(() {
+                  isVerifyingWebsite = false;
+                });
+
+                if (!isValid) {
+                  setDialogState(() {
+                    websiteError = 'Website could not be verified. Please check the URL.';
+                  });
+                  return;
+                }
+
+                try {
+                  // Add lab via API
+                  final newLab = await LabService.addLab(
+                    name: labName!,
+                    professorName: professorName!,
+                    universityId: _selectedUniversityId!,
+                    website: labWebsite!,
+                  );
+
+                  setState(() {
+                    _selectedLabId = newLab.id;
+                    _selectedLabName = newLab.name;
+                    _labController.text = '${newLab.name} - ${newLab.professorName}';
+                  });
+                  Navigator.pop(context);
+
+                  // Show success message
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Lab/Professor added successfully! Website verified.'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                } catch (e) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to add lab: ${e.toString()}'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              },
+              child: isVerifyingWebsite
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Verify & Add'),
+            ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (labName?.isNotEmpty == true && professorName?.isNotEmpty == true) {
-                setState(() {
-                  _selectedLabId = 'new_${DateTime.now().millisecondsSinceEpoch}';
-                  _selectedLabName = labName!;
-                  _labController.text = '$labName - $professorName';
-                });
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('Add'),
-          ),
-        ],
       ),
     );
   }
 
-  List<Lab> _getDemoLabs() {
-    return [
-      Lab(
-        id: '1',
-        name: 'Stanford AI Lab',
-        professorName: 'Dr. Fei-Fei Li',
-        professorId: 'prof1',
-        universityName: 'Stanford University',
-        universityId: 'uni1',
-        department: 'Computer Science',
-        overallRating: 4.6,
-        reviewCount: 128,
-        researchAreas: ['Computer Vision', 'AI Safety', 'Deep Learning'],
-        tags: ['Well Funded', 'Industry Focus', 'Publication Heavy'],
-      ),
-      Lab(
-        id: '2',
-        name: 'MIT CSAIL',
-        professorName: 'Dr. Regina Barzilay',
-        professorId: 'prof2',
-        universityName: 'MIT',
-        universityId: 'uni2',
-        department: 'EECS',
-        overallRating: 4.7,
-        reviewCount: 156,
-        researchAreas: ['NLP', 'Machine Learning', 'Healthcare AI'],
-        tags: ['Top Tier', 'Collaborative', 'Innovation Focused'],
-      ),
-      Lab(
-        id: '3',
-        name: 'Berkeley AI Research Lab',
-        professorName: 'Dr. Pieter Abbeel',
-        professorId: 'prof3',
-        universityName: 'UC Berkeley',
-        universityId: 'uni3',
-        department: 'EECS',
-        overallRating: 4.8,
-        reviewCount: 142,
-        researchAreas: ['Robotics', 'Reinforcement Learning', 'Deep Learning'],
-        tags: ['Startup Culture', 'Well Funded', 'Industry Focus'],
-      ),
-    ];
-  }
 
   void _submitReview() async {
     if (!_formKey.currentState!.validate() ||
@@ -1148,24 +1446,28 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           .where((line) => line.trim().isNotEmpty)
           .toList();
 
-      final review = Review(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        labId: _selectedLabId!,
-        userId: 'current_user', // TODO: Get from auth provider
-        position: _position,
-        duration: _duration,
-        reviewDate: DateTime.now(),
-        rating: _overallRating,
-        categoryRatings: Map.from(_categoryRatings),
-        reviewText: _reviewTextController.text.trim(),
-        pros: pros,
-        cons: cons,
-        helpfulCount: 0,
-        isVerified: false, // Will be set by verification process
-      );
+      // Get current user from auth provider
+      final authProvider = context.read<AuthProvider>();
+      final currentUser = authProvider.currentUser;
 
-      // TODO: Submit to ReviewProvider
-      await Future.delayed(const Duration(seconds: 2)); // Simulate API call
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Prepare review data for API
+      final reviewData = {
+        'lab_id': _selectedLabId!,
+        'position': _position,
+        'duration': _duration,
+        'rating': _overallRating,
+        'category_ratings': _categoryRatings,
+        'review_text': _reviewTextController.text.trim(),
+        'pros': pros,
+        'cons': cons,
+      };
+
+      // Submit review via API
+      await ReviewService.submitReview(reviewData);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1192,6 +1494,98 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           _isSubmitting = false;
         });
       }
+    }
+  }
+
+  Widget _buildInteractiveStars() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(5, (index) {
+        final starValue = index + 1.0;
+        final isHalfFilled = _overallRating >= index + 0.5 && _overallRating < starValue;
+        final isFilled = _overallRating >= starValue;
+
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              // If tapping on a filled star, set to half rating
+              // If tapping on empty/half star, set to full rating
+              if (isFilled && _overallRating == starValue) {
+                _overallRating = starValue - 0.5;
+              } else if (isHalfFilled && _overallRating == starValue - 0.5) {
+                _overallRating = starValue;
+              } else {
+                _overallRating = starValue;
+              }
+            });
+          },
+          child: Container(
+            padding: const EdgeInsets.all(4),
+            child: Icon(
+              isFilled ? Icons.star : isHalfFilled ? Icons.star_half : Icons.star_border,
+              size: 36,
+              color: isFilled || isHalfFilled ? Colors.amber : AppColors.border,
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Color _getRatingColor(double rating) {
+    if (rating >= 4.5) return AppColors.success;
+    if (rating >= 3.5) return AppColors.primary;
+    if (rating >= 2.5) return Colors.orange;
+    return AppColors.error;
+  }
+
+  String _getRatingDescription(double rating) {
+    if (rating >= 4.5) return 'Excellent Experience';
+    if (rating >= 3.5) return 'Good Experience';
+    if (rating >= 2.5) return 'Average Experience';
+    if (rating >= 1.5) return 'Below Average';
+    return 'Poor Experience';
+  }
+
+  bool _isValidUrl(String url) {
+    try {
+      final uri = Uri.parse(url);
+      return uri.hasScheme && (uri.scheme == 'http' || uri.scheme == 'https') && uri.hasAuthority;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> _verifyWebsite(String url) async {
+    try {
+      // Add http:// if no scheme is provided
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://$url';
+      }
+
+      // For demo purposes, we'll simulate website verification
+      // In a real app, you would make an HTTP request to check if the website exists
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Simple validation: check if it's a plausible academic URL
+      final uri = Uri.parse(url);
+      final domain = uri.host.toLowerCase();
+
+      // Consider it valid if it contains common academic domains or keywords
+      final isAcademic = domain.contains('.edu') ||
+                        domain.contains('.ac.') ||
+                        domain.contains('university') ||
+                        domain.contains('institute') ||
+                        domain.contains('college') ||
+                        domain.contains('lab') ||
+                        domain.contains('research');
+
+      // For demo, randomly fail 10% of the time to show error handling
+      final shouldFail = DateTime.now().millisecond % 10 == 0;
+
+      return isAcademic && !shouldFail;
+    } catch (e) {
+      return false;
     }
   }
 

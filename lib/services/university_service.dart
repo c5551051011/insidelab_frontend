@@ -5,17 +5,27 @@ import '../data/models/lab.dart';
 import 'api_service.dart';
 
 class UniversityService {
-  static Future<List<University>> getAllUniversities() async {
-    final response = await ApiService.get('/universities/');
+  static Future<List<University>> getAllUniversities({String? search, int page = 1, int limit = 50}) async {
+    try {
+      String queryParams = 'page=$page&limit=$limit';
+      if (search != null && search.isNotEmpty) {
+        queryParams += '&search=${Uri.encodeComponent(search)}';
+      }
 
-    if (response is Map && response.containsKey('results')) {
-      return (response['results'] as List)
-          .map((json) => University.fromJson(json))
-          .toList();
-    } else {
-      return (response as List)
-          .map((json) => University.fromJson(json))
-          .toList();
+      final response = await ApiService.get('/universities/?$queryParams');
+
+      if (response is Map && response.containsKey('results')) {
+        return (response['results'] as List)
+            .map((json) => University.fromJson(json))
+            .toList();
+      } else {
+        return (response as List)
+            .map((json) => University.fromJson(json))
+            .toList();
+      }
+    } catch (e) {
+      print('Error fetching universities: $e');
+      return [];
     }
   }
 
@@ -69,5 +79,71 @@ class UniversityService {
   static Future<Professor> getProfessorById(String id) async {
     final response = await ApiService.get('/universities/professors/$id/');
     return Professor.fromJson(response);
+  }
+
+  // Add a new university (requires authentication)
+  static Future<University> addUniversity({
+    required String name,
+    required String website,
+    String? country,
+    String? state,
+    String? city,
+    String? description,
+  }) async {
+    try {
+      final universityData = {
+        'name': name,
+        'website': website,
+        'country': country ?? 'Unknown',
+        'state': state ?? 'Unknown',
+        'city': city ?? 'Unknown',
+        if (description != null) 'description': description,
+      };
+
+      final response = await ApiService.post(
+        '/universities/',
+        universityData,
+        requireAuth: true,
+      );
+      return University.fromJson(response);
+    } catch (e) {
+      print('Error adding university: $e');
+      rethrow;
+    }
+  }
+
+  // Search universities by name
+  static Future<List<University>> searchUniversities(String query) async {
+    try {
+      return await getAllUniversities(search: query);
+    } catch (e) {
+      print('Error searching universities: $e');
+      return [];
+    }
+  }
+
+  // Verify university website
+  static Future<bool> verifyUniversityWebsite(String website) async {
+    try {
+      final response = await ApiService.post('/universities/verify-website/', {
+        'website': website,
+      });
+      return response['is_valid'] ?? false;
+    } catch (e) {
+      print('Error verifying university website: $e');
+      // For demo purposes, return false if verification fails
+      return false;
+    }
+  }
+
+  // Get university statistics
+  static Future<Map<String, dynamic>?> getUniversityStats(String universityId) async {
+    try {
+      final response = await ApiService.get('/universities/$universityId/stats/');
+      return Map<String, dynamic>.from(response);
+    } catch (e) {
+      print('Error fetching university stats: $e');
+      return null;
+    }
   }
 }

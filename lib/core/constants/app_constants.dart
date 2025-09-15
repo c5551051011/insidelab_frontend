@@ -23,6 +23,7 @@ class AppConstants {
     'Work-Life Balance',
     'Career Development',
     'Funding Availability',
+    'Lab Culture',
   ];
 
   // Position Options

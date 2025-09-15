@@ -22,14 +22,14 @@ class University {
 
   factory University.fromJson(Map<String, dynamic> json) {
     return University(
-      id: json['id'],
-      name: json['name'],
-      country: json['country'],
-      state: json['state'],
-      city: json['city'],
+      id: json['id'].toString(),
+      name: json['name'] ?? '',
+      country: json['country'] ?? '',
+      state: json['state'] ?? '',
+      city: json['city'] ?? '',
       website: json['website'],
       ranking: json['ranking'],
-      logoUrl: json['logoUrl'],
+      logoUrl: json['logoUrl'] ?? json['logo_url'],
     );
   }
 
