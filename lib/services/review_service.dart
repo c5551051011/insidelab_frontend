@@ -3,6 +3,49 @@ import '../data/models/review.dart';
 import 'api_service.dart';
 
 class ReviewService {
+  // Cache for rating categories to avoid repeated API calls
+  static List<String>? _cachedRatingCategories;
+
+  // Get rating categories from backend
+  static Future<List<String>> getRatingCategories() async {
+    if (_cachedRatingCategories != null) {
+      print('DEBUG: Using cached categories: $_cachedRatingCategories');
+      return _cachedRatingCategories!;
+    }
+
+    print('DEBUG: Fetching categories from /reviews/categories/');
+    final response = await ApiService.get('/reviews/categories/');
+    print('DEBUG: Categories response: $response');
+    print('DEBUG: Response type: ${response.runtimeType}');
+
+    if (response is List) {
+      _cachedRatingCategories = List<String>.from(response);
+      print('DEBUG: Parsed as List: $_cachedRatingCategories');
+    } else if (response is Map && response.containsKey('categories')) {
+      _cachedRatingCategories = List<String>.from(response['categories']);
+      print('DEBUG: Parsed from categories key: $_cachedRatingCategories');
+    } else if (response is Map && response.containsKey('results')) {
+      _cachedRatingCategories = List<String>.from(response['results']);
+      print('DEBUG: Parsed from results key: $_cachedRatingCategories');
+    } else {
+      print('DEBUG: Unexpected response format: $response');
+    }
+
+    print('DEBUG: Final cached categories: $_cachedRatingCategories');
+    return _cachedRatingCategories!;
+  }
+
+  // Clear cached categories (useful if backend updates them)
+  static void clearCachedCategories() {
+    _cachedRatingCategories = null;
+  }
+
+  // Force refresh categories from backend
+  static Future<List<String>> refreshRatingCategories() async {
+    _cachedRatingCategories = null;
+    return await getRatingCategories();
+  }
+
   // Get reviews for a specific lab
   static Future<List<Review>> getLabReviews(String labId, {int page = 1, int limit = 20}) async {
     try {
@@ -98,6 +141,9 @@ class ReviewService {
         {'is_helpful': isHelpful},
         requireAuth: true,
       );
+    } on UnsupportedEndpointException catch (e) {
+      print('Review helpful marking not supported by backend: $e');
+      // Silently ignore if not supported
     } catch (e) {
       print('Error marking review as helpful: $e');
       rethrow;
@@ -109,6 +155,9 @@ class ReviewService {
     try {
       final response = await ApiService.get('/reviews/my_reviews/', requireAuth: true);
       return (response as List).map((json) => Review.fromJson(json)).toList();
+    } on UnsupportedEndpointException catch (e) {
+      print('User reviews not supported by backend: $e');
+      return [];
     } catch (e) {
       print('Error fetching user reviews: $e');
       return [];
@@ -122,6 +171,9 @@ class ReviewService {
         'reason': reason,
       }, requireAuth: true);
       return true;
+    } on UnsupportedEndpointException catch (e) {
+      print('Review reporting not supported by backend: $e');
+      return false;
     } catch (e) {
       print('Error reporting review: $e');
       return false;

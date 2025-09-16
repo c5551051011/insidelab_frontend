@@ -27,15 +27,15 @@ class Professor {
 
   factory Professor.fromJson(Map<String, dynamic> json) {
     return Professor(
-      id: json['id'],
-      name: json['name'],
-      email: json['email'],
-      universityId: json['universityId'],
-      department: json['department'],
-      profileUrl: json['profileUrl'],
-      googleScholarUrl: json['googleScholarUrl'],
-      personalWebsite: json['personalWebsite'],
-      researchInterests: List<String>.from(json['researchInterests']),
+      id: json['id'].toString(),
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      universityId: json['university_id']?.toString() ?? json['university']?.toString() ?? '',
+      department: json['department'] ?? '',
+      profileUrl: json['profile_url'],
+      googleScholarUrl: json['google_scholar_url'],
+      personalWebsite: json['personal_website'],
+      researchInterests: List<String>.from(json['research_interests'] ?? []),
       bio: json['bio'],
     );
   }
@@ -45,12 +45,12 @@ class Professor {
       'id': id,
       'name': name,
       'email': email,
-      'universityId': universityId,
+      'university_id': universityId,
       'department': department,
-      'profileUrl': profileUrl,
-      'googleScholarUrl': googleScholarUrl,
-      'personalWebsite': personalWebsite,
-      'researchInterests': researchInterests,
+      'profile_url': profileUrl,
+      'google_scholar_url': googleScholarUrl,
+      'personal_website': personalWebsite,
+      'research_interests': researchInterests,
       'bio': bio,
     };
   }

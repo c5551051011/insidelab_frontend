@@ -55,10 +55,17 @@ class ApiService {
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
+      } else if (response.statusCode == 404) {
+        throw UnsupportedEndpointException(endpoint, 'Endpoint not found');
+      } else if (response.statusCode == 405) {
+        throw UnsupportedEndpointException(endpoint, 'Method not allowed');
       } else {
         throw ApiException(response.statusCode, response.body);
       }
     } catch (e) {
+      if (e is UnsupportedEndpointException || e is ApiException) {
+        rethrow;
+      }
       throw ApiException(0, e.toString());
     }
   }
@@ -83,12 +90,16 @@ class ApiService {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return json.decode(response.body);
+      } else if (response.statusCode == 404) {
+        throw UnsupportedEndpointException(endpoint, 'Endpoint not found');
+      } else if (response.statusCode == 405) {
+        throw UnsupportedEndpointException(endpoint, 'Method not allowed');
       } else {
         throw ApiException(response.statusCode, response.body);
       }
     } catch (e) {
       print('API Error: $e');
-      if (e is ApiException) {
+      if (e is UnsupportedEndpointException || e is ApiException) {
         rethrow;
       }
       throw ApiException(0, e.toString());
@@ -109,10 +120,17 @@ class ApiService {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return json.decode(response.body);
+      } else if (response.statusCode == 404) {
+        throw UnsupportedEndpointException(endpoint, 'Endpoint not found');
+      } else if (response.statusCode == 405) {
+        throw UnsupportedEndpointException(endpoint, 'Method not allowed');
       } else {
         throw ApiException(response.statusCode, response.body);
       }
     } catch (e) {
+      if (e is UnsupportedEndpointException || e is ApiException) {
+        rethrow;
+      }
       throw ApiException(0, e.toString());
     }
   }
@@ -126,10 +144,17 @@ class ApiService {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return response.body.isNotEmpty ? json.decode(response.body) : null;
+      } else if (response.statusCode == 404) {
+        throw UnsupportedEndpointException(endpoint, 'Endpoint not found');
+      } else if (response.statusCode == 405) {
+        throw UnsupportedEndpointException(endpoint, 'Method not allowed');
       } else {
         throw ApiException(response.statusCode, response.body);
       }
     } catch (e) {
+      if (e is UnsupportedEndpointException || e is ApiException) {
+        rethrow;
+      }
       throw ApiException(0, e.toString());
     }
   }
@@ -143,4 +168,14 @@ class ApiException implements Exception {
 
   @override
   String toString() => 'ApiException: $statusCode - $message';
+}
+
+class UnsupportedEndpointException implements Exception {
+  final String endpoint;
+  final String message;
+
+  UnsupportedEndpointException(this.endpoint, this.message);
+
+  @override
+  String toString() => 'UnsupportedEndpointException: $endpoint - $message';
 }

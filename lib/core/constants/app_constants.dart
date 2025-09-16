@@ -16,14 +16,15 @@ class AppConstants {
   static const int maxReviewLength = 2000;
   static const int maxProsConsItems = 5;
 
-  // Rating Categories
+  // Rating Categories (Fallback - Use ReviewService.getRatingCategories() for dynamic categories)
   static const List<String> ratingCategories = [
     'Research Environment',
     'Advisor Support',
     'Work-Life Balance',
-    'Career Development',
-    'Funding Availability',
+    'Career Support',
+    'Funding & Resources',
     'Lab Culture',
+    'Mentorship Quality',
   ];
 
   // Position Options

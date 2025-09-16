@@ -61,30 +61,39 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
       child: SafeArea(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 1200),
-          margin: const EdgeInsets.symmetric(horizontal: 24),
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
             children: [
               _buildLogo(context),
               const Spacer(),
-              if (MediaQuery.of(context).size.width >= 768) ...[
-                _buildDesktopMenu(context),
-                const SizedBox(width: 24),
-                Consumer<AuthProvider>(
-                  builder: (context, authProvider, child) {
-                    final user = authProvider.currentUser;
-                    if (user?.canProvideServices == true) {
-                      return Row(
-                        children: [
-                          RoleSwitcher(showIcon: false),
-                          const SizedBox(width: 24),
-                        ],
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-                _buildAuthButtons(context),
-              ] else
+              if (MediaQuery.of(context).size.width >= 850)
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Flexible(child: _buildDesktopMenu(context)),
+                      const SizedBox(width: 16),
+                      Consumer<AuthProvider>(
+                        builder: (context, authProvider, child) {
+                          final user = authProvider.currentUser;
+                          if (user?.canProvideServices == true) {
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                RoleSwitcher(showIcon: false),
+                                const SizedBox(width: 16),
+                              ],
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                      _buildAuthButtons(context),
+                    ],
+                  ),
+                )
+              else
                 _buildMobileMenuButton(context),
             ],
           ),
@@ -113,14 +122,40 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
   }
 
   Widget _buildDesktopMenu(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Adjust menu items based on available width
+    if (screenWidth < 950) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildNavItem(context, 'Labs', '/search'),
+          const SizedBox(width: 12),
+          _buildNavItem(context, 'Services', '/application-services'),
+        ],
+      );
+    } else if (screenWidth < 1100) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildNavItem(context, 'Labs', '/search'),
+          const SizedBox(width: 16),
+          _buildNavItem(context, 'Marketplace', '/marketplace'),
+          const SizedBox(width: 16),
+          _buildNavItem(context, 'Services', '/application-services'),
+        ],
+      );
+    }
+
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         _buildNavItem(context, 'Labs', '/search'),
-        const SizedBox(width: 32),
+        const SizedBox(width: 24),
         _buildNavItem(context, 'Marketplace', '/marketplace'),
-        const SizedBox(width: 32),
+        const SizedBox(width: 24),
         _buildNavItem(context, 'Services', '/application-services'),
-        const SizedBox(width: 32),
+        const SizedBox(width: 24),
         _buildNavItem(context, 'Success Stories', '/'),
       ],
     );
@@ -131,11 +166,11 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
       onTap: () => Navigator.pushNamed(context, route),
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
         child: Text(
           title,
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 15,
             fontWeight: FontWeight.w500,
             color: AppColors.textPrimary,
           ),

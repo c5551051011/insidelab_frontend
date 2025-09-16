@@ -28,19 +28,53 @@ class ReviewsBrowseScreen extends StatefulWidget {
 class _ReviewsBrowseScreenState extends State<ReviewsBrowseScreen> with SingleTickerProviderStateMixin {
   late TextEditingController _searchController;
   late TabController _tabController;
-  
+
   String _sortBy = 'recent';
   Map<String, dynamic> _filters = {};
   bool _showFilters = false;
+  List<Review> _allReviews = [];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController(text: widget.initialQuery);
     _tabController = TabController(length: 3, vsync: this);
-    
+
     if (widget.initialLabId != null) {
       _filters['labId'] = widget.initialLabId;
+    }
+
+    _loadAllReviews();
+  }
+
+  Future<void> _loadAllReviews() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      // Load reviews from all labs - you might want to implement a general reviews endpoint
+      if (widget.initialLabId != null) {
+        // Load reviews for specific lab
+        final reviewProvider = context.read<ReviewProvider>();
+        await reviewProvider.loadLabReviews(widget.initialLabId!);
+        _allReviews = reviewProvider.getLabReviews(widget.initialLabId!) ?? [];
+      } else {
+        // For browsing all reviews, we'd need a general endpoint
+        // For now, this will be empty until backend provides /reviews/ endpoint
+        _allReviews = [];
+      }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -233,13 +267,12 @@ class _ReviewsBrowseScreenState extends State<ReviewsBrowseScreen> with SingleTi
   }
 
   Widget _buildStatsSection() {
-    final reviews = _getDemoReviews();
     return ReviewStats(
-      totalReviews: reviews.length,
-      averageRating: _calculateAverageRating(reviews),
-      verifiedReviews: reviews.where((r) => r.isVerified).length,
-      recentReviews: reviews.where((r) => 
-        r.reviewDate.isAfter(DateTime.now().subtract(const Duration(days: 30)))
+      totalReviews: _allReviews.length,
+      averageRating: _calculateAverageRating(_allReviews),
+      verifiedReviews: _allReviews.where((r) => r.isVerified).length,
+      recentReviews: _allReviews.where((r) =>
+          r.reviewDate.isAfter(DateTime.now().subtract(const Duration(days: 30)))
       ).length,
     );
   }
@@ -293,7 +326,7 @@ class _ReviewsBrowseScreenState extends State<ReviewsBrowseScreen> with SingleTi
           return _buildErrorState(reviewProvider.error!);
         }
 
-        List<Review> reviews = _getFilteredReviews(_getDemoReviews(), type);
+        List<Review> reviews = _getFilteredReviews(_allReviews, type);
         
         if (reviews.isEmpty) {
           return _buildEmptyState(type);
@@ -501,94 +534,6 @@ class _ReviewsBrowseScreenState extends State<ReviewsBrowseScreen> with SingleTi
     return filtered;
   }
 
-  List<Review> _getDemoReviews() {
-    return [
-      Review(
-        id: '1',
-        labId: 'lab1',
-        userId: 'user1',
-        position: 'PhD Student',
-        duration: '3 years',
-        reviewDate: DateTime.now().subtract(const Duration(days: 15)),
-        rating: 4.5,
-        categoryRatings: {
-          'Mentorship': 4.0,
-          'Research Environment': 5.0,
-          'Work-Life Balance': 4.0,
-          'Career Support': 4.5,
-        },
-        reviewText: 'Amazing research environment with cutting-edge projects. Professor is very supportive and provides excellent mentorship. Lab culture is collaborative and everyone helps each other.',
-        pros: [
-          'Excellent mentorship from PI',
-          'State-of-the-art equipment',
-          'Collaborative lab culture',
-          'Strong publication record',
-        ],
-        cons: [
-          'High expectations',
-          'Competitive atmosphere',
-        ],
-        helpfulCount: 23,
-        isVerified: true,
-      ),
-      Review(
-        id: '2',
-        labId: 'lab2',
-        userId: 'user2',
-        position: 'MS Student',
-        duration: '2 years',
-        reviewDate: DateTime.now().subtract(const Duration(days: 45)),
-        rating: 3.5,
-        categoryRatings: {
-          'Mentorship': 3.0,
-          'Research Environment': 4.0,
-          'Work-Life Balance': 3.5,
-          'Career Support': 3.0,
-        },
-        reviewText: 'Good lab for getting research experience, but mentorship could be better. Professor is often busy and doesn\'t have much time for individual students.',
-        pros: [
-          'Interesting research projects',
-          'Good lab facilities',
-          'Flexible schedule',
-        ],
-        cons: [
-          'Limited mentorship',
-          'Professor often unavailable',
-          'Unclear expectations',
-        ],
-        helpfulCount: 12,
-        isVerified: true,
-      ),
-      Review(
-        id: '3',
-        labId: 'lab1',
-        userId: 'user3',
-        position: 'PostDoc',
-        duration: '1.5 years',
-        reviewDate: DateTime.now().subtract(const Duration(days: 80)),
-        rating: 5.0,
-        categoryRatings: {
-          'Mentorship': 5.0,
-          'Research Environment': 5.0,
-          'Work-Life Balance': 4.5,
-          'Career Support': 5.0,
-        },
-        reviewText: 'Exceptional lab with world-class research. Professor provides incredible support for career development and is always available for discussions. Highly recommend!',
-        pros: [
-          'World-class research',
-          'Outstanding mentorship',
-          'Excellent career support',
-          'International collaborations',
-          'Great funding',
-        ],
-        cons: [
-          'Very competitive',
-        ],
-        helpfulCount: 45,
-        isVerified: true,
-      ),
-    ];
-  }
 
   double _calculateAverageRating(List<Review> reviews) {
     if (reviews.isEmpty) return 0.0;

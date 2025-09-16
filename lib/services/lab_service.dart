@@ -43,15 +43,38 @@ class LabService {
   // Get labs by university
   static Future<List<Lab>> getLabsByUniversity(String universityId) async {
     try {
-      final response = await ApiService.get('/labs/?university_id=$universityId');
+      print('Fetching labs for university ID: $universityId');
+      // Try both parameter formats in case backend expects different naming
+      final response = await ApiService.get('/labs/?university=$universityId');
+      print('API URL: /labs/?university=$universityId');
+      print('Response: $response');
 
+      List<Lab> labs;
       if (response is Map && response.containsKey('results')) {
-        return (response['results'] as List)
+        labs = (response['results'] as List)
             .map((json) => Lab.fromJson(json))
             .toList();
       } else {
-        return (response as List).map((json) => Lab.fromJson(json)).toList();
+        labs = (response as List).map((json) => Lab.fromJson(json)).toList();
       }
+
+      // Debug: Print all lab university IDs to see what we're getting
+      print('Debugging lab university IDs:');
+      for (var lab in labs) {
+        print('  Lab "${lab.name}" has universityId: "${lab.universityId}" (expected: "$universityId")');
+      }
+
+      // Additional client-side filtering as backup
+      final filteredLabs = labs.where((lab) => lab.universityId == universityId).toList();
+      print('Found ${labs.length} labs from API, ${filteredLabs.length} match university ID $universityId');
+
+      // If no matches, let's try without client-side filtering (trust backend filtering)
+      if (filteredLabs.isEmpty && labs.isNotEmpty) {
+        print('No client-side matches found, returning all labs from backend (trusting backend filtering)');
+        return labs;
+      }
+
+      return filteredLabs;
     } catch (e) {
       print('Error fetching labs by university: $e');
       return [];
@@ -61,22 +84,24 @@ class LabService {
   // Add a new lab (requires authentication)
   static Future<Lab> addLab({
     required String name,
-    required String professorName,
+    required String professorId,
     required String universityId,
-    required String website,
-    String? department,
+    required String department,
     String? description,
+    String? website,
     List<String>? researchAreas,
+    List<String>? tags,
   }) async {
     try {
       final labData = {
         'name': name,
-        'professor_name': professorName,
-        'university_id': universityId,
-        'website': website,
-        if (department != null) 'department': department,
+        'professor': int.parse(professorId),
+        'university': int.parse(universityId),
+        'department': department,
         if (description != null) 'description': description,
+        if (website != null) 'website': website,
         if (researchAreas != null) 'research_areas': researchAreas,
+        if (tags != null) 'tags': tags,
       };
 
       final response = await ApiService.post(
@@ -107,22 +132,46 @@ class LabService {
       if (query != null && query.isNotEmpty) {
         queryParams += '&search=${Uri.encodeComponent(query)}';
       }
-      if (universityId != null) queryParams += '&university_id=$universityId';
+      if (universityId != null) queryParams += '&university=$universityId';
       if (department != null) queryParams += '&department=$department';
       if (minRating != null) queryParams += '&min_rating=$minRating';
       if (researchAreas != null && researchAreas.isNotEmpty) {
         queryParams += '&research_areas=${researchAreas.join(',')}';
       }
 
+      print('Searching labs with query params: $queryParams');
       final response = await ApiService.get('/labs/?$queryParams');
 
+      List<Lab> labs;
       if (response is Map && response.containsKey('results')) {
-        return (response['results'] as List)
+        labs = (response['results'] as List)
             .map((json) => Lab.fromJson(json))
             .toList();
       } else {
-        return (response as List).map((json) => Lab.fromJson(json)).toList();
+        labs = (response as List).map((json) => Lab.fromJson(json)).toList();
       }
+
+      // Additional client-side filtering if universityId is specified
+      if (universityId != null) {
+        // Debug: Print what university IDs we're getting from search
+        print('Debugging search results university IDs:');
+        for (var lab in labs) {
+          print('  Lab "${lab.name}" has universityId: "${lab.universityId}" (expected: "$universityId")');
+        }
+
+        final filteredLabs = labs.where((lab) => lab.universityId == universityId).toList();
+        print('Search found ${labs.length} labs from API, ${filteredLabs.length} match university ID $universityId');
+
+        // If no matches, trust backend filtering and return all results
+        if (filteredLabs.isEmpty && labs.isNotEmpty) {
+          print('No client-side matches in search, returning all labs from backend (trusting backend filtering)');
+          return labs;
+        }
+
+        return filteredLabs;
+      }
+
+      return labs;
     } catch (e) {
       print('Error searching labs: $e');
       return [];
@@ -136,6 +185,16 @@ class LabService {
         'website': website,
       });
       return response['is_valid'] ?? false;
+    } on UnsupportedEndpointException catch (e) {
+      print('Website verification not supported by backend: $e');
+      // Graceful fallback: basic URL validation with academic domain support
+      if (Uri.tryParse(website) == null || !website.startsWith('http')) {
+        return false;
+      }
+      // Accept common academic and research domains
+      final uri = Uri.parse(website);
+      final academicDomains = ['.edu', '.ac.', '.org', 'sites.google.com', 'github.io', 'gitlab.io'];
+      return academicDomains.any((domain) => uri.host.contains(domain));
     } catch (e) {
       print('Error verifying lab website: $e');
       return false;
@@ -147,6 +206,9 @@ class LabService {
     try {
       final response = await ApiService.get('/labs/$labId/stats/');
       return Map<String, dynamic>.from(response);
+    } on UnsupportedEndpointException catch (e) {
+      print('Lab stats not supported by backend: $e');
+      return null;
     } catch (e) {
       print('Error fetching lab stats: $e');
       return null;

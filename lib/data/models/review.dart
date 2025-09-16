@@ -32,23 +32,23 @@ class Review {
 
   factory Review.fromJson(Map<String, dynamic> json) {
     return Review(
-      id: json['id'],
-      labId: json['labId'],
-      userId: json['userId'],
-      position: json['position'],
-      duration: json['duration'],
-      reviewDate: DateTime.parse(json['reviewDate']),
-      rating: json['rating'].toDouble(),
+      id: json['id'].toString(),
+      labId: json['lab']?.toString() ?? json['labId']?.toString() ?? '',
+      userId: json['user']?.toString() ?? json['userId']?.toString() ?? '',
+      position: json['position'] ?? '',
+      duration: json['duration'] ?? '',
+      reviewDate: DateTime.parse(json['created_at'] ?? json['reviewDate'] ?? DateTime.now().toIso8601String()),
+      rating: double.tryParse(json['rating']?.toString() ?? '0') ?? 0.0,
       categoryRatings: Map<String, double>.from(
-        json['categoryRatings'].map(
-              (key, value) => MapEntry(key, value.toDouble()),
+        (json['category_ratings'] ?? json['categoryRatings'] ?? {}).map(
+              (key, value) => MapEntry(key, double.tryParse(value.toString()) ?? 0.0),
         ),
       ),
-      reviewText: json['reviewText'],
-      pros: List<String>.from(json['pros']),
-      cons: List<String>.from(json['cons']),
-      helpfulCount: json['helpfulCount'] ?? 0,
-      isVerified: json['isVerified'] ?? false,
+      reviewText: json['review_text'] ?? json['reviewText'] ?? '',
+      pros: List<String>.from(json['pros'] ?? []),
+      cons: List<String>.from(json['cons'] ?? []),
+      helpfulCount: json['helpful_count'] ?? json['helpfulCount'] ?? 0,
+      isVerified: json['is_verified'] ?? json['isVerified'] ?? false,
     );
   }
 

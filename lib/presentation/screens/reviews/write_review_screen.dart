@@ -41,12 +41,12 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   String _duration = '1 year';
   double _overallRating = 4.0;
 
-  final Map<String, double> _categoryRatings = {
-    for (String category in AppConstants.ratingCategories) category: 4.0,
-  };
+  Map<String, double> _categoryRatings = {};
 
   bool _isSubmitting = false;
   bool _isCheckingAuth = true;
+  bool _isLoadingCategories = true;
+  List<String> _ratingCategories = [];
   List<University> _filteredUniversities = [];
   List<Lab> _filteredLabs = [];
 
@@ -68,6 +68,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           setState(() {
             _isCheckingAuth = false;
           });
+          _loadRatingCategories();
           _initializeUniversityList();
         }
         return;
@@ -88,6 +89,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           setState(() {
             _isCheckingAuth = false;
           });
+          _loadRatingCategories();
           _initializeUniversityList();
         }
       } catch (error) {
@@ -120,13 +122,66 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
     }
   }
 
+  void _loadRatingCategories() async {
+    try {
+      print('DEBUG: Loading rating categories...');
+      // Clear cached categories to ensure we get fresh ones
+      ReviewService.clearCachedCategories();
+      final categories = await ReviewService.getRatingCategories();
+      print('DEBUG: Received categories: $categories');
+      if (mounted) {
+        setState(() {
+          _ratingCategories = categories;
+          _categoryRatings = {
+            for (String category in categories) category: 4.0,
+          };
+          _isLoadingCategories = false;
+        });
+        print('DEBUG: Updated _categoryRatings: $_categoryRatings');
+      }
+    } catch (e) {
+      print('Error loading rating categories: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load rating categories. Please refresh the page.'),
+            backgroundColor: AppColors.error,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () {
+                setState(() {
+                  _isLoadingCategories = true;
+                });
+                _loadRatingCategories();
+              },
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (_isCheckingAuth) {
+    if (_isCheckingAuth || _isLoadingCategories) {
       return Scaffold(
         appBar: const HeaderNavigation(),
-        body: const Center(
-          child: CircularProgressIndicator(),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(
+                _isCheckingAuth ? 'Checking authentication...' : 'Loading rating categories...',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -331,6 +386,17 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
             ),
           ),
         ),
+        if (_selectedUniversityId == null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'Please select a university',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.error,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -384,10 +450,39 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           },
           suggestionsCallback: (pattern) async {
             if (_selectedUniversityId == null) return <Lab>[];
-            if (pattern.isEmpty) return _filteredLabs;
-            return _filteredLabs.where((lab) =>
-                lab.name.toLowerCase().contains(pattern.toLowerCase()) ||
-                lab.professorName.toLowerCase().contains(pattern.toLowerCase())).toList();
+
+            try {
+              // Always fetch labs for the selected university to ensure correct filtering
+              List<Lab> labs;
+
+              if (pattern.isEmpty) {
+                // Always fetch fresh labs for the selected university
+                labs = await LabService.getLabsByUniversity(_selectedUniversityId!);
+                print('Fetched ${labs.length} labs for university $_selectedUniversityId');
+              } else {
+                // Search within the university's labs
+                labs = await LabService.searchLabsAdvanced(
+                  query: pattern,
+                  universityId: _selectedUniversityId!,
+                );
+                print('Found ${labs.length} labs matching "$pattern" in university $_selectedUniversityId');
+              }
+
+              return labs;
+            } catch (e) {
+              print('Error searching labs: $e');
+              // Fallback: filter cached labs by university ID and pattern
+              final universityLabs = _filteredLabs.where((lab) =>
+                  lab.universityId == _selectedUniversityId).toList();
+
+              if (pattern.isEmpty) {
+                return universityLabs;
+              } else {
+                return universityLabs.where((lab) =>
+                    lab.name.toLowerCase().contains(pattern.toLowerCase()) ||
+                    lab.professorName.toLowerCase().contains(pattern.toLowerCase())).toList();
+              }
+            }
           },
           itemBuilder: (context, suggestion) {
             return ListTile(
@@ -1207,6 +1302,8 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                     _selectedUniversityName = newUniversity.name;
                     _universityController.text = newUniversity.name;
                     _filteredLabs = []; // No labs for new university initially
+                    // Add the new university to the filtered list so it appears in future searches
+                    _filteredUniversities.add(newUniversity);
                   });
                   Navigator.pop(context);
 
@@ -1244,6 +1341,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   void _showAddLabDialog() {
     String? labName;
     String? professorName;
+    String? department;
     String? labWebsite;
     bool isVerifyingWebsite = false;
     String? websiteError;
@@ -1271,6 +1369,14 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                     hintText: 'e.g., Dr. Jane Smith',
                   ),
                   onChanged: (value) => professorName = value,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  decoration: const InputDecoration(
+                    labelText: 'Department *',
+                    hintText: 'e.g., Computer Science',
+                  ),
+                  onChanged: (value) => department = value,
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -1330,7 +1436,10 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
             ),
             ElevatedButton(
               onPressed: isVerifyingWebsite ? null : () async {
-                if (labName?.isEmpty == true || professorName?.isEmpty == true || labWebsite?.isEmpty == true) {
+                if (labName?.isEmpty == true ||
+                    professorName?.isEmpty == true ||
+                    department?.isEmpty == true ||
+                    labWebsite?.isEmpty == true) {
                   return;
                 }
 
@@ -1362,18 +1471,28 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                 }
 
                 try {
-                  // Add lab via API
+                  // First create the professor, then use their ID for the lab
+                  final newProfessor = await UniversityService.addProfessor(
+                    name: professorName!,
+                    universityId: _selectedUniversityId!,
+                    department: department!,
+                  );
+
+                  // Add lab via API using the newly created professor's ID
                   final newLab = await LabService.addLab(
                     name: labName!,
-                    professorName: professorName!,
+                    professorId: newProfessor.id,
                     universityId: _selectedUniversityId!,
-                    website: labWebsite!,
+                    department: department!,
+                    website: labWebsite,
                   );
 
                   setState(() {
                     _selectedLabId = newLab.id;
                     _selectedLabName = newLab.name;
                     _labController.text = '${newLab.name} - ${newLab.professorName}';
+                    // Add the new lab to the filtered list so it appears in future searches
+                    _filteredLabs.add(newLab);
                   });
                   Navigator.pop(context);
 
@@ -1413,21 +1532,27 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
     if (!_formKey.currentState!.validate() ||
         _selectedUniversityId == null ||
         _selectedLabId == null) {
+
+      // Trigger UI updates to show validation messages
+      setState(() {
+        // This will trigger the rebuild and show error messages
+      });
+
       String errorMessage = '';
       if (_selectedUniversityId == null) {
         errorMessage = 'Please select a university';
       } else if (_selectedLabId == null) {
         errorMessage = 'Please select a lab or professor';
+      } else {
+        errorMessage = 'Please fill in all required fields';
       }
 
-      if (errorMessage.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: AppColors.error,
+        ),
+      );
       return;
     }
 
@@ -1456,7 +1581,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
 
       // Prepare review data for API
       final reviewData = {
-        'lab_id': _selectedLabId!,
+        'lab': int.parse(_selectedLabId!), // Backend expects 'lab' as integer, not 'lab_id'
         'position': _position,
         'duration': _duration,
         'rating': _overallRating,
@@ -1465,6 +1590,9 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
         'pros': pros,
         'cons': cons,
       };
+
+      print('Submitting review data: ${reviewData}');
+      print('Category ratings: ${_categoryRatings}');
 
       // Submit review via API
       await ReviewService.submitReview(reviewData);
@@ -1558,7 +1686,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
 
   Future<bool> _verifyWebsite(String url) async {
     try {
-      // Add http:// if no scheme is provided
+      // Add https:// if no scheme is provided
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         url = 'https://$url';
       }
@@ -1567,23 +1695,47 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
       // In a real app, you would make an HTTP request to check if the website exists
       await Future.delayed(const Duration(seconds: 2));
 
-      // Simple validation: check if it's a plausible academic URL
+      // Enhanced validation for various academic and research domains
       final uri = Uri.parse(url);
       final domain = uri.host.toLowerCase();
+      final fullUrl = url.toLowerCase();
 
-      // Consider it valid if it contains common academic domains or keywords
+      // Check for academic domains
       final isAcademic = domain.contains('.edu') ||
                         domain.contains('.ac.') ||
                         domain.contains('university') ||
                         domain.contains('institute') ||
-                        domain.contains('college') ||
-                        domain.contains('lab') ||
-                        domain.contains('research');
+                        domain.contains('college');
 
-      // For demo, randomly fail 10% of the time to show error handling
-      final shouldFail = DateTime.now().millisecond % 10 == 0;
+      // Check for research-related domains and platforms
+      final isResearchRelated = domain.contains('lab') ||
+                               domain.contains('research') ||
+                               domain.contains('kaist') ||
+                               domain.contains('mit') ||
+                               domain.contains('stanford') ||
+                               domain.contains('berkeley') ||
+                               domain.contains('harvard') ||
+                               domain.contains('cmu') ||
+                               domain.contains('google.com') || // Google Sites
+                               domain.contains('github.io') ||
+                               domain.contains('wordpress.com') ||
+                               domain.contains('wixsite.com') ||
+                               fullUrl.contains('sites.google.com');
 
-      return isAcademic && !shouldFail;
+      // Check for common academic URL patterns
+      final hasAcademicPattern = fullUrl.contains('/lab') ||
+                                fullUrl.contains('/research') ||
+                                fullUrl.contains('/faculty') ||
+                                fullUrl.contains('/people') ||
+                                fullUrl.contains('/group');
+
+      // Consider it valid if it meets any of the criteria
+      final isValid = isAcademic || isResearchRelated || hasAcademicPattern;
+
+      // For demo, only fail if URL is clearly invalid (less than 5% failure rate)
+      final shouldFail = DateTime.now().millisecond % 20 == 0 && !isValid;
+
+      return isValid && !shouldFail;
     } catch (e) {
       return false;
     }

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/providers/data_providers.dart';
 import '../../../data/models/review.dart';
+import '../../../data/repositories/review_repository.dart';
 import '../../widgets/common/app_bar_widget.dart';
 
 class MyReviewsScreen extends StatefulWidget {
@@ -27,61 +28,25 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
       _isLoading = true;
     });
 
-    // TODO: Implement actual user reviews loading from repository
-    await Future.delayed(const Duration(seconds: 1));
-    
-    final authProvider = context.read<AuthProvider>();
-    final currentUser = authProvider.currentUser;
-    
-    if (currentUser != null) {
-      // Mock data for demonstration
-      _userReviews = [
-        Review(
-          id: 'review1',
-          labId: 'lab1',
-          userId: currentUser.id,
-          position: 'PhD Student',
-          duration: '2 years',
-          reviewDate: DateTime.now().subtract(const Duration(days: 30)),
-          rating: 4.5,
-          categoryRatings: {
-            'research': 5.0,
-            'mentorship': 4.0,
-            'resources': 4.0,
-            'work_life': 5.0,
-          },
-          reviewText: 'Great lab with excellent research opportunities and supportive environment.',
-          pros: ['Excellent mentorship', 'Cutting-edge research', 'Good work-life balance'],
-          cons: ['Limited funding for conferences', 'Old equipment'],
-          helpfulCount: 12,
-          isVerified: true,
-        ),
-        Review(
-          id: 'review2',
-          labId: 'lab2',
-          userId: currentUser.id,
-          position: 'Research Assistant',
-          duration: '6 months',
-          reviewDate: DateTime.now().subtract(const Duration(days: 60)),
-          rating: 3.5,
-          categoryRatings: {
-            'research': 4.0,
-            'mentorship': 3.0,
-            'resources': 3.0,
-            'work_life': 4.0,
-          },
-          reviewText: 'Decent experience but could be better organized.',
-          pros: ['Interesting projects', 'Flexible hours'],
-          cons: ['Poor communication', 'Unclear expectations'],
-          helpfulCount: 8,
-          isVerified: true,
-        ),
-      ];
-    }
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final currentUser = authProvider.currentUser;
 
-    setState(() {
-      _isLoading = false;
-    });
+      if (currentUser != null) {
+        // Load real user reviews from backend
+        final reviewRepository = ReviewRepositoryImpl();
+        _userReviews = await reviewRepository.getUserReviews(currentUser.id);
+      }
+    } catch (e) {
+      print('Error loading user reviews: $e');
+      _userReviews = [];
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override

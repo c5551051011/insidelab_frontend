@@ -81,6 +81,33 @@ class UniversityService {
     return Professor.fromJson(response);
   }
 
+  // Add a new professor (requires authentication)
+  static Future<Professor> addProfessor({
+    required String name,
+    required String universityId,
+    String? email,
+    String? department,
+  }) async {
+    try {
+      final professorData = {
+        'name': name,
+        'university': int.parse(universityId),
+        if (email != null) 'email': email,
+        if (department != null) 'department': department,
+      };
+
+      final response = await ApiService.post(
+        '/universities/professors/',
+        professorData,
+        requireAuth: true,
+      );
+      return Professor.fromJson(response);
+    } catch (e) {
+      print('Error adding professor: $e');
+      rethrow;
+    }
+  }
+
   // Add a new university (requires authentication)
   static Future<University> addUniversity({
     required String name,
@@ -129,9 +156,12 @@ class UniversityService {
         'website': website,
       });
       return response['is_valid'] ?? false;
+    } on UnsupportedEndpointException catch (e) {
+      print('Website verification not supported by backend: $e');
+      // Graceful fallback: basic URL validation
+      return Uri.tryParse(website) != null && website.startsWith('http');
     } catch (e) {
       print('Error verifying university website: $e');
-      // For demo purposes, return false if verification fails
       return false;
     }
   }
@@ -141,6 +171,9 @@ class UniversityService {
     try {
       final response = await ApiService.get('/universities/$universityId/stats/');
       return Map<String, dynamic>.from(response);
+    } on UnsupportedEndpointException catch (e) {
+      print('University stats not supported by backend: $e');
+      return null;
     } catch (e) {
       print('Error fetching university stats: $e');
       return null;
