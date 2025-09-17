@@ -124,11 +124,14 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
 
   void _loadRatingCategories() async {
     try {
-      print('DEBUG: Loading rating categories...');
       // Clear cached categories to ensure we get fresh ones
       ReviewService.clearCachedCategories();
       final categories = await ReviewService.getRatingCategories();
-      print('DEBUG: Received categories: $categories');
+
+      if (categories.isEmpty) {
+        throw Exception('No rating categories returned from backend');
+      }
+
       if (mounted) {
         setState(() {
           _ratingCategories = categories;
@@ -137,15 +140,34 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           };
           _isLoadingCategories = false;
         });
-        print('DEBUG: Updated _categoryRatings: $_categoryRatings');
       }
     } catch (e) {
       print('Error loading rating categories: $e');
+
+      // Fallback to hardcoded categories
+      final fallbackCategories = [
+        'Research Environment',
+        'Advisor Support',
+        'Work-Life Balance',
+        'Career Support',
+        'Funding & Resources',
+        'Lab Culture',
+        'Mentorship Quality',
+      ];
+
       if (mounted) {
+        setState(() {
+          _ratingCategories = fallbackCategories;
+          _categoryRatings = {
+            for (String category in fallbackCategories) category: 4.0,
+          };
+          _isLoadingCategories = false;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load rating categories. Please refresh the page.'),
-            backgroundColor: AppColors.error,
+            content: Text('Could not load categories from server. Using default categories.'),
+            backgroundColor: AppColors.warning,
             action: SnackBarAction(
               label: 'Retry',
               textColor: Colors.white,
@@ -1585,7 +1607,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
         'position': _position,
         'duration': _duration,
         'rating': _overallRating,
-        'category_ratings': _categoryRatings,
+        'ratings_input': _categoryRatings, // Backend expects 'ratings_input' for write operations
         'review_text': _reviewTextController.text.trim(),
         'pros': pros,
         'cons': cons,

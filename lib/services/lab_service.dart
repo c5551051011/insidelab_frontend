@@ -214,4 +214,38 @@ class LabService {
       return null;
     }
   }
+
+  // Get enhanced lab rating averages
+  static Future<Map<String, dynamic>?> getLabAverages(String labId) async {
+    try {
+      print('DEBUG: Fetching lab averages for lab $labId');
+      final response = await ApiService.get('/reviews/lab/$labId/averages/');
+      print('DEBUG: Lab averages response: $response');
+      return Map<String, dynamic>.from(response);
+    } on UnsupportedEndpointException catch (e) {
+      print('Lab averages not supported by backend: $e');
+      return null;
+    } catch (e) {
+      print('Error fetching lab averages: $e');
+      return null;
+    }
+  }
+
+  // Compare multiple labs
+  static Future<Map<String, dynamic>?> compareLabs(List<String> labIds) async {
+    try {
+      print('DEBUG: Comparing labs: $labIds');
+      final response = await ApiService.post('/reviews/labs/compare/', {
+        'lab_ids': labIds,
+      });
+      print('DEBUG: Lab comparison response: $response');
+      return Map<String, dynamic>.from(response);
+    } on UnsupportedEndpointException catch (e) {
+      print('Lab comparison not supported by backend: $e');
+      return null;
+    } catch (e) {
+      print('Error comparing labs: $e');
+      return null;
+    }
+  }
 }

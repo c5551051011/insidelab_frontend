@@ -9,30 +9,44 @@ class ReviewService {
   // Get rating categories from backend
   static Future<List<String>> getRatingCategories() async {
     if (_cachedRatingCategories != null) {
-      print('DEBUG: Using cached categories: $_cachedRatingCategories');
       return _cachedRatingCategories!;
     }
 
-    print('DEBUG: Fetching categories from /reviews/categories/');
-    final response = await ApiService.get('/reviews/categories/');
-    print('DEBUG: Categories response: $response');
-    print('DEBUG: Response type: ${response.runtimeType}');
+    // Try different possible endpoints for rating categories
+    final possibleEndpoints = [
+      '/reviews/rating-categories/',
+      '/reviews/categories/',
+      '/rating-categories/',
+      '/categories/',
+    ];
 
-    if (response is List) {
-      _cachedRatingCategories = List<String>.from(response);
-      print('DEBUG: Parsed as List: $_cachedRatingCategories');
-    } else if (response is Map && response.containsKey('categories')) {
-      _cachedRatingCategories = List<String>.from(response['categories']);
-      print('DEBUG: Parsed from categories key: $_cachedRatingCategories');
-    } else if (response is Map && response.containsKey('results')) {
-      _cachedRatingCategories = List<String>.from(response['results']);
-      print('DEBUG: Parsed from results key: $_cachedRatingCategories');
-    } else {
-      print('DEBUG: Unexpected response format: $response');
+    Exception? lastException;
+
+    for (String endpoint in possibleEndpoints) {
+      try {
+        final response = await ApiService.get(endpoint);
+
+        if (response is List) {
+          _cachedRatingCategories = List<String>.from(response);
+        } else if (response is Map && response.containsKey('categories')) {
+          _cachedRatingCategories = List<String>.from(response['categories']);
+        } else if (response is Map && response.containsKey('results')) {
+          _cachedRatingCategories = List<String>.from(response['results']);
+        } else {
+          continue; // Try next endpoint
+        }
+
+        if (_cachedRatingCategories != null && _cachedRatingCategories!.isNotEmpty) {
+          return _cachedRatingCategories!;
+        }
+      } catch (e) {
+        lastException = e is Exception ? e : Exception(e.toString());
+        continue; // Try next endpoint
+      }
     }
 
-    print('DEBUG: Final cached categories: $_cachedRatingCategories');
-    return _cachedRatingCategories!;
+    // If we get here, all endpoints failed
+    throw lastException ?? Exception('Failed to load rating categories from any endpoint');
   }
 
   // Clear cached categories (useful if backend updates them)
