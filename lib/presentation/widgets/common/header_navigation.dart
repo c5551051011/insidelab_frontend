@@ -72,7 +72,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Flexible(child: _buildDesktopMenu(context)),
+                      _buildDesktopMenu(context),
                       const SizedBox(width: 16),
                       Consumer<AuthProvider>(
                         builder: (context, authProvider, child) {
@@ -126,38 +126,44 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
 
     // Adjust menu items based on available width
     if (screenWidth < 950) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildNavItem(context, 'Labs', '/search'),
-          const SizedBox(width: 12),
-          _buildNavItem(context, 'Services', '/application-services'),
-        ],
+      return Flexible(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(child: _buildNavItem(context, 'Labs', '/search')),
+            const SizedBox(width: 8),
+            Flexible(child: _buildNavItem(context, 'Services', '/application-services')),
+          ],
+        ),
       );
     } else if (screenWidth < 1100) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildNavItem(context, 'Labs', '/search'),
-          const SizedBox(width: 16),
-          _buildNavItem(context, 'Marketplace', '/marketplace'),
-          const SizedBox(width: 16),
-          _buildNavItem(context, 'Services', '/application-services'),
-        ],
+      return Flexible(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(child: _buildNavItem(context, 'Labs', '/search')),
+            const SizedBox(width: 12),
+            Flexible(child: _buildNavItem(context, 'Marketplace', '/marketplace')),
+            const SizedBox(width: 12),
+            Flexible(child: _buildNavItem(context, 'Services', '/application-services')),
+          ],
+        ),
       );
     }
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildNavItem(context, 'Labs', '/search'),
-        const SizedBox(width: 24),
-        _buildNavItem(context, 'Marketplace', '/marketplace'),
-        const SizedBox(width: 24),
-        _buildNavItem(context, 'Services', '/application-services'),
-        const SizedBox(width: 24),
-        _buildNavItem(context, 'Success Stories', '/'),
-      ],
+    return Flexible(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(child: _buildNavItem(context, 'Labs', '/search')),
+          const SizedBox(width: 16),
+          Flexible(child: _buildNavItem(context, 'Marketplace', '/marketplace')),
+          const SizedBox(width: 16),
+          Flexible(child: _buildNavItem(context, 'Services', '/application-services')),
+          const SizedBox(width: 16),
+          Flexible(child: _buildNavItem(context, 'Success Stories', '/')),
+        ],
+      ),
     );
   }
 
@@ -174,6 +180,8 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
             fontWeight: FontWeight.w500,
             color: AppColors.textPrimary,
           ),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
       ),
     );

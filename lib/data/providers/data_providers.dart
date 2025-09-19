@@ -241,24 +241,45 @@ class AuthProvider extends ChangeNotifier {
         'department': userData['department']!,
       });
 
-      // Create user from backend response
-      _currentUser = User(
-        id: response['user']['id'].toString(),
-        email: response['user']['email'],
-        name: response['user']['name'] ?? response['user']['username'] ?? userData['email']!.split('@')[0],
-        verificationStatus: response['user']['is_verified'] == true
-            ? VerificationStatus.verified
-            : VerificationStatus.unverified,
-        isLabMember: response['user']['is_lab_member'] ?? false,
-        university: response['user']['university'],
-        department: response['user']['department'],
-        labName: response['user']['lab_name'],
-        position: response['user']['position'],
-        joinedDate: DateTime.parse(response['user']['created_at'] ?? DateTime.now().toIso8601String()),
-        reviewCount: response['user']['review_count'] ?? 0,
-        helpfulVotes: response['user']['helpful_votes'] ?? 0,
-      );
-      _isAuthenticated = true;
+      // For email verification flow, don't automatically authenticate
+      // User needs to verify email first
+      if (response['requires_verification'] == true || response['user']['is_verified'] == false) {
+        // Store user data but don't set as authenticated
+        _currentUser = User(
+          id: response['user']['id'].toString(),
+          email: response['user']['email'],
+          name: response['user']['name'] ?? response['user']['username'] ?? userData['email']!.split('@')[0],
+          verificationStatus: VerificationStatus.unverified,
+          isLabMember: response['user']['is_lab_member'] ?? false,
+          university: response['user']['university'],
+          department: response['user']['department'],
+          labName: response['user']['lab_name'],
+          position: response['user']['position'],
+          joinedDate: DateTime.parse(response['user']['created_at'] ?? DateTime.now().toIso8601String()),
+          reviewCount: response['user']['review_count'] ?? 0,
+          helpfulVotes: response['user']['helpful_votes'] ?? 0,
+        );
+        _isAuthenticated = false; // Don't authenticate until email is verified
+      } else {
+        // Legacy flow for already verified users
+        _currentUser = User(
+          id: response['user']['id'].toString(),
+          email: response['user']['email'],
+          name: response['user']['name'] ?? response['user']['username'] ?? userData['email']!.split('@')[0],
+          verificationStatus: response['user']['is_verified'] == true
+              ? VerificationStatus.verified
+              : VerificationStatus.unverified,
+          isLabMember: response['user']['is_lab_member'] ?? false,
+          university: response['user']['university'],
+          department: response['user']['department'],
+          labName: response['user']['lab_name'],
+          position: response['user']['position'],
+          joinedDate: DateTime.parse(response['user']['created_at'] ?? DateTime.now().toIso8601String()),
+          reviewCount: response['user']['review_count'] ?? 0,
+          helpfulVotes: response['user']['helpful_votes'] ?? 0,
+        );
+        _isAuthenticated = true;
+      }
     } catch (error) {
       print('Sign-up error: $error');
       if (error is ApiException) {
@@ -294,11 +315,18 @@ class AuthProvider extends ChangeNotifier {
       if (result != null) {
         // Try to sync with backend or create/update user
         try {
-          final response = await ApiService.post('/auth/google/', {
+          print('DEBUG: Google Sign-In result: $result');
+
+          // Prepare request data
+          final requestData = {
             'id_token': result['idToken'],
             'email': result['email'],
             'name': result['displayName'],
-          });
+          };
+
+          print('DEBUG: Sending Google auth request: $requestData');
+
+          final response = await ApiService.post('/auth/google/', requestData);
 
           // Save backend auth token
           await ApiService.setAuthToken(response['access']);

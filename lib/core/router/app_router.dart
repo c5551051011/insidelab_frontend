@@ -8,6 +8,8 @@ import '../../presentation/screens/reviews/reviews_browse_screen.dart';
 import '../../presentation/screens/reviews/review_detail_screen.dart';
 import '../../presentation/screens/auth/sign_in_screen.dart';
 import '../../presentation/screens/auth/sign_up_screen.dart';
+import '../../presentation/screens/auth/email_verification_screen.dart';
+import '../../presentation/screens/auth/verify_email_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
 import '../../presentation/screens/profile/my_reviews_screen.dart';
 import '../../presentation/screens/services/application_services_screen.dart';
@@ -32,6 +34,8 @@ class AppRouter {
   static const String reviewDetails = '/review-details';
   static const String signIn = '/sign-in';
   static const String signUp = '/sign-up';
+  static const String emailVerification = '/email-verification';
+  static const String verifyEmail = '/verify-email';
   static const String profile = '/profile';
   static const String myReviews = '/my-reviews';
   static const String applicationServices = '/application-services';
@@ -94,6 +98,21 @@ class AppRouter {
       case signUp:
         return MaterialPageRoute(
           builder: (_) => const SignUpScreen(),
+        );
+
+      case emailVerification:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => EmailVerificationScreen(
+            email: args?['email'] ?? '',
+            userId: args?['userId'],
+          ),
+        );
+
+      case verifyEmail:
+        final token = settings.arguments as String? ?? '';
+        return MaterialPageRoute(
+          builder: (_) => VerifyEmailScreen(token: token),
         );
 
       case profile:

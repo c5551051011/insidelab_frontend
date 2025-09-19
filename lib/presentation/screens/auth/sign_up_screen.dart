@@ -227,21 +227,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             },
           ),
           const SizedBox(height: 20),
-          TextFormField(
-            controller: _departmentController,
-            decoration: const InputDecoration(
-              labelText: 'Department',
-              hintText: 'e.g., Computer Science, Biology',
-              prefixIcon: Icon(Icons.school),
-              helperText: 'Your academic department',
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your department';
-              }
-              return null;
-            },
-          ),
+          _buildDepartmentDropdown(),
           const SizedBox(height: 20),
           TextFormField(
             controller: _passwordController,
@@ -435,50 +421,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
         });
 
         if (mounted) {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => AlertDialog(
-              icon: const Icon(
-                Icons.email,
-                size: 48,
-                color: AppColors.primary,
-              ),
-              title: const Text('Check Your Email!'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'We\'ve sent a verification link to:',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _emailController.text,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Click the link in the email to verify your account. '
-                        'You can sign in after verification.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    Navigator.pushReplacementNamed(context, '/sign-in');
-                  },
-                  child: const Text('Go to Sign In'),
-                ),
-              ],
-            ),
+          // Navigate to email verification screen
+          Navigator.pushReplacementNamed(
+            context,
+            '/email-verification',
+            arguments: {
+              'email': _emailController.text.trim(),
+              'userId': authProvider.currentUser?.id,
+            },
           );
         }
       } catch (e) {
@@ -639,6 +589,73 @@ class _SignUpScreenState extends State<SignUpScreen> {
         authProvider.clearError();
       }
     }
+  }
+
+  Widget _buildDepartmentDropdown() {
+    final departments = [
+      'Computer Science',
+      'Electrical Engineering',
+      'Mechanical Engineering',
+      'Chemical Engineering',
+      'Civil Engineering',
+      'Biomedical Engineering',
+      'Aerospace Engineering',
+      'Materials Science',
+      'Biology',
+      'Chemistry',
+      'Physics',
+      'Mathematics',
+      'Statistics',
+      'Psychology',
+      'Economics',
+      'Business Administration',
+      'Medicine',
+      'Pharmacy',
+      'Nursing',
+      'Public Health',
+      'Environmental Science',
+      'Geology',
+      'Anthropology',
+      'Sociology',
+      'Political Science',
+      'History',
+      'Philosophy',
+      'Literature',
+      'Art',
+      'Music',
+      'Other',
+    ];
+
+    return DropdownButtonFormField<String>(
+      value: _department,
+      decoration: const InputDecoration(
+        labelText: 'Department',
+        prefixIcon: Icon(Icons.school),
+        helperText: 'Select your academic department',
+      ),
+      items: departments.map((String department) {
+        return DropdownMenuItem<String>(
+          value: department,
+          child: Text(department),
+        );
+      }).toList(),
+      onChanged: (String? newValue) {
+        setState(() {
+          _department = newValue;
+          if (newValue != null && newValue != 'Other') {
+            _departmentController.text = newValue;
+          } else {
+            _departmentController.clear();
+          }
+        });
+      },
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please select your department';
+        }
+        return null;
+      },
+    );
   }
 
   @override

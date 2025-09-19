@@ -54,13 +54,7 @@ class ServicesSection extends StatelessWidget {
         'title': 'Professor & Lab Reviews',
         'description': 'Read honest reviews from current grad students about professors, research labs, and program culture. Make informed decisions about your graduate school applications.',
         'imagePath': 'images/review_image.png',
-        'route': '/',
-      },
-      {
-        'title': 'Service Marketplace',
-        'description': 'Browse and book services from verified graduate students and professionals. Get CV reviews, mock interviews, mentorship, and more.',
-        'imagePath': 'images/resume_image.png', // Reuse existing image temporarily
-        'route': '/marketplace',
+        'route': '/search',
       },
       {
         'title': 'CV & Resume Feedback',
@@ -92,28 +86,30 @@ class ServicesSection extends StatelessWidget {
     } else if (isTablet) {
       return Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildServiceCard(
-                  context: context,
-                  title: services[0]['title'] as String,
-                  description: services[0]['description'] as String,
-                  imagePath: services[0]['imagePath'] as String,
-                  route: services[0]['route'] as String,
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildServiceCard(
+                    context: context,
+                    title: services[0]['title'] as String,
+                    description: services[0]['description'] as String,
+                    imagePath: services[0]['imagePath'] as String,
+                    route: services[0]['route'] as String,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 24),
-              Expanded(
-                child: _buildServiceCard(
-                  context: context,
-                  title: services[1]['title'] as String,
-                  description: services[1]['description'] as String,
-                  imagePath: services[1]['imagePath'] as String,
-                  route: services[1]['route'] as String,
+                const SizedBox(width: 24),
+                Expanded(
+                  child: _buildServiceCard(
+                    context: context,
+                    title: services[1]['title'] as String,
+                    description: services[1]['description'] as String,
+                    imagePath: services[1]['imagePath'] as String,
+                    route: services[1]['route'] as String,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 24),
           Center(
@@ -131,20 +127,22 @@ class ServicesSection extends StatelessWidget {
         ],
       );
     } else {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: services.map((service) => Expanded(
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 12),
-            child: _buildServiceCard(
-              context: context,
-              title: service['title'] as String,
-              description: service['description'] as String,
-              imagePath: service['imagePath'] as String,
-              route: service['route'] as String,
+      return IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: services.map((service) => Expanded(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              child: _buildServiceCard(
+                context: context,
+                title: service['title'] as String,
+                description: service['description'] as String,
+                imagePath: service['imagePath'] as String,
+                route: service['route'] as String,
+              ),
             ),
-          ),
-        )).toList(),
+          )).toList(),
+        ),
       );
     }
   }
@@ -173,6 +171,7 @@ class ServicesSection extends StatelessWidget {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Image thumbnail
                   Container(
@@ -224,51 +223,61 @@ class ServicesSection extends StatelessWidget {
                   ),
                   
                   // Card content
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          description,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            color: AppColors.textSecondary,
-                            height: 1.5,
-                            fontFamily: 'Inter',
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Text(
-                              'Learn More',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
-                                fontFamily: 'Inter',
+                  Flexible(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                  fontFamily: 'Inter',
+                                ),
                               ),
+                              const SizedBox(height: 12),
+                              Text(
+                                description,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  color: AppColors.textSecondary,
+                                  height: 1.5,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Learn More',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                    fontFamily: 'Inter',
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.arrow_forward,
+                                  size: 16,
+                                  color: AppColors.primary,
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.arrow_forward,
-                              size: 16,
-                              color: AppColors.primary,
-                            ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

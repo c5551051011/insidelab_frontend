@@ -48,9 +48,6 @@ class AuthService {
     await ApiService.clearAuthToken();
   }
 
-  static Future<void> verifyEmail(String token) async {
-    await ApiService.post('/auth/verify-email/', {'token': token});
-  }
 
   static Future<Map<String, dynamic>?> getCurrentUser() async {
     try {
@@ -77,6 +74,45 @@ class AuthService {
       print('DEBUG: Token verification failed: $e');
       await ApiService.clearAuthToken();
       return false;
+    }
+  }
+
+  // Email verification methods
+  static Future<Map<String, dynamic>> verifyEmail(String token) async {
+    try {
+      print('DEBUG: Verifying email with token: $token');
+      final response = await ApiService.get('/auth/verify-email/$token/');
+      print('DEBUG: Email verification response: $response');
+      return response;
+    } catch (e) {
+      print('DEBUG: Email verification error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> resendVerificationEmail(String email) async {
+    try {
+      print('DEBUG: Resending verification email to: $email');
+      final response = await ApiService.post('/auth/resend-verification/', {
+        'email': email,
+      });
+      print('DEBUG: Resend verification response: $response');
+      return response;
+    } catch (e) {
+      print('DEBUG: Resend verification error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> unsubscribeFromEmails(String userId) async {
+    try {
+      print('DEBUG: Unsubscribing user: $userId');
+      final response = await ApiService.get('/auth/unsubscribe/$userId/');
+      print('DEBUG: Unsubscribe response: $response');
+      return response;
+    } catch (e) {
+      print('DEBUG: Unsubscribe error: $e');
+      rethrow;
     }
   }
 }
