@@ -7,11 +7,13 @@ import 'rating_stars.dart';
 class LabCard extends StatelessWidget {
   final Lab lab;
   final VoidCallback onTap;
+  final String? highlightQuery;
 
   const LabCard({
     Key? key,
     required this.lab,
     required this.onTap,
+    this.highlightQuery,
   }) : super(key: key);
 
   @override
@@ -27,13 +29,18 @@ class LabCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildAvatar(),
                   const SizedBox(width: 16),
                   Expanded(
+                    flex: 3,
                     child: _buildLabInfo(),
                   ),
-                  _buildRatingInfo(),
+                  Flexible(
+                    flex: 1,
+                    child: _buildRatingInfo(),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
@@ -68,9 +75,9 @@ class LabCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        _buildHighlightedText(
           lab.name,
-          style: const TextStyle(
+          const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -78,9 +85,9 @@ class LabCard extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 4),
-        Text(
+        _buildHighlightedText(
           '${lab.professorName} • ${lab.universityName}',
-          style: const TextStyle(
+          const TextStyle(
             color: AppColors.textSecondary,
             fontSize: 14,
           ),
@@ -96,24 +103,144 @@ class LabCard extends StatelessWidget {
               color: AppColors.textTertiary,
             ),
             const SizedBox(width: 4),
-            Text(
-              lab.department,
-              style: const TextStyle(
-                color: AppColors.textTertiary,
-                fontSize: 12,
+            Expanded(
+              child: _buildHighlightedText(
+                lab.department,
+                const TextStyle(
+                  color: AppColors.textTertiary,
+                  fontSize: 12,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
         ),
+        if (lab.researchAreas.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          SizedBox(
+            width: double.infinity,
+            child: _buildResearchAreas(),
+          ),
+        ],
       ],
+    );
+  }
+
+  Widget _buildResearchAreas() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Wrap(
+          spacing: 4,
+          runSpacing: 4,
+          children: lab.researchAreas.take(3).map((area) {
+            final isHighlighted = highlightQuery != null &&
+                highlightQuery!.isNotEmpty &&
+                area.toLowerCase().contains(highlightQuery!.toLowerCase());
+
+            return ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: constraints.maxWidth * 0.45, // Limit to 45% of available width
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isHighlighted
+                      ? AppColors.primary.withOpacity(0.2)
+                      : AppColors.background,
+                  borderRadius: BorderRadius.circular(8),
+                  border: isHighlighted
+                      ? Border.all(color: AppColors.primary, width: 1)
+                      : null,
+                ),
+                child: Text(
+                  area,
+                  style: TextStyle(
+                    color: isHighlighted ? AppColors.primary : AppColors.textTertiary,
+                    fontSize: 10,
+                    fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildHighlightedText(
+    String text,
+    TextStyle style, {
+    int? maxLines,
+    TextOverflow? overflow,
+  }) {
+    if (highlightQuery == null ||
+        highlightQuery!.isEmpty ||
+        !text.toLowerCase().contains(highlightQuery!.toLowerCase())) {
+      return Text(
+        text,
+        style: style,
+        maxLines: maxLines,
+        overflow: overflow,
+      );
+    }
+
+    final query = highlightQuery!.toLowerCase();
+    final lowerText = text.toLowerCase();
+    final spans = <TextSpan>[];
+
+    int start = 0;
+    int index = lowerText.indexOf(query);
+
+    while (index != -1) {
+      // Add text before the match
+      if (index > start) {
+        spans.add(TextSpan(
+          text: text.substring(start, index),
+          style: style,
+        ));
+      }
+
+      // Add highlighted match
+      spans.add(TextSpan(
+        text: text.substring(index, index + query.length),
+        style: style.copyWith(
+          backgroundColor: AppColors.primary.withOpacity(0.2),
+          color: AppColors.primary,
+          fontWeight: FontWeight.w600,
+        ),
+      ));
+
+      start = index + query.length;
+      index = lowerText.indexOf(query, start);
+    }
+
+    // Add remaining text
+    if (start < text.length) {
+      spans.add(TextSpan(
+        text: text.substring(start),
+        style: style,
+      ));
+    }
+
+    return RichText(
+      text: TextSpan(children: spans),
+      maxLines: maxLines,
+      overflow: overflow ?? TextOverflow.ellipsis,
+      softWrap: true,
     );
   }
 
   Widget _buildRatingInfo() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             RatingStars(rating: lab.overallRating, size: 20),
             const SizedBox(width: 8),
@@ -225,7 +352,6 @@ class LabCard extends StatelessWidget {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const Spacer(),
                 Container(
                   width: 60,
                   height: 4,

@@ -79,6 +79,9 @@ class _FilterSidebarState extends State<FilterSidebar> {
                     _minRating = value;
                   });
                 },
+                onChangeEnd: (value) {
+                  _applyFilters(); // Apply filters when user finishes sliding
+                },
               ),
             ),
             Text(
@@ -132,6 +135,7 @@ class _FilterSidebarState extends State<FilterSidebar> {
                     _selectedUniversities.remove(uni);
                   }
                 });
+                _applyFilters(); // Apply filters immediately
               },
             );
           }).toList(),
@@ -178,6 +182,7 @@ class _FilterSidebarState extends State<FilterSidebar> {
                     _selectedResearchAreas.remove(area);
                   }
                 });
+                _applyFilters(); // Apply filters immediately
               },
             );
           }).toList(),
@@ -222,6 +227,7 @@ class _FilterSidebarState extends State<FilterSidebar> {
                     _selectedTags.remove(tag);
                   }
                 });
+                _applyFilters(); // Apply filters immediately
               },
               controlAffinity: ListTileControlAffinity.leading,
               dense: true,

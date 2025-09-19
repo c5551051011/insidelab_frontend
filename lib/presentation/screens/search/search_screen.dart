@@ -2,7 +2,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/lab.dart';
+import '../../../services/search_service.dart';
 import '../../widgets/lab_card.dart';
+import '../../widgets/enhanced_search_bar.dart';
 import 'widgets/filter_sidebar.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -18,20 +20,32 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  late TextEditingController _searchController;
+  String _currentQuery = '';
   Map<String, dynamic> _filters = {};
+  List<Lab> _searchResults = [];
+  bool _isLoading = false;
+  String? _errorMessage;
+  String _sortBy = 'rating';
+  int _currentPage = 1;
+  bool _hasMoreResults = true;
 
   @override
   void initState() {
     super.initState();
-    _searchController = TextEditingController(text: widget.initialQuery);
+    _currentQuery = widget.initialQuery ?? '';
+    // Always perform search - if query is empty, it will show all labs
+    _performSearch();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: _buildSearchBar(),
+        title: EnhancedSearchBar(
+          initialQuery: _currentQuery,
+          onSearch: _onSearchSubmitted,
+          onQueryChanged: _onQueryChanged,
+        ),
         backgroundColor: Colors.white,
         elevation: 1,
       ),
@@ -43,11 +57,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 SizedBox(
                   width: 300,
                   child: FilterSidebar(
-                    onFiltersChanged: (filters) {
-                      setState(() {
-                        _filters = filters;
-                      });
-                    },
+                    onFiltersChanged: _onFiltersChanged,
                   ),
                 ),
                 Expanded(
@@ -63,75 +73,224 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildResults() {
     return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(width: 16),
-          const Icon(Icons.search, color: AppColors.textSecondary),
-          const SizedBox(width: 8),
+          _buildResultsHeader(),
+          const SizedBox(height: 8),
+          _buildSortOptions(),
+          const SizedBox(height: 24),
           Expanded(
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: 'Search labs, professors, universities...',
-                border: InputBorder.none,
-              ),
-              onSubmitted: (_) => _performSearch(),
-            ),
-          ),
-          IconButton(
-            onPressed: _performSearch,
-            icon: const Icon(Icons.search),
-            color: AppColors.primary,
+            child: _buildResultsList(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildResults() {
-    // TODO: Replace with actual search results
-    final results = _getMockSearchResults();
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildResultsHeader() {
+    if (_isLoading && _searchResults.isEmpty) {
+      return const Row(
         children: [
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: 12),
           Text(
-            '${results.length} labs found for "${_searchController.text}"',
-            style: const TextStyle(
+            'Searching...',
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
           ),
+        ],
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.red, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Search Error',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
-          _buildSortOptions(),
-          const SizedBox(height: 24),
-          Expanded(
-            child: ListView.builder(
-              itemCount: results.length,
-              itemBuilder: (context, index) {
-                return LabCard(
-                  lab: results[index],
-                  onTap: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/lab-detail',
-                      arguments: results[index],
-                    );
-                  },
-                );
-              },
+          Text(
+            _errorMessage!,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
             ),
           ),
+        ],
+      );
+    }
+
+    final resultCount = _searchResults.length;
+    final queryText = _currentQuery.isNotEmpty ? ' for "$_currentQuery"' : '';
+
+    return Text(
+      '$resultCount lab${resultCount != 1 ? 's' : ''} found$queryText',
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  Widget _buildResultsList() {
+    if (_isLoading && _searchResults.isEmpty) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: AppColors.textSecondary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Something went wrong',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _errorMessage!,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _performSearch,
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_searchResults.isEmpty && !_isLoading) {
+      return _buildEmptyState();
+    }
+
+    return ListView.builder(
+      itemCount: _searchResults.length + (_hasMoreResults ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index == _searchResults.length) {
+          // Load more indicator
+          return Container(
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _loadMoreResults,
+                      child: const Text('Load More'),
+                    ),
+            ),
+          );
+        }
+
+        final lab = _searchResults[index];
+        return LabCard(
+          lab: lab,
+          onTap: () {
+            Navigator.pushNamed(
+              context,
+              '/lab-detail',
+              arguments: lab,
+            );
+          },
+          highlightQuery: _currentQuery,
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.search_off,
+            size: 64,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No labs found',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _currentQuery.isNotEmpty
+                ? 'Try adjusting your search terms or filters'
+                : 'Enter a search term to find labs',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          if (_currentQuery.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 8,
+              children: [
+                ActionChip(
+                  label: const Text('Clear search'),
+                  onPressed: () {
+                    setState(() {
+                      _currentQuery = '';
+                      _searchResults.clear();
+                    });
+                  },
+                ),
+                ActionChip(
+                  label: const Text('Clear filters'),
+                  onPressed: () {
+                    setState(() {
+                      _filters.clear();
+                    });
+                    _performSearch();
+                  },
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -143,219 +302,136 @@ class _SearchScreenState extends State<SearchScreen> {
         const Text('Sort by:'),
         const SizedBox(width: 8),
         DropdownButton<String>(
-          value: 'rating',
+          value: _sortBy,
           items: const [
             DropdownMenuItem(value: 'rating', child: Text('Rating')),
             DropdownMenuItem(value: 'reviews', child: Text('Reviews')),
             DropdownMenuItem(value: 'name', child: Text('Name')),
+            DropdownMenuItem(value: 'newest', child: Text('Newest')),
           ],
           onChanged: (value) {
-            // TODO: Implement sorting
+            if (value != null) {
+              setState(() {
+                _sortBy = value;
+              });
+              _performSearch();
+            }
           },
         ),
+        const Spacer(),
+        if (_isLoading && _searchResults.isNotEmpty)
+          Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Loading more...',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
       ],
     );
   }
 
-  void _performSearch() {
-    // TODO: Implement actual search
-    setState(() {});
+  // Event handlers
+  void _onSearchSubmitted(String query) {
+    setState(() {
+      _currentQuery = query.trim();
+      _currentPage = 1;
+      _hasMoreResults = true;
+    });
+    _performSearch();
   }
 
-  List<Lab> _getMockSearchResults() {
-    return [
-      Lab(
-        id: '1',
-        name: 'Stanford AI Lab (SAIL)',
-        professorName: 'Dr. Fei-Fei Li',
-        professorId: 'prof1',
-        universityName: 'Stanford University',
-        universityId: 'uni1',
-        department: 'Computer Science',
-        overallRating: 4.6,
-        reviewCount: 128,
-        researchAreas: ['Computer Vision', 'AI Safety', 'Deep Learning'],
-        tags: ['Well Funded', 'Industry Focus', 'Publication Heavy'],
-        description: 'Leading AI research lab focusing on computer vision and AI safety with strong industry connections.',
-        website: 'https://ai.stanford.edu/',
-        labSize: 45,
-        ratingBreakdown: {
-          'Mentorship Quality': 4.5,
-          'Research Environment': 4.8,
-          'Work-Life Balance': 3.9,
-          'Career Support': 4.7,
-          'Funding & Resources': 4.9,
-          'Collaboration Culture': 4.4,
-        },
-        recruitmentStatus: RecruitmentStatus(
-          isRecruitingPhD: true,
-          isRecruitingPostdoc: true,
-          isRecruitingIntern: false,
-          notes: 'Actively recruiting PhD students in computer vision and robotics',
-          lastUpdated: DateTime.now().subtract(const Duration(days: 7)),
-        ),
-      ),
-      Lab(
-        id: '2',
-        name: 'MIT CSAIL',
-        professorName: 'Dr. Regina Barzilay',
-        professorId: 'prof2',
-        universityName: 'MIT',
-        universityId: 'uni2',
-        department: 'EECS',
-        overallRating: 4.7,
-        reviewCount: 156,
-        researchAreas: ['NLP', 'Machine Learning', 'Healthcare AI'],
-        tags: ['Top Tier', 'Collaborative', 'Innovation Focused'],
-        description: 'Cutting-edge research in NLP and healthcare AI with focus on real-world impact.',
-        website: 'https://www.csail.mit.edu/',
-        labSize: 32,
-        ratingBreakdown: {
-          'Mentorship Quality': 4.8,
-          'Research Environment': 4.9,
-          'Work-Life Balance': 4.2,
-          'Career Support': 4.6,
-          'Funding & Resources': 4.8,
-          'Collaboration Culture': 4.7,
-        },
-        recruitmentStatus: RecruitmentStatus(
-          isRecruitingPhD: false,
-          isRecruitingPostdoc: true,
-          isRecruitingIntern: true,
-          notes: 'No PhD openings this year, but accepting exceptional postdocs',
-          lastUpdated: DateTime.now().subtract(const Duration(days: 3)),
-        ),
-      ),
-      Lab(
-        id: '3',
-        name: 'Berkeley AI Research Lab (BAIR)',
-        professorName: 'Dr. Pieter Abbeel',
-        professorId: 'prof3',
-        universityName: 'UC Berkeley',
-        universityId: 'uni3',
-        department: 'EECS',
-        overallRating: 4.8,
-        reviewCount: 142,
-        researchAreas: ['Robotics', 'Reinforcement Learning', 'Deep Learning'],
-        tags: ['Startup Culture', 'Well Funded', 'Industry Focus'],
-        description: 'Premier robotics and RL lab with strong startup connections and industry impact.',
-        website: 'https://bair.berkeley.edu/',
-        labSize: 38,
-        ratingBreakdown: {
-          'Mentorship Quality': 4.6,
-          'Research Environment': 4.9,
-          'Work-Life Balance': 4.0,
-          'Career Support': 4.8,
-          'Funding & Resources': 4.7,
-          'Collaboration Culture': 4.5,
-        },
-        recruitmentStatus: RecruitmentStatus(
-          isRecruitingPhD: true,
-          isRecruitingPostdoc: false,
-          isRecruitingIntern: true,
-          notes: 'Looking for PhD students with robotics background',
-          lastUpdated: DateTime.now().subtract(const Duration(days: 14)),
-        ),
-      ),
-      Lab(
-        id: '4',
-        name: 'Carnegie Mellon Robotics Institute',
-        professorName: 'Dr. Katia Sycara',
-        professorId: 'prof4',
-        universityName: 'Carnegie Mellon University',
-        universityId: 'uni4',
-        department: 'Robotics',
-        overallRating: 4.5,
-        reviewCount: 94,
-        researchAreas: ['Multi-Agent Systems', 'Human-Robot Interaction', 'AI Planning'],
-        tags: ['Research Heavy', 'Government Funding', 'Interdisciplinary'],
-        description: 'World-renowned robotics research with focus on multi-agent systems and human-robot interaction.',
-        website: 'https://www.ri.cmu.edu/',
-        labSize: 28,
-        ratingBreakdown: {
-          'Mentorship Quality': 4.3,
-          'Research Environment': 4.8,
-          'Work-Life Balance': 4.1,
-          'Career Support': 4.2,
-          'Funding & Resources': 4.6,
-          'Collaboration Culture': 4.4,
-        },
-        recruitmentStatus: RecruitmentStatus(
-          isRecruitingPhD: true,
-          isRecruitingPostdoc: true,
-          isRecruitingIntern: false,
-          notes: 'Seeking students interested in human-robot collaboration',
-          lastUpdated: DateTime.now().subtract(const Duration(days: 21)),
-        ),
-      ),
-      Lab(
-        id: '5',
-        name: 'University of Toronto Vector Institute',
-        professorName: 'Dr. Geoffrey Hinton',
-        professorId: 'prof5',
-        universityName: 'University of Toronto',
-        universityId: 'uni5',
-        department: 'Computer Science',
-        overallRating: 4.9,
-        reviewCount: 234,
-        researchAreas: ['Deep Learning', 'Neural Networks', 'AI Safety'],
-        tags: ['Legendary', 'Innovation Focused', 'Collaborative'],
-        description: 'Home of deep learning pioneers with groundbreaking research in neural networks and AI safety.',
-        website: 'https://vectorinstitute.ai/',
-        labSize: 52,
-        ratingBreakdown: {
-          'Mentorship Quality': 4.9,
-          'Research Environment': 5.0,
-          'Work-Life Balance': 4.3,
-          'Career Support': 4.8,
-          'Funding & Resources': 4.9,
-          'Collaboration Culture': 4.8,
-        },
-        recruitmentStatus: RecruitmentStatus(
-          isRecruitingPhD: false,
-          isRecruitingPostdoc: false,
-          isRecruitingIntern: false,
-          notes: 'Not currently recruiting - highly competitive lab',
-          lastUpdated: DateTime.now().subtract(const Duration(days: 2)),
-        ),
-      ),
-      Lab(
-        id: '6',
-        name: 'Google DeepMind (University Partnership)',
-        professorName: 'Dr. Demis Hassabis',
-        professorId: 'prof6',
-        universityName: 'Multiple Universities',
-        universityId: 'uni6',
-        department: 'Computer Science / AI',
-        overallRating: 4.4,
-        reviewCount: 67,
-        researchAreas: ['Reinforcement Learning', 'Game AI', 'General AI'],
-        tags: ['Industry Leader', 'Cutting Edge', 'High Pressure'],
-        description: 'Industrial research lab with university partnerships, pushing the boundaries of general AI.',
-        website: 'https://deepmind.com/',
-        labSize: 15,
-        ratingBreakdown: {
-          'Mentorship Quality': 4.0,
-          'Research Environment': 4.9,
-          'Work-Life Balance': 3.8,
-          'Career Support': 4.7,
-          'Funding & Resources': 5.0,
-          'Collaboration Culture': 4.1,
-        },
-        recruitmentStatus: RecruitmentStatus(
-          isRecruitingPhD: true,
-          isRecruitingPostdoc: true,
-          isRecruitingIntern: true,
-          notes: 'Partnership program with select universities',
-          lastUpdated: DateTime.now().subtract(const Duration(days: 5)),
-        ),
-      ),
-    ];
+  void _onQueryChanged(String query) {
+    // Optionally implement real-time search
+    // For now, we'll only search on submit
   }
+
+  void _onFiltersChanged(Map<String, dynamic> filters) {
+    setState(() {
+      _filters = filters;
+      _currentPage = 1;
+      _hasMoreResults = true;
+    });
+    _performSearch();
+  }
+
+  Future<void> _performSearch() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      if (_currentPage == 1) {
+        _searchResults.clear();
+      }
+    });
+
+    try {
+      final results = await SearchService.searchLabs(
+        query: _currentQuery,
+        filters: _filters,
+        page: _currentPage,
+        limit: 20,
+      );
+
+      setState(() {
+        if (_currentPage == 1) {
+          _searchResults = results;
+        } else {
+          _searchResults.addAll(results);
+        }
+        _hasMoreResults = results.length >= 20;
+        _applySorting();
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to search labs: ${e.toString()}';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadMoreResults() async {
+    if (_isLoading || !_hasMoreResults) return;
+
+    setState(() {
+      _currentPage++;
+    });
+
+    await _performSearch();
+  }
+
+  void _applySorting() {
+    switch (_sortBy) {
+      case 'rating':
+        _searchResults.sort((a, b) => b.overallRating.compareTo(a.overallRating));
+        break;
+      case 'reviews':
+        _searchResults.sort((a, b) => b.reviewCount.compareTo(a.reviewCount));
+        break;
+      case 'name':
+        _searchResults.sort((a, b) => a.name.compareTo(b.name));
+        break;
+      case 'newest':
+        // Sort by a newest field if available, or keep current order
+        break;
+    }
+  }
+
 
   @override
   void dispose() {
-    _searchController.dispose();
     super.dispose();
   }
 }
