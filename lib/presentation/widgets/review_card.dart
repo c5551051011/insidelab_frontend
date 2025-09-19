@@ -42,34 +42,69 @@ class ReviewCard extends StatelessWidget {
 
   Widget _buildHeader() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            RatingStars(rating: review.rating),
-            const SizedBox(width: 8),
-            Text(
-              review.rating.toStringAsFixed(1),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            if (review.isVerified) ...[
-              const SizedBox(width: 8),
-              const Icon(
-                Icons.verified,
-                size: 16,
-                color: AppColors.primary,
-              ),
-            ],
-          ],
+        // Left side - rating info (can shrink)
+        Flexible(
+          flex: 2,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // If we have very little space, show only rating with stars
+              if (constraints.maxWidth < 120) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(child: RatingStars(rating: review.rating)),
+                    if (review.isVerified) ...[
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.verified,
+                        size: 14,
+                        color: AppColors.primary,
+                      ),
+                    ],
+                  ],
+                );
+              }
+
+              // Normal layout with rating number
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(child: RatingStars(rating: review.rating)),
+                  const SizedBox(width: 8),
+                  Text(
+                    review.rating.toStringAsFixed(1),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (review.isVerified) ...[
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.verified,
+                      size: 16,
+                      color: AppColors.primary,
+                    ),
+                  ],
+                ],
+              );
+            },
+          ),
         ),
-        Text(
-          '${review.position} • ${review.duration} • ${_formatDate(review.reviewDate)}',
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
+        const SizedBox(width: 8),
+        // Right side - metadata (can shrink)
+        Expanded(
+          flex: 3,
+          child: Text(
+            '${review.position} • ${review.duration} • ${_formatDate(review.reviewDate)}',
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ),
       ],

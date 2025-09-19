@@ -235,33 +235,60 @@ class LabCard extends StatelessWidget {
   }
 
   Widget _buildRatingInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Check if we have very limited space
+        final isVerySmall = constraints.maxWidth < 100;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisSize: MainAxisSize.min,
           children: [
-            RatingStars(rating: lab.overallRating, size: 20),
-            const SizedBox(width: 8),
+            if (isVerySmall)
+              // Stack rating vertically when space is very limited
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    lab.overallRating.toStringAsFixed(1),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  RatingStars(rating: lab.overallRating, size: 16),
+                ],
+              )
+            else
+              // Use horizontal layout when space allows
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: RatingStars(rating: lab.overallRating, size: 20),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    lab.overallRating.toStringAsFixed(1),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 4),
             Text(
-              lab.overallRating.toStringAsFixed(1),
+              '${lab.reviewCount} reviews',
               style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+                color: AppColors.textSecondary,
+                fontSize: 14,
               ),
             ),
           ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '${lab.reviewCount} reviews',
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 
