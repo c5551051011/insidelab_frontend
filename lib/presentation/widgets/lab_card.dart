@@ -76,7 +76,7 @@ class LabCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHighlightedText(
-          lab.name,
+          '${lab.professorName} • ${lab.universityName}',
           const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -86,7 +86,7 @@ class LabCard extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         _buildHighlightedText(
-          '${lab.professorName} • ${lab.universityName}',
+          lab.name,
           const TextStyle(
             color: AppColors.textSecondary,
             fontSize: 14,
