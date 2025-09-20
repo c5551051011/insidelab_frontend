@@ -2,6 +2,7 @@
 // presentation/screens/auth/sign_up_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:math';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/providers/data_providers.dart';
@@ -30,6 +31,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _obscureConfirmPassword = true;
   bool _agreedToTerms = false;
   bool _allowEmails = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _generateRandomUsername();
+  }
+
+  void _generateRandomUsername() {
+    final random = Random();
+
+    // Adjectives for friendly usernames
+    final adjectives = [
+      'Smart', 'Bright', 'Quick', 'Swift', 'Sharp', 'Wise', 'Bold', 'Cool',
+      'Fast', 'Strong', 'Clear', 'Fresh', 'Young', 'New', 'Pure', 'True',
+      'Deep', 'High', 'Wild', 'Free', 'Safe', 'Easy', 'Fine', 'Good',
+      'Kind', 'Nice', 'Calm', 'Fair', 'Real', 'Rich', 'Soft', 'Warm'
+    ];
+
+    // Nouns related to academia/research
+    final nouns = [
+      'Scholar', 'Student', 'Learner', 'Thinker', 'Reader', 'Writer', 'Seeker',
+      'Explorer', 'Finder', 'Builder', 'Maker', 'Creator', 'Helper', 'Leader',
+      'Dreamer', 'Planner', 'Doer', 'Walker', 'Runner', 'Climber', 'Flyer',
+      'Star', 'Moon', 'Sun', 'River', 'Ocean', 'Mountain', 'Forest', 'Garden',
+      'Bridge', 'Tower', 'Castle', 'House', 'Path', 'Journey', 'Quest', 'Goal'
+    ];
+
+    final adjective = adjectives[random.nextInt(adjectives.length)];
+    final noun = nouns[random.nextInt(nouns.length)];
+    final number = random.nextInt(999) + 1; // 1-999
+
+    final username = '$adjective$noun$number';
+    _usernameController.text = username;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -163,27 +198,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             },
           ),
           const SizedBox(height: 20),
-          TextFormField(
-            controller: _usernameController,
-            decoration: const InputDecoration(
-              labelText: 'Username (Anonymous)',
-              hintText: 'Choose a username',
-              prefixIcon: Icon(Icons.person),
-              helperText: 'This will be shown on your reviews',
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please choose a username';
-              }
-              if (value.length < 3) {
-                return 'Username must be at least 3 characters';
-              }
-              if (value.length > 20) {
-                return 'Username must be less than 20 characters';
-              }
-              return null;
-            },
-          ),
+          _buildUsernameField(),
           const SizedBox(height: 20),
           TextFormField(
             controller: _nameController,
@@ -278,6 +293,94 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildUsernameField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _usernameController,
+                decoration: const InputDecoration(
+                  labelText: 'Username (Anonymous)',
+                  hintText: 'Auto-generated for privacy',
+                  prefixIcon: Icon(Icons.person),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please choose a username';
+                  }
+                  if (value.length < 3) {
+                    return 'Username must be at least 3 characters';
+                  }
+                  if (value.length > 20) {
+                    return 'Username must be less than 20 characters';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: _generateRandomUsername,
+              icon: const Icon(Icons.refresh),
+              tooltip: 'Generate new username',
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.primary.withOpacity(0.1),
+                foregroundColor: AppColors.primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.info.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: AppColors.info.withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.privacy_tip_outlined,
+                color: AppColors.info,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Privacy Recommendation',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.info,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'We recommend using the auto-generated username to protect your privacy. You can change it, but random usernames help keep your reviews anonymous.',
+                      style: TextStyle(
+                        color: AppColors.info,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
