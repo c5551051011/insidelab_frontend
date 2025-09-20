@@ -10,6 +10,7 @@ import '../../../data/models/review.dart';
 import 'widgets/lab_header.dart';
 import 'widgets/rating_breakdown.dart';
 import 'widgets/reviews_list.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LabDetailScreen extends StatelessWidget {
   final Lab lab;
@@ -495,6 +496,10 @@ class LabDetailScreen extends StatelessWidget {
                 );
               }).toList(),
             ),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+            _buildReportIssueSection(),
           ],
         ),
       ),
@@ -519,13 +524,16 @@ class LabDetailScreen extends StatelessWidget {
           ),
           Expanded(
             child: isLink
-                ? Text(
-              value,
-              style: const TextStyle(
-                color: AppColors.primary,
-                decoration: TextDecoration.underline,
-              ),
-            )
+                ? InkWell(
+                    onTap: () => _launchUrl(value),
+                    child: Text(
+                      value,
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  )
                 : Text(value),
           ),
         ],
@@ -558,5 +566,229 @@ class LabDetailScreen extends StatelessWidget {
   double _adjustRating(double baseRating, int adjustment) {
     final adjusted = baseRating + (adjustment * 0.1);
     return (adjusted < 1.0) ? 1.0 : (adjusted > 5.0) ? 5.0 : adjusted;
+  }
+
+  Widget _buildReportIssueSection() {
+    return Builder(
+      builder: (context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.report_outlined,
+                size: 20,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Found incorrect information?',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Help us improve lab information accuracy. Report issues with department, website, research areas, recruitment status, or any other details.',
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: () => _showReportIssueDialog(context),
+            icon: const Icon(Icons.email_outlined, size: 18),
+            label: const Text('Report Information Issue'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              side: BorderSide(color: AppColors.primary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReportIssueDialog(BuildContext context) {
+    final issueController = TextEditingController();
+    final correctionController = TextEditingController();
+    final sourceController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.report_outlined, color: AppColors.primary),
+            const SizedBox(width: 8),
+            const Text('Report Information Issue'),
+          ],
+        ),
+        content: SizedBox(
+          width: 500,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Lab: ${lab.name}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                      Text('Professor: ${lab.professorName}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                      Text('University: ${lab.universityName}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'What information is incorrect?',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: issueController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    hintText: 'Describe what information is wrong (e.g., "Department should be Computer Science, not Electrical Engineering")',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'What is the correct information?',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: correctionController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    hintText: 'Provide the correct information',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Source/Verification (optional)',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: sourceController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    hintText: 'Source of the correct information (e.g., official website, lab page)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              if (issueController.text.trim().isNotEmpty) {
+                _sendCorrectionEmail(
+                  context,
+                  issueController.text.trim(),
+                  correctionController.text.trim(),
+                  sourceController.text.trim(),
+                );
+                Navigator.pop(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please describe what information is incorrect.'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.send, size: 16),
+            label: const Text('Send Report'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _sendCorrectionEmail(BuildContext context, String issue, String correction, String source) async {
+    final subject = Uri.encodeComponent('Lab Information Correction - ${lab.name}');
+    final body = Uri.encodeComponent(
+      'Lab Information Correction Request\n\n'
+      'Lab Name: ${lab.name}\n'
+      'Professor: ${lab.professorName}\n'
+      'University: ${lab.universityName}\n'
+      'Department: ${lab.department}\n\n'
+      'Issue Description:\n$issue\n\n'
+      'Correct Information:\n$correction\n\n'
+      '${source.isNotEmpty ? 'Source/Verification:\n$source\n\n' : ''}'
+      'Thank you for helping improve InsideLab!'
+    );
+
+    final emailUrl = Uri.parse('mailto:insidelab25@gmail.com?subject=$subject&body=$body');
+
+    try {
+      if (await canLaunchUrl(emailUrl)) {
+        await launchUrl(emailUrl);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Opening email client...'),
+              backgroundColor: AppColors.success,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        throw 'Could not launch email client';
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Please email insidelab25@gmail.com with the correction details.'),
+            backgroundColor: AppColors.warning,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _launchUrl(String url) async {
+    // Ensure URL has proper protocol
+    String formattedUrl = url;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      formattedUrl = 'https://$url';
+    }
+
+    final uri = Uri.parse(formattedUrl);
+
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not launch $formattedUrl';
+      }
+    } catch (e) {
+      print('Error launching URL: $e');
+    }
   }
 }
