@@ -1,24 +1,90 @@
 // presentation/screens/lab_detail/lab_detail_screen.dart
 import 'package:flutter/material.dart';
-import 'package:insidelab/presentation/widgets/rating_radar_chart.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/lab.dart';
-import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../data/models/lab.dart';
-import '../../../data/models/review.dart';
+import '../../../services/lab_service.dart';
 import 'widgets/lab_header.dart';
 import 'widgets/rating_breakdown.dart';
 import 'widgets/reviews_list.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class LabDetailScreen extends StatelessWidget {
+class LabDetailScreen extends StatefulWidget {
   final Lab lab;
 
   const LabDetailScreen({
     Key? key,
     required this.lab,
   }) : super(key: key);
+
+  @override
+  State<LabDetailScreen> createState() => _LabDetailScreenState();
+}
+
+class _LabDetailScreenState extends State<LabDetailScreen> {
+  Map<String, double>? _ratingBreakdown;
+  bool _isLoadingRatings = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRatingBreakdown();
+  }
+
+  Future<void> _loadRatingBreakdown() async {
+    try {
+      final averages = await LabService.getLabAverages(widget.lab.id);
+      if (averages != null && mounted) {
+        setState(() {
+          _ratingBreakdown = _convertToRatingBreakdown(averages);
+          _isLoadingRatings = false;
+        });
+      } else {
+        // Fallback to static data if backend doesn't return data
+        setState(() {
+          _ratingBreakdown = _getStaticRatingBreakdown();
+          _isLoadingRatings = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading rating breakdown: $e');
+      if (mounted) {
+        setState(() {
+          _ratingBreakdown = _getStaticRatingBreakdown();
+          _isLoadingRatings = false;
+        });
+      }
+    }
+  }
+
+  Map<String, double> _convertToRatingBreakdown(Map<String, dynamic> averages) {
+    // Convert backend response to rating breakdown format
+    return {
+      'Mentorship Quality': (averages['mentorship_quality'] ?? widget.lab.overallRating).toDouble(),
+      'Research Environment': (averages['research_environment'] ?? widget.lab.overallRating).toDouble(),
+      'Work-Life Balance': (averages['work_life_balance'] ?? widget.lab.overallRating).toDouble(),
+      'Career Support': (averages['career_support'] ?? widget.lab.overallRating).toDouble(),
+      'Funding & Resources': (averages['funding_resources'] ?? widget.lab.overallRating).toDouble(),
+      'Collaboration Culture': (averages['collaboration_culture'] ?? widget.lab.overallRating).toDouble(),
+    };
+  }
+
+  Map<String, double> _getStaticRatingBreakdown() {
+    // Static data based on overall rating, but consistent (not changing with window size)
+    final baseRating = widget.lab.overallRating;
+    return {
+      'Mentorship Quality': _adjustRating(baseRating, 0.2),
+      'Research Environment': _adjustRating(baseRating, -0.1),
+      'Work-Life Balance': _adjustRating(baseRating, -0.3),
+      'Career Support': _adjustRating(baseRating, 0.1),
+      'Funding & Resources': _adjustRating(baseRating, 0.0),
+      'Collaboration Culture': _adjustRating(baseRating, 0.2),
+    };
+  }
+
+  double _adjustRating(double baseRating, double adjustment) {
+    final adjusted = baseRating + adjustment;
+    return adjusted.clamp(1.0, 5.0);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +95,7 @@ class LabDetailScreen extends StatelessWidget {
           SliverToBoxAdapter(
             child: Column(
               children: [
-                LabHeader(lab: lab),
+                LabHeader(lab: widget.lab),
                 const SizedBox(height: 24),
                 _buildContent(context),
               ],
@@ -45,7 +111,7 @@ class LabDetailScreen extends StatelessWidget {
       pinned: true,
       expandedHeight: 200,
       flexibleSpace: FlexibleSpaceBar(
-        title: Text(lab.name),
+        title: Text(widget.lab.name),
         background: Container(
           decoration: const BoxDecoration(
             gradient: AppColors.primaryGradient,
@@ -69,7 +135,9 @@ class LabDetailScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       // Always show rating breakdown with sample data if real data is not available
-                      RatingBreakdown(ratings: _getRatingBreakdownData()),
+                      _isLoadingRatings
+                          ? const Center(child: CircularProgressIndicator())
+                          : RatingBreakdown(ratings: _ratingBreakdown ?? {}),
                       const SizedBox(height: 24),
                       const SizedBox(height: 24),
                       _buildLabInfo(),
@@ -85,7 +153,7 @@ class LabDetailScreen extends StatelessWidget {
                 const SizedBox(width: 24),
                 Expanded(
                   flex: 4,
-                  child: ReviewsList(labId: lab.id),
+                  child: ReviewsList(labId: widget.lab.id),
                 ),
               ],
             );
@@ -93,7 +161,9 @@ class LabDetailScreen extends StatelessWidget {
             return Column(
               children: [
                 // Always show rating breakdown with sample data if real data is not available
-                RatingBreakdown(ratings: _getRatingBreakdownData()),
+                _isLoadingRatings
+                    ? const Center(child: CircularProgressIndicator())
+                    : RatingBreakdown(ratings: _ratingBreakdown ?? {}),
                 const SizedBox(height: 24),
                 const SizedBox(height: 24),
                 _buildLabInfo(),
@@ -104,7 +174,7 @@ class LabDetailScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 _buildRecentPublications(),
                 const SizedBox(height: 24),
-                ReviewsList(labId: lab.id),
+                ReviewsList(labId: widget.lab.id),
               ],
             );
           }
@@ -115,7 +185,7 @@ class LabDetailScreen extends StatelessWidget {
 
   /*
   Widget _buildRadarChart() {
-    if (lab.ratingBreakdown == null) return const SizedBox.shrink();
+    if (widget.lab.ratingBreakdown == null) return const SizedBox.shrink();
 
     return Card(
       child: Padding(
@@ -134,7 +204,7 @@ class LabDetailScreen extends StatelessWidget {
 
             Center(
               child: RatingRadarChart(
-                ratings: lab.ratingBreakdown!,
+                ratings: widget.lab.ratingBreakdown!,
                 size: 250,
               ),
             ),
@@ -146,9 +216,9 @@ class LabDetailScreen extends StatelessWidget {
 */
 
   Widget _buildRecruitmentStatus() {
-    if (lab.recruitmentStatus == null) return const SizedBox.shrink();
+    if (widget.lab.recruitmentStatus == null) return const SizedBox.shrink();
 
-    final status = lab.recruitmentStatus!;
+    final status = widget.lab.recruitmentStatus!;
 
     return Card(
       child: Padding(
@@ -247,7 +317,7 @@ class LabDetailScreen extends StatelessWidget {
   }
 
   Widget _buildResearchTopics() {
-    if (lab.researchTopics == null || lab.researchTopics!.isEmpty) {
+    if (widget.lab.researchTopics == null || widget.lab.researchTopics!.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -265,7 +335,7 @@ class LabDetailScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            ...lab.researchTopics!.map((topic) => _buildResearchTopic(topic)),
+            ...widget.lab.researchTopics!.map((topic) => _buildResearchTopic(topic)),
           ],
         ),
       ),
@@ -348,7 +418,7 @@ class LabDetailScreen extends StatelessWidget {
   }
 
   Widget _buildRecentPublications() {
-    if (lab.recentPublications == null || lab.recentPublications!.isEmpty) {
+    if (widget.lab.recentPublications == null || widget.lab.recentPublications!.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -366,8 +436,8 @@ class LabDetailScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            ...lab.recentPublications!.take(5).map((pub) => _buildPublication(pub)),
-            if (lab.website != null) ...[
+            ...widget.lab.recentPublications!.take(5).map((pub) => _buildPublication(pub)),
+            if (widget.lab.website != null) ...[
               const SizedBox(height: 16),
               Center(
                 child: TextButton(
@@ -470,14 +540,14 @@ class LabDetailScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            if (lab.description != null) ...[
-              Text(lab.description!),
+            if (widget.lab.description != null) ...[
+              Text(widget.lab.description!),
               const SizedBox(height: 16),
             ],
-            _buildInfoRow('Department', lab.department),
-            _buildInfoRow('Lab Size', '${lab.labSize ?? "Unknown"} members'),
-            if (lab.website != null)
-              _buildInfoRow('Website', lab.website!, isLink: true),
+            _buildInfoRow('Department', widget.lab.department),
+            _buildInfoRow('Lab Size', '${widget.lab.labSize ?? "Unknown"} members'),
+            if (widget.lab.website != null)
+              _buildInfoRow('Website', widget.lab.website!, isLink: true),
             const SizedBox(height: 16),
             const Text(
               'Research Areas',
@@ -489,7 +559,7 @@ class LabDetailScreen extends StatelessWidget {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: lab.researchAreas.map((area) {
+              children: widget.lab.researchAreas.map((area) {
                 return Chip(
                   label: Text(area),
                   backgroundColor: AppColors.primaryLight.withOpacity(0.1),
@@ -541,32 +611,6 @@ class LabDetailScreen extends StatelessWidget {
     );
   }
 
-  // Get rating breakdown data - uses real data if available, otherwise generates sample data
-  Map<String, double> _getRatingBreakdownData() {
-    // If lab has real rating breakdown data, use it
-    if (lab.ratingBreakdown != null && lab.ratingBreakdown!.isNotEmpty) {
-      return lab.ratingBreakdown!;
-    }
-
-    // Generate sample data based on overall rating with some variance
-    final baseRating = lab.overallRating;
-    final random = DateTime.now().millisecondsSinceEpoch % 100;
-
-    return {
-      'Mentorship Quality': _adjustRating(baseRating, random % 7 - 3),
-      'Research Environment': _adjustRating(baseRating, (random * 2) % 5 - 2),
-      'Work-Life Balance': _adjustRating(baseRating, (random * 3) % 9 - 4),
-      'Career Support': _adjustRating(baseRating, (random * 4) % 6 - 3),
-      'Funding & Resources': _adjustRating(baseRating, (random * 5) % 7 - 3),
-      'Collaboration Culture': _adjustRating(baseRating, (random * 6) % 5 - 2),
-    };
-  }
-
-  // Helper method to adjust rating within valid range
-  double _adjustRating(double baseRating, int adjustment) {
-    final adjusted = baseRating + (adjustment * 0.1);
-    return (adjusted < 1.0) ? 1.0 : (adjusted > 5.0) ? 5.0 : adjusted;
-  }
 
   Widget _buildReportIssueSection() {
     return Builder(
@@ -644,9 +688,9 @@ class LabDetailScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Lab: ${lab.name}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                      Text('Professor: ${lab.professorName}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                      Text('University: ${lab.universityName}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                      Text('Lab: ${widget.lab.name}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                      Text('Professor: ${widget.lab.professorName}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                      Text('University: ${widget.lab.universityName}', style: const TextStyle(fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ),
@@ -729,13 +773,13 @@ class LabDetailScreen extends StatelessWidget {
   }
 
   Future<void> _sendCorrectionEmail(BuildContext context, String issue, String correction, String source) async {
-    final subject = Uri.encodeComponent('Lab Information Correction - ${lab.name}');
+    final subject = Uri.encodeComponent('Lab Information Correction - ${widget.lab.name}');
     final body = Uri.encodeComponent(
       'Lab Information Correction Request\n\n'
-      'Lab Name: ${lab.name}\n'
-      'Professor: ${lab.professorName}\n'
-      'University: ${lab.universityName}\n'
-      'Department: ${lab.department}\n\n'
+      'Lab Name: ${widget.lab.name}\n'
+      'Professor: ${widget.lab.professorName}\n'
+      'University: ${widget.lab.universityName}\n'
+      'Department: ${widget.lab.department}\n\n'
       'Issue Description:\n$issue\n\n'
       'Correct Information:\n$correction\n\n'
       '${source.isNotEmpty ? 'Source/Verification:\n$source\n\n' : ''}'
