@@ -361,10 +361,12 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
 
     // Analyze search intent
     if (widget.showSearchIntent) {
+      final newIntent = query.isNotEmpty
+          ? SearchService.analyzeSearchIntent(query)
+          : null;
+      print('DEBUG: Query "$query" detected intent: $newIntent');
       setState(() {
-        _detectedIntent = query.isNotEmpty
-            ? SearchService.analyzeSearchIntent(query)
-            : null;
+        _detectedIntent = newIntent;
       });
     }
 

@@ -34,17 +34,27 @@ class HeroSection extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 1200),
             padding: EdgeInsets.symmetric(
               horizontal: isMobile ? 24 : 48,
-              vertical: 96,
+              vertical: isMobile ? 48 : 96,
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildHeroContent(context, isMobile),
-                SizedBox(height: isMobile ? 32 : 40),
-                _buildSearchSection(context, isMobile),
-                SizedBox(height: isMobile ? 24 : 32),
-                _buildActionButtons(context, isMobile),
-              ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Adjust spacing based on available height
+                final availableHeight = constraints.maxHeight;
+                final isCompact = availableHeight < 600;
+
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: _buildHeroContent(context, isMobile),
+                    ),
+                    SizedBox(height: isCompact ? 16 : (isMobile ? 32 : 40)),
+                    _buildSearchSection(context, isMobile),
+                    SizedBox(height: isCompact ? 12 : (isMobile ? 24 : 32)),
+                    _buildActionButtons(context, isMobile),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -56,21 +66,26 @@ class HeroSection extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(maxWidth: 920),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Main Headline
-          Text(
-            'Your Gateway to Graduate School Success',
-            style: TextStyle(
-              fontSize: isMobile ? 36 : 56,
-              fontWeight: FontWeight.w800,
-              color: AppColors.heroText,
-              height: 1.1,
-              letterSpacing: -0.02,
-              fontFamily: 'Inter',
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              'Your Gateway to Graduate School Success',
+              style: TextStyle(
+                fontSize: isMobile ? 36 : 56,
+                fontWeight: FontWeight.w800,
+                color: AppColors.heroText,
+                height: 1.1,
+                letterSpacing: -0.02,
+                fontFamily: 'Inter',
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
             ),
-            textAlign: TextAlign.center,
           ),
-          SizedBox(height: isMobile ? 20 : 24),
+          SizedBox(height: isMobile ? 16 : 24),
           // Subheading
           Container(
             constraints: const BoxConstraints(maxWidth: 760),
@@ -83,6 +98,8 @@ class HeroSection extends StatelessWidget {
                 fontFamily: 'Inter',
               ),
               textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -92,10 +109,11 @@ class HeroSection extends StatelessWidget {
 
   Widget _buildSearchSection(BuildContext context, bool isMobile) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         // Search Bar
         const SearchBarWidget(),
-        SizedBox(height: isMobile ? 12 : 16),
+        SizedBox(height: isMobile ? 8 : 16),
         // Help Guide
         Container(
           constraints: const BoxConstraints(maxWidth: 500),
@@ -108,6 +126,8 @@ class HeroSection extends StatelessWidget {
               fontFamily: 'Inter',
             ),
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
@@ -118,6 +138,7 @@ class HeroSection extends StatelessWidget {
     if (isMobile) {
       // Stack buttons vertically on mobile
       return Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           _buildWriteReviewButton(context),
           const SizedBox(height: 12),
@@ -128,6 +149,7 @@ class HeroSection extends StatelessWidget {
       // Side by side on desktop
       return Row(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           _buildWriteReviewButton(context),
           const SizedBox(width: 16),

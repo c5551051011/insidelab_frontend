@@ -41,11 +41,7 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: EnhancedSearchBar(
-          initialQuery: _currentQuery,
-          onSearch: _onSearchSubmitted,
-          onQueryChanged: _onQueryChanged,
-        ),
+        title: const Text('Search Labs'),
         backgroundColor: Colors.white,
         elevation: 1,
       ),
@@ -79,6 +75,17 @@ class _SearchScreenState extends State<SearchScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Search bar with proper space for intent chips
+          Container(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: EnhancedSearchBar(
+              initialQuery: _currentQuery,
+              onSearch: _onSearchSubmitted,
+              onQueryChanged: _onQueryChanged,
+              showSearchIntent: true,
+              showSuggestions: true,
+            ),
+          ),
           _buildResultsHeader(),
           const SizedBox(height: 8),
           _buildSortOptions(),
