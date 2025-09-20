@@ -36,28 +36,46 @@ class SearchService {
           searchParams['min_rating'] = filters['minRating'];
         }
 
+        if (filters['maxRating'] != null && filters['maxRating'] > 0) {
+          searchParams['max_rating'] = filters['maxRating'];
+        }
+
         if (filters['universities'] != null &&
             (filters['universities'] as List).isNotEmpty) {
-          // Join multiple universities with comma
-          searchParams['universities'] = (filters['universities'] as List).join(',');
+          // Backend expects single university parameter, send first selected
+          searchParams['university'] = (filters['universities'] as List).first;
         }
 
         if (filters['researchAreas'] != null &&
             (filters['researchAreas'] as List).isNotEmpty) {
-          searchParams['research_areas'] = (filters['researchAreas'] as List).join(',');
+          // Backend expects single research_area parameter, send first selected
+          searchParams['research_area'] = (filters['researchAreas'] as List).first;
         }
 
         if (filters['tags'] != null &&
             (filters['tags'] as List).isNotEmpty) {
-          searchParams['tags'] = (filters['tags'] as List).join(',');
+          // Backend expects single tag parameter, send first selected
+          searchParams['tag'] = (filters['tags'] as List).first;
         }
 
         if (filters['department'] != null) {
           searchParams['department'] = filters['department'];
         }
 
-        if (filters['universityId'] != null) {
-          searchParams['university'] = filters['universityId'];
+        if (filters['professorId'] != null) {
+          searchParams['professor'] = filters['professorId'];
+        }
+
+        if (filters['recruitingPhd'] != null) {
+          searchParams['recruiting_phd'] = filters['recruitingPhd'];
+        }
+
+        if (filters['recruitingPostdoc'] != null) {
+          searchParams['recruiting_postdoc'] = filters['recruitingPostdoc'];
+        }
+
+        if (filters['recruitingIntern'] != null) {
+          searchParams['recruiting_intern'] = filters['recruitingIntern'];
         }
       }
 
@@ -66,10 +84,16 @@ class SearchService {
       // Use the advanced search method from LabService
       return await LabService.searchLabsAdvanced(
         query: searchParams['search'],
-        universityId: searchParams['university'],
+        university: searchParams['university'],
+        professor: searchParams['professor'],
         department: searchParams['department'],
-        researchAreas: searchParams['research_areas']?.split(','),
+        researchArea: searchParams['research_area'],
+        tag: searchParams['tag'],
         minRating: searchParams['min_rating'],
+        maxRating: searchParams['max_rating'],
+        recruitingPhd: searchParams['recruiting_phd'],
+        recruitingPostdoc: searchParams['recruiting_postdoc'],
+        recruitingIntern: searchParams['recruiting_intern'],
         page: page,
         limit: limit,
       );
@@ -87,10 +111,16 @@ class SearchService {
   }) async {
     try {
       return await LabService.searchLabsAdvanced(
-        universityId: filters?['universityId'],
+        university: filters?['universities']?.isNotEmpty == true ? filters!['universities'].first : null,
+        professor: filters?['professorId'],
         department: filters?['department'],
-        researchAreas: filters?['researchAreas'],
+        researchArea: filters?['researchAreas']?.isNotEmpty == true ? filters!['researchAreas'].first : null,
+        tag: filters?['tags']?.isNotEmpty == true ? filters!['tags'].first : null,
         minRating: filters?['minRating'],
+        maxRating: filters?['maxRating'],
+        recruitingPhd: filters?['recruitingPhd'],
+        recruitingPostdoc: filters?['recruitingPostdoc'],
+        recruitingIntern: filters?['recruitingIntern'],
         page: page,
         limit: limit,
       );
@@ -129,7 +159,7 @@ class SearchService {
   static Future<List<Lab>> searchByResearchArea(String researchArea) async {
     try {
       return await LabService.searchLabsAdvanced(
-        researchAreas: [researchArea],
+        researchArea: researchArea,
       );
     } catch (e) {
       print('Error searching by research area: $e');

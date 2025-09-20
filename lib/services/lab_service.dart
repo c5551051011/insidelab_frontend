@@ -119,10 +119,16 @@ class LabService {
   // Search labs with advanced filters
   static Future<List<Lab>> searchLabsAdvanced({
     String? query,
-    String? universityId,
+    String? university,
+    String? professor,
     String? department,
-    List<String>? researchAreas,
+    String? researchArea,
+    String? tag,
     double? minRating,
+    double? maxRating,
+    bool? recruitingPhd,
+    bool? recruitingPostdoc,
+    bool? recruitingIntern,
     int page = 1,
     int limit = 20,
   }) async {
@@ -132,12 +138,16 @@ class LabService {
       if (query != null && query.isNotEmpty) {
         queryParams += '&search=${Uri.encodeComponent(query)}';
       }
-      if (universityId != null) queryParams += '&university=$universityId';
-      if (department != null) queryParams += '&department=$department';
+      if (university != null) queryParams += '&university=${Uri.encodeComponent(university)}';
+      if (professor != null) queryParams += '&professor=${Uri.encodeComponent(professor)}';
+      if (department != null) queryParams += '&department=${Uri.encodeComponent(department)}';
+      if (researchArea != null) queryParams += '&research_area=${Uri.encodeComponent(researchArea)}';
+      if (tag != null) queryParams += '&tag=${Uri.encodeComponent(tag)}';
       if (minRating != null) queryParams += '&min_rating=$minRating';
-      if (researchAreas != null && researchAreas.isNotEmpty) {
-        queryParams += '&research_areas=${researchAreas.join(',')}';
-      }
+      if (maxRating != null) queryParams += '&max_rating=$maxRating';
+      if (recruitingPhd != null) queryParams += '&recruiting_phd=$recruitingPhd';
+      if (recruitingPostdoc != null) queryParams += '&recruiting_postdoc=$recruitingPostdoc';
+      if (recruitingIntern != null) queryParams += '&recruiting_intern=$recruitingIntern';
 
       print('Searching labs with query params: $queryParams');
       final response = await ApiService.get('/labs/?$queryParams');
@@ -149,26 +159,6 @@ class LabService {
             .toList();
       } else {
         labs = (response as List).map((json) => Lab.fromJson(json)).toList();
-      }
-
-      // Additional client-side filtering if universityId is specified
-      if (universityId != null) {
-        // Debug: Print what university IDs we're getting from search
-        print('Debugging search results university IDs:');
-        for (var lab in labs) {
-          print('  Lab "${lab.name}" has universityId: "${lab.universityId}" (expected: "$universityId")');
-        }
-
-        final filteredLabs = labs.where((lab) => lab.universityId == universityId).toList();
-        print('Search found ${labs.length} labs from API, ${filteredLabs.length} match university ID $universityId');
-
-        // If no matches, trust backend filtering and return all results
-        if (filteredLabs.isEmpty && labs.isNotEmpty) {
-          print('No client-side matches in search, returning all labs from backend (trusting backend filtering)');
-          return labs;
-        }
-
-        return filteredLabs;
       }
 
       return labs;

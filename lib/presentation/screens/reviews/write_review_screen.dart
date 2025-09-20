@@ -485,7 +485,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                 // Search within the university's labs
                 labs = await LabService.searchLabsAdvanced(
                   query: pattern,
-                  universityId: _selectedUniversityId!,
+                  university: _selectedUniversityId!,
                 );
                 print('Found ${labs.length} labs matching "$pattern" in university $_selectedUniversityId');
               }

@@ -2,6 +2,8 @@
 // presentation/screens/search/widgets/filter_sidebar.dart
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../data/models/university.dart';
+import '../../../../services/university_service.dart';
 
 class FilterSidebar extends StatefulWidget {
   final Function(Map<String, dynamic>) onFiltersChanged;
@@ -17,9 +19,32 @@ class FilterSidebar extends StatefulWidget {
 
 class _FilterSidebarState extends State<FilterSidebar> {
   double _minRating = 0;
-  final Set<String> _selectedUniversities = {};
+  final Set<String> _selectedUniversityIds = {};
   final Set<String> _selectedResearchAreas = {};
   final Set<String> _selectedTags = {};
+  List<University> _universities = [];
+  bool _universitiesLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUniversities();
+  }
+
+  Future<void> _loadUniversities() async {
+    try {
+      final universities = await UniversityService.getAllUniversities();
+      setState(() {
+        _universities = universities;
+        _universitiesLoading = false;
+      });
+    } catch (e) {
+      print('Error loading universities: $e');
+      setState(() {
+        _universitiesLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +105,7 @@ class _FilterSidebarState extends State<FilterSidebar> {
                   });
                 },
                 onChangeEnd: (value) {
-                  _applyFilters(); // Apply filters when user finishes sliding
+                  // Note: Rating filter will be applied when Apply button is clicked
                 },
               ),
             ),
@@ -98,17 +123,6 @@ class _FilterSidebarState extends State<FilterSidebar> {
   }
 
   Widget _buildUniversityFilter() {
-    final universities = [
-      'MIT',
-      'Stanford',
-      'Carnegie Mellon',
-      'UC Berkeley',
-      'Harvard',
-      'Princeton',
-      'Cornell',
-      'Georgia Tech',
-    ];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -120,26 +134,28 @@ class _FilterSidebarState extends State<FilterSidebar> {
           ),
         ),
         const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: universities.map((uni) {
-            return FilterChip(
-              label: Text(uni),
-              selected: _selectedUniversities.contains(uni),
-              onSelected: (selected) {
-                setState(() {
-                  if (selected) {
-                    _selectedUniversities.add(uni);
-                  } else {
-                    _selectedUniversities.remove(uni);
-                  }
-                });
-                _applyFilters(); // Apply filters immediately
-              },
-            );
-          }).toList(),
-        ),
+        if (_universitiesLoading)
+          const Center(child: CircularProgressIndicator())
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _universities.map((university) {
+              return FilterChip(
+                label: Text(university.name),
+                selected: _selectedUniversityIds.contains(university.id),
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _selectedUniversityIds.add(university.id);
+                    } else {
+                      _selectedUniversityIds.remove(university.id);
+                    }
+                  });
+                },
+              );
+            }).toList(),
+          ),
       ],
     );
   }
@@ -182,7 +198,6 @@ class _FilterSidebarState extends State<FilterSidebar> {
                     _selectedResearchAreas.remove(area);
                   }
                 });
-                _applyFilters(); // Apply filters immediately
               },
             );
           }).toList(),
@@ -227,7 +242,6 @@ class _FilterSidebarState extends State<FilterSidebar> {
                     _selectedTags.remove(tag);
                   }
                 });
-                _applyFilters(); // Apply filters immediately
               },
               controlAffinity: ListTileControlAffinity.leading,
               dense: true,
@@ -261,7 +275,7 @@ class _FilterSidebarState extends State<FilterSidebar> {
   void _clearFilters() {
     setState(() {
       _minRating = 0;
-      _selectedUniversities.clear();
+      _selectedUniversityIds.clear();
       _selectedResearchAreas.clear();
       _selectedTags.clear();
     });
@@ -271,7 +285,7 @@ class _FilterSidebarState extends State<FilterSidebar> {
   void _applyFilters() {
     widget.onFiltersChanged({
       'minRating': _minRating,
-      'universities': _selectedUniversities.toList(),
+      'universities': _selectedUniversityIds.toList(),
       'researchAreas': _selectedResearchAreas.toList(),
       'tags': _selectedTags.toList(),
     });
