@@ -67,11 +67,9 @@ class LabDetailScreen extends StatelessWidget {
                   flex: 3,
                   child: Column(
                     children: [
-                      if (lab.ratingBreakdown != null) ...[
-                        RatingBreakdown(ratings: lab.ratingBreakdown!),
-                        const SizedBox(height: 24),
-                        //_buildRadarChart(),
-                      ],
+                      // Always show rating breakdown with sample data if real data is not available
+                      RatingBreakdown(ratings: _getRatingBreakdownData()),
+                      const SizedBox(height: 24),
                       const SizedBox(height: 24),
                       _buildLabInfo(),
                       const SizedBox(height: 24),
@@ -93,11 +91,9 @@ class LabDetailScreen extends StatelessWidget {
           } else {
             return Column(
               children: [
-                if (lab.ratingBreakdown != null) ...[
-                  RatingBreakdown(ratings: lab.ratingBreakdown!),
-                  const SizedBox(height: 24),
-                  // _buildRadarChart(),
-                ],
+                // Always show rating breakdown with sample data if real data is not available
+                RatingBreakdown(ratings: _getRatingBreakdownData()),
+                const SizedBox(height: 24),
                 const SizedBox(height: 24),
                 _buildLabInfo(),
                 const SizedBox(height: 24),
@@ -535,5 +531,32 @@ class LabDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  // Get rating breakdown data - uses real data if available, otherwise generates sample data
+  Map<String, double> _getRatingBreakdownData() {
+    // If lab has real rating breakdown data, use it
+    if (lab.ratingBreakdown != null && lab.ratingBreakdown!.isNotEmpty) {
+      return lab.ratingBreakdown!;
+    }
+
+    // Generate sample data based on overall rating with some variance
+    final baseRating = lab.overallRating;
+    final random = DateTime.now().millisecondsSinceEpoch % 100;
+
+    return {
+      'Mentorship Quality': _adjustRating(baseRating, random % 7 - 3),
+      'Research Environment': _adjustRating(baseRating, (random * 2) % 5 - 2),
+      'Work-Life Balance': _adjustRating(baseRating, (random * 3) % 9 - 4),
+      'Career Support': _adjustRating(baseRating, (random * 4) % 6 - 3),
+      'Funding & Resources': _adjustRating(baseRating, (random * 5) % 7 - 3),
+      'Collaboration Culture': _adjustRating(baseRating, (random * 6) % 5 - 2),
+    };
+  }
+
+  // Helper method to adjust rating within valid range
+  double _adjustRating(double baseRating, int adjustment) {
+    final adjusted = baseRating + (adjustment * 0.1);
+    return (adjusted < 1.0) ? 1.0 : (adjusted > 5.0) ? 5.0 : adjusted;
   }
 }
