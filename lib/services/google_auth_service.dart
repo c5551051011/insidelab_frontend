@@ -4,34 +4,59 @@ class GoogleAuthService {
   // TODO: Replace with your actual Google Client ID
   static const String _webClientId = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
 
-  static final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: [
-      'email',
-      'profile',
-    ],
-    // Configure client ID for different platforms
-    clientId: _webClientId,
-  );
-  
+  static GoogleSignIn? _googleSignIn;
+
+  static GoogleSignIn _getGoogleSignIn() {
+    if (_googleSignIn != null) return _googleSignIn!;
+
+    // Check if Client ID is configured
+    if (_webClientId.contains('YOUR_GOOGLE_CLIENT_ID')) {
+      throw Exception(
+        'Google Client ID not configured. Please replace YOUR_GOOGLE_CLIENT_ID in google_auth_service.dart and web/index.html with your actual Google Client ID from Google Cloud Console.'
+      );
+    }
+
+    _googleSignIn = GoogleSignIn(
+      scopes: [
+        'email',
+        'profile',
+      ],
+      // Configure client ID for different platforms
+      clientId: _webClientId,
+    );
+
+    return _googleSignIn!;
+  }
+
   static GoogleSignInAccount? _currentUser;
 
-  /// Sign in with Google
+  /// Sign in with Google using modern approach
   static Future<Map<String, dynamic>?> signInWithGoogle() async {
     try {
-      // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
+      final googleSignIn = _getGoogleSignIn();
+
+      // For web platform, try signInSilently first (recommended approach)
+      GoogleSignInAccount? googleUser = await googleSignIn.signInSilently();
+
+      // If silent sign-in fails, use the standard sign-in flow
+      if (googleUser == null) {
+        googleUser = await googleSignIn.signIn();
+      }
+
       if (googleUser == null) {
         // User canceled the sign-in
         return null;
       }
+
+      // Get authentication details
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
       // Store current user
       _currentUser = googleUser;
 
       // Check if user email is from an educational institution (.edu)
       final isEduEmail = _isEducationalEmail(googleUser.email);
-      
+
       return {
         'uid': googleUser.id,
         'email': googleUser.email,
@@ -39,6 +64,8 @@ class GoogleAuthService {
         'photoURL': googleUser.photoUrl,
         'isEduEmail': isEduEmail,
         'isNewUser': true, // Since we don't have backend to check this
+        'idToken': googleAuth.idToken,
+        'accessToken': googleAuth.accessToken,
       };
     } catch (error) {
       print('Google Sign-In Error: $error');
@@ -49,7 +76,8 @@ class GoogleAuthService {
   /// Sign out from Google
   static Future<void> signOut() async {
     try {
-      await _googleSignIn.signOut();
+      final googleSignIn = _getGoogleSignIn();
+      await googleSignIn.signOut();
       _currentUser = null;
     } catch (error) {
       print('Sign-Out Error: $error');
@@ -60,9 +88,10 @@ class GoogleAuthService {
   /// Check if the user is currently signed in
   static Future<bool> isSignedIn() async {
     try {
-      final isSignedIn = await _googleSignIn.isSignedIn();
+      final googleSignIn = _getGoogleSignIn();
+      final isSignedIn = await googleSignIn.isSignedIn();
       if (isSignedIn) {
-        _currentUser = _googleSignIn.currentUser;
+        _currentUser = googleSignIn.currentUser;
       }
       return isSignedIn;
     } catch (error) {
@@ -75,7 +104,8 @@ class GoogleAuthService {
   static Future<Map<String, dynamic>?> getCurrentUser() async {
     try {
       if (_currentUser == null) {
-        _currentUser = _googleSignIn.currentUser;
+        final googleSignIn = _getGoogleSignIn();
+        _currentUser = googleSignIn.currentUser;
       }
       
       if (_currentUser == null) {
@@ -118,7 +148,8 @@ class GoogleAuthService {
   /// Disconnect Google account (revoke access)
   static Future<void> disconnect() async {
     try {
-      await _googleSignIn.disconnect();
+      final googleSignIn = _getGoogleSignIn();
+      await googleSignIn.disconnect();
       _currentUser = null;
     } catch (error) {
       print('Disconnect Error: $error');
@@ -129,8 +160,10 @@ class GoogleAuthService {
   /// Handle sign-in errors with user-friendly messages
   static String getErrorMessage(dynamic error) {
     String errorMessage = error.toString().toLowerCase();
-    
-    if (errorMessage.contains('network')) {
+
+    if (errorMessage.contains('popup_closed') || errorMessage.contains('popup-closed')) {
+      return 'Sign-in popup was closed. Please try again and allow popups for this site.';
+    } else if (errorMessage.contains('network')) {
       return 'Network error. Please check your internet connection.';
     } else if (errorMessage.contains('user-disabled')) {
       return 'This account has been disabled. Please contact support.';
