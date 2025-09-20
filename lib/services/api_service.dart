@@ -2,10 +2,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/environment.dart';
 
 class ApiService {
-  // TODO: Update this to your actual backend URL
-  static const String baseUrl = 'http://127.0.0.1:8000/api/v1';
+  // Use environment-based URL configuration
+  static String get baseUrl => Environment.apiUrl;
   static String? _authToken;
 
   // Token management
