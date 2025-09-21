@@ -53,7 +53,7 @@ class _SignInScreenState extends State<SignInScreen> {
     return Column(
       children: [
         const Text(
-          '🔬 InsideLab',
+          'InsideLab',
           style: TextStyle(
             fontSize: 48,
             fontWeight: FontWeight.bold,

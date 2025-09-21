@@ -106,7 +106,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Column(
       children: [
         const Text(
-          '🔬 InsideLab',
+          'InsideLab',
           style: TextStyle(
             fontSize: 48,
             fontWeight: FontWeight.bold,

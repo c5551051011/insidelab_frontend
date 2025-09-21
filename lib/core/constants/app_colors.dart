@@ -17,9 +17,9 @@ class AppColors {
   static const Color background = Color(0xFFFFFFFF);     // Card background
   static const Color backgroundLight = Color(0xFFF8FAFC); // Light background
   static const Color surface = Color(0xFFFFFFFF);        // White surface
-  static const Color textPrimary = Color(0xFF0F172A);    // Text basic
-  static const Color textSecondary = Color(0xFF475569);  // Text secondary
-  static const Color textTertiary = Color(0xFF94A3B8);   // Light text
+  static const Color textPrimary = Color(0xFF1F2937);    // Softer dark text (was too black)
+  static const Color textSecondary = Color(0xFF6B7280);  // Medium gray text
+  static const Color textTertiary = Color(0xFF9CA3AF);   // Light gray text
 
   // Footer Colors (Updated to UI Spec)
   static const Color footerBackground = Color(0xFF0B1220); // Footer background
