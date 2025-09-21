@@ -11,6 +11,7 @@ class EnhancedSearchBar extends StatefulWidget {
   final String? hintText;
   final bool showSuggestions;
   final bool showSearchIntent;
+  final ValueChanged<bool>? onOverlayChanged;
 
   const EnhancedSearchBar({
     Key? key,
@@ -20,6 +21,7 @@ class EnhancedSearchBar extends StatefulWidget {
     this.hintText,
     this.showSuggestions = true,
     this.showSearchIntent = true,
+    this.onOverlayChanged,
   }) : super(key: key);
 
   @override
@@ -34,6 +36,10 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
   Timer? _debounceTimer;
   SearchIntent? _detectedIntent;
 
+  // Overlay related
+  final LayerLink _layerLink = LayerLink();
+  OverlayEntry? _overlayEntry;
+
   @override
   void initState() {
     super.initState();
@@ -43,79 +49,75 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: _focusNode.hasFocus ? AppColors.primary : AppColors.border,
-              width: _focusNode.hasFocus ? 2 : 1,
-            ),
-            boxShadow: _focusNode.hasFocus
-                ? [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: AppColors.border,
+            width: 1,
           ),
-          child: Row(
-            children: [
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: _controller,
-                      focusNode: _focusNode,
-                      decoration: InputDecoration(
-                        hintText: widget.hintText ?? _getContextualHintText(),
-                        border: InputBorder.none,
-                        hintStyle: TextStyle(
-                          color: AppColors.textSecondary.withOpacity(0.7),
-                          fontSize: 16,
-                        ),
-                      ),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: AppColors.textPrimary,
-                      ),
-                      onChanged: _onQueryChanged,
-                      onSubmitted: _onSubmitted,
-                    ),
-                    if (widget.showSearchIntent && _detectedIntent != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: _buildSearchIntentChip(),
-                      ),
-                  ],
-                ),
-              ),
-              if (_controller.text.isNotEmpty)
-                IconButton(
-                  onPressed: _clearSearch,
-                  icon: const Icon(Icons.clear),
-                  color: AppColors.textSecondary,
-                  iconSize: 20,
-                ),
-              IconButton(
-                onPressed: () => _onSubmitted(_controller.text),
-                icon: const Icon(Icons.search),
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: 8),
-            ],
-          ),
+          boxShadow: _focusNode.hasFocus
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
-        if (_showSuggestions && _suggestions.isNotEmpty)
-          _buildSuggestionsPanel(),
-      ],
+        child: Row(
+          children: [
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    decoration: InputDecoration(
+                      hintText: widget.hintText ?? _getContextualHintText(),
+                      border: InputBorder.none,
+                      hintStyle: TextStyle(
+                        color: AppColors.textSecondary.withOpacity(0.7),
+                        fontSize: 16,
+                      ),
+                    ),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
+                    ),
+                    onChanged: _onQueryChanged,
+                    onSubmitted: _onSubmitted,
+                  ),
+                  if (widget.showSearchIntent && _detectedIntent != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: _buildSearchIntentChip(),
+                    ),
+                ],
+              ),
+            ),
+            if (_controller.text.isNotEmpty)
+              IconButton(
+                onPressed: _clearSearch,
+                icon: const Icon(Icons.clear),
+                color: AppColors.textSecondary,
+                iconSize: 20,
+              ),
+            IconButton(
+              onPressed: () => _onSubmitted(_controller.text),
+              icon: const Icon(Icons.search),
+              color: AppColors.primary,
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+      ),
     );
   }
 
@@ -179,21 +181,14 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
 
   Widget _buildSuggestionsPanel() {
     return Container(
-      margin: const EdgeInsets.only(top: 4),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -212,11 +207,13 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
               ],
             ),
           ),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _suggestions.length,
-            itemBuilder: (context, index) {
+          Flexible(
+            child: ListView.builder(
+              shrinkWrap: true,
+              physics: const ClampingScrollPhysics(),
+              padding: EdgeInsets.zero,
+              itemCount: _suggestions.length,
+              itemBuilder: (context, index) {
               final suggestion = _suggestions[index];
               return InkWell(
                 onTap: () => _selectSuggestion(suggestion),
@@ -244,11 +241,12 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
                     ],
                   ),
                 ),
-              );
-            },
+                );
+              },
+            ),
           ),
           if (_suggestions.isEmpty && _controller.text.isNotEmpty)
-            _buildPopularSearches(),
+            Flexible(child: _buildPopularSearches()),
         ],
       ),
     );
@@ -259,6 +257,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -271,11 +270,13 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
             ),
           ),
         ),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: popularTerms.take(5).length,
-          itemBuilder: (context, index) {
+        Flexible(
+          child: ListView.builder(
+            shrinkWrap: true,
+            physics: const ClampingScrollPhysics(),
+            padding: EdgeInsets.zero,
+            itemCount: popularTerms.take(5).length,
+            itemBuilder: (context, index) {
             final term = popularTerms[index];
             return InkWell(
               onTap: () => _selectSuggestion(term),
@@ -298,8 +299,9 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
                   ],
                 ),
               ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ],
     );
@@ -381,6 +383,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
     setState(() {
       _showSuggestions = false;
     });
+    _hideOverlay();
     widget.onSearch?.call(query);
     _focusNode.unfocus();
   }
@@ -397,6 +400,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
       _showSuggestions = false;
       _detectedIntent = null;
     });
+    _hideOverlay();
     widget.onQueryChanged?.call('');
   }
 
@@ -407,6 +411,11 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
       });
       if (_controller.text.isNotEmpty) {
         _loadSuggestions(_controller.text);
+      } else {
+        // Show popular searches when focused with empty text
+        if (_suggestions.isEmpty) {
+          _showOverlay();
+        }
       }
     } else {
       // Small delay to allow suggestion selection
@@ -415,6 +424,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
           setState(() {
             _showSuggestions = false;
           });
+          _hideOverlay();
         }
       });
     }
@@ -427,6 +437,7 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
       setState(() {
         _suggestions.clear();
       });
+      _hideOverlay();
       return;
     }
 
@@ -443,14 +454,72 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
         setState(() {
           _suggestions = suggestions;
         });
+        if (_suggestions.isNotEmpty && _showSuggestions) {
+          _showOverlay();
+        } else {
+          _hideOverlay();
+        }
       }
     } catch (e) {
       print('Error loading suggestions: $e');
     }
   }
 
+  void _showOverlay() {
+    if (_overlayEntry != null) return;
+
+    // Get the actual width of the search bar
+    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
+    final searchBarWidth = renderBox?.size.width ?? 600.0;
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned.fill(
+        child: Stack(
+          children: [
+            // Background tap to close
+            GestureDetector(
+              onTap: _hideOverlay,
+              child: Container(
+                color: Colors.transparent,
+              ),
+            ),
+            // Suggestion panel
+            CompositedTransformFollower(
+              link: _layerLink,
+              offset: const Offset(0, 56), // Position below search bar
+              child: Material(
+                elevation: 8,
+                borderRadius: BorderRadius.circular(12),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.5,
+                    maxWidth: searchBarWidth, // Limit width to search bar width
+                  ),
+                  child: SizedBox(
+                    width: searchBarWidth, // Match search bar width exactly
+                    child: _buildSuggestionsPanel(),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+    widget.onOverlayChanged?.call(true);
+  }
+
+  void _hideOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    widget.onOverlayChanged?.call(false);
+  }
+
   @override
   void dispose() {
+    _hideOverlay();
     _controller.dispose();
     _focusNode.dispose();
     _debounceTimer?.cancel();

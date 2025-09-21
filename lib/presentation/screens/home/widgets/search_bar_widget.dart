@@ -5,7 +5,9 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../widgets/enhanced_search_bar.dart';
 
 class SearchBarWidget extends StatelessWidget {
-  const SearchBarWidget({Key? key}) : super(key: key);
+  const SearchBarWidget({Key? key, this.onOverlayChanged}) : super(key: key);
+
+  final ValueChanged<bool>? onOverlayChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +21,7 @@ class SearchBarWidget extends StatelessWidget {
         hintText: 'Search labs, professors, universities, research areas...',
         showSuggestions: true,
         showSearchIntent: false, // Disable to reduce clutter on homepage
+        onOverlayChanged: onOverlayChanged,
       ),
     );
   }

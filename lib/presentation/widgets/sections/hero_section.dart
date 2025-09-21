@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../screens/home/widgets/search_bar_widget.dart';
 
-class HeroSection extends StatelessWidget {
+class HeroSection extends StatefulWidget {
   const HeroSection({Key? key}) : super(key: key);
+
+  @override
+  State<HeroSection> createState() => _HeroSectionState();
+}
+
+class _HeroSectionState extends State<HeroSection> {
+  bool _overlayOpen = false;
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +79,12 @@ class HeroSection extends StatelessWidget {
                       child: _buildSearchSection(context, isMobile),
                     ),
                     SizedBox(height: isCompact ? 12 : (isMobile ? 24 : 32)),
-                    _buildActionButtons(context, isMobile),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 150),
+                      child: _overlayOpen
+                        ? const SizedBox.shrink()
+                        : _buildActionButtons(context, isMobile),
+                    ),
                   ],
                 );
               },
@@ -171,7 +183,11 @@ class HeroSection extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Search Bar
-            const SearchBarWidget(),
+            SearchBarWidget(
+              onOverlayChanged: (open) {
+                if (mounted) setState(() => _overlayOpen = open);
+              },
+            ),
             if (showHelpText) ...[
               SizedBox(height: isMobile ? 8 : 16),
               // Help Guide
