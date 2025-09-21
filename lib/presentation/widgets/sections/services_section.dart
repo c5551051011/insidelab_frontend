@@ -51,20 +51,44 @@ class ServicesSection extends StatelessWidget {
   Widget _buildServiceCards(BuildContext context, bool isMobile, bool isTablet) {
     final services = [
       {
-        'title': 'Professor & Lab Reviews',
-        'description': 'Read honest reviews from current grad students about professors, research labs, and program culture. Make informed decisions about your graduate school applications.',
+        'emoji': '🔍',
+        'title': 'Search Lab Reviews',
+        'description': 'Discover authentic reviews from current and former graduate students about research labs, professors, and programs.',
+        'features': [
+          'Filter by university, department, or research area',
+          'Read detailed anonymous reviews',
+          'Compare lab ratings and metrics',
+          'Save labs to your watchlist',
+        ],
+        'buttonText': 'Explore Reviews',
         'imagePath': 'images/review_image.png',
         'route': '/search',
       },
       {
+        'emoji': '📄',
         'title': 'CV & Resume Feedback',
-        'description': 'Get your CV reviewed by experienced professionals and current graduate students. Receive detailed feedback to improve your academic profile.',
+        'description': 'Get professional feedback on your academic CV and resume from experienced graduate students and industry professionals.',
+        'features': [
+          'AI-powered initial screening',
+          'Human expert review and comments',
+          'Field-specific formatting guidelines',
+          'Before/after improvement tracking',
+        ],
+        'buttonText': 'Upload Document',
         'imagePath': 'images/resume_image.png',
         'route': '/cv-review',
       },
       {
+        'emoji': '🎤',
         'title': 'Mock Interview Sessions',
-        'description': 'Practice with experienced interviewers who know what graduate programs are looking for. Build confidence before your real interviews.',
+        'description': 'Practice PhD admissions and job interviews with personalized mock sessions tailored to your field and target programs.',
+        'features': [
+          'AI-powered interview simulation',
+          'Field-specific question databases',
+          'Real-time feedback and scoring',
+          'Video analysis and improvement tips',
+        ],
+        'buttonText': 'Start Practice',
         'imagePath': 'images/interview_image.png',
         'route': '/mock-interview',
       },
@@ -76,8 +100,11 @@ class ServicesSection extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 24),
           child: _buildServiceCard(
             context: context,
+            emoji: service['emoji'] as String,
             title: service['title'] as String,
             description: service['description'] as String,
+            features: service['features'] as List<String>,
+            buttonText: service['buttonText'] as String,
             imagePath: service['imagePath'] as String,
             route: service['route'] as String,
           ),
@@ -92,8 +119,11 @@ class ServicesSection extends StatelessWidget {
                 Expanded(
                   child: _buildServiceCard(
                     context: context,
+                    emoji: services[0]['emoji'] as String,
                     title: services[0]['title'] as String,
                     description: services[0]['description'] as String,
+                    features: services[0]['features'] as List<String>,
+                    buttonText: services[0]['buttonText'] as String,
                     imagePath: services[0]['imagePath'] as String,
                     route: services[0]['route'] as String,
                   ),
@@ -102,8 +132,11 @@ class ServicesSection extends StatelessWidget {
                 Expanded(
                   child: _buildServiceCard(
                     context: context,
+                    emoji: services[1]['emoji'] as String,
                     title: services[1]['title'] as String,
                     description: services[1]['description'] as String,
+                    features: services[1]['features'] as List<String>,
+                    buttonText: services[1]['buttonText'] as String,
                     imagePath: services[1]['imagePath'] as String,
                     route: services[1]['route'] as String,
                   ),
@@ -117,8 +150,11 @@ class ServicesSection extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 400),
               child: _buildServiceCard(
                 context: context,
+                emoji: services[2]['emoji'] as String,
                 title: services[2]['title'] as String,
                 description: services[2]['description'] as String,
+                features: services[2]['features'] as List<String>,
+                buttonText: services[2]['buttonText'] as String,
                 imagePath: services[2]['imagePath'] as String,
                 route: services[2]['route'] as String,
               ),
@@ -135,8 +171,11 @@ class ServicesSection extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 12),
               child: _buildServiceCard(
                 context: context,
+                emoji: service['emoji'] as String,
                 title: service['title'] as String,
                 description: service['description'] as String,
+                features: service['features'] as List<String>,
+                buttonText: service['buttonText'] as String,
                 imagePath: service['imagePath'] as String,
                 route: service['route'] as String,
               ),
@@ -149,8 +188,11 @@ class ServicesSection extends StatelessWidget {
 
   Widget _buildServiceCard({
     required BuildContext context,
+    required String emoji,
     required String title,
     required String description,
+    required List<String> features,
+    required String buttonText,
     required String imagePath,
     required String route,
   }) {
@@ -221,7 +263,7 @@ class ServicesSection extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
+
                   // Card content
                   Flexible(
                     child: Padding(
@@ -233,14 +275,27 @@ class ServicesSection extends StatelessWidget {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                title,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                  fontFamily: 'Inter',
-                                ),
+                              Row(
+                                children: [
+                                  Text(
+                                    emoji,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      title,
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary,
+                                        fontFamily: 'Inter',
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 12),
                               Text(
@@ -252,28 +307,66 @@ class ServicesSection extends StatelessWidget {
                                   fontFamily: 'Inter',
                                 ),
                               ),
+                              const SizedBox(height: 16),
+                              ...features.map((feature) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 16,
+                                      height: 16,
+                                      margin: EdgeInsets.only(right: 8, top: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 10,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        feature,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.textSecondary,
+                                          height: 1.4,
+                                          fontFamily: 'Inter',
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )).toList(),
                             ],
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(top: 16),
-                            child: Row(
-                              children: [
-                                Text(
-                                  'Learn More',
-                                  style: TextStyle(
+                            padding: const EdgeInsets.only(top: 20),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () => Navigator.pushNamed(context, route),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: Text(
+                                  buttonText,
+                                  style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
                                     fontFamily: 'Inter',
                                   ),
                                 ),
-                                const SizedBox(width: 4),
-                                Icon(
-                                  Icons.arrow_forward,
-                                  size: 16,
-                                  color: AppColors.primary,
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                         ],
@@ -291,8 +384,8 @@ class ServicesSection extends StatelessWidget {
 
   IconData _getServiceIcon(String title) {
     switch (title) {
-      case 'Professor & Lab Reviews':
-        return Icons.star;
+      case 'Search Lab Reviews':
+        return Icons.search;
       case 'CV & Resume Feedback':
         return Icons.description;
       case 'Mock Interview Sessions':
