@@ -12,6 +12,7 @@ class HeroSection extends StatelessWidget {
     
     return Container(
       height: screenSize.height * 0.9, // 90% of screen height
+      constraints: const BoxConstraints(minHeight: 300), // Minimum height
       decoration: BoxDecoration(
         image: DecorationImage(
           image: AssetImage('images/hero_background.png'),
@@ -41,15 +42,35 @@ class HeroSection extends StatelessWidget {
                 // Adjust spacing based on available height
                 final availableHeight = constraints.maxHeight;
                 final isCompact = availableHeight < 600;
+                final isExtremelyConstrained = availableHeight < 200;
+
+                // If extremely constrained, show only essential content
+                if (isExtremelyConstrained) {
+                  return SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildHeroContent(context, isMobile),
+                        const SizedBox(height: 16),
+                        _buildSearchSection(context, isMobile),
+                      ],
+                    ),
+                  );
+                }
 
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Flexible(
+                      flex: 2,
                       child: _buildHeroContent(context, isMobile),
                     ),
                     SizedBox(height: isCompact ? 16 : (isMobile ? 32 : 40)),
-                    _buildSearchSection(context, isMobile),
+                    Flexible(
+                      flex: 1,
+                      child: _buildSearchSection(context, isMobile),
+                    ),
                     SizedBox(height: isCompact ? 12 : (isMobile ? 24 : 32)),
                     _buildActionButtons(context, isMobile),
                   ],
@@ -63,74 +84,116 @@ class HeroSection extends StatelessWidget {
   }
 
   Widget _buildHeroContent(BuildContext context, bool isMobile) {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 920),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Main Headline
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              'Your Gateway to Graduate School Success',
-              style: TextStyle(
-                fontSize: isMobile ? 36 : 56,
-                fontWeight: FontWeight.w800,
-                color: AppColors.heroText,
-                height: 1.1,
-                letterSpacing: -0.02,
-                fontFamily: 'Inter',
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // If height is extremely constrained, show minimal content
+        final isExtremelyConstrained = constraints.maxHeight < 50;
+
+        if (isExtremelyConstrained) {
+          return SizedBox(
+            height: constraints.maxHeight,
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'InsideLab',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.heroText,
+                    fontFamily: 'Inter',
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
             ),
-          ),
-          SizedBox(height: isMobile ? 16 : 24),
-          // Subheading
-          Container(
-            constraints: const BoxConstraints(maxWidth: 760),
-            child: Text(
-              'Search labs with detailed ratings, read honest reviews from current grad students, and find the perfect research environment for your goals.',
-              style: TextStyle(
-                fontSize: isMobile ? 16 : 20,
-                color: AppColors.heroSubtext,
-                height: 1.5,
-                fontFamily: 'Inter',
+          );
+        }
+
+        return Container(
+          constraints: const BoxConstraints(maxWidth: 920),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Main Headline
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Your Gateway to Graduate School Success',
+                    style: TextStyle(
+                      fontSize: isMobile ? 36 : 56,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.heroText,
+                      height: 1.1,
+                      letterSpacing: -0.02,
+                      fontFamily: 'Inter',
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                  ),
+                ),
               ),
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
+              if (constraints.maxHeight > 100) ...[
+                SizedBox(height: isMobile ? 16 : 24),
+                // Subheading
+                Flexible(
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 760),
+                    child: Text(
+                      'Search labs with detailed ratings, read honest reviews from current grad students, and find the perfect research environment for your goals.',
+                      style: TextStyle(
+                        fontSize: isMobile ? 16 : 20,
+                        color: AppColors.heroSubtext,
+                        height: 1.5,
+                        fontFamily: 'Inter',
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildSearchSection(BuildContext context, bool isMobile) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Search Bar
-        const SearchBarWidget(),
-        SizedBox(height: isMobile ? 8 : 16),
-        // Help Guide
-        Container(
-          constraints: const BoxConstraints(maxWidth: 500),
-          child: Text(
-            'Search by university, professor, lab name, or research area',
-            style: TextStyle(
-              fontSize: isMobile ? 14 : 16,
-              color: AppColors.heroSubtext.withOpacity(0.8),
-              height: 1.4,
-              fontFamily: 'Inter',
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final showHelpText = constraints.maxHeight > 80;
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Search Bar
+            const SearchBarWidget(),
+            if (showHelpText) ...[
+              SizedBox(height: isMobile ? 8 : 16),
+              // Help Guide
+              Container(
+                constraints: const BoxConstraints(maxWidth: 500),
+                child: Text(
+                  'Search by university, professor, lab name, or research area',
+                  style: TextStyle(
+                    fontSize: isMobile ? 14 : 16,
+                    color: AppColors.heroSubtext.withOpacity(0.8),
+                    height: 1.4,
+                    fontFamily: 'Inter',
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 
