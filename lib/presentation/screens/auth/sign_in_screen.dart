@@ -1,6 +1,7 @@
 // presentation/screens/auth/sign_in_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/providers/data_providers.dart';
 import '../../../utils/validators.dart';
@@ -159,7 +160,7 @@ class _SignInScreenState extends State<SignInScreen> {
         const Text("Don't have an account?"),
         TextButton(
           onPressed: () {
-            Navigator.pushReplacementNamed(context, '/sign-up');
+            context.go('/sign-up');
           },
           child: const Text('Sign Up'),
         ),
@@ -178,13 +179,23 @@ class _SignInScreenState extends State<SignInScreen> {
         );
 
         if (mounted) {
-          Navigator.pushReplacementNamed(context, '/');
+          context.go('/');
         }
       } catch (e) {
         if (mounted) {
+          print('DEBUG: Sign in error: $e');
+          final authProvider = context.read<AuthProvider>();
+          String errorMessage = authProvider.errorMessage ??
+                               'Sign in failed. Please check your credentials.';
+
+          // Show more specific error if available
+          if (e.toString().contains('No access token')) {
+            errorMessage = 'Login response missing authentication token. Please contact support.';
+          }
+
           Helpers.showSnackBar(
             context,
-            'Sign in failed. Please check your credentials.',
+            errorMessage,
             isError: true,
           );
         }
@@ -265,7 +276,7 @@ class _SignInScreenState extends State<SignInScreen> {
       
       if (mounted) {
         if (authProvider.isAuthenticated) {
-          Navigator.pushReplacementNamed(context, '/');
+          context.go('/');
           
           // Show edu email notice if needed
           if (authProvider.errorMessage != null) {

@@ -33,7 +33,9 @@ class ApiService {
   // HTTP Headers
   static Future<Map<String, String>> _getHeaders({bool requireAuth = false}) async {
     final headers = <String, String>{
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json; charset=utf-8',
+      'Accept': 'application/json',
+      'Accept-Charset': 'utf-8',
     };
 
     if (requireAuth) {
@@ -44,6 +46,33 @@ class ApiService {
     }
 
     return headers;
+  }
+
+  // Clean request data to avoid JSON parsing issues
+  static Map<String, dynamic> _cleanRequestData(Map<String, dynamic> data) {
+    final cleanData = <String, dynamic>{};
+
+    for (final entry in data.entries) {
+      final key = entry.key;
+      final value = entry.value;
+
+      if (value is String) {
+        // Remove or escape problematic characters
+        final cleanValue = value
+            .replaceAll('\n', '\\n')
+            .replaceAll('\r', '\\r')
+            .replaceAll('\t', '\\t')
+            .replaceAll('\b', '\\b')
+            .replaceAll('\f', '\\f')
+            .replaceAll('"', '\\"')
+            .trim();
+        cleanData[key] = cleanValue;
+      } else {
+        cleanData[key] = value;
+      }
+    }
+
+    return cleanData;
   }
 
   // Generic HTTP methods
@@ -78,12 +107,23 @@ class ApiService {
       ) async {
     try {
       print('Making POST request to: $baseUrl$endpoint');
-      print('Request data: ${json.encode(data)}');
+
+      // Clean and validate data before encoding
+      final cleanData = _cleanRequestData(data);
+      final jsonString = json.encode(cleanData);
+
+      print('Request data: $jsonString');
+      print('Request data length: ${jsonString.length}');
 
       final response = await http.post(
         Uri.parse('$baseUrl$endpoint'),
         headers: await _getHeaders(requireAuth: requireAuth),
-        body: json.encode(data),
+        body: jsonString,
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          throw Exception('Request timeout - server took too long to respond');
+        },
       );
 
       print('Response status: ${response.statusCode}');
@@ -100,6 +140,28 @@ class ApiService {
       }
     } catch (e) {
       print('API Error: $e');
+      print('API Error type: ${e.runtimeType}');
+
+      // Handle different types of network errors
+      if (e.toString().contains('Failed to fetch') ||
+          e.toString().contains('XMLHttpRequest') ||
+          e.toString().contains('CORS')) {
+        print('DEBUG: Network/CORS error detected');
+        throw ApiException(0, 'Cannot connect to server. Please check if the backend is running and CORS is configured properly.');
+      }
+
+      // Handle timeout errors
+      if (e.toString().contains('timeout') || e.toString().contains('TimeoutException')) {
+        print('DEBUG: Request timeout detected');
+        throw ApiException(0, 'Request timeout. The server is taking too long to respond. Please try again.');
+      }
+
+      // Handle JSON parsing errors
+      if (e.toString().contains('JSON') || e.toString().contains('parse')) {
+        print('DEBUG: JSON parsing error detected');
+        throw ApiException(0, 'Server response format error. Please try again or contact support.');
+      }
+
       if (e is UnsupportedEndpointException || e is ApiException) {
         rethrow;
       }

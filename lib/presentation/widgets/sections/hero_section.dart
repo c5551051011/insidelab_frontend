@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../screens/home/widgets/search_bar_widget.dart';
 
@@ -240,7 +241,7 @@ class _HeroSectionState extends State<HeroSection> {
 
   Widget _buildWriteReviewButton(BuildContext context) {
     return ElevatedButton.icon(
-      onPressed: () => Navigator.pushNamed(context, '/write-review'),
+      onPressed: () => context.go('/write-review'),
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
@@ -277,7 +278,7 @@ class _HeroSectionState extends State<HeroSection> {
 
   Widget _buildMockInterviewButton(BuildContext context) {
     return OutlinedButton.icon(
-      onPressed: () => Navigator.pushNamed(context, '/mock-interview'),
+      onPressed: () => context.go('/services/mock-interview'),
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.heroText,
         side: const BorderSide(

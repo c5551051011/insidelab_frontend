@@ -9,8 +9,47 @@ class LabService {
   }
 
   static Future<Lab> getLabById(String id) async {
-    final response = await ApiService.get('/labs/$id/');
-    return Lab.fromJson(response);
+    print('DEBUG: LabService.getLabById called with ID: $id');
+    try {
+      final response = await ApiService.get('/labs/$id/');
+      print('DEBUG: Lab API response: $response');
+      return Lab.fromJson(response);
+    } catch (e) {
+      print('DEBUG: Error fetching lab by ID: $e');
+      rethrow;
+    }
+  }
+
+  static Future<Lab?> getLabByName(String name) async {
+    print('DEBUG: LabService.getLabByName called with name: $name');
+    try {
+      // Search for labs by name
+      final response = await searchLabs(query: name);
+      print('DEBUG: Lab search response: $response');
+
+      if (response['results'] != null && response['results'].isNotEmpty) {
+        final results = response['results'] as List;
+
+        // Find exact match by name (case insensitive)
+        for (var labData in results) {
+          final lab = Lab.fromJson(labData);
+          if (lab.name.toLowerCase() == name.toLowerCase()) {
+            print('DEBUG: Found exact match for lab: ${lab.name}');
+            return lab;
+          }
+        }
+
+        // If no exact match, return the first result
+        print('DEBUG: No exact match, returning first result');
+        return Lab.fromJson(results.first);
+      }
+
+      print('DEBUG: No labs found with name: $name');
+      return null;
+    } catch (e) {
+      print('DEBUG: Error fetching lab by name: $e');
+      return null;
+    }
   }
 
   static Future<Map<String, dynamic>> searchLabs({

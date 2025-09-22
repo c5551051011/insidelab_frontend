@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/router/app_routes.dart';
 import '../../../data/providers/data_providers.dart';
 import '../../../data/models/user.dart';
 import 'role_switcher.dart';
@@ -104,7 +106,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
 
   Widget _buildLogo(BuildContext context) {
     return InkWell(
-      onTap: () => Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false),
+      onTap: () => context.go('/'),
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -132,7 +134,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
           children: [
             Flexible(child: _buildNavItem(context, 'Labs', '/search')),
             const SizedBox(width: 8),
-            Flexible(child: _buildNavItem(context, 'Services', '/application-services')),
+            Flexible(child: _buildNavItem(context, 'Services', '/services')),
           ],
         ),
       );
@@ -145,7 +147,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
             const SizedBox(width: 12),
             Flexible(child: _buildNavItem(context, 'Marketplace', '/marketplace')),
             const SizedBox(width: 12),
-            Flexible(child: _buildNavItem(context, 'Services', '/application-services')),
+            Flexible(child: _buildNavItem(context, 'Services', '/services')),
           ],
         ),
       );
@@ -159,7 +161,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
           const SizedBox(width: 16),
           Flexible(child: _buildNavItem(context, 'Marketplace', '/marketplace')),
           const SizedBox(width: 16),
-          Flexible(child: _buildNavItem(context, 'Services', '/application-services')),
+          Flexible(child: _buildNavItem(context, 'Services', '/services')),
           const SizedBox(width: 16),
           Flexible(child: _buildNavItem(context, 'Success Stories', '/')),
         ],
@@ -169,7 +171,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
 
   Widget _buildNavItem(BuildContext context, String title, String route) {
     return InkWell(
-      onTap: () => Navigator.pushNamed(context, route),
+      onTap: () => context.go(route),
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
@@ -196,7 +198,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
           return Row(
             children: [
               TextButton(
-                onPressed: () => Navigator.pushNamed(context, '/sign-in'),
+                onPressed: () => context.go('/sign-in'),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.primary,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -211,7 +213,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
               ),
               const SizedBox(width: 12),
               ElevatedButton(
-                onPressed: () => Navigator.pushNamed(context, '/sign-up'),
+                onPressed: () => context.go('/sign-up'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.buttonPrimary,
                   foregroundColor: AppColors.buttonText,
@@ -316,22 +318,22 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
       onSelected: (value) async {
         switch (value) {
           case 'profile':
-            Navigator.pushNamed(context, '/profile');
+            context.go('/profile');
             break;
           case 'my_reviews':
-            Navigator.pushNamed(context, '/my-reviews');
+            context.go('/profile/my-reviews');
             break;
           case 'verification':
-            Navigator.pushNamed(context, '/verification');
+            context.go('/verification');
             break;
           case 'provider_dashboard':
-            Navigator.pushNamed(context, '/provider-dashboard');
+            context.go('/provider/dashboard');
             break;
           case 'my_services':
-            Navigator.pushNamed(context, '/my-services');
+            context.go('/provider/services');
             break;
           case 'earnings':
-            Navigator.pushNamed(context, '/earnings');
+            context.go('/provider/earnings');
             break;
           case 'switch_to_seeker':
             _showRoleSwitchDialog(context, UserRole.seeker);
@@ -342,7 +344,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
           case 'logout':
             await authProvider.signOut();
             if (context.mounted) {
-              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+              context.go('/');
             }
             break;
         }
@@ -548,9 +550,9 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
               Navigator.pop(context);
               // Navigate to appropriate dashboard
               if (targetRole == UserRole.provider) {
-                Navigator.pushNamed(context, '/provider-dashboard');
+                context.go('/provider/dashboard');
               } else {
-                Navigator.pushNamed(context, '/');
+                context.go('/');
               }
             },
             style: ElevatedButton.styleFrom(
@@ -613,9 +615,9 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildMobileNavItem(context, 'Labs', '/search'),
-                        _buildMobileNavItem(context, 'Services', '/application-services'),
+                        _buildMobileNavItem(context, 'Services', '/services'),
                         _buildMobileNavItem(context, 'Success Stories', '/'),
-                        _buildMobileNavItem(context, 'Mock Interview', '/mock-interview'),
+                        _buildMobileNavItem(context, 'Mock Interview', '/services/mock-interview'),
                         const SizedBox(height: 32),
                         Consumer<AuthProvider>(
                           builder: (context, authProvider, child) {
@@ -628,7 +630,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
                                     child: TextButton(
                                       onPressed: () {
                                         Navigator.pop(context);
-                                        Navigator.pushNamed(context, '/sign-in');
+                                        context.go('/sign-in');
                                       },
                                       child: const Text(
                                         'Log In',
@@ -645,7 +647,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
                                     child: ElevatedButton(
                                       onPressed: () {
                                         Navigator.pop(context);
-                                        Navigator.pushNamed(context, '/sign-up');
+                                        context.go('/sign-up');
                                       },
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: AppColors.buttonPrimary,
@@ -671,7 +673,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _buildMobileNavItem(context, 'My Profile', '/profile'),
-                                  _buildMobileNavItem(context, 'My Reviews', '/my-reviews'),
+                                  _buildMobileNavItem(context, 'My Reviews', '/profile/my-reviews'),
                                   const SizedBox(height: 16),
                                   SizedBox(
                                     width: double.infinity,
@@ -679,7 +681,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
                                       onPressed: () async {
                                         await authProvider.signOut();
                                         if (context.mounted) {
-                                          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                                          context.go('/');
                                         }
                                       },
                                       style: OutlinedButton.styleFrom(
@@ -722,7 +724,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
       child: InkWell(
         onTap: () {
           Navigator.pop(context);
-          Navigator.pushNamed(context, route);
+          context.go(route);
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(

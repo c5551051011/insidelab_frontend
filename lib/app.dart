@@ -1,8 +1,8 @@
-// app.dart - Updated with Provider setup
+// app.dart - Updated with Provider setup and GoRouter
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
-import 'core/router/app_router.dart';
+import 'core/router/go_router_config.dart';
 import 'data/providers/data_providers.dart';
 import 'data/repositories/lab_repository.dart';
 import 'data/repositories/review_repository.dart';
@@ -36,12 +36,11 @@ class InsideLabApp extends StatelessWidget {
           create: (_) => AuthProvider(),
         ),
       ],
-      child: MaterialApp(
+      child: MaterialApp.router(
         title: 'InsideLab - Graduate School Lab Reviews',
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
-        onGenerateRoute: AppRouter.generateRoute,
-        initialRoute: AppRouter.home,
+        routerConfig: GoRouterConfig.router,
       ),
     );
   }

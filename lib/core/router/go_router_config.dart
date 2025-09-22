@@ -1,0 +1,315 @@
+// core/router/go_router_config.dart
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../presentation/screens/home/home_screen.dart';
+import '../../presentation/screens/lab_detail/lab_detail_screen.dart';
+import '../../presentation/screens/search/search_screen.dart';
+import '../../presentation/screens/reviews/write_review_screen.dart';
+import '../../presentation/screens/reviews/reviews_browse_screen.dart';
+import '../../presentation/screens/reviews/review_detail_screen.dart';
+import '../../presentation/screens/auth/sign_in_screen.dart';
+import '../../presentation/screens/auth/sign_up_screen.dart';
+import '../../presentation/screens/auth/email_verification_screen.dart';
+import '../../presentation/screens/auth/verify_email_screen.dart';
+import '../../presentation/screens/profile/profile_screen.dart';
+import '../../presentation/screens/profile/my_reviews_screen.dart';
+import '../../presentation/screens/services/application_services_screen.dart';
+import '../../presentation/screens/services/cv_review_screen.dart';
+import '../../presentation/screens/services/mock_interview_screen.dart';
+import '../../presentation/screens/services/mentorship_marketplace_screen.dart';
+import '../../presentation/screens/services/timeline_manager_screen.dart';
+import '../../presentation/screens/marketplace/marketplace_screen.dart';
+import '../../presentation/screens/provider/provider_dashboard_screen.dart';
+import '../../presentation/screens/provider/my_services_screen.dart';
+import '../../presentation/screens/provider/booking_management_screen.dart';
+import '../../presentation/screens/provider/earnings_screen.dart';
+import '../../data/models/lab.dart';
+import '../../data/models/review.dart';
+import '../../services/lab_service.dart';
+import '../../services/review_service.dart';
+
+class GoRouterConfig {
+  static final GoRouter router = GoRouter(
+    initialLocation: '/',
+    debugLogDiagnostics: true,
+    routes: [
+      // Home
+      GoRoute(
+        path: '/',
+        name: 'home',
+        builder: (context, state) => const HomeScreen(),
+      ),
+
+      // Search
+      GoRoute(
+        path: '/search',
+        name: 'search',
+        builder: (context, state) {
+          final query = state.uri.queryParameters['q'];
+          return SearchScreen(initialQuery: query);
+        },
+      ),
+
+      // Lab Detail
+      GoRoute(
+        path: '/lab/:labSlug',
+        name: 'lab-detail',
+        builder: (context, state) {
+          final labSlug = state.pathParameters['labSlug']!;
+          final labName = Lab.getNameFromSlug(labSlug);
+          return FutureBuilder<Lab?>(
+            future: LabService.getLabByName(labName),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (snapshot.hasError || !snapshot.hasData) {
+                return Scaffold(
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 64),
+                        const SizedBox(height: 16),
+                        Text('Lab not found'),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => context.go('/'),
+                          child: const Text('Go Home'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              return LabDetailScreen(lab: snapshot.data!);
+            },
+          );
+        },
+      ),
+
+      // Write Review
+      GoRoute(
+        path: '/write-review',
+        name: 'write-review',
+        builder: (context, state) {
+          final labId = state.uri.queryParameters['lab'];
+          return WriteReviewScreen(labId: labId);
+        },
+      ),
+
+      // Browse Reviews
+      GoRoute(
+        path: '/reviews',
+        name: 'browse-reviews',
+        builder: (context, state) {
+          final query = state.uri.queryParameters['q'];
+          final labId = state.uri.queryParameters['lab'];
+          return ReviewsBrowseScreen(
+            initialQuery: query,
+            initialLabId: labId,
+          );
+        },
+      ),
+
+      // Review Detail
+      GoRoute(
+        path: '/reviews/:reviewId',
+        name: 'review-detail',
+        builder: (context, state) {
+          final reviewId = state.pathParameters['reviewId']!;
+          return FutureBuilder<Review?>(
+            future: ReviewService.getReviewById(reviewId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (snapshot.hasError || !snapshot.hasData) {
+                return Scaffold(
+                  body: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.error_outline, size: 64),
+                        const SizedBox(height: 16),
+                        Text('Review not found'),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => context.go('/reviews'),
+                          child: const Text('Browse Reviews'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              return ReviewDetailScreen(review: snapshot.data!);
+            },
+          );
+        },
+      ),
+
+      // Authentication Routes
+      GoRoute(
+        path: '/sign-in',
+        name: 'sign-in',
+        builder: (context, state) => const SignInScreen(),
+      ),
+
+      GoRoute(
+        path: '/sign-up',
+        name: 'sign-up',
+        builder: (context, state) => const SignUpScreen(),
+      ),
+
+      GoRoute(
+        path: '/email-verification',
+        name: 'email-verification',
+        builder: (context, state) {
+          // Don't pass sensitive info from URL for security
+          return const EmailVerificationScreen();
+        },
+      ),
+
+      GoRoute(
+        path: '/verify-email/:token',
+        name: 'verify-email',
+        builder: (context, state) {
+          final token = state.pathParameters['token'] ?? '';
+          return VerifyEmailScreen(token: token);
+        },
+      ),
+
+      // Profile Routes
+      GoRoute(
+        path: '/profile',
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+
+      GoRoute(
+        path: '/profile/my-reviews',
+        name: 'my-reviews',
+        builder: (context, state) => const MyReviewsScreen(),
+      ),
+
+      // Service Routes
+      GoRoute(
+        path: '/services',
+        name: 'application-services',
+        builder: (context, state) => const ApplicationServicesScreen(),
+      ),
+
+      GoRoute(
+        path: '/services/cv-review',
+        name: 'cv-review',
+        builder: (context, state) => const CVReviewScreen(),
+      ),
+
+      GoRoute(
+        path: '/services/mock-interview',
+        name: 'mock-interview',
+        builder: (context, state) => const MockInterviewScreen(),
+      ),
+
+      GoRoute(
+        path: '/services/timeline-manager',
+        name: 'timeline-manager',
+        builder: (context, state) => const TimelineManagerScreen(),
+      ),
+
+      GoRoute(
+        path: '/services/mentorship',
+        name: 'mentorship-marketplace',
+        builder: (context, state) => const MentorshipMarketplaceScreen(),
+      ),
+
+      // Marketplace
+      GoRoute(
+        path: '/marketplace',
+        name: 'marketplace',
+        builder: (context, state) => const MarketplaceScreen(),
+      ),
+
+      // Provider Routes
+      GoRoute(
+        path: '/provider/dashboard',
+        name: 'provider-dashboard',
+        builder: (context, state) => const ProviderDashboardScreen(),
+      ),
+
+      GoRoute(
+        path: '/provider/services',
+        name: 'my-services',
+        builder: (context, state) => const MyServicesScreen(),
+      ),
+
+      GoRoute(
+        path: '/provider/bookings',
+        name: 'booking-management',
+        builder: (context, state) => const BookingManagementScreen(),
+      ),
+
+      GoRoute(
+        path: '/provider/earnings',
+        name: 'earnings',
+        builder: (context, state) => const EarningsScreen(),
+      ),
+
+      // Coming Soon Routes
+      GoRoute(
+        path: '/services/sop-editing',
+        name: 'sop-editing',
+        builder: (context, state) => const Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.construction, size: 64),
+                SizedBox(height: 16),
+                Text(
+                  'SOP Editing Service',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text('Coming Soon!'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ],
+
+    // Error handling
+    errorBuilder: (context, state) => Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64),
+            const SizedBox(height: 16),
+            Text(
+              'Page Not Found',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text('The page "${state.matchedLocation}" could not be found.'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => context.go('/'),
+              child: const Text('Go Home'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}

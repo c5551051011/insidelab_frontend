@@ -1,7 +1,9 @@
 
 // presentation/screens/lab_detail/widgets/lab_header.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_routes.dart';
 import '../../../../data/models/lab.dart';
 import '../../../widgets/rating_stars.dart';
 
@@ -108,11 +110,7 @@ class LabHeader extends StatelessWidget {
                   const SizedBox(height: 16),
                   ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/write-review',
-                        arguments: lab.id,
-                      );
+                      AppRoutes.goToWriteReview(context, labId: lab.id);
                     },
                     icon: const Icon(Icons.edit),
                     label: const Text('Write Review'),

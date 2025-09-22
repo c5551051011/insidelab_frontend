@@ -2,6 +2,7 @@
 // presentation/screens/auth/sign_up_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:math';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
@@ -462,7 +463,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         const Text('Already have an account?'),
         TextButton(
           onPressed: () {
-            Navigator.pushReplacementNamed(context, '/sign-in');
+            context.go('/sign-in');
           },
           child: const Text('Sign In'),
         ),
@@ -525,14 +526,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
         if (mounted) {
           // Navigate to email verification screen
-          Navigator.pushReplacementNamed(
-            context,
-            '/email-verification',
-            arguments: {
-              'email': _emailController.text.trim(),
-              'userId': authProvider.currentUser?.id,
-            },
-          );
+          context.go('/email-verification?email=${Uri.encodeComponent(_emailController.text.trim())}&userId=${authProvider.currentUser?.id}');
         }
       } catch (e) {
         if (mounted) {
@@ -673,7 +667,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                    context.go('/');
                   },
                   child: const Text('Get Started'),
                 ),

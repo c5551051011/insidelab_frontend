@@ -136,6 +136,17 @@ class ReviewService {
     }
   }
 
+  // Get a review by ID
+  static Future<Review?> getReviewById(String reviewId) async {
+    try {
+      final response = await ApiService.get('/reviews/$reviewId/');
+      return Review.fromJson(response);
+    } catch (e) {
+      print('Error fetching review by ID: $e');
+      return null;
+    }
+  }
+
   // Delete a review
   static Future<bool> deleteReview(String reviewId) async {
     try {

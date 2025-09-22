@@ -1,5 +1,6 @@
 // presentation/screens/search/search_screen.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/lab.dart';
 import '../../../services/search_service.dart';
@@ -231,11 +232,7 @@ class _SearchScreenState extends State<SearchScreen> {
         return LabCard(
           lab: lab,
           onTap: () {
-            Navigator.pushNamed(
-              context,
-              '/lab-detail',
-              arguments: lab,
-            );
+            context.go('/lab/${lab.slug}');
           },
           highlightQuery: _currentQuery,
         );

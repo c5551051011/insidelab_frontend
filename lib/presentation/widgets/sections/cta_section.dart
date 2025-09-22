@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 
 class CtaSection extends StatelessWidget {
@@ -97,7 +98,7 @@ class CtaSection extends StatelessWidget {
 
   Widget _buildPrimaryButton(BuildContext context) {
     return ElevatedButton(
-      onPressed: () => Navigator.pushNamed(context, '/sign-up'),
+      onPressed: () => context.go('/sign-up'),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF2563EB),
@@ -133,7 +134,7 @@ class CtaSection extends StatelessWidget {
 
   Widget _buildSecondaryButton(BuildContext context) {
     return OutlinedButton(
-      onPressed: () => Navigator.pushNamed(context, '/'),
+      onPressed: () => context.go('/reviews'),
       style: OutlinedButton.styleFrom(
         foregroundColor: Colors.white,
         side: const BorderSide(

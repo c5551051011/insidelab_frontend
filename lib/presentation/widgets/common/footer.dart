@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 
 class Footer extends StatelessWidget {
@@ -156,7 +157,7 @@ class Footer extends StatelessWidget {
 
   Widget _buildSocialIcon(BuildContext context, IconData icon, String route) {
     return InkWell(
-      onTap: () => Navigator.pushNamed(context, route),
+      onTap: () => context.go(route),
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.all(8),
@@ -179,9 +180,9 @@ class Footer extends StatelessWidget {
       'Product',
       [
         {'title': 'Professor Reviews', 'route': '/'},
-        {'title': 'CV Feedback', 'route': '/cv-review'},
-        {'title': 'Mock Interviews', 'route': '/mock-interview'},
-        {'title': 'Application Services', 'route': '/application-services'},
+        {'title': 'CV Feedback', 'route': '/services/cv-review'},
+        {'title': 'Mock Interviews', 'route': '/services/mock-interview'},
+        {'title': 'Application Services', 'route': '/services'},
       ],
     );
   }
@@ -242,7 +243,7 @@ class Footer extends StatelessWidget {
         ...links.map((link) => Container(
           margin: const EdgeInsets.only(bottom: 12),
           child: InkWell(
-            onTap: () => Navigator.pushNamed(context, link['route']!),
+            onTap: () => context.go(link['route']!),
             borderRadius: BorderRadius.circular(4),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),

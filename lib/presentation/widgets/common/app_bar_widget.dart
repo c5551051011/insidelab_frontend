@@ -1,6 +1,7 @@
 // presentation/widgets/common/app_bar_widget.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/providers/data_providers.dart';
 
@@ -20,7 +21,7 @@ class InsideLabAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       title: InkWell(
-        onTap: () => Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false),
+        onTap: () => context.go('/'),
         child: title != null
             ? Text(title!)
             : const Text(

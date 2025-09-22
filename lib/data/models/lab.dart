@@ -99,6 +99,18 @@ class Lab {
       'recruitment_status': recruitmentStatus?.toJson(),
     };
   }
+
+  // Generate a simple URL-friendly slug from lab name
+  String get slug {
+    return name.toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9\s]'), '')
+        .replaceAll(RegExp(r'\s+'), '-');
+  }
+
+  // Since we're using name-based slugs, we need to search by name
+  static String getNameFromSlug(String slug) {
+    return slug.replaceAll('-', ' ');
+  }
 }
 
 // ResearchTopic 모델

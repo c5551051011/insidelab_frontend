@@ -1,18 +1,14 @@
 // lib/presentation/screens/auth/email_verification_screen.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'dart:async';
 import '../../../core/constants/app_colors.dart';
+import '../../../data/providers/data_providers.dart';
 import '../../../services/auth_service.dart';
 
 class EmailVerificationScreen extends StatefulWidget {
-  final String email;
-  final String? userId;
-
-  const EmailVerificationScreen({
-    Key? key,
-    required this.email,
-    this.userId,
-  }) : super(key: key);
+  const EmailVerificationScreen({Key? key}) : super(key: key);
 
   @override
   State<EmailVerificationScreen> createState() => _EmailVerificationScreenState();
@@ -59,13 +55,23 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   Future<void> _resendVerificationEmail() async {
     if (!_canResend || _isResending) return;
 
+    final authProvider = context.read<AuthProvider>();
+    final email = authProvider.currentUser?.email;
+
+    if (email == null) {
+      setState(() {
+        _message = 'No email found. Please sign up again.';
+      });
+      return;
+    }
+
     setState(() {
       _isResending = true;
       _message = null;
     });
 
     try {
-      await AuthService.resendVerificationEmail(widget.email);
+      await AuthService.resendVerificationEmail(email);
       setState(() {
         _message = 'Verification email sent successfully!';
       });
@@ -141,14 +147,19 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: AppColors.border),
                     ),
-                    child: Text(
-                      widget.email,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                      textAlign: TextAlign.center,
+                    child: Consumer<AuthProvider>(
+                      builder: (context, authProvider, _) {
+                        final email = authProvider.currentUser?.email ?? 'your email';
+                        return Text(
+                          email,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                          textAlign: TextAlign.center,
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -240,7 +251,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                   // Back to sign in
                   TextButton(
                     onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/sign-in');
+                      context.go('/sign-in');
                     },
                     child: Text(
                       'Back to Sign In',

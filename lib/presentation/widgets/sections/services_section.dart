@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 
 class ServicesSection extends StatelessWidget {
@@ -62,7 +63,7 @@ class ServicesSection extends StatelessWidget {
         ],
         'buttonText': 'Explore Reviews',
         'imagePath': 'images/review_image.png',
-        'route': '/search',
+        'route': '/reviews',
       },
       {
         'emoji': '📄',
@@ -76,7 +77,7 @@ class ServicesSection extends StatelessWidget {
         ],
         'buttonText': 'Upload Document',
         'imagePath': 'images/resume_image.png',
-        'route': '/cv-review',
+        'route': '/services/cv-review',
       },
       {
         'emoji': '🎤',
@@ -90,7 +91,7 @@ class ServicesSection extends StatelessWidget {
         ],
         'buttonText': 'Start Practice',
         'imagePath': 'images/interview_image.png',
-        'route': '/mock-interview',
+        'route': '/services/mock-interview',
       },
     ];
 
@@ -203,7 +204,7 @@ class ServicesSection extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => Navigator.pushNamed(context, route),
+            onTap: () => context.go(route),
             borderRadius: BorderRadius.circular(12),
             child: Container(
               decoration: BoxDecoration(
@@ -348,7 +349,7 @@ class ServicesSection extends StatelessWidget {
                             child: SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
-                                onPressed: () => Navigator.pushNamed(context, route),
+                                onPressed: () => context.go(route),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   foregroundColor: Colors.white,

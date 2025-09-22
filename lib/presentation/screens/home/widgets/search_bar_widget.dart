@@ -1,7 +1,9 @@
 
 // presentation/screens/home/widgets/search_bar_widget.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/app_routes.dart';
 import '../../../widgets/enhanced_search_bar.dart';
 
 class SearchBarWidget extends StatelessWidget {
@@ -27,12 +29,6 @@ class SearchBarWidget extends StatelessWidget {
   }
 
   void _performSearch(BuildContext context, String query) {
-    if (query.trim().isNotEmpty) {
-      Navigator.pushNamed(
-        context,
-        '/search',
-        arguments: query,
-      );
-    }
+    AppRoutes.goToSearch(context, query: query.trim().isNotEmpty ? query.trim() : null);
   }
 }

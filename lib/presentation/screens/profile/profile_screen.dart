@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/providers/data_providers.dart';
 import '../../widgets/common/app_bar_widget.dart';
@@ -241,7 +242,7 @@ class ProfileScreen extends StatelessWidget {
       children: [
         ElevatedButton.icon(
           onPressed: () {
-            Navigator.pushNamed(context, '/my-reviews');
+            context.go('/profile/my-reviews');
           },
           icon: const Icon(Icons.rate_review),
           label: const Text('View My Reviews'),

@@ -19,6 +19,11 @@ dependencies:
   # State Management
   provider: ^6.1.1
 
+  # Routing
+  go_router: ^14.2.7
+  flutter_web_plugins:
+    sdk: flutter
+
   # Networking
   http: ^1.1.0
   dio: ^5.4.0

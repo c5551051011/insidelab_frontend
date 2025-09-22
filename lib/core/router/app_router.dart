@@ -103,10 +103,7 @@ class AppRouter {
       case emailVerification:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
-          builder: (_) => EmailVerificationScreen(
-            email: args?['email'] ?? '',
-            userId: args?['userId'],
-          ),
+          builder: (_) => const EmailVerificationScreen(),
         );
 
       case verifyEmail:
