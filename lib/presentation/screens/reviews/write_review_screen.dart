@@ -2,8 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/router/app_routes.dart';
 import '../../../data/models/lab.dart';
 import '../../../data/models/university.dart';
 import '../../../data/providers/data_providers.dart';
@@ -80,7 +82,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
 
         if (!authProvider.isAuthenticated) {
           if (mounted) {
-            Navigator.pushReplacementNamed(context, '/sign-in');
+            context.go('/sign-in');
             return;
           }
         }
@@ -95,7 +97,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
       } catch (error) {
         // If auth check fails, redirect to login
         if (mounted) {
-          Navigator.pushReplacementNamed(context, '/sign-in');
+          context.go('/sign-in');
         }
       }
     });

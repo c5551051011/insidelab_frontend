@@ -62,7 +62,7 @@ class ServicesSection extends StatelessWidget {
           'Save labs to your watchlist',
         ],
         'buttonText': 'Explore Reviews',
-        'imagePath': 'images/review_image.png',
+        'imagePath': 'assets/images/review_image.png',
         'route': '/reviews',
       },
       {
@@ -76,7 +76,7 @@ class ServicesSection extends StatelessWidget {
           'Before/after improvement tracking',
         ],
         'buttonText': 'Upload Document',
-        'imagePath': 'images/resume_image.png',
+        'imagePath': 'assets/images/resume_image.png',
         'route': '/services/cv-review',
       },
       {
@@ -90,7 +90,7 @@ class ServicesSection extends StatelessWidget {
           'Video analysis and improvement tips',
         ],
         'buttonText': 'Start Practice',
-        'imagePath': 'images/interview_image.png',
+        'imagePath': 'assets/images/interview_image.png',
         'route': '/services/mock-interview',
       },
     ];

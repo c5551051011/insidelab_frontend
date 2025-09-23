@@ -23,7 +23,7 @@ class _HeroSectionState extends State<HeroSection> {
       constraints: const BoxConstraints(minHeight: 300), // Minimum height
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('images/hero_background.png'),
+          image: AssetImage('assets/images/hero_background.png'),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
             Colors.transparent,

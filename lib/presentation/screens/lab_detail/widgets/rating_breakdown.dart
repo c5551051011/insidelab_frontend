@@ -42,6 +42,7 @@ class _RatingBreakdownState extends State<RatingBreakdown>
   @override
   Widget build(BuildContext context) {
     return Card(
+      elevation: 0,
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(

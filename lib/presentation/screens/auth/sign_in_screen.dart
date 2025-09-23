@@ -246,7 +246,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                   )
                 : Image.asset(
-                    'icons/google_logo.png', // You'll need to add this asset
+                    'assets/icons/google_logo.png', // You'll need to add this asset
                     height: 20,
                     width: 20,
                     errorBuilder: (context, error, stackTrace) => Icon(
