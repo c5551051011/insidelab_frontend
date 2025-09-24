@@ -132,7 +132,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Flexible(child: _buildNavItem(context, 'Labs', '/search')),
+            Flexible(child: _buildNavItem(context, 'Search', '/search')),
             const SizedBox(width: 8),
             Flexible(child: _buildNavItem(context, 'Services', '/services')),
           ],
@@ -143,7 +143,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Flexible(child: _buildNavItem(context, 'Labs', '/search')),
+            Flexible(child: _buildNavItem(context, 'Search', '/search')),
             const SizedBox(width: 12),
             Flexible(child: _buildNavItem(context, 'Marketplace', '/marketplace')),
             const SizedBox(width: 12),
@@ -157,7 +157,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Flexible(child: _buildNavItem(context, 'Labs', '/search')),
+          Flexible(child: _buildNavItem(context, 'Search', '/search')),
           const SizedBox(width: 16),
           Flexible(child: _buildNavItem(context, 'Marketplace', '/marketplace')),
           const SizedBox(width: 16),
@@ -614,7 +614,7 @@ class _HeaderNavigationState extends State<HeaderNavigation> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildMobileNavItem(context, 'Labs', '/search'),
+                        _buildMobileNavItem(context, 'Search', '/search'),
                         _buildMobileNavItem(context, 'Services', '/services'),
                         _buildMobileNavItem(context, 'Success Stories', '/'),
                         _buildMobileNavItem(context, 'Mock Interview', '/services/mock-interview'),
