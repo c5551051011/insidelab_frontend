@@ -2,6 +2,7 @@
 // presentation/screens/home/widgets/featured_labs_section.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/lab.dart';
 import '../../../../data/providers/data_providers.dart';
@@ -104,11 +105,7 @@ class _FeaturedLabsSectionState extends State<FeaturedLabsSection> {
         return LabCard(
           lab: labs[index],
           onTap: () {
-            Navigator.pushNamed(
-              context,
-              '/lab-detail',
-              arguments: labs[index],
-            );
+            context.go('/lab/${labs[index].slug}');
           },
         );
       },
@@ -124,11 +121,7 @@ class _FeaturedLabsSectionState extends State<FeaturedLabsSection> {
         return LabCard(
           lab: labs[index],
           onTap: () {
-            Navigator.pushNamed(
-              context,
-              '/lab-detail',
-              arguments: labs[index],
-            );
+            context.go('/lab/${labs[index].slug}');
           },
         );
       },

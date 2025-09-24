@@ -87,12 +87,14 @@ class GoRouterConfig {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Scaffold(
+                    appBar: HeaderNavigation(),
                     body: Center(child: CircularProgressIndicator()),
                   );
                 }
 
                 if (snapshot.hasError || !snapshot.hasData) {
                   return Scaffold(
+                    appBar: const HeaderNavigation(),
                     body: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -161,12 +163,14 @@ class GoRouterConfig {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Scaffold(
+                    appBar: HeaderNavigation(),
                     body: Center(child: CircularProgressIndicator()),
                   );
                 }
 
                 if (snapshot.hasError || !snapshot.hasData) {
                   return Scaffold(
+                    appBar: const HeaderNavigation(),
                     body: Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
