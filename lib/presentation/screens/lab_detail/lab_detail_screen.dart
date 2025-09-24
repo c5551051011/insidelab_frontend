@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/lab.dart';
 import '../../../services/lab_service.dart';
+import '../../widgets/common/header_navigation.dart';
 import 'widgets/lab_header.dart';
 import 'widgets/rating_breakdown.dart';
 import 'widgets/reviews_list.dart';
@@ -89,33 +90,31 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          _buildAppBar(context),
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                LabHeader(lab: widget.lab),
-                const SizedBox(height: 24),
-                _buildContent(context),
-              ],
+      appBar: const HeaderNavigation(),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Container(
+              height: 200,
+              decoration: const BoxDecoration(
+                gradient: AppColors.primaryGradient,
+              ),
+              child: Center(
+                child: Text(
+                  widget.lab.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAppBar(BuildContext context) {
-    return SliverAppBar(
-      pinned: true,
-      expandedHeight: 200,
-      flexibleSpace: FlexibleSpaceBar(
-        title: Text(widget.lab.name),
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: AppColors.primaryGradient,
-          ),
+            LabHeader(lab: widget.lab),
+            const SizedBox(height: 24),
+            _buildContent(context),
+          ],
         ),
       ),
     );

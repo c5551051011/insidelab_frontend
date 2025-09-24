@@ -4,7 +4,7 @@ import 'dart:io';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/providers/data_providers.dart';
 import '../../../data/models/mentor.dart';
-import '../../widgets/common/app_bar_widget.dart';
+import '../../widgets/common/header_navigation.dart';
 
 class CVReviewScreen extends StatefulWidget {
   const CVReviewScreen({Key? key}) : super(key: key);
@@ -102,10 +102,7 @@ class _CVReviewScreenState extends State<CVReviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const InsideLabAppBar(
-        title: 'CV/Resume Review',
-        showBackButton: true,
-      ),
+      appBar: const HeaderNavigation(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/providers/data_providers.dart';
 import '../../../data/models/mentor.dart';
-import '../../widgets/common/app_bar_widget.dart';
+import '../../widgets/common/header_navigation.dart';
 
 class MockInterviewScreen extends StatefulWidget {
   const MockInterviewScreen({Key? key}) : super(key: key);
@@ -127,10 +127,7 @@ class _MockInterviewScreenState extends State<MockInterviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const InsideLabAppBar(
-        title: 'Mock Interviews',
-        showBackButton: true,
-      ),
+      appBar: const HeaderNavigation(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(

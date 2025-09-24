@@ -9,6 +9,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../data/providers/data_providers.dart';
 import '../../../utils/validators.dart';
 import '../../../utils/helpers.dart';
+import '../../widgets/common/header_navigation.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -70,6 +71,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const HeaderNavigation(),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),

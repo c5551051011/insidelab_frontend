@@ -1,6 +1,7 @@
 // core/router/go_router_config.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../presentation/screens/home/home_screen.dart';
 import '../../presentation/screens/lab_detail/lab_detail_screen.dart';
 import '../../presentation/screens/search/search_screen.dart';
@@ -27,8 +28,25 @@ import '../../data/models/lab.dart';
 import '../../data/models/review.dart';
 import '../../services/lab_service.dart';
 import '../../services/review_service.dart';
+import '../../presentation/widgets/common/header_navigation.dart';
 
 class GoRouterConfig {
+  static Page<dynamic> _buildPageWithoutTransition({
+    required Widget child,
+    required GoRouterState state,
+  }) {
+    if (kIsWeb) {
+      return NoTransitionPage(
+        key: state.pageKey,
+        child: child,
+      );
+    }
+    return MaterialPage(
+      key: state.pageKey,
+      child: child,
+    );
+  }
+
   static final GoRouter router = GoRouter(
     initialLocation: '/',
     debugLogDiagnostics: true,
@@ -37,16 +55,22 @@ class GoRouterConfig {
       GoRoute(
         path: '/',
         name: 'home',
-        builder: (context, state) => const HomeScreen(),
+        pageBuilder: (context, state) => _buildPageWithoutTransition(
+          child: const HomeScreen(),
+          state: state,
+        ),
       ),
 
       // Search
       GoRoute(
         path: '/search',
         name: 'search',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final query = state.uri.queryParameters['q'];
-          return SearchScreen(initialQuery: query);
+          return _buildPageWithoutTransition(
+            child: SearchScreen(initialQuery: query),
+            state: state,
+          );
         },
       ),
 
@@ -54,40 +78,43 @@ class GoRouterConfig {
       GoRoute(
         path: '/lab/:labSlug',
         name: 'lab-detail',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final labSlug = state.pathParameters['labSlug']!;
           final labName = Lab.getNameFromSlug(labSlug);
-          return FutureBuilder<Lab?>(
-            future: LabService.getLabByName(labName),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
+          return _buildPageWithoutTransition(
+            child: FutureBuilder<Lab?>(
+              future: LabService.getLabByName(labName),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                }
 
-              if (snapshot.hasError || !snapshot.hasData) {
-                return Scaffold(
-                  body: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 64),
-                        const SizedBox(height: 16),
-                        Text('Lab not found'),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () => context.go('/'),
-                          child: const Text('Go Home'),
-                        ),
-                      ],
+                if (snapshot.hasError || !snapshot.hasData) {
+                  return Scaffold(
+                    body: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline, size: 64),
+                          const SizedBox(height: 16),
+                          Text('Lab not found'),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () => context.go('/'),
+                            child: const Text('Go Home'),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              }
+                  );
+                }
 
-              return LabDetailScreen(lab: snapshot.data!);
-            },
+                return LabDetailScreen(lab: snapshot.data!);
+              },
+            ),
+            state: state,
           );
         },
       ),
@@ -96,9 +123,12 @@ class GoRouterConfig {
       GoRoute(
         path: '/write-review',
         name: 'write-review',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final labId = state.uri.queryParameters['lab'];
-          return WriteReviewScreen(labId: labId);
+          return _buildPageWithoutTransition(
+            child: WriteReviewScreen(labId: labId),
+            state: state,
+          );
         },
       ),
 
@@ -106,12 +136,15 @@ class GoRouterConfig {
       GoRoute(
         path: '/reviews',
         name: 'browse-reviews',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final query = state.uri.queryParameters['q'];
           final labId = state.uri.queryParameters['lab'];
-          return ReviewsBrowseScreen(
-            initialQuery: query,
-            initialLabId: labId,
+          return _buildPageWithoutTransition(
+            child: ReviewsBrowseScreen(
+              initialQuery: query,
+              initialLabId: labId,
+            ),
+            state: state,
           );
         },
       ),
@@ -120,39 +153,42 @@ class GoRouterConfig {
       GoRoute(
         path: '/reviews/:reviewId',
         name: 'review-detail',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final reviewId = state.pathParameters['reviewId']!;
-          return FutureBuilder<Review?>(
-            future: ReviewService.getReviewById(reviewId),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
+          return _buildPageWithoutTransition(
+            child: FutureBuilder<Review?>(
+              future: ReviewService.getReviewById(reviewId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Scaffold(
+                    body: Center(child: CircularProgressIndicator()),
+                  );
+                }
 
-              if (snapshot.hasError || !snapshot.hasData) {
-                return Scaffold(
-                  body: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.error_outline, size: 64),
-                        const SizedBox(height: 16),
-                        Text('Review not found'),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () => context.go('/reviews'),
-                          child: const Text('Browse Reviews'),
-                        ),
-                      ],
+                if (snapshot.hasError || !snapshot.hasData) {
+                  return Scaffold(
+                    body: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline, size: 64),
+                          const SizedBox(height: 16),
+                          Text('Review not found'),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () => context.go('/reviews'),
+                            child: const Text('Browse Reviews'),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              }
+                  );
+                }
 
-              return ReviewDetailScreen(review: snapshot.data!);
-            },
+                return ReviewDetailScreen(review: snapshot.data!);
+              },
+            ),
+            state: state,
           );
         },
       ),
@@ -161,30 +197,39 @@ class GoRouterConfig {
       GoRoute(
         path: '/sign-in',
         name: 'sign-in',
-        builder: (context, state) => const SignInScreen(),
+        pageBuilder: (context, state) => _buildPageWithoutTransition(
+          child: const SignInScreen(),
+          state: state,
+        ),
       ),
 
       GoRoute(
         path: '/sign-up',
         name: 'sign-up',
-        builder: (context, state) => const SignUpScreen(),
+        pageBuilder: (context, state) => _buildPageWithoutTransition(
+          child: const SignUpScreen(),
+          state: state,
+        ),
       ),
 
       GoRoute(
         path: '/email-verification',
         name: 'email-verification',
-        builder: (context, state) {
-          // Don't pass sensitive info from URL for security
-          return const EmailVerificationScreen();
-        },
+        pageBuilder: (context, state) => _buildPageWithoutTransition(
+          child: const EmailVerificationScreen(),
+          state: state,
+        ),
       ),
 
       GoRoute(
         path: '/verify-email/:token',
         name: 'verify-email',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final token = state.pathParameters['token'] ?? '';
-          return VerifyEmailScreen(token: token);
+          return _buildPageWithoutTransition(
+            child: VerifyEmailScreen(token: token),
+            state: state,
+          );
         },
       ),
 
@@ -192,51 +237,75 @@ class GoRouterConfig {
       GoRoute(
         path: '/profile',
         name: 'profile',
-        builder: (context, state) => const ProfileScreen(),
+        pageBuilder: (context, state) => _buildPageWithoutTransition(
+          child: const ProfileScreen(),
+          state: state,
+        ),
       ),
 
       GoRoute(
         path: '/profile/my-reviews',
         name: 'my-reviews',
-        builder: (context, state) => const MyReviewsScreen(),
+        pageBuilder: (context, state) => _buildPageWithoutTransition(
+          child: const MyReviewsScreen(),
+          state: state,
+        ),
       ),
 
       // Service Routes
       GoRoute(
         path: '/services',
         name: 'application-services',
-        builder: (context, state) => const ApplicationServicesScreen(),
+        pageBuilder: (context, state) => _buildPageWithoutTransition(
+          child: const ApplicationServicesScreen(),
+          state: state,
+        ),
       ),
 
       GoRoute(
         path: '/services/cv-review',
         name: 'cv-review',
-        builder: (context, state) => const CVReviewScreen(),
+        pageBuilder: (context, state) => _buildPageWithoutTransition(
+          child: const CVReviewScreen(),
+          state: state,
+        ),
       ),
 
       GoRoute(
         path: '/services/mock-interview',
         name: 'mock-interview',
-        builder: (context, state) => const MockInterviewScreen(),
+        pageBuilder: (context, state) => _buildPageWithoutTransition(
+          child: const MockInterviewScreen(),
+          state: state,
+        ),
       ),
 
       GoRoute(
         path: '/services/timeline-manager',
         name: 'timeline-manager',
-        builder: (context, state) => const TimelineManagerScreen(),
+        pageBuilder: (context, state) => _buildPageWithoutTransition(
+          child: const TimelineManagerScreen(),
+          state: state,
+        ),
       ),
 
       GoRoute(
         path: '/services/mentorship',
         name: 'mentorship-marketplace',
-        builder: (context, state) => const MentorshipMarketplaceScreen(),
+        pageBuilder: (context, state) => _buildPageWithoutTransition(
+          child: const MentorshipMarketplaceScreen(),
+          state: state,
+        ),
       ),
 
       // Marketplace
       GoRoute(
         path: '/marketplace',
         name: 'marketplace',
-        builder: (context, state) => const MarketplaceScreen(),
+        pageBuilder: (context, state) => _buildPageWithoutTransition(
+          child: const MarketplaceScreen(),
+          state: state,
+        ),
       ),
 
       // Provider Routes

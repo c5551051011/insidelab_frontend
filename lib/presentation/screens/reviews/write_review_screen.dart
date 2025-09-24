@@ -816,134 +816,70 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
 
   Widget _buildCategoryRatingRow(String category) {
     final rating = _categoryRatings[category]!;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isNarrow = screenWidth < 600;
 
-    if (isNarrow) {
-      // Stack vertically on narrow screens
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  category,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              RatingStars(rating: rating, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                rating.toStringAsFixed(1),
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 4,
-            runSpacing: 4,
-            children: List.generate(10, (index) {
-              final ratingValue = (index + 1) * 0.5;
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _categoryRatings[category] = ratingValue;
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: rating == ratingValue ? AppColors.primary : Colors.transparent,
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(
-                      color: rating == ratingValue ? AppColors.primary : AppColors.border,
-                    ),
-                  ),
-                  child: Text(
-                    ratingValue.toString(),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: rating == ratingValue ? Colors.white : AppColors.textTertiary,
-                    ),
-                  ),
-                ),
-              );
-            }),
-          ),
-        ],
-      );
-    } else {
-      // Horizontal layout for wider screens
-      return Row(
-        children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              category,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-          const SizedBox(width: 16),
-          RatingStars(rating: rating, size: 20),
-          const SizedBox(width: 16),
-          Text(
-            rating.toStringAsFixed(1),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          flex: 2,
+          child: Text(
+            category,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Wrap(
-              spacing: 2,
-              children: List.generate(10, (index) {
-                final ratingValue = (index + 1) * 0.5;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _categoryRatings[category] = ratingValue;
-                    });
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 1),
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: rating == ratingValue ? AppColors.primary : Colors.transparent,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                    child: Text(
-                      ratingValue.toString(),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: rating == ratingValue ? Colors.white : AppColors.textTertiary,
-                      ),
-                    ),
-                  ),
-                );
-              }),
+        ),
+        const SizedBox(width: 16),
+        RatingStars(rating: rating, size: 20),
+        const SizedBox(width: 16),
+        SizedBox(
+          width: 48,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              rating.toStringAsFixed(1),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
             ),
           ),
-        ],
-      );
-    }
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          flex: 3,
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: AppColors.primary,
+              inactiveTrackColor: AppColors.border,
+              thumbColor: AppColors.primary,
+              overlayColor: AppColors.primary.withOpacity(0.2),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+              trackHeight: 4,
+            ),
+            child: Slider(
+              value: rating,
+              min: 0.5,
+              max: 5.0,
+              divisions: 9,
+              onChanged: (value) {
+                setState(() {
+                  _categoryRatings[category] = value;
+                });
+              },
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildReviewText() {

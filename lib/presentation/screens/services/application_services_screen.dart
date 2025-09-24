@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/providers/data_providers.dart';
-import '../../widgets/common/app_bar_widget.dart';
+import '../../widgets/common/header_navigation.dart';
 
 class ApplicationServicesScreen extends StatelessWidget {
   const ApplicationServicesScreen({Key? key}) : super(key: key);
@@ -10,10 +10,7 @@ class ApplicationServicesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const InsideLabAppBar(
-        title: 'Application Services',
-        showBackButton: true,
-      ),
+      appBar: const HeaderNavigation(),
       body: SingleChildScrollView(
         child: Column(
           children: [

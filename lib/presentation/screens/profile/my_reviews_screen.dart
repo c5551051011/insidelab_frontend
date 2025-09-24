@@ -4,7 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../data/providers/data_providers.dart';
 import '../../../data/models/review.dart';
 import '../../../data/repositories/review_repository.dart';
-import '../../widgets/common/app_bar_widget.dart';
+import '../../widgets/common/header_navigation.dart';
 
 class MyReviewsScreen extends StatefulWidget {
   const MyReviewsScreen({Key? key}) : super(key: key);
@@ -52,10 +52,7 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const InsideLabAppBar(
-        title: 'My Reviews',
-        showBackButton: true,
-      ),
+      appBar: const HeaderNavigation(),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
           final user = authProvider.currentUser;

@@ -6,6 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../data/providers/data_providers.dart';
 import '../../../utils/validators.dart';
 import '../../../utils/helpers.dart';
+import '../../widgets/common/header_navigation.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({Key? key}) : super(key: key);
@@ -23,6 +24,7 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: const HeaderNavigation(),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),

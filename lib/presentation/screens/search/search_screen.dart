@@ -6,6 +6,7 @@ import '../../../data/models/lab.dart';
 import '../../../services/search_service.dart';
 import '../../widgets/lab_card.dart';
 import '../../widgets/enhanced_search_bar.dart';
+import '../../widgets/common/header_navigation.dart';
 import 'widgets/filter_sidebar.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -41,11 +42,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Search Labs'),
-        backgroundColor: Colors.white,
-        elevation: 1,
-      ),
+      appBar: const HeaderNavigation(),
       body: LayoutBuilder(
         builder: (context, constraints) {
           if (constraints.maxWidth > 1000) {

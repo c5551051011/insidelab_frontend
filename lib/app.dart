@@ -1,5 +1,6 @@
 // app.dart - Updated with Provider setup and GoRouter
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/go_router_config.dart';
@@ -38,7 +39,19 @@ class InsideLabApp extends StatelessWidget {
       ],
       child: MaterialApp.router(
         title: 'InsideLab - Graduate School Lab Reviews',
-        theme: AppTheme.lightTheme,
+        theme: kIsWeb
+            ? AppTheme.lightTheme.copyWith(
+                pageTransitionsTheme: const PageTransitionsTheme(
+                  builders: {
+                    TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+                    TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
+                    TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+                    TargetPlatform.macOS: FadeUpwardsPageTransitionsBuilder(),
+                    TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+                  },
+                ),
+              )
+            : AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
         routerConfig: GoRouterConfig.router,
       ),

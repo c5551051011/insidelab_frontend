@@ -63,7 +63,7 @@ class ServicesSection extends StatelessWidget {
         ],
         'buttonText': 'Explore Reviews',
         'imagePath': 'assets/images/review_image.png',
-        'route': '/reviews',
+        'route': '/search',
       },
       {
         'emoji': '📄',
