@@ -893,14 +893,17 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        maxWidth: 600,
-        maxHeight: MediaQuery.of(context).size.height * 0.9,
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 600,
+          maxHeight: MediaQuery.of(context).size.height * 0.9,
+        ),
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -1031,6 +1034,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
               ],
             ),
           ],
+        ),
         ),
       ),
     );
@@ -1177,7 +1181,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
         ),
         if (_publications.isNotEmpty) ...[
           const SizedBox(height: 12),
-          ...._publications.asMap().entries.map((entry) => Card(
+          ..._publications.asMap().entries.map((entry) => Card(
             margin: const EdgeInsets.only(bottom: 8),
             child: Padding(
               padding: const EdgeInsets.all(12),
