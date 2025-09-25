@@ -8,8 +8,10 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../data/models/lab.dart';
 import '../../../data/models/university.dart';
+import '../../../data/models/research_group.dart';
 import '../../../data/providers/data_providers.dart';
 import '../../../services/university_service.dart';
+import '../../../services/research_group_service.dart';
 import '../../../services/lab_service.dart';
 import '../../../services/review_service.dart';
 import '../../widgets/common/header_navigation.dart';
@@ -33,11 +35,16 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   final _prosController = TextEditingController();
   final _consController = TextEditingController();
   final _universityController = TextEditingController();
+  final _departmentController = TextEditingController();
+  final _researchGroupController = TextEditingController();
   final _labController = TextEditingController();
 
   String? _selectedLabId;
   String? _selectedUniversityId;
   String? _selectedUniversityName;
+  String? _selectedDepartment;
+  String? _selectedResearchGroupId;
+  String? _selectedResearchGroupName;
   String? _selectedLabName;
   String _position = 'PhD Student';
   String _duration = '1 year';
@@ -50,6 +57,8 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   bool _isLoadingCategories = true;
   List<String> _ratingCategories = [];
   List<University> _filteredUniversities = [];
+  List<String> _filteredDepartments = [];
+  List<ResearchGroup> _filteredResearchGroups = [];
   List<Lab> _filteredLabs = [];
 
   @override
@@ -228,6 +237,10 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildUniversitySelection(),
+                      const SizedBox(height: 24),
+                      _buildDepartmentSelection(),
+                      const SizedBox(height: 24),
+                      _buildResearchGroupSelection(),
                       const SizedBox(height: 24),
                       _buildLabSelection(),
                       const SizedBox(height: 24),
@@ -421,6 +434,169 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
               ),
             ),
           ),
+      ],
+    );
+  }
+
+  Widget _buildDepartmentSelection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Department *',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _departmentController,
+          decoration: InputDecoration(
+            hintText: _selectedUniversityName != null
+                ? 'Type department name (e.g., Computer Science)...'
+                : 'Select a university first',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColors.primary, width: 2),
+            ),
+            enabled: _selectedUniversityId != null,
+          ),
+          enabled: _selectedUniversityId != null,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Please enter the department name';
+            }
+            return null;
+          },
+          onChanged: (value) {
+            setState(() {
+              _selectedDepartment = value.trim().isEmpty ? null : value.trim();
+              // Clear research group and lab when department changes
+              _researchGroupController.clear();
+              _selectedResearchGroupId = null;
+              _selectedResearchGroupName = null;
+              _labController.clear();
+              _selectedLabId = null;
+              _selectedLabName = null;
+              _filteredResearchGroups.clear();
+              _filteredLabs.clear();
+            });
+
+            // Load research groups for the selected department
+            if (_selectedUniversityId != null && value.trim().isNotEmpty) {
+              _loadResearchGroups(_selectedUniversityId!, value.trim());
+            }
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildResearchGroupSelection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Research Group',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Optional',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        TypeAheadField<ResearchGroup>(
+          controller: _researchGroupController,
+          suggestionsCallback: (pattern) {
+            if (pattern.isEmpty) return _filteredResearchGroups;
+            return _filteredResearchGroups.where((group) =>
+              group.name.toLowerCase().contains(pattern.toLowerCase())).toList();
+          },
+          itemBuilder: (context, suggestion) {
+            return ListTile(
+              title: Text(suggestion.name),
+              subtitle: Text('${suggestion.department} • ${suggestion.professorCount} professors'),
+            );
+          },
+          onSelected: (suggestion) {
+            setState(() {
+              _researchGroupController.text = suggestion.name;
+              _selectedResearchGroupId = suggestion.id;
+              _selectedResearchGroupName = suggestion.name;
+              // Clear lab selection when research group changes
+              _labController.clear();
+              _selectedLabId = null;
+              _selectedLabName = null;
+              _filteredLabs.clear();
+            });
+
+            // Load labs for the selected research group
+            _loadLabsForGroup(suggestion.id);
+          },
+          builder: (context, controller, focusNode) {
+            return TextFormField(
+              controller: controller,
+              focusNode: focusNode,
+              decoration: InputDecoration(
+                hintText: _selectedDepartment != null
+                    ? 'Search or type research group name (optional)...'
+                    : 'Select a department first',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppColors.primary, width: 2),
+                ),
+                suffixIcon: _researchGroupController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _researchGroupController.clear();
+                            _selectedResearchGroupId = null;
+                            _selectedResearchGroupName = null;
+                            _labController.clear();
+                            _selectedLabId = null;
+                            _selectedLabName = null;
+                            _filteredLabs.clear();
+                          });
+                          // Load all labs for department instead
+                          if (_selectedUniversityId != null && _selectedDepartment != null) {
+                            _loadLabsForDepartment(_selectedUniversityId!, _selectedDepartment!);
+                          }
+                        },
+                      )
+                    : null,
+                enabled: _selectedDepartment != null,
+              ),
+              enabled: _selectedDepartment != null,
+            );
+          },
+        ),
       ],
     );
   }
@@ -1701,12 +1877,70 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
     }
   }
 
+  // Load research groups for selected university and department
+  Future<void> _loadResearchGroups(String universityId, String department) async {
+    try {
+      final groups = await ResearchGroupService.getGroupsByUniversityAndDepartment(
+        universityId,
+        department,
+      );
+
+      setState(() {
+        _filteredResearchGroups = groups;
+      });
+    } catch (e) {
+      // Handle error silently, research groups are optional
+      setState(() {
+        _filteredResearchGroups = [];
+      });
+    }
+  }
+
+  // Load labs for selected research group
+  Future<void> _loadLabsForGroup(String groupId) async {
+    try {
+      final labs = await ResearchGroupService.getLabsInGroup(groupId);
+      // Convert to Lab objects if needed
+      setState(() {
+        // For now, we'll assume the API returns Lab-compatible data
+        _filteredLabs = labs.map((labData) => Lab.fromJson(labData)).toList();
+      });
+    } catch (e) {
+      // Fallback to loading labs by department if group fails
+      if (_selectedUniversityId != null && _selectedDepartment != null) {
+        await _loadLabsForDepartment(_selectedUniversityId!, _selectedDepartment!);
+      }
+    }
+  }
+
+  // Load labs for selected university and department (when no research group)
+  Future<void> _loadLabsForDepartment(String universityId, String department) async {
+    try {
+      // For now, get all labs by university and filter client-side by department
+      // In future, backend should support department filtering directly
+      final allLabs = await LabService.getLabsByUniversity(universityId);
+      final departmentLabs = allLabs.where((lab) =>
+        lab.department.toLowerCase() == department.toLowerCase()
+      ).toList();
+
+      setState(() {
+        _filteredLabs = departmentLabs;
+      });
+    } catch (e) {
+      setState(() {
+        _filteredLabs = [];
+      });
+    }
+  }
+
   @override
   void dispose() {
     _reviewTextController.dispose();
     _prosController.dispose();
     _consController.dispose();
     _universityController.dispose();
+    _departmentController.dispose();
+    _researchGroupController.dispose();
     _labController.dispose();
     super.dispose();
   }

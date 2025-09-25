@@ -544,6 +544,8 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
               const SizedBox(height: 16),
             ],
             _buildInfoRow('Department', widget.lab.department),
+            if (widget.lab.hasResearchGroup)
+              _buildInfoRow('Research Group', widget.lab.researchGroupName!),
             _buildInfoRow('Lab Size', '${widget.lab.labSize ?? "Unknown"} members'),
             if (widget.lab.website != null)
               _buildInfoRow('Website', widget.lab.website!, isLink: true),
@@ -778,7 +780,8 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
       'Lab Name: ${widget.lab.name}\n'
       'Professor: ${widget.lab.professorName}\n'
       'University: ${widget.lab.universityName}\n'
-      'Department: ${widget.lab.department}\n\n'
+      'Department: ${widget.lab.department}\n'
+      '${widget.lab.hasResearchGroup ? 'Research Group: ${widget.lab.researchGroupName}\n' : ''}\n'
       'Issue Description:\n$issue\n\n'
       'Correct Information:\n$correction\n\n'
       '${source.isNotEmpty ? 'Source/Verification:\n$source\n\n' : ''}'

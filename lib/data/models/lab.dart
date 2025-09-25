@@ -7,6 +7,8 @@ class Lab {
   final String universityName;
   final String universityId;
   final String department;
+  final String? researchGroupName;
+  final String? researchGroupId;
   final double overallRating;
   final int reviewCount;
   final List<String> researchAreas;
@@ -27,6 +29,8 @@ class Lab {
     required this.universityName,
     required this.universityId,
     required this.department,
+    this.researchGroupName,
+    this.researchGroupId,
     required this.overallRating,
     required this.reviewCount,
     required this.researchAreas,
@@ -49,6 +53,8 @@ class Lab {
       universityName: json['university_name'] ?? json['university']?['name'] ?? '',
       universityId: json['university_id']?.toString() ?? json['university']?.toString() ?? '',
       department: json['department'] ?? '',
+      researchGroupName: json['research_group_name'] ?? json['research_group']?['name'],
+      researchGroupId: json['research_group_id']?.toString() ?? json['research_group']?['id']?.toString(),
       overallRating: double.tryParse(json['overall_rating']?.toString() ?? '0') ?? 0.0,
       reviewCount: json['review_count'] ?? 0,
       researchAreas: List<String>.from(json['research_areas'] ?? []),
@@ -86,6 +92,8 @@ class Lab {
       'university_name': universityName,
       'university_id': universityId,
       'department': department,
+      'research_group_name': researchGroupName,
+      'research_group_id': researchGroupId,
       'overall_rating': overallRating,
       'review_count': reviewCount,
       'research_areas': researchAreas,
@@ -99,6 +107,33 @@ class Lab {
       'recruitment_status': recruitmentStatus?.toJson(),
     };
   }
+
+  // Helper methods for displaying hierarchy
+  String get affiliationLine {
+    final parts = <String>[];
+    parts.add(professorName);
+    parts.add(universityName);
+    return parts.join(' • ');
+  }
+
+  String get hierarchyLine {
+    final parts = <String>[universityName, department];
+    if (researchGroupName != null) {
+      parts.add(researchGroupName!);
+    }
+    return parts.join(' > ');
+  }
+
+  String get fullHierarchy {
+    final parts = <String>[universityName, department];
+    if (researchGroupName != null) {
+      parts.add(researchGroupName!);
+    }
+    parts.add(name);
+    return parts.join(' > ');
+  }
+
+  bool get hasResearchGroup => researchGroupName != null && researchGroupName!.isNotEmpty;
 
   // Generate a simple URL-friendly slug from lab name
   String get slug {

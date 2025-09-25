@@ -105,7 +105,7 @@ class LabCard extends StatelessWidget {
             const SizedBox(width: 4),
             Expanded(
               child: _buildHighlightedText(
-                lab.department,
+                lab.hierarchyLine,
                 const TextStyle(
                   color: AppColors.textTertiary,
                   fontSize: 12,
