@@ -806,16 +806,8 @@ class ProfileScreen extends StatelessWidget {
   void _showEditProfileDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Profile'),
-        content: const Text('Profile editing functionality coming soon!'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
+      barrierDismissible: false,
+      builder: (context) => EditProfileDialog(),
     );
   }
 
@@ -847,5 +839,455 @@ class ProfileScreen extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+}
+
+class EditProfileDialog extends StatefulWidget {
+  @override
+  _EditProfileDialogState createState() => _EditProfileDialogState();
+}
+
+class _EditProfileDialogState extends State<EditProfileDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _universityController = TextEditingController();
+  final _departmentController = TextEditingController();
+  final _positionController = TextEditingController();
+  final _labNameController = TextEditingController();
+  final _advisorNameController = TextEditingController();
+  final _bioController = TextEditingController();
+  final _researchAreaController = TextEditingController();
+
+  List<String> _specialties = [];
+  List<String> _publications = [];
+  final _specialtyController = TextEditingController();
+  final _publicationController = TextEditingController();
+
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeFields();
+  }
+
+  void _initializeFields() {
+    final authProvider = context.read<AuthProvider>();
+    final user = authProvider.currentUser;
+
+    if (user != null) {
+      _nameController.text = user.displayName;
+      _universityController.text = user.university ?? '';
+      _departmentController.text = user.department ?? '';
+      _positionController.text = user.position ?? '';
+      _labNameController.text = user.labName ?? '';
+      _advisorNameController.text = user.advisorName ?? '';
+      _bioController.text = user.bio ?? '';
+      _researchAreaController.text = user.researchArea ?? '';
+      _specialties = List.from(user.specialties);
+      _publications = List.from(user.publications);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.9,
+        maxWidth: 600,
+        maxHeight: MediaQuery.of(context).size.height * 0.9,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Edit Profile',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSection(
+                        'Personal Information',
+                        Icons.person,
+                        [
+                          _buildTextField(
+                            controller: _nameController,
+                            label: 'Full Name',
+                            validator: (value) {
+                              if (value?.isEmpty ?? true) {
+                                return 'Name is required';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            controller: _bioController,
+                            label: 'Bio / Research Statement',
+                            maxLines: 3,
+                            hint: 'Tell others about your research interests and goals...',
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      _buildSection(
+                        'Academic Information',
+                        Icons.school,
+                        [
+                          _buildTextField(
+                            controller: _universityController,
+                            label: 'University',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            controller: _departmentController,
+                            label: 'Department',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            controller: _positionController,
+                            label: 'Position',
+                            hint: 'e.g., PhD Student, Masters Student, Postdoc',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            controller: _labNameController,
+                            label: 'Lab Name',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildTextField(
+                            controller: _advisorNameController,
+                            label: 'Advisor Name',
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      _buildSection(
+                        'Research Information',
+                        Icons.science,
+                        [
+                          _buildTextField(
+                            controller: _researchAreaController,
+                            label: 'Primary Research Area',
+                            hint: 'e.g., Machine Learning, Computer Vision, NLP',
+                          ),
+                          const SizedBox(height: 16),
+                          _buildSpecialtiesSection(),
+                          const SizedBox(height: 16),
+                          _buildPublicationsSection(),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: _isLoading ? null : () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _saveProfile,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  child: _isLoading
+                      ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text('Save Changes'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSection(String title, IconData icon, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: AppColors.primary, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ...children,
+      ],
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    String? hint,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.primary),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSpecialtiesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _specialtyController,
+                decoration: InputDecoration(
+                  labelText: 'Add Specialty/Interest',
+                  hintText: 'e.g., Deep Learning, Computer Vision',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppColors.primary),
+                  ),
+                ),
+                onFieldSubmitted: _addSpecialty,
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: () => _addSpecialty(_specialtyController.text),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Add'),
+            ),
+          ],
+        ),
+        if (_specialties.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _specialties.map((specialty) => Chip(
+              label: Text(specialty),
+              deleteIcon: Icon(Icons.close, size: 16),
+              onDeleted: () => _removeSpecialty(specialty),
+              backgroundColor: AppColors.primary.withOpacity(0.1),
+              deleteIconColor: AppColors.primary,
+            )).toList(),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPublicationsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _publicationController,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  labelText: 'Add Publication',
+                  hintText: 'Enter publication title and authors...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppColors.primary),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: () => _addPublication(_publicationController.text),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Add'),
+            ),
+          ],
+        ),
+        if (_publications.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          ...._publications.asMap().entries.map((entry) => Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      entry.value,
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete, color: AppColors.error, size: 18),
+                    onPressed: () => _removePublication(entry.key),
+                  ),
+                ],
+              ),
+            ),
+          )).toList(),
+        ],
+      ],
+    );
+  }
+
+  void _addSpecialty(String specialty) {
+    if (specialty.trim().isNotEmpty && !_specialties.contains(specialty.trim())) {
+      setState(() {
+        _specialties.add(specialty.trim());
+        _specialtyController.clear();
+      });
+    }
+  }
+
+  void _removeSpecialty(String specialty) {
+    setState(() {
+      _specialties.remove(specialty);
+    });
+  }
+
+  void _addPublication(String publication) {
+    if (publication.trim().isNotEmpty) {
+      setState(() {
+        _publications.add(publication.trim());
+        _publicationController.clear();
+      });
+    }
+  }
+
+  void _removePublication(int index) {
+    setState(() {
+      _publications.removeAt(index);
+    });
+  }
+
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final authProvider = context.read<AuthProvider>();
+
+      // TODO: Implement actual API call to update user profile
+      // For now, we'll show a success message
+
+      await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Profile updated successfully!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+
+        // TODO: Refresh user data or update provider
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update profile: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _universityController.dispose();
+    _departmentController.dispose();
+    _positionController.dispose();
+    _labNameController.dispose();
+    _advisorNameController.dispose();
+    _bioController.dispose();
+    _researchAreaController.dispose();
+    _specialtyController.dispose();
+    _publicationController.dispose();
+    super.dispose();
   }
 }
