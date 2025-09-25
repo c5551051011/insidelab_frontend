@@ -12,13 +12,14 @@ class SearchService {
   static Future<List<Lab>> searchLabs({
     required String query,
     Map<String, dynamic>? filters,
+    String? sortBy,
     int page = 1,
     int limit = 20,
   }) async {
     try {
       // If query is empty, just get labs with filters
       if (query.trim().isEmpty) {
-        return await _getFilteredLabs(filters: filters, page: page, limit: limit);
+        return await _getFilteredLabs(filters: filters, sortBy: sortBy, page: page, limit: limit);
       }
 
       // Prepare search parameters
@@ -79,7 +80,8 @@ class SearchService {
         }
       }
 
-      print('DEBUG: Searching with params: $searchParams');
+      // Convert UI sort option to backend ordering parameter
+      final ordering = _convertSortToOrdering(sortBy);
 
       // Use the advanced search method from LabService
       return await LabService.searchLabsAdvanced(
@@ -94,11 +96,11 @@ class SearchService {
         recruitingPhd: searchParams['recruiting_phd'],
         recruitingPostdoc: searchParams['recruiting_postdoc'],
         recruitingIntern: searchParams['recruiting_intern'],
+        ordering: ordering,
         page: page,
         limit: limit,
       );
     } catch (e) {
-      print('Error in comprehensive search: $e');
       return [];
     }
   }
@@ -106,6 +108,7 @@ class SearchService {
   /// Get labs with only filters (no text query)
   static Future<List<Lab>> _getFilteredLabs({
     Map<String, dynamic>? filters,
+    String? sortBy,
     int page = 1,
     int limit = 20,
   }) async {
@@ -121,11 +124,11 @@ class SearchService {
         recruitingPhd: filters?['recruitingPhd'],
         recruitingPostdoc: filters?['recruitingPostdoc'],
         recruitingIntern: filters?['recruitingIntern'],
+        ordering: _convertSortToOrdering(sortBy),
         page: page,
         limit: limit,
       );
     } catch (e) {
-      print('Error in filtered search: $e');
       return [];
     }
   }
@@ -138,7 +141,6 @@ class SearchService {
         query: professorName,
       );
     } catch (e) {
-      print('Error searching by professor: $e');
       return [];
     }
   }
@@ -150,7 +152,6 @@ class SearchService {
         query: universityQuery,
       );
     } catch (e) {
-      print('Error searching by university: $e');
       return [];
     }
   }
@@ -162,7 +163,6 @@ class SearchService {
         researchArea: researchArea,
       );
     } catch (e) {
-      print('Error searching by research area: $e');
       return [];
     }
   }
@@ -227,7 +227,6 @@ class SearchService {
 
       return suggestionList;
     } catch (e) {
-      print('Error getting search suggestions: $e');
       return [];
     }
   }
@@ -312,6 +311,24 @@ class SearchService {
       'lab', 'laboratory', 'research group', 'center', 'institute'
     ];
     return labKeywords.any((keyword) => query.contains(keyword));
+  }
+
+  /// Convert UI sort option to backend ordering parameter
+  static String? _convertSortToOrdering(String? sortBy) {
+    switch (sortBy) {
+      case 'rating':
+        return '-overall_rating'; // Highest rated first
+      case 'reviews':
+        return '-review_count'; // Most reviewed first
+      case 'lab':
+        return 'name'; // Lab name A-Z
+      case 'professor':
+        return 'professor__name'; // Professor name A-Z
+      case 'newest':
+        return '-created_at'; // Newest first
+      default:
+        return '-overall_rating'; // Default to rating
+    }
   }
 }
 

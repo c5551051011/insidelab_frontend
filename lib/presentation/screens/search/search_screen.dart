@@ -307,7 +307,8 @@ class _SearchScreenState extends State<SearchScreen> {
           items: const [
             DropdownMenuItem(value: 'rating', child: Text('Rating')),
             DropdownMenuItem(value: 'reviews', child: Text('Reviews')),
-            DropdownMenuItem(value: 'name', child: Text('Name')),
+            DropdownMenuItem(value: 'lab', child: Text('Lab Name')),
+            DropdownMenuItem(value: 'professor', child: Text('Professor')),
             DropdownMenuItem(value: 'newest', child: Text('Newest')),
           ],
           onChanged: (value) {
@@ -379,6 +380,7 @@ class _SearchScreenState extends State<SearchScreen> {
       final results = await SearchService.searchLabs(
         query: _currentQuery,
         filters: _filters,
+        sortBy: _sortBy,
         page: _currentPage,
         limit: 20,
       );
@@ -390,7 +392,6 @@ class _SearchScreenState extends State<SearchScreen> {
           _searchResults.addAll(results);
         }
         _hasMoreResults = results.length >= 20;
-        _applySorting();
       });
     } catch (e) {
       setState(() {
@@ -413,22 +414,6 @@ class _SearchScreenState extends State<SearchScreen> {
     await _performSearch();
   }
 
-  void _applySorting() {
-    switch (_sortBy) {
-      case 'rating':
-        _searchResults.sort((a, b) => b.overallRating.compareTo(a.overallRating));
-        break;
-      case 'reviews':
-        _searchResults.sort((a, b) => b.reviewCount.compareTo(a.reviewCount));
-        break;
-      case 'name':
-        _searchResults.sort((a, b) => a.name.compareTo(b.name));
-        break;
-      case 'newest':
-        // Sort by a newest field if available, or keep current order
-        break;
-    }
-  }
 
 
   @override
