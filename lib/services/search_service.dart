@@ -8,6 +8,15 @@ class SearchService {
   static final Map<String, DateTime> _cacheTimestamps = {};
   static const Duration _cacheExpiry = Duration(minutes: 5);
 
+  // Cache for search results to avoid duplicate API calls
+  static final Map<String, List<Lab>> _searchCache = {};
+  static final Map<String, DateTime> _searchCacheTimestamps = {};
+  static const Duration _searchCacheExpiry = Duration(minutes: 3);
+
+  // Cache for search results with total count
+  static final Map<String, LabSearchResult> _searchResultCache = {};
+  static final Map<String, DateTime> _searchResultCacheTimestamps = {};
+
   /// Comprehensive search across multiple fields
   static Future<List<Lab>> searchLabs({
     required String query,
@@ -17,9 +26,31 @@ class SearchService {
     int limit = 20,
   }) async {
     try {
+      // Create cache key from search parameters
+      final cacheKey = _generateCacheKey(query, filters, sortBy, page, limit);
+
+      // Check cache first
+      if (_searchCache.containsKey(cacheKey)) {
+        final cacheTime = _searchCacheTimestamps[cacheKey];
+        if (cacheTime != null &&
+            DateTime.now().difference(cacheTime) < _searchCacheExpiry) {
+          return _searchCache[cacheKey]!;
+        } else {
+          // Remove expired cache
+          _searchCache.remove(cacheKey);
+          _searchCacheTimestamps.remove(cacheKey);
+        }
+      }
+
       // If query is empty, just get labs with filters
       if (query.trim().isEmpty) {
-        return await _getFilteredLabs(filters: filters, sortBy: sortBy, page: page, limit: limit);
+        final results = await _getFilteredLabs(filters: filters, sortBy: sortBy, page: page, limit: limit);
+
+        // Cache the results
+        _searchCache[cacheKey] = results;
+        _searchCacheTimestamps[cacheKey] = DateTime.now();
+
+        return results;
       }
 
       // Prepare search parameters
@@ -84,7 +115,7 @@ class SearchService {
       final ordering = _convertSortToOrdering(sortBy);
 
       // Use the advanced search method from LabService
-      return await LabService.searchLabsAdvanced(
+      final results = await LabService.searchLabsAdvanced(
         query: searchParams['search'],
         university: searchParams['university'],
         professor: searchParams['professor'],
@@ -100,8 +131,67 @@ class SearchService {
         page: page,
         limit: limit,
       );
+
+      // Cache the results
+      _searchCache[cacheKey] = results;
+      _searchCacheTimestamps[cacheKey] = DateTime.now();
+
+      return results;
     } catch (e) {
       return [];
+    }
+  }
+
+  /// Comprehensive search with total count - returns LabSearchResult
+  static Future<LabSearchResult> searchLabsWithCount({
+    required String query,
+    Map<String, dynamic>? filters,
+    String? sortBy,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      // Create cache key from search parameters
+      final cacheKey = _generateCacheKey(query, filters, sortBy, page, limit);
+
+      // Check cache first
+      if (_searchResultCache.containsKey(cacheKey)) {
+        final cacheTime = _searchResultCacheTimestamps[cacheKey];
+        if (cacheTime != null &&
+            DateTime.now().difference(cacheTime) < _searchCacheExpiry) {
+          return _searchResultCache[cacheKey]!;
+        } else {
+          // Remove expired cache
+          _searchResultCache.remove(cacheKey);
+          _searchResultCacheTimestamps.remove(cacheKey);
+        }
+      }
+
+      // Use LabService to get search results with count
+      final result = await LabService.searchLabsAdvancedWithCount(
+        query: query.trim().isEmpty ? null : query.trim(),
+        university: filters?['universities']?.isNotEmpty == true ? filters!['universities'].first : null,
+        professor: filters?['professorId'],
+        department: filters?['department'],
+        researchArea: filters?['researchAreas']?.isNotEmpty == true ? filters!['researchAreas'].first : null,
+        tag: filters?['tags']?.isNotEmpty == true ? filters!['tags'].first : null,
+        minRating: filters?['minRating'],
+        maxRating: filters?['maxRating'],
+        recruitingPhd: filters?['recruitingPhd'],
+        recruitingPostdoc: filters?['recruitingPostdoc'],
+        recruitingIntern: filters?['recruitingIntern'],
+        ordering: _convertSortToOrdering(sortBy),
+        page: page,
+        limit: limit,
+      );
+
+      // Cache the result
+      _searchResultCache[cacheKey] = result;
+      _searchResultCacheTimestamps[cacheKey] = DateTime.now();
+
+      return result;
+    } catch (e) {
+      return LabSearchResult(labs: [], totalCount: 0);
     }
   }
 
@@ -253,6 +343,18 @@ class SearchService {
     _cacheTimestamps.clear();
   }
 
+  /// Clear search results cache
+  static void clearSearchCache() {
+    _searchCache.clear();
+    _searchCacheTimestamps.clear();
+  }
+
+  /// Clear all caches
+  static void clearAllCaches() {
+    clearSuggestionCache();
+    clearSearchCache();
+  }
+
   /// Determine search intent based on query
   static SearchIntent analyzeSearchIntent(String query) {
     final lowerQuery = query.toLowerCase().trim();
@@ -329,6 +431,33 @@ class SearchService {
       default:
         return '-overall_rating'; // Default to rating
     }
+  }
+
+  /// Generate cache key from search parameters
+  static String _generateCacheKey(
+    String query,
+    Map<String, dynamic>? filters,
+    String? sortBy,
+    int page,
+    int limit,
+  ) {
+    final key = StringBuffer();
+    key.write('q:${query.trim()}');
+    key.write('|s:${sortBy ?? 'rating'}');
+    key.write('|p:$page');
+    key.write('|l:$limit');
+
+    if (filters != null && filters.isNotEmpty) {
+      final sortedKeys = filters.keys.toList()..sort();
+      for (final filterKey in sortedKeys) {
+        final value = filters[filterKey];
+        if (value != null) {
+          key.write('|$filterKey:$value');
+        }
+      }
+    }
+
+    return key.toString();
   }
 }
 

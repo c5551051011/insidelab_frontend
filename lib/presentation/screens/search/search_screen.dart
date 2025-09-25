@@ -25,6 +25,7 @@ class _SearchScreenState extends State<SearchScreen> {
   String _currentQuery = '';
   Map<String, dynamic> _filters = {};
   List<Lab> _searchResults = [];
+  int _totalCount = 0;
   bool _isLoading = false;
   String? _errorMessage;
   String _sortBy = 'rating';
@@ -147,7 +148,7 @@ class _SearchScreenState extends State<SearchScreen> {
       );
     }
 
-    final resultCount = _searchResults.length;
+    final resultCount = _totalCount > 0 ? _totalCount : _searchResults.length;
     final queryText = _currentQuery.isNotEmpty ? ' for "$_currentQuery"' : '';
 
     return Text(
@@ -377,7 +378,7 @@ class _SearchScreenState extends State<SearchScreen> {
     });
 
     try {
-      final results = await SearchService.searchLabs(
+      final searchResult = await SearchService.searchLabsWithCount(
         query: _currentQuery,
         filters: _filters,
         sortBy: _sortBy,
@@ -387,11 +388,13 @@ class _SearchScreenState extends State<SearchScreen> {
 
       setState(() {
         if (_currentPage == 1) {
-          _searchResults = results;
+          _searchResults = searchResult.labs;
+          _totalCount = searchResult.totalCount;
         } else {
-          _searchResults.addAll(results);
+          _searchResults.addAll(searchResult.labs);
+          // Keep the same total count for pagination
         }
-        _hasMoreResults = results.length >= 20;
+        _hasMoreResults = searchResult.labs.length >= 20;
       });
     } catch (e) {
       setState(() {

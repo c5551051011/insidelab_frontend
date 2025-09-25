@@ -2,6 +2,13 @@
 import '../data/models/lab.dart';
 import 'api_service.dart';
 
+class LabSearchResult {
+  final List<Lab> labs;
+  final int totalCount;
+
+  LabSearchResult({required this.labs, required this.totalCount});
+}
+
 class LabService {
   static Future<List<Lab>> getFeaturedLabs() async {
     final response = await ApiService.get('/labs/featured/');
@@ -180,6 +187,64 @@ class LabService {
       return labs;
     } catch (e) {
       return [];
+    }
+  }
+
+  // Search labs with advanced filters and return LabSearchResult with total count
+  static Future<LabSearchResult> searchLabsAdvancedWithCount({
+    String? query,
+    String? university,
+    String? professor,
+    String? department,
+    String? researchArea,
+    String? tag,
+    double? minRating,
+    double? maxRating,
+    bool? recruitingPhd,
+    bool? recruitingPostdoc,
+    bool? recruitingIntern,
+    String? ordering,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      String queryParams = 'page=$page&limit=$limit';
+
+      if (query != null && query.isNotEmpty) {
+        queryParams += '&search=${Uri.encodeComponent(query)}';
+      }
+      if (university != null) queryParams += '&university=${Uri.encodeComponent(university)}';
+      if (professor != null) queryParams += '&professor=${Uri.encodeComponent(professor)}';
+      if (department != null) queryParams += '&department=${Uri.encodeComponent(department)}';
+      if (researchArea != null) queryParams += '&research_area=${Uri.encodeComponent(researchArea)}';
+      if (tag != null) queryParams += '&tag=${Uri.encodeComponent(tag)}';
+      if (minRating != null) queryParams += '&min_rating=$minRating';
+      if (maxRating != null) queryParams += '&max_rating=$maxRating';
+      if (recruitingPhd != null) queryParams += '&recruiting_phd=$recruitingPhd';
+      if (recruitingPostdoc != null) queryParams += '&recruiting_postdoc=$recruitingPostdoc';
+      if (recruitingIntern != null) queryParams += '&recruiting_intern=$recruitingIntern';
+      if (ordering != null) queryParams += '&ordering=${Uri.encodeComponent(ordering)}';
+
+      final response = await ApiService.get('/labs/?$queryParams');
+
+      List<Lab> labs;
+      int totalCount = 0;
+
+      if (response is Map && response.containsKey('results')) {
+        // Paginated response with count
+        labs = (response['results'] as List)
+            .map((json) => Lab.fromJson(json))
+            .toList();
+        totalCount = response['count'] ?? labs.length;
+      } else {
+        // Direct array response (fallback)
+        labs = (response as List).map((json) => Lab.fromJson(json)).toList();
+        totalCount = labs.length;
+      }
+
+      return LabSearchResult(labs: labs, totalCount: totalCount);
+    } catch (e) {
+      return LabSearchResult(labs: [], totalCount: 0);
     }
   }
 
