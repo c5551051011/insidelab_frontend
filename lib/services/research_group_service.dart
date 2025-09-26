@@ -1,6 +1,7 @@
 // lib/services/research_group_service.dart
 import '../data/models/research_group.dart';
 import 'api_service.dart';
+import 'lab_service.dart';
 
 class ResearchGroupService {
   /// Get all research groups with optional filtering
@@ -118,6 +119,26 @@ class ResearchGroupService {
     try {
       final response = await ApiService.get('/universities/research-groups/$groupId/labs/');
       return response as List;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /// Get departments for a specific university
+  static Future<List<String>> getDepartmentsByUniversity(String universityId) async {
+    try {
+      // First try to get departments from research groups
+      final groups = await getGroupsByUniversity(universityId);
+      final departments = groups.map((group) => group.department).toSet().toList();
+
+      // If no departments from research groups, try to get from labs
+      if (departments.isEmpty) {
+        final labs = await LabService.getLabsByUniversity(universityId);
+        final labDepartments = labs.map((lab) => lab.department).toSet().toList();
+        return labDepartments..sort();
+      }
+
+      return departments..sort();
     } catch (e) {
       return [];
     }
