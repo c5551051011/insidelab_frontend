@@ -55,6 +55,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   bool _isSubmitting = false;
   bool _isCheckingAuth = true;
   bool _isLoadingCategories = true;
+  bool _isFormPreFilled = false;
   List<String> _ratingCategories = [];
   List<University> _filteredUniversities = [];
   List<String> _filteredDepartments = [];
@@ -81,6 +82,10 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           });
           _loadRatingCategories();
           _initializeUniversityList();
+          // Auto-populate form if labId is provided
+          if (widget.labId != null) {
+            _loadAndPopulateLabDetails(widget.labId!);
+          }
         }
         return;
       }
@@ -102,6 +107,10 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           });
           _loadRatingCategories();
           _initializeUniversityList();
+          // Auto-populate form if labId is provided
+          if (widget.labId != null) {
+            _loadAndPopulateLabDetails(widget.labId!);
+          }
         }
       } catch (error) {
         // If auth check fails, redirect to login
@@ -130,6 +139,114 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           ),
         );
       }
+    }
+  }
+
+  // Load lab details and auto-populate form fields
+  Future<void> _loadAndPopulateLabDetails(String labId) async {
+    try {
+      final lab = await LabService.getLabById(labId);
+      if (mounted) {
+        setState(() {
+          // Set university information
+          _selectedUniversityId = lab.universityId;
+          _selectedUniversityName = lab.universityName;
+          _universityController.text = lab.universityName;
+
+          // Set department
+          _selectedDepartment = lab.department;
+          _departmentController.text = lab.department;
+
+          // Set research group if it exists
+          if (lab.hasResearchGroup) {
+            _selectedResearchGroupId = lab.researchGroupId;
+            _selectedResearchGroupName = lab.researchGroupName;
+            _researchGroupController.text = lab.researchGroupName ?? '';
+          }
+
+          // Set lab information
+          _selectedLabId = lab.id;
+          _selectedLabName = lab.name;
+          _labController.text = '${lab.name} - ${lab.professorName}';
+
+          // Mark form as pre-filled
+          _isFormPreFilled = true;
+        });
+
+        // Load related data based on the lab information
+        await _loadLabFormData(lab);
+
+        print('Successfully pre-filled form with ${lab.name} information');
+      }
+    } catch (e) {
+      print('Error loading lab details for form: $e');
+      // If lab loading fails, continue with empty form - no UI notification during init
+    }
+  }
+
+  // Load all related form data based on lab information
+  Future<void> _loadLabFormData(Lab lab) async {
+    try {
+      // Load departments for the university
+      final departmentsFuture = ResearchGroupService.getDepartmentsByUniversity(lab.universityId);
+
+      // Load research groups for the department if it exists
+      final researchGroupsFuture = lab.department.isNotEmpty
+          ? ResearchGroupService.getGroupsByUniversityAndDepartment(lab.universityId, lab.department)
+          : Future.value(<ResearchGroup>[]);
+
+      // Load all labs for the university
+      final labsFuture = LabService.getLabsByUniversity(lab.universityId);
+
+      // Wait for all data to load
+      final results = await Future.wait([
+        departmentsFuture,
+        researchGroupsFuture,
+        labsFuture,
+      ]);
+
+      if (mounted) {
+        setState(() {
+          final departments = results[0] as List<String>;
+          // Ensure selected department is in the list and remove duplicates
+          final departmentSet = <String>{...departments};
+          if (_selectedDepartment != null) {
+            departmentSet.add(_selectedDepartment!);
+          }
+          _filteredDepartments = departmentSet.toList()..sort();
+
+          final researchGroups = results[1] as List<ResearchGroup>;
+          // Ensure selected research group is in the list and remove duplicates by ID
+          final groupMap = <String, ResearchGroup>{};
+          for (final group in researchGroups) {
+            groupMap[group.id] = group;
+          }
+          if (_selectedResearchGroupId != null && _selectedResearchGroupName != null) {
+            // Check if selected research group is already in the list
+            final hasSelectedGroup = groupMap.values.any((g) => g.name == _selectedResearchGroupName);
+            if (!hasSelectedGroup) {
+              // Create a temporary group entry if it's not in the API results
+              final tempGroup = ResearchGroup(
+                id: _selectedResearchGroupId!,
+                name: _selectedResearchGroupName!,
+                description: '',
+                universityId: _selectedUniversityId!,
+                universityName: _selectedUniversityName!,
+                department: _selectedDepartment!,
+                createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+              );
+              groupMap[tempGroup.id] = tempGroup;
+            }
+          }
+          _filteredResearchGroups = groupMap.values.toList();
+
+          _filteredLabs = results[2] as List<Lab>;
+        });
+      }
+    } catch (e) {
+      print('Error loading form data: $e');
+      // Continue with current data if loading fails
     }
   }
 
@@ -280,12 +397,44 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Share your honest experience to help future graduate students',
+          _isFormPreFilled
+              ? 'Share your honest experience to help future graduate students (form pre-filled)'
+              : 'Share your honest experience to help future graduate students',
           style: TextStyle(
             fontSize: 16,
             color: AppColors.textSecondary,
           ),
         ),
+        if (_isFormPreFilled) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.success.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.success.withOpacity(0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  size: 16,
+                  color: AppColors.success,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Lab information pre-filled',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(16),
@@ -414,7 +563,8 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
 
               if (mounted) {
                 setState(() {
-                  _filteredDepartments = departments;
+                  // Remove duplicates from departments and sort
+                  _filteredDepartments = departments.toSet().toList()..sort();
                   _filteredLabs = labs;
                 });
               }
