@@ -4,10 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/router/app_routes.dart';
 import '../../../data/models/lab.dart';
-import '../../../data/models/university.dart';
 import '../../../data/models/university_department.dart';
 import '../../../data/models/research_group.dart';
 import '../../../data/providers/data_providers.dart';
@@ -61,8 +58,6 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   bool _isLoadingCategories = true;
   bool _isFormPreFilled = false;
   List<String> _ratingCategories = [];
-  List<University> _filteredUniversities = [];
-  List<UniversityDepartment> _filteredDepartments = [];
   List<ResearchGroup> _filteredResearchGroups = [];
   List<Lab> _filteredLabs = [];
 
@@ -85,7 +80,6 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
             _isCheckingAuth = false;
           });
           _loadRatingCategories();
-          _initializeUniversityList();
           // Auto-populate form if labId is provided
           if (widget.labId != null) {
             _loadAndPopulateLabDetails(widget.labId!);
@@ -110,7 +104,6 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
             _isCheckingAuth = false;
           });
           _loadRatingCategories();
-          _initializeUniversityList();
           // Auto-populate form if labId is provided
           if (widget.labId != null) {
             _loadAndPopulateLabDetails(widget.labId!);
@@ -125,26 +118,6 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
     });
   }
 
-  void _initializeUniversityList() async {
-    try {
-      final universities = await UniversityService.getAllUniversities();
-      if (mounted) {
-        setState(() {
-          _filteredUniversities = universities;
-        });
-      }
-    } catch (e) {
-      print('Error loading universities: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load universities. Please try again.'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    }
-  }
 
   // Load lab details and auto-populate form fields
   Future<void> _loadAndPopulateLabDetails(String labId) async {
@@ -211,9 +184,8 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
       if (mounted) {
         setState(() {
           final departments = results[0] as List<UniversityDepartment>;
-          _filteredDepartments = departments;
 
-          // Find the matching department
+          // Find the matching department and set it
           final matchingDept = departments.where((dept) => dept.displayName == lab.department).firstOrNull;
           if (matchingDept != null) {
             _selectedUniversityDepartmentId = matchingDept.id;
@@ -1326,198 +1298,6 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   }
 
 
-  void _showAddUniversityDialog() {
-    String? universityName;
-    String? universityWebsite;
-    String? country;
-    String? state;
-    String? city;
-    bool isVerifyingWebsite = false;
-    String? websiteError;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Add New University'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'University Name *',
-                    hintText: 'e.g., Stanford University',
-                  ),
-                  onChanged: (value) => universityName = value,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Country *',
-                    hintText: 'e.g., United States',
-                  ),
-                  onChanged: (value) => country = value,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'State/Province *',
-                    hintText: 'e.g., California',
-                  ),
-                  onChanged: (value) => state = value,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'City *',
-                    hintText: 'e.g., Stanford',
-                  ),
-                  onChanged: (value) => city = value,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'University Website *',
-                    hintText: 'https://www.university.edu',
-                    errorText: websiteError,
-                    suffixIcon: isVerifyingWebsite
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.link),
-                  ),
-                  onChanged: (value) {
-                    universityWebsite = value;
-                    if (websiteError != null) {
-                      setDialogState(() {
-                        websiteError = null;
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.info.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.info_outline, size: 16, color: AppColors.info),
-                          const SizedBox(width: 8),
-                          const Text('Verification Required', style: TextStyle(fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'We will verify that the website exists and belongs to the specified university before adding it to our database.',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: isVerifyingWebsite ? null : () async {
-                if (universityName?.isEmpty == true ||
-                    universityWebsite?.isEmpty == true ||
-                    country?.isEmpty == true ||
-                    state?.isEmpty == true ||
-                    city?.isEmpty == true) {
-                  return;
-                }
-
-                // Validate website URL format
-                if (universityWebsite != null && !_isValidUrl(universityWebsite!)) {
-                  setDialogState(() {
-                    websiteError = 'Please enter a valid URL (https://example.com)';
-                  });
-                  return;
-                }
-
-                setDialogState(() {
-                  isVerifyingWebsite = true;
-                  websiteError = null;
-                });
-
-                // Verify website exists
-                final isValid = await _verifyWebsite(universityWebsite!);
-
-                setDialogState(() {
-                  isVerifyingWebsite = false;
-                });
-
-                if (!isValid) {
-                  setDialogState(() {
-                    websiteError = 'Website could not be verified. Please check the URL.';
-                  });
-                  return;
-                }
-
-                try {
-                  // Add university via API
-                  final newUniversity = await UniversityService.addUniversity(
-                    name: universityName!,
-                    website: universityWebsite!,
-                    country: country!,
-                    state: state!,
-                    city: city!,
-                  );
-
-                  setState(() {
-                    _selectedUniversityId = newUniversity.id;
-                    _selectedUniversityName = newUniversity.name;
-                    _universityController.text = newUniversity.name;
-                    _filteredLabs = []; // No labs for new university initially
-                    // Add the new university to the filtered list so it appears in future searches
-                    _filteredUniversities.add(newUniversity);
-                  });
-                  Navigator.pop(context);
-
-                  // Show success message
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('University added successfully! Website verified.'),
-                      backgroundColor: AppColors.success,
-                    ),
-                  );
-                } catch (e) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to add university: ${e.toString()}'),
-                      backgroundColor: AppColors.error,
-                    ),
-                  );
-                }
-              },
-              child: isVerifyingWebsite
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Text('Verify & Add'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
 
   void _showAddResearchGroupDialog() {
@@ -2235,8 +2015,8 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
       });
     } catch (e) {
       // Fallback to loading labs by department if group fails
-      if (_selectedUniversityId != null && _selectedDepartment != null) {
-        await _loadLabsForDepartment(_selectedUniversityId!, _selectedDepartment!);
+      if (_selectedUniversityId != null && _selectedUniversityDepartment != null) {
+        await _loadLabsForDepartment(_selectedUniversityId!, _selectedUniversityDepartment!.displayName);
       }
     }
   }
