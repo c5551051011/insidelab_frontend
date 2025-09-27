@@ -529,6 +529,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
               borderSide: BorderSide(color: AppColors.primary, width: 2),
             ),
           ),
+          isExpanded: true,
           onChanged: _selectedUniversityDepartment == null ? null : (String? value) {
             if (value == '___ADD_NEW___') {
               _showAddResearchGroupDialog();
@@ -769,87 +770,63 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   }
 
   Widget _buildPositionDropdown() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Your Position *',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+    return DropdownButtonFormField<String>(
+      value: _position,
+      decoration: InputDecoration(
+            labelText: 'Your Position *',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: AppColors.primary, width: 2),
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: DropdownButton<String>(
-            value: _position,
-            underline: const SizedBox(),
-            isExpanded: true,
-            items: const [
-              DropdownMenuItem(value: 'PhD Student', child: Text('PhD Student')),
-              DropdownMenuItem(value: 'MS Student', child: Text('MS Student')),
-              DropdownMenuItem(value: 'Undergrad', child: Text('Undergraduate Student')),
-              DropdownMenuItem(value: 'PostDoc', child: Text('PostDoc')),
-              DropdownMenuItem(value: 'Research Assistant', child: Text('Research Assistant')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _position = value!;
-              });
-            },
-          ),
+          isExpanded: true,
+          items: const [
+            DropdownMenuItem(value: 'PhD Student', child: Text('PhD Student')),
+            DropdownMenuItem(value: 'MS Student', child: Text('MS Student')),
+            DropdownMenuItem(value: 'Undergrad', child: Text('Undergraduate Student')),
+            DropdownMenuItem(value: 'PostDoc', child: Text('PostDoc')),
+            DropdownMenuItem(value: 'Research Assistant', child: Text('Research Assistant')),
+          ],
+          onChanged: (value) {
+            setState(() {
+              _position = value!;
+            });
+          },
         ),
       ],
     );
   }
 
   Widget _buildDurationDropdown() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Duration *',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
+    return DropdownButtonFormField<String>(
+      value: _duration,
+      decoration: InputDecoration(
+        labelText: 'Duration *',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
         ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: DropdownButton<String>(
-            value: _duration,
-            underline: const SizedBox(),
-            isExpanded: true,
-            items: const [
-              DropdownMenuItem(value: '< 6 months', child: Text('Less than 6 months')),
-              DropdownMenuItem(value: '6 months', child: Text('6 months')),
-              DropdownMenuItem(value: '1 year', child: Text('1 year')),
-              DropdownMenuItem(value: '2 years', child: Text('2 years')),
-              DropdownMenuItem(value: '3 years', child: Text('3 years')),
-              DropdownMenuItem(value: '4+ years', child: Text('4+ years')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _duration = value!;
-              });
-            },
-          ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: AppColors.primary, width: 2),
         ),
+      ),
+      isExpanded: true,
+      items: const [
+        DropdownMenuItem(value: '< 6 months', child: Text('Less than 6 months')),
+        DropdownMenuItem(value: '6 months', child: Text('6 months')),
+        DropdownMenuItem(value: '1 year', child: Text('1 year')),
+        DropdownMenuItem(value: '2 years', child: Text('2 years')),
+        DropdownMenuItem(value: '3 years', child: Text('3 years')),
+        DropdownMenuItem(value: '4+ years', child: Text('4+ years')),
       ],
+      onChanged: (value) {
+        setState(() {
+          _duration = value!;
+        });
+      },
     );
   }
 
@@ -1968,16 +1945,22 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
 
   // Load research groups for selected university and department
   Future<void> _loadResearchGroups(String universityId, String department) async {
+    print('DEBUG: Loading research groups for university $universityId, department: $department');
     try {
       final groups = await ResearchGroupService.getGroupsByUniversityAndDepartment(
         universityId,
         department,
       );
+      print('DEBUG: Found ${groups.length} research groups for department $department');
+      for (final group in groups) {
+        print('DEBUG: - ${group.name} (dept: ${group.department})');
+      }
 
       setState(() {
         _filteredResearchGroups = groups;
       });
     } catch (e) {
+      print('DEBUG: Error loading research groups: $e');
       // Handle error silently, research groups are optional
       setState(() {
         _filteredResearchGroups = [];
