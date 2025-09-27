@@ -795,8 +795,6 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
               _position = value!;
             });
           },
-        ),
-      ],
     );
   }
 
