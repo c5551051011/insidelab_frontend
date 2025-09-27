@@ -487,6 +487,12 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
 
 
   Widget _buildResearchGroupSelection() {
+    // Debug: Show current research groups
+    print('DEBUG: Building research group dropdown with ${_filteredResearchGroups.length} groups');
+    for (final group in _filteredResearchGroups) {
+      print('DEBUG: - ${group.name} (dept: ${group.department})');
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -515,11 +521,24 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                 ),
               ),
             ),
+            // DEBUG: Show current department
+            const SizedBox(width: 8),
+            Text(
+              'Dept: ${_selectedUniversityDepartment?.displayName ?? "None"}',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 8),
-        SizedBox(
-          width: double.infinity,
+        ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: double.infinity,
+            minWidth: double.infinity,
+          ),
           child: DropdownButtonFormField<String>(
             value: _selectedResearchGroupName,
             decoration: InputDecoration(
@@ -533,8 +552,10 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(color: AppColors.primary, width: 2),
               ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
             ),
             isExpanded: true,
+            menuMaxHeight: 300,
           onChanged: _selectedUniversityDepartment == null ? null : (String? value) {
             if (value == '___ADD_NEW___') {
               _showAddResearchGroupDialog();

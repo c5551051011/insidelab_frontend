@@ -24,7 +24,9 @@ class ResearchGroupService {
         endpoint += '?${params.join('&')}';
       }
 
+      print('DEBUG: Making API call to: $endpoint');
       final response = await ApiService.get(endpoint);
+      print('DEBUG: API response received, processing ${response is Map && response.containsKey('results') ? (response['results'] as List).length : 'unknown count'} research groups');
 
       List<ResearchGroup> groups;
       if (response is Map && response.containsKey('results')) {
@@ -35,6 +37,22 @@ class ResearchGroupService {
         groups = (response as List)
             .map((json) => ResearchGroup.fromJson(json))
             .toList();
+      }
+
+      print('DEBUG: Processed ${groups.length} research groups from API');
+      if (department != null) {
+        print('DEBUG: Requested department filter: $department');
+        for (final group in groups) {
+          print('DEBUG: Group "${group.name}" is in department: "${group.department}"');
+        }
+
+        // Additional frontend filtering as backup
+        final filteredGroups = groups.where((group) =>
+          group.department.toLowerCase().trim() == department.toLowerCase().trim()
+        ).toList();
+
+        print('DEBUG: After frontend filtering: ${filteredGroups.length} groups remain');
+        return filteredGroups;
       }
 
       return groups;
