@@ -8,13 +8,16 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../data/models/lab.dart';
 import '../../../data/models/university.dart';
+import '../../../data/models/university_department.dart';
 import '../../../data/models/research_group.dart';
 import '../../../data/providers/data_providers.dart';
 import '../../../services/university_service.dart';
+import '../../../services/university_department_service.dart';
 import '../../../services/research_group_service.dart';
 import '../../../services/lab_service.dart';
 import '../../../services/review_service.dart';
 import '../../widgets/common/header_navigation.dart';
+import '../../widgets/common/university_department_selector.dart';
 import '../../widgets/rating_stars.dart';
 
 class WriteReviewScreen extends StatefulWidget {
@@ -42,7 +45,8 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   String? _selectedLabId;
   String? _selectedUniversityId;
   String? _selectedUniversityName;
-  String? _selectedDepartment;
+  String? _selectedUniversityDepartmentId;
+  UniversityDepartment? _selectedUniversityDepartment;
   String? _selectedResearchGroupId;
   String? _selectedResearchGroupName;
   String? _selectedLabName;
@@ -58,7 +62,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   bool _isFormPreFilled = false;
   List<String> _ratingCategories = [];
   List<University> _filteredUniversities = [];
-  List<String> _filteredDepartments = [];
+  List<UniversityDepartment> _filteredDepartments = [];
   List<ResearchGroup> _filteredResearchGroups = [];
   List<Lab> _filteredLabs = [];
 
@@ -153,8 +157,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           _selectedUniversityName = lab.universityName;
           _universityController.text = lab.universityName;
 
-          // Set department
-          _selectedDepartment = lab.department;
+          // Set department - we'll need to load the university department
           _departmentController.text = lab.department;
 
           // Set research group if it exists
@@ -187,8 +190,8 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   // Load all related form data based on lab information
   Future<void> _loadLabFormData(Lab lab) async {
     try {
-      // Load departments for the university
-      final departmentsFuture = ResearchGroupService.getDepartmentsByUniversity(lab.universityId);
+      // Load university departments for the university
+      final departmentsFuture = UniversityDepartmentService.getDepartmentsByUniversity(lab.universityId);
 
       // Load research groups for the department if it exists
       final researchGroupsFuture = lab.department.isNotEmpty
@@ -207,13 +210,15 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
 
       if (mounted) {
         setState(() {
-          final departments = results[0] as List<String>;
-          // Ensure selected department is in the list and remove duplicates
-          final departmentSet = <String>{...departments};
-          if (_selectedDepartment != null) {
-            departmentSet.add(_selectedDepartment!);
+          final departments = results[0] as List<UniversityDepartment>;
+          _filteredDepartments = departments;
+
+          // Find the matching department
+          final matchingDept = departments.where((dept) => dept.displayName == lab.department).firstOrNull;
+          if (matchingDept != null) {
+            _selectedUniversityDepartmentId = matchingDept.id;
+            _selectedUniversityDepartment = matchingDept;
           }
-          _filteredDepartments = departmentSet.toList()..sort();
 
           final researchGroups = results[1] as List<ResearchGroup>;
           // Ensure selected research group is in the list and remove duplicates by ID
@@ -232,7 +237,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                 description: '',
                 universityId: _selectedUniversityId!,
                 universityName: _selectedUniversityName!,
-                department: _selectedDepartment!,
+                department: lab.department,
                 createdAt: DateTime.now(),
                 updatedAt: DateTime.now(),
               );
@@ -353,9 +358,51 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildUniversitySelection(),
-                      const SizedBox(height: 24),
-                      _buildDepartmentSelection(),
+                      UniversityDepartmentSelector(
+                        selectedUniversityId: _selectedUniversityId,
+                        selectedUniversityName: _selectedUniversityName,
+                        selectedUniversityDepartmentId: _selectedUniversityDepartmentId,
+                        onUniversitySelected: (universityId, universityName) {
+                          setState(() {
+                            _selectedUniversityId = universityId;
+                            _selectedUniversityName = universityName;
+                            _universityController.text = universityName;
+                            // Clear dependent selections
+                            _selectedUniversityDepartmentId = null;
+                            _selectedUniversityDepartment = null;
+                            _departmentController.clear();
+                            _researchGroupController.clear();
+                            _selectedResearchGroupId = null;
+                            _selectedResearchGroupName = null;
+                            _labController.clear();
+                            _selectedLabId = null;
+                            _selectedLabName = null;
+                            _filteredResearchGroups.clear();
+                            _filteredLabs.clear();
+                          });
+                        },
+                        onDepartmentSelected: (departmentId, department) {
+                          setState(() {
+                            _selectedUniversityDepartmentId = departmentId;
+                            _selectedUniversityDepartment = department;
+                            _departmentController.text = department.displayName;
+                            // Clear research group and lab when department changes
+                            _researchGroupController.clear();
+                            _selectedResearchGroupId = null;
+                            _selectedResearchGroupName = null;
+                            _labController.clear();
+                            _selectedLabId = null;
+                            _selectedLabName = null;
+                            _filteredResearchGroups.clear();
+                            _filteredLabs.clear();
+                          });
+
+                          // Load research groups for the selected department
+                          if (_selectedUniversityId != null) {
+                            _loadResearchGroups(_selectedUniversityId!, department.displayName);
+                          }
+                        },
+                      ),
                       const SizedBox(height: 24),
                       _buildResearchGroupSelection(),
                       const SizedBox(height: 24),
@@ -463,232 +510,6 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
     );
   }
 
-  Widget _buildUniversitySelection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'University *',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TypeAheadField<University>(
-          controller: _universityController,
-          builder: (context, controller, focusNode) {
-            return TextField(
-              controller: controller,
-              focusNode: focusNode,
-              decoration: InputDecoration(
-                hintText: 'Search or type university name...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppColors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppColors.primary),
-                ),
-                suffixIcon: _universityController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          setState(() {
-                            _universityController.clear();
-                            _selectedUniversityId = null;
-                            _selectedUniversityName = null;
-                            _labController.clear();
-                            _selectedLabId = null;
-                            _selectedLabName = null;
-                            _filteredLabs.clear();
-                          });
-                        },
-                      )
-                    : const Icon(Icons.search),
-              ),
-            );
-          },
-          suggestionsCallback: (pattern) async {
-            try {
-              if (pattern.isEmpty) {
-                return _filteredUniversities;
-              }
-              final searchResults = await UniversityService.getAllUniversities(search: pattern);
-              return searchResults;
-            } catch (e) {
-              print('Error searching universities: $e');
-              return _filteredUniversities.where((uni) =>
-                  uni.name.toLowerCase().contains(pattern.toLowerCase())).toList();
-            }
-          },
-          itemBuilder: (context, suggestion) {
-            return ListTile(
-              title: Text(suggestion.name),
-              subtitle: Text('${suggestion.city}, ${suggestion.state}, ${suggestion.country}'),
-            );
-          },
-          onSelected: (suggestion) async {
-            setState(() {
-              _selectedUniversityId = suggestion.id;
-              _selectedUniversityName = suggestion.name;
-              _universityController.text = suggestion.name;
-              // Clear dependent selections when university changes
-              _departmentController.clear();
-              _selectedDepartment = null;
-              _researchGroupController.clear();
-              _selectedResearchGroupId = null;
-              _selectedResearchGroupName = null;
-              _labController.clear();
-              _selectedLabId = null;
-              _selectedLabName = null;
-              // Clear filtered lists
-              _filteredDepartments.clear();
-              _filteredResearchGroups.clear();
-              _filteredLabs.clear();
-            });
-
-            // Load departments and labs for the selected university in parallel
-            try {
-              final futures = [
-                ResearchGroupService.getDepartmentsByUniversity(suggestion.id),
-                LabService.getLabsByUniversity(suggestion.id),
-              ];
-
-              final results = await Future.wait(futures);
-              final departments = results[0] as List<String>;
-              final labs = results[1] as List<Lab>;
-
-              if (mounted) {
-                setState(() {
-                  // Remove duplicates from departments and sort
-                  _filteredDepartments = departments.toSet().toList()..sort();
-                  _filteredLabs = labs;
-                });
-              }
-            } catch (e) {
-              print('Error loading departments and labs: $e');
-              if (mounted) {
-                setState(() {
-                  _filteredDepartments = [];
-                  _filteredLabs = [];
-                });
-              }
-            }
-          },
-          emptyBuilder: (context) => Container(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Text('University not found'),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: () => _showAddUniversityDialog(),
-                  child: const Text('Add New University'),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (_selectedUniversityId == null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              'Please select a university',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.error,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildDepartmentSelection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Department *',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: _selectedDepartment,
-          decoration: InputDecoration(
-            hintText: _selectedUniversityName != null
-                ? 'Select a department or add new'
-                : 'Select a university first',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
-            ),
-          ),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return 'Please select a department';
-            }
-            return null;
-          },
-          onChanged: _selectedUniversityId == null ? null : (String? value) {
-            if (value == '___ADD_NEW___') {
-              _showAddDepartmentDialog();
-            } else {
-              setState(() {
-                _selectedDepartment = value;
-                _departmentController.text = value ?? '';
-                // Clear research group and lab when department changes
-                _researchGroupController.clear();
-                _selectedResearchGroupId = null;
-                _selectedResearchGroupName = null;
-                _labController.clear();
-                _selectedLabId = null;
-                _selectedLabName = null;
-                _filteredResearchGroups.clear();
-                _filteredLabs.clear();
-              });
-
-              // Load research groups for the selected department
-              if (_selectedUniversityId != null && value != null) {
-                _loadResearchGroups(_selectedUniversityId!, value);
-              }
-            }
-          },
-          items: [
-            ..._filteredDepartments.map((dept) => DropdownMenuItem<String>(
-              value: dept,
-              child: Text(dept),
-            )),
-            const DropdownMenuItem<String>(
-              value: '___ADD_NEW___',
-              child: Row(
-                children: [
-                  Icon(Icons.add, color: AppColors.primary, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Add New Department',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
   Widget _buildResearchGroupSelection() {
     return Column(
@@ -725,7 +546,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
         DropdownButtonFormField<String>(
           value: _selectedResearchGroupName,
           decoration: InputDecoration(
-            hintText: _selectedDepartment != null
+            hintText: _selectedUniversityDepartment != null
                 ? 'Select a research group or add new (optional)'
                 : 'Select a department first',
             border: OutlineInputBorder(
@@ -736,7 +557,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
               borderSide: BorderSide(color: AppColors.primary, width: 2),
             ),
           ),
-          onChanged: _selectedDepartment == null ? null : (String? value) {
+          onChanged: _selectedUniversityDepartment == null ? null : (String? value) {
             if (value == '___ADD_NEW___') {
               _showAddResearchGroupDialog();
             } else if (value == '___NONE___') {
@@ -750,8 +571,8 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                 _filteredLabs.clear();
               });
               // Load all labs for department instead
-              if (_selectedUniversityId != null && _selectedDepartment != null) {
-                _loadLabsForDepartment(_selectedUniversityId!, _selectedDepartment!);
+              if (_selectedUniversityId != null && _selectedUniversityDepartment != null) {
+                _loadLabsForDepartment(_selectedUniversityId!, _selectedUniversityDepartment!.displayName);
               }
             } else if (value != null) {
               final selectedGroup = _filteredResearchGroups.firstWhere(
@@ -763,7 +584,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                         description: '',
                         universityId: _selectedUniversityId!,
                         universityName: _selectedUniversityName!,
-                        department: _selectedDepartment!,
+                        department: _selectedUniversityDepartment!.displayName,
                         createdAt: DateTime.now(),
                         updatedAt: DateTime.now(),
                       )
@@ -783,8 +604,8 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
               // Load labs for the selected research group
               if (selectedGroup.id.startsWith('temp_')) {
                 // For temporary groups, load all department labs
-                if (_selectedUniversityId != null && _selectedDepartment != null) {
-                  _loadLabsForDepartment(_selectedUniversityId!, _selectedDepartment!);
+                if (_selectedUniversityId != null && _selectedUniversityDepartment != null) {
+                  _loadLabsForDepartment(_selectedUniversityId!, _selectedUniversityDepartment!.displayName);
                 }
               } else {
                 _loadLabsForGroup(selectedGroup.id);
@@ -1698,107 +1519,6 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
     );
   }
 
-  void _showAddDepartmentDialog() {
-    String? departmentName;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Add New Department',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'University: $_selectedUniversityName',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              decoration: InputDecoration(
-                labelText: 'Department Name *',
-                hintText: 'e.g., Computer Science',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppColors.primary, width: 2),
-                ),
-              ),
-              onChanged: (value) {
-                departmentName = value.trim().isEmpty ? null : value.trim();
-              },
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter department name';
-                }
-                return null;
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text(
-              'Cancel',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (departmentName != null && departmentName!.isNotEmpty) {
-                // Add the new department to the list
-                setState(() {
-                  _selectedDepartment = departmentName!;
-                  _departmentController.text = departmentName!;
-                  if (!_filteredDepartments.contains(departmentName!)) {
-                    _filteredDepartments.add(departmentName!);
-                    _filteredDepartments.sort();
-                  }
-                  // Clear dependent fields
-                  _researchGroupController.clear();
-                  _selectedResearchGroupId = null;
-                  _selectedResearchGroupName = null;
-                  _labController.clear();
-                  _selectedLabId = null;
-                  _selectedLabName = null;
-                  _filteredResearchGroups.clear();
-                  _filteredLabs.clear();
-                });
-                Navigator.of(context).pop();
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Department "$departmentName" added successfully'),
-                    backgroundColor: AppColors.success,
-                  ),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Add Department'),
-          ),
-        ],
-      ),
-    );
-  }
 
   void _showAddResearchGroupDialog() {
     String? groupName;
@@ -1834,7 +1554,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                     ),
                   ),
                   Text(
-                    'Department: $_selectedDepartment',
+                    'Department: ${_selectedUniversityDepartment?.displayName}',
                     style: TextStyle(
                       fontSize: 14,
                       color: AppColors.textSecondary,
@@ -1987,7 +1707,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                       name: groupName!,
                       description: groupDescription ?? '',
                       universityId: _selectedUniversityId!,
-                      department: _selectedDepartment!,
+                      department: _selectedUniversityDepartment!.displayName,
                       researchAreas: researchAreas,
                       website: groupWebsite,
                     );
@@ -2021,7 +1741,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                       description: groupDescription ?? '',
                       universityId: _selectedUniversityId!,
                       universityName: _selectedUniversityName!,
-                      department: _selectedDepartment!,
+                      department: _selectedUniversityDepartment!.displayName,
                       researchAreas: researchAreas,
                       website: groupWebsite,
                       createdAt: now,
