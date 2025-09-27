@@ -339,7 +339,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                             _selectedUniversityId = universityId;
                             _selectedUniversityName = universityName;
                             _universityController.text = universityName;
-                            // Clear dependent selections
+                            // Clear ALL dependent selections when university changes
                             _selectedUniversityDepartmentId = null;
                             _selectedUniversityDepartment = null;
                             _departmentController.clear();
@@ -349,16 +349,18 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                             _labController.clear();
                             _selectedLabId = null;
                             _selectedLabName = null;
+                            // Completely clear research groups - they should only load after department selection
                             _filteredResearchGroups.clear();
                             _filteredLabs.clear();
                           });
+                          print('DEBUG: University changed to $universityName, cleared all research groups');
                         },
                         onDepartmentSelected: (departmentId, department) {
                           setState(() {
                             _selectedUniversityDepartmentId = departmentId;
                             _selectedUniversityDepartment = department;
                             _departmentController.text = department.displayName;
-                            // Clear research group and lab when department changes
+                            // Clear ALL dependent selections when department changes
                             _researchGroupController.clear();
                             _selectedResearchGroupId = null;
                             _selectedResearchGroupName = null;
@@ -369,8 +371,9 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                             _filteredLabs.clear();
                           });
 
-                          // Load research groups for the selected department
+                          // Load research groups for the selected department ONLY
                           if (_selectedUniversityId != null) {
+                            print('DEBUG: Department changed to ${department.displayName}, loading research groups...');
                             _loadResearchGroups(_selectedUniversityId!, department.displayName);
                           }
                         },
@@ -515,21 +518,23 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           ],
         ),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: _selectedResearchGroupName,
-          decoration: InputDecoration(
-            hintText: _selectedUniversityDepartment != null
-                ? 'Select a research group or add new (optional)'
-                : 'Select a department first',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+        SizedBox(
+          width: double.infinity,
+          child: DropdownButtonFormField<String>(
+            value: _selectedResearchGroupName,
+            decoration: InputDecoration(
+              hintText: _selectedUniversityDepartment != null
+                  ? 'Select a research group or add new (optional)'
+                  : 'Select a department first',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: AppColors.primary, width: 2),
+              ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
-            ),
-          ),
-          isExpanded: true,
+            isExpanded: true,
           onChanged: _selectedUniversityDepartment == null ? null : (String? value) {
             if (value == '___ADD_NEW___') {
               _showAddResearchGroupDialog();
@@ -614,6 +619,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
               ),
             ),
           ],
+          ),
         ),
       ],
     );
@@ -770,7 +776,9 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   }
 
   Widget _buildPositionDropdown() {
-    return DropdownButtonFormField<String>(
+    return SizedBox(
+      width: double.infinity,
+      child: DropdownButtonFormField<String>(
       value: _position,
       decoration: InputDecoration(
             labelText: 'Your Position *',
@@ -795,11 +803,14 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
               _position = value!;
             });
           },
+      ),
     );
   }
 
   Widget _buildDurationDropdown() {
-    return DropdownButtonFormField<String>(
+    return SizedBox(
+      width: double.infinity,
+      child: DropdownButtonFormField<String>(
       value: _duration,
       decoration: InputDecoration(
         labelText: 'Duration *',
@@ -825,6 +836,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           _duration = value!;
         });
       },
+      ),
     );
   }
 
@@ -1944,6 +1956,15 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   // Load research groups for selected university and department
   Future<void> _loadResearchGroups(String universityId, String department) async {
     print('DEBUG: Loading research groups for university $universityId, department: $department');
+
+    // Clear existing research groups first
+    setState(() {
+      _filteredResearchGroups.clear();
+      _selectedResearchGroupId = null;
+      _selectedResearchGroupName = null;
+      _researchGroupController.clear();
+    });
+
     try {
       final groups = await ResearchGroupService.getGroupsByUniversityAndDepartment(
         universityId,
