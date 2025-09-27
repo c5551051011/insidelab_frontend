@@ -49,7 +49,12 @@ class _UniversityDepartmentSelectorState extends State<UniversityDepartmentSelec
       final universities = await UniversityService.searchUniversities('');
       if (mounted) {
         setState(() {
-          _universities = universities;
+          // Remove duplicates by ID to prevent dropdown errors
+          final uniqueUniversities = <String, University>{};
+          for (final uni in universities) {
+            uniqueUniversities[uni.id] = uni;
+          }
+          _universities = uniqueUniversities.values.toList();
         });
         // If there's a selected university, load its departments
         if (widget.selectedUniversityId != null) {
@@ -71,7 +76,12 @@ class _UniversityDepartmentSelectorState extends State<UniversityDepartmentSelec
       final departments = await UniversityDepartmentService.getDepartmentsByUniversity(universityId);
       if (mounted) {
         setState(() {
-          _universityDepartments = departments;
+          // Remove duplicates by ID to prevent dropdown errors
+          final uniqueDepartments = <String, UniversityDepartment>{};
+          for (final dept in departments) {
+            uniqueDepartments[dept.id] = dept;
+          }
+          _universityDepartments = uniqueDepartments.values.toList();
           _isLoadingDepartments = false;
         });
       }
@@ -415,7 +425,10 @@ class _UniversityDepartmentSelectorState extends State<UniversityDepartmentSelec
             maxHeight: 120,
           ),
           child: DropdownButtonFormField<String>(
-            value: widget.selectedUniversityId,
+            value: widget.selectedUniversityId != null &&
+                   _universities.any((uni) => uni.id == widget.selectedUniversityId)
+                ? widget.selectedUniversityId
+                : null,
             decoration: InputDecoration(
               labelText: widget.isRequired ? 'University *' : 'University',
               prefixIcon: const Icon(Icons.school),
@@ -495,7 +508,10 @@ class _UniversityDepartmentSelectorState extends State<UniversityDepartmentSelec
             maxHeight: 120,
           ),
           child: DropdownButtonFormField<String>(
-            value: widget.selectedUniversityDepartmentId,
+            value: widget.selectedUniversityDepartmentId != null &&
+                   _universityDepartments.any((dept) => dept.id == widget.selectedUniversityDepartmentId)
+                ? widget.selectedUniversityDepartmentId
+                : null,
             decoration: InputDecoration(
               labelText: widget.isRequired ? 'Department *' : 'Department',
               prefixIcon: const Icon(Icons.science),
