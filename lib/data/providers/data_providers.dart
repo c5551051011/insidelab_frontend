@@ -231,6 +231,16 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Validate required fields
+      final requiredFields = ['email', 'username', 'name', 'password', 'password_confirm', 'position', 'university_department'];
+      for (final field in requiredFields) {
+        if (userData[field] == null || userData[field]!.isEmpty) {
+          throw Exception('Missing required field: $field');
+        }
+      }
+
+      print('DEBUG: Sending registration data: ${userData.keys.toList()}');
+
       final response = await AuthService.register({
         'email': userData['email']!,
         'username': userData['username']!,
@@ -238,7 +248,7 @@ class AuthProvider extends ChangeNotifier {
         'password': userData['password']!,
         'password_confirm': userData['password_confirm']!,
         'position': userData['position']!,
-        'department': userData['department']!,
+        'university_department': userData['university_department']!,
       });
 
       // For email verification flow, don't automatically authenticate

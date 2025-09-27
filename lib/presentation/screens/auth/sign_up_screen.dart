@@ -7,6 +7,10 @@ import 'dart:math';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../data/providers/data_providers.dart';
+import '../../../data/models/university.dart';
+import '../../../data/models/university_department.dart';
+import '../../../services/university_service.dart';
+import '../../../services/university_department_service.dart';
 import '../../../utils/validators.dart';
 import '../../../utils/helpers.dart';
 import '../../widgets/common/header_navigation.dart';
@@ -26,18 +30,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _confirmPasswordController = TextEditingController();
 
   String? _selectedPosition;
-  String? _department;
+  String? _selectedUniversityId;
+  String? _selectedUniversityName;
+  String? _selectedUniversityDepartmentId;
   final _nameController = TextEditingController();
-  final _departmentController = TextEditingController();
+  final _universityController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreedToTerms = false;
   bool _allowEmails = false;
 
+  // University and Department data
+  List<University> _universities = [];
+  List<UniversityDepartment> _universityDepartments = [];
+  bool _isLoadingDepartments = false;
+  bool _isLoadingUniversities = false;
+
   @override
   void initState() {
     super.initState();
     _generateRandomUsername();
+    _loadUniversities();
   }
 
   void _generateRandomUsername() {
@@ -219,33 +232,52 @@ class _SignUpScreenState extends State<SignUpScreen> {
             },
           ),
           const SizedBox(height: 20),
-          DropdownButtonFormField<String>(
-            value: _selectedPosition,
-            decoration: const InputDecoration(
-              labelText: 'Current Position',
-              prefixIcon: Icon(Icons.work),
-              helperText: 'Helps contextualize your reviews',
+          Container(
+            constraints: const BoxConstraints(
+              minHeight: 56,
+              maxHeight: 120,
             ),
-            items: AppConstants.positions
-                .map((position) => DropdownMenuItem(
-              value: position,
-              child: Text(position),
-            ))
-                .toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedPosition = value;
-              });
-            },
-            validator: (value) {
-              if (value == null) {
-                return 'Please select your position';
-              }
-              return null;
-            },
+            child: DropdownButtonFormField<String>(
+              value: _selectedPosition,
+              decoration: const InputDecoration(
+                labelText: 'Current Position',
+                prefixIcon: Icon(Icons.work),
+                helperText: 'Helps contextualize your reviews',
+              ),
+              isExpanded: true,
+              menuMaxHeight: 300,
+              items: AppConstants.positions
+                  .map((position) => DropdownMenuItem(
+                value: position,
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      position,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedPosition = value;
+                });
+              },
+              validator: (value) {
+                if (value == null) {
+                  return 'Please select your position';
+                }
+                return null;
+              },
+            ),
           ),
           const SizedBox(height: 20),
-          _buildDepartmentDropdown(),
+          _buildUniversitySelection(),
+          const SizedBox(height: 20),
+          _buildDepartmentSelection(),
           const SizedBox(height: 20),
           TextFormField(
             controller: _passwordController,
@@ -432,7 +464,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         return SizedBox(
           height: 48,
           child: ElevatedButton(
-            onPressed: (!_agreedToTerms || authProvider.isLoading)
+            onPressed: (!_agreedToTerms ||
+                       authProvider.isLoading ||
+                       _selectedPosition == null ||
+                       _selectedUniversityDepartmentId == null)
                 ? null
                 : _signUp,
             style: ElevatedButton.styleFrom(
@@ -515,6 +550,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (_formKey.currentState!.validate()) {
       final authProvider = context.read<AuthProvider>();
 
+      // Debug validation
+      print('DEBUG: Signup validation data:');
+      print('  Email: ${_emailController.text.trim()}');
+      print('  Username: ${_usernameController.text.trim()}');
+      print('  Name: ${_nameController.text.trim()}');
+      print('  Position: $_selectedPosition');
+      print('  University ID: $_selectedUniversityId');
+      print('  University Name: $_selectedUniversityName');
+      print('  University Department ID: $_selectedUniversityDepartmentId');
+
+      // Additional validation
+      if (_selectedPosition == null) {
+        Helpers.showSnackBar(context, 'Please select your position', isError: true);
+        return;
+      }
+      if (_selectedUniversityDepartmentId == null) {
+        Helpers.showSnackBar(context, 'Please select your university and department', isError: true);
+        return;
+      }
+
       try {
         await authProvider.signUp({
           'email': _emailController.text.trim(),
@@ -522,8 +577,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'name': _nameController.text.trim(),
           'password': _passwordController.text,
           'password_confirm': _confirmPasswordController.text,
-          'position': _selectedPosition,
-          'department': _departmentController.text.trim(),
+          'position': _selectedPosition!,
+          'university_department': _selectedUniversityDepartmentId!,
         });
 
         if (mounted) {
@@ -690,70 +745,540 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  Widget _buildDepartmentDropdown() {
-    final departments = [
-      'Computer Science',
-      'Electrical Engineering',
-      'Mechanical Engineering',
-      'Chemical Engineering',
-      'Civil Engineering',
-      'Biomedical Engineering',
-      'Aerospace Engineering',
-      'Materials Science',
-      'Biology',
-      'Chemistry',
-      'Physics',
-      'Mathematics',
-      'Statistics',
-      'Psychology',
-      'Economics',
-      'Business Administration',
-      'Medicine',
-      'Pharmacy',
-      'Nursing',
-      'Public Health',
-      'Environmental Science',
-      'Geology',
-      'Anthropology',
-      'Sociology',
-      'Political Science',
-      'History',
-      'Philosophy',
-      'Literature',
-      'Art',
-      'Music',
-      'Other',
-    ];
-
-    return DropdownButtonFormField<String>(
-      value: _department,
-      decoration: const InputDecoration(
-        labelText: 'Department',
-        prefixIcon: Icon(Icons.school),
-        helperText: 'Select your academic department',
-      ),
-      items: departments.map((String department) {
-        return DropdownMenuItem<String>(
-          value: department,
-          child: Text(department),
-        );
-      }).toList(),
-      onChanged: (String? newValue) {
+  Future<void> _loadUniversities() async {
+    try {
+      final universities = await UniversityService.searchUniversities('');
+      if (mounted) {
         setState(() {
-          _department = newValue;
-          if (newValue != null && newValue != 'Other') {
-            _departmentController.text = newValue;
-          } else {
-            _departmentController.clear();
-          }
+          _universities = universities;
         });
-      },
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please select your department';
-        }
-        return null;
-      },
+      }
+    } catch (e) {
+      print('Error loading universities: $e');
+    }
+  }
+
+  Future<void> _loadDepartmentsForUniversity(String universityId) async {
+    setState(() {
+      _isLoadingDepartments = true;
+      _universityDepartments.clear();
+      _selectedUniversityDepartmentId = null;
+    });
+
+    try {
+      final departments = await UniversityDepartmentService.getDepartmentsByUniversity(universityId);
+      if (mounted) {
+        setState(() {
+          _universityDepartments = departments;
+          _isLoadingDepartments = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading departments: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingDepartments = false;
+        });
+      }
+    }
+  }
+
+  Widget _buildUniversitySelection() {
+    return Container(
+      constraints: const BoxConstraints(
+        minHeight: 56,
+        maxHeight: 120,
+      ),
+      child: DropdownButtonFormField<String>(
+        value: _selectedUniversityId,
+        decoration: InputDecoration(
+          labelText: 'University *',
+          prefixIcon: const Icon(Icons.school),
+          helperText: 'Select your university or add new',
+          suffixIcon: _isLoadingUniversities
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : null,
+        ),
+        isExpanded: true,
+        menuMaxHeight: 300,
+        items: [
+          ..._universities.map((university) {
+            return DropdownMenuItem<String>(
+              value: university.id,
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 48),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '${university.name} - ${university.city}',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+              ),
+            );
+          }),
+          DropdownMenuItem<String>(
+            value: '___ADD_NEW_UNIVERSITY___',
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Row(
+                children: [
+                  Icon(Icons.add, color: AppColors.primary, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Add New University',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+        onChanged: (String? universityId) {
+          if (universityId == '___ADD_NEW_UNIVERSITY___') {
+            _showAddUniversityDialog();
+          } else if (universityId != null) {
+            final university = _universities.firstWhere((u) => u.id == universityId);
+            setState(() {
+              _selectedUniversityId = universityId;
+              _selectedUniversityName = university.name;
+              _universityController.text = university.name;
+            });
+            _loadDepartmentsForUniversity(universityId);
+          }
+        },
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please select your university';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
+  Widget _buildDepartmentSelection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          constraints: const BoxConstraints(
+            minHeight: 56,
+            maxHeight: 120,
+          ),
+          child: DropdownButtonFormField<String>(
+            value: _selectedUniversityDepartmentId,
+            decoration: InputDecoration(
+              labelText: 'Department *',
+              prefixIcon: const Icon(Icons.science),
+              helperText: _selectedUniversityId != null
+                  ? 'Select your department or add new'
+                  : 'Select a university first',
+              suffixIcon: _isLoadingDepartments
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : null,
+            ),
+            isExpanded: true,
+            menuMaxHeight: 300,
+            items: [
+              ..._universityDepartments.map((dept) => DropdownMenuItem<String>(
+                value: dept.id,
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      dept.displayName,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ),
+                ),
+              )),
+              if (_selectedUniversityId != null)
+                DropdownMenuItem<String>(
+                  value: '___ADD_NEW___',
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    child: Row(
+                      children: [
+                        Icon(Icons.add, color: AppColors.primary, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Add New Department',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+            onChanged: _selectedUniversityId == null ? null : (String? value) {
+              if (value == '___ADD_NEW___') {
+                _showAddDepartmentDialog();
+              } else {
+                setState(() {
+                  _selectedUniversityDepartmentId = value;
+                });
+              }
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please select your department';
+              }
+              return null;
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showAddUniversityDialog() {
+    String? universityName;
+    String? website;
+    String? country;
+    String? state;
+    String? city;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Add New University',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'University Name *',
+                  hintText: 'e.g., Stanford University',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppColors.primary, width: 2),
+                  ),
+                ),
+                onChanged: (value) {
+                  universityName = value.trim().isEmpty ? null : value.trim();
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Website *',
+                  hintText: 'e.g., https://www.stanford.edu',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppColors.primary, width: 2),
+                  ),
+                ),
+                onChanged: (value) {
+                  website = value.trim().isEmpty ? null : value.trim();
+                },
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Country',
+                        hintText: 'e.g., United States',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: AppColors.primary, width: 2),
+                        ),
+                      ),
+                      onChanged: (value) {
+                        country = value.trim().isEmpty ? null : value.trim();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'State/Province',
+                        hintText: 'e.g., California',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: AppColors.primary, width: 2),
+                        ),
+                      ),
+                      onChanged: (value) {
+                        state = value.trim().isEmpty ? null : value.trim();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'City',
+                  hintText: 'e.g., Stanford',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: AppColors.primary, width: 2),
+                  ),
+                ),
+                onChanged: (value) {
+                  city = value.trim().isEmpty ? null : value.trim();
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (universityName != null && universityName!.isNotEmpty &&
+                  website != null && website!.isNotEmpty) {
+                try {
+                  Navigator.of(context).pop();
+
+                  // Show loading
+                  setState(() {
+                    _isLoadingUniversities = true;
+                  });
+
+                  final newUniversity = await UniversityService.addUniversity(
+                    name: universityName!,
+                    website: website!,
+                    country: country,
+                    state: state,
+                    city: city,
+                  );
+
+                  // Reload universities and select the new one
+                  await _loadUniversities();
+
+                  setState(() {
+                    _selectedUniversityId = newUniversity.id;
+                    _selectedUniversityName = newUniversity.name;
+                    _universityController.text = newUniversity.name;
+                    _isLoadingUniversities = false;
+                  });
+
+                  // Load departments for the new university
+                  _loadDepartmentsForUniversity(newUniversity.id);
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('University "${newUniversity.name}" added successfully'),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  setState(() {
+                    _isLoadingUniversities = false;
+                  });
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error adding university: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Add University'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddDepartmentDialog() {
+    String? departmentName;
+    String? localName;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Add New Department',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'University: $_selectedUniversityName',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'Department Name *',
+                hintText: 'e.g., Computer Science',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppColors.primary, width: 2),
+                ),
+              ),
+              onChanged: (value) {
+                departmentName = value.trim().isEmpty ? null : value.trim();
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              decoration: InputDecoration(
+                labelText: 'Local Name (optional)',
+                hintText: 'e.g., EECS (if different from standard name)',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppColors.primary, width: 2),
+                ),
+              ),
+              onChanged: (value) {
+                localName = value.trim().isEmpty ? null : value.trim();
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (departmentName != null && departmentName!.isNotEmpty) {
+                try {
+                  Navigator.of(context).pop();
+
+                  // Show loading
+                  setState(() {
+                    _isLoadingDepartments = true;
+                  });
+
+                  final newUniversityDepartment = await UniversityDepartmentService.createNewDepartmentForUniversity(
+                    universityId: _selectedUniversityId!,
+                    departmentName: departmentName!,
+                    localName: localName,
+                  );
+
+                  // Reload departments and select the new one
+                  await _loadDepartmentsForUniversity(_selectedUniversityId!);
+
+                  setState(() {
+                    _selectedUniversityDepartmentId = newUniversityDepartment.id;
+                  });
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Department "${newUniversityDepartment.displayName}" added successfully'),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  setState(() {
+                    _isLoadingDepartments = false;
+                  });
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error adding department: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Add Department'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -762,7 +1287,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _emailController.dispose();
     _usernameController.dispose();
     _nameController.dispose();
-    _departmentController.dispose();
+    _universityController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
