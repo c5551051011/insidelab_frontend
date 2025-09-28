@@ -534,30 +534,43 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           ],
         ),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
+        _buildStandardDropdown<String>(
           value: _selectedResearchGroupName,
-          decoration: InputDecoration(
-            hintText: _selectedUniversityDepartment != null
-                ? 'Select a research group or add new (optional)'
-                : 'Select a department first',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
+          labelText: 'Research Group',
+          hintText: _selectedUniversityDepartment != null
+              ? 'Select a research group or add new (optional)'
+              : 'Select a department first',
+          enabled: _selectedUniversityDepartment != null,
+          items: [
+            const DropdownMenuItem<String>(
+              value: '___NONE___',
+              child: Text('No Research Group'),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
+            ..._filteredResearchGroups.map((group) => DropdownMenuItem<String>(
+              value: group.name,
+              child: Text(
+                group.name,
+                overflow: TextOverflow.ellipsis,
+              ),
+            )),
+            const DropdownMenuItem<String>(
+              value: '___ADD_NEW___',
+              child: Row(
+                children: [
+                  Icon(Icons.add, color: AppColors.primary, size: 20),
+                  SizedBox(width: 8),
+                  Text(
+                    'Add New Research Group',
+                    style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-          ),
-          isExpanded: true,
-          menuMaxHeight: 200,
-          dropdownColor: Colors.white,
-          elevation: 8,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 16,
-          ),
-          onChanged: _selectedUniversityDepartment == null ? null : (String? value) {
+          ],
+          onChanged: (String? value) {
             if (value == '___ADD_NEW___') {
               _showAddResearchGroupDialog();
             } else if (value == '___NONE___') {
@@ -612,35 +625,6 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
               }
             }
           },
-          items: [
-            const DropdownMenuItem<String>(
-              value: '___NONE___',
-              child: Text('No Research Group'),
-            ),
-            ..._filteredResearchGroups.map((group) => DropdownMenuItem<String>(
-              value: group.name,
-              child: Text(
-                group.name,
-                overflow: TextOverflow.ellipsis,
-              ),
-            )),
-            const DropdownMenuItem<String>(
-              value: '___ADD_NEW___',
-              child: Row(
-                children: [
-                  Icon(Icons.add, color: AppColors.primary, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Add New Research Group',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ],
     );
@@ -797,27 +781,9 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   }
 
   Widget _buildPositionDropdown() {
-    return DropdownButtonFormField<String>(
+    return _buildStandardDropdown<String>(
       value: _position,
-      decoration: InputDecoration(
-        labelText: 'Your Position *',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-      ),
-      isExpanded: true,
-      menuMaxHeight: 200,
-      dropdownColor: Colors.white,
-      elevation: 8,
-      style: TextStyle(
-        color: AppColors.textPrimary,
-        fontSize: 16,
-      ),
+      labelText: 'Your Position *',
       items: const [
         DropdownMenuItem(value: 'PhD Student', child: Text('PhD Student')),
         DropdownMenuItem(value: 'MS Student', child: Text('MS Student')),
@@ -834,27 +800,9 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   }
 
   Widget _buildDurationDropdown() {
-    return DropdownButtonFormField<String>(
+    return _buildStandardDropdown<String>(
       value: _duration,
-      decoration: InputDecoration(
-        labelText: 'Duration *',
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-      ),
-      isExpanded: true,
-      menuMaxHeight: 200,
-      dropdownColor: Colors.white,
-      elevation: 8,
-      style: TextStyle(
-        color: AppColors.textPrimary,
-        fontSize: 16,
-      ),
+      labelText: 'Duration *',
       items: const [
         DropdownMenuItem(value: '< 6 months', child: Text('Less than 6 months')),
         DropdownMenuItem(value: '6 months', child: Text('6 months')),
@@ -868,6 +816,41 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           _duration = value!;
         });
       },
+    );
+  }
+
+  // Reusable standard dropdown widget
+  Widget _buildStandardDropdown<T>({
+    required T? value,
+    required String labelText,
+    String? hintText,
+    required List<DropdownMenuItem<T>> items,
+    required ValueChanged<T?>? onChanged,
+    bool enabled = true,
+  }) {
+    return Container(
+      constraints: const BoxConstraints(
+        minHeight: 56,
+        maxHeight: 120,
+      ),
+      child: DropdownButtonFormField<T>(
+        value: value,
+        decoration: InputDecoration(
+          labelText: labelText,
+          hintText: hintText,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: AppColors.primary, width: 2),
+          ),
+        ),
+        isExpanded: true,
+        menuMaxHeight: 300,
+        items: items,
+        onChanged: enabled ? onChanged : null,
+      ),
     );
   }
 
