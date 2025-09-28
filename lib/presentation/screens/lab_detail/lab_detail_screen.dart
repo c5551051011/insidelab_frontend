@@ -8,6 +8,8 @@ import 'widgets/lab_header.dart';
 import 'widgets/rating_breakdown.dart';
 import 'widgets/reviews_list.dart';
 import 'widgets/publications_widget.dart';
+import 'widgets/lab_information_widget.dart';
+import 'widgets/recruitment_status_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LabDetailScreen extends StatefulWidget {
@@ -118,9 +120,9 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
                   flex: 3,
                   child: Column(
                     children: [
-                      _buildLabInfo(),
+                      LabInformationWidget(lab: widget.lab),
                       const SizedBox(height: 24),
-                      _buildRecruitmentStatus(),
+                      RecruitmentStatusWidget(lab: widget.lab),
                       const SizedBox(height: 24),
                       PublicationsWidget(labId: widget.lab.id),
                     ],
@@ -146,9 +148,9 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
           } else {
             return Column(
               children: [
-                _buildLabInfo(),
+                LabInformationWidget(lab: widget.lab),
                 const SizedBox(height: 24),
-                _buildRecruitmentStatus(),
+                RecruitmentStatusWidget(lab: widget.lab),
                 const SizedBox(height: 24),
                 PublicationsWidget(labId: widget.lab.id),
                 const SizedBox(height: 24),

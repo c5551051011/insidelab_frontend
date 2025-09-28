@@ -53,74 +53,115 @@ class LabHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    lab.name,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
                   Text(
                     lab.professorName,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    lab.name,
+                    style: const TextStyle(
+                      fontSize: 14,
                       color: Colors.white70,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     '${lab.universityName} • ${lab.department}',
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       color: Colors.white70,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Flexible(
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 4,
+                      children: lab.tags.take(3).map((tag) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white30),
+                          ),
+                          child: Text(
+                            tag,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ],
               ),
             ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  lab.overallRating.toStringAsFixed(1),
-                  style: const TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                RatingStars(rating: lab.overallRating, size: 20),
-                const SizedBox(height: 4),
-                Text(
-                  '${lab.reviewCount} reviews',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: () {
-                    AppRoutes.goToWriteReview(context, labId: lab.id);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10b981),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  child: const Text(
-                    'Write Review',
-                    style: TextStyle(
+            SizedBox(
+              width: 140,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    lab.overallRating.toStringAsFixed(1),
+                    style: const TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.w600,
                       color: Colors.white,
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ),
-              ],
+                  RatingStars(rating: lab.overallRating, size: 18),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${lab.reviewCount} reviews',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      AppRoutes.goToWriteReview(context, labId: lab.id);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10b981),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      minimumSize: const Size(0, 32),
+                    ),
+                    child: const Text(
+                      'Write Review',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

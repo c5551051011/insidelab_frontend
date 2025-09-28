@@ -1,6 +1,7 @@
 // presentation/screens/lab_detail/widgets/rating_breakdown.dart
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../widgets/common/card_widget.dart';
 
 class RatingBreakdown extends StatefulWidget {
   final Map<String, double> ratings;
@@ -41,60 +42,50 @@ class _RatingBreakdownState extends State<RatingBreakdown>
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Rating Breakdown',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+    return CardWidget(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const CardTitle(title: 'Rating Breakdown'),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.2)),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Avg: ${_getAverageRating().toStringAsFixed(1)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
-                        ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Avg: ${_getAverageRating().toStringAsFixed(1)}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
                       ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.star,
-                        color: AppColors.rating,
-                        size: 14,
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.star,
+                      color: AppColors.rating,
+                      size: 14,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Column(
-              children: widget.ratings.entries.map((entry) {
-                return _buildRatingItem(entry.key, entry.value);
-              }).toList(),
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Column(
+            children: widget.ratings.entries.map((entry) {
+              return _buildRatingItem(entry.key, entry.value);
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
