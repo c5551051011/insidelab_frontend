@@ -1,5 +1,6 @@
 // presentation/screens/reviews/write_review_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:go_router/go_router.dart';
@@ -166,10 +167,8 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
       // Load university departments for the university
       final departmentsFuture = UniversityDepartmentService.getDepartmentsByUniversity(lab.universityId);
 
-      // Load research groups for the department if it exists
-      final researchGroupsFuture = lab.department.isNotEmpty
-          ? ResearchGroupService.getGroupsByUniversityAndDepartment(lab.universityId, lab.department)
-          : Future.value(<ResearchGroup>[]);
+      // Load research groups - we need to find the university department ID first
+      final researchGroupsFuture = Future.value(<ResearchGroup>[]);
 
       // Load all labs for the university
       final labsFuture = LabService.getLabsByUniversity(lab.universityId);
@@ -177,7 +176,6 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
       // Wait for all data to load
       final results = await Future.wait([
         departmentsFuture,
-        researchGroupsFuture,
         labsFuture,
       ]);
 
@@ -192,33 +190,15 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
             _selectedUniversityDepartment = matchingDept;
           }
 
-          final researchGroups = results[1] as List<ResearchGroup>;
-          // Ensure selected research group is in the list and remove duplicates by ID
-          final groupMap = <String, ResearchGroup>{};
-          for (final group in researchGroups) {
-            groupMap[group.id] = group;
-          }
-          if (_selectedResearchGroupId != null && _selectedResearchGroupName != null) {
-            // Check if selected research group is already in the list
-            final hasSelectedGroup = groupMap.values.any((g) => g.name == _selectedResearchGroupName);
-            if (!hasSelectedGroup) {
-              // Create a temporary group entry if it's not in the API results
-              final tempGroup = ResearchGroup(
-                id: _selectedResearchGroupId!,
-                name: _selectedResearchGroupName!,
-                description: '',
-                universityId: _selectedUniversityId!,
-                universityName: _selectedUniversityName!,
-                department: lab.department,
-                createdAt: DateTime.now(),
-                updatedAt: DateTime.now(),
-              );
-              groupMap[tempGroup.id] = tempGroup;
-            }
-          }
-          _filteredResearchGroups = groupMap.values.toList();
+          // Research groups will be loaded later when department is selected
+          _filteredResearchGroups = [];
 
-          _filteredLabs = results[2] as List<Lab>;
+          _filteredLabs = results[1] as List<Lab>;
+
+          // Load research groups for the department after university departments are loaded
+          if (_selectedUniversityDepartmentId != null) {
+            _loadResearchGroups(_selectedUniversityDepartmentId!);
+          }
         });
       }
     } catch (e) {
@@ -374,7 +354,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                           // Load research groups for the selected department ONLY
                           if (_selectedUniversityId != null) {
                             print('DEBUG: Department changed to ${department.displayName}, loading research groups...');
-                            _loadResearchGroups(_selectedUniversityId!, department.displayName);
+                            _loadResearchGroups(department.id);
                           }
                         },
                       ),
@@ -1567,7 +1547,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   void _showAddLabDialog() {
     String? labName;
     String? professorName;
-    String? department;
+    String? department = _selectedUniversityDepartment?.displayName;
     String? labWebsite;
     bool isVerifyingWebsite = false;
     String? websiteError;
@@ -1595,14 +1575,6 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                     hintText: 'e.g., Dr. Jane Smith',
                   ),
                   onChanged: (value) => professorName = value,
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Department *',
-                    hintText: 'e.g., Computer Science',
-                  ),
-                  onChanged: (value) => department = value,
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -1664,7 +1636,6 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
               onPressed: isVerifyingWebsite ? null : () async {
                 if (labName?.isEmpty == true ||
                     professorName?.isEmpty == true ||
-                    department?.isEmpty == true ||
                     labWebsite?.isEmpty == true) {
                   return;
                 }
@@ -1701,7 +1672,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                   final newProfessor = await UniversityService.addProfessor(
                     name: professorName!,
                     universityId: _selectedUniversityId!,
-                    department: department!,
+                    department: _selectedUniversityDepartment!.displayName,
                   );
 
                   // Add lab via API using the newly created professor's ID
@@ -1709,8 +1680,9 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                     name: labName!,
                     professorId: newProfessor.id,
                     universityId: _selectedUniversityId!,
-                    department: department!,
+                    department: _selectedUniversityDepartment!.displayName,
                     website: labWebsite,
+                    researchGroupId: _selectedResearchGroupId, // Use selected research group
                   );
 
                   setState(() {
@@ -1824,14 +1796,19 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
       await ReviewService.submitReview(reviewData);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Review submitted successfully!'),
-            backgroundColor: AppColors.success,
-          ),
-        );
+        // Use SchedulerBinding.instance.addPostFrameCallback to ensure navigation happens after frame
+        SchedulerBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Review submitted successfully!'),
+                backgroundColor: AppColors.success,
+              ),
+            );
 
-        Navigator.pop(context);
+            Navigator.pop(context);
+          }
+        });
       }
     } catch (error) {
       if (mounted) {
@@ -1967,9 +1944,9 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
     }
   }
 
-  // Load research groups for selected university and department
-  Future<void> _loadResearchGroups(String universityId, String department) async {
-    print('DEBUG: Loading research groups for university $universityId, department: $department');
+  // Load research groups for selected university department
+  Future<void> _loadResearchGroups(String universityDepartmentId) async {
+    print('DEBUG: Loading research groups for university department ID: $universityDepartmentId');
 
     // Clear existing research groups first
     setState(() {
@@ -1980,11 +1957,10 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
     });
 
     try {
-      final groups = await ResearchGroupService.getGroupsByUniversityAndDepartment(
-        universityId,
-        department,
+      final groups = await ResearchGroupService.getGroupsByUniversityDepartment(
+        universityDepartmentId,
       );
-      print('DEBUG: Found ${groups.length} research groups for department $department');
+      print('DEBUG: Found ${groups.length} research groups for university department $universityDepartmentId');
       for (final group in groups) {
         print('DEBUG: - ${group.name} (dept: ${group.department})');
       }

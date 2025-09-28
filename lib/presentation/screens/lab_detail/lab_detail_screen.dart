@@ -7,6 +7,7 @@ import '../../widgets/common/header_navigation.dart';
 import 'widgets/lab_header.dart';
 import 'widgets/rating_breakdown.dart';
 import 'widgets/reviews_list.dart';
+import 'widgets/publications_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LabDetailScreen extends StatefulWidget {
@@ -94,23 +95,6 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Container(
-              height: 200,
-              decoration: const BoxDecoration(
-                gradient: AppColors.primaryGradient,
-              ),
-              child: Center(
-                child: Text(
-                  widget.lab.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
             LabHeader(lab: widget.lab),
             const SizedBox(height: 24),
             _buildContent(context),
@@ -129,8 +113,23 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Left Column: Lab Info + Recruitment Status + Publications
                 Expanded(
                   flex: 3,
+                  child: Column(
+                    children: [
+                      _buildLabInfo(),
+                      const SizedBox(height: 24),
+                      _buildRecruitmentStatus(),
+                      const SizedBox(height: 24),
+                      PublicationsWidget(labId: widget.lab.id),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 24),
+                // Right Column: Rating Breakdown + Reviews
+                Expanded(
+                  flex: 2,
                   child: Column(
                     children: [
                       // Always show rating breakdown with sample data if real data is not available
@@ -138,40 +137,25 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
                           ? const Center(child: CircularProgressIndicator())
                           : RatingBreakdown(ratings: _ratingBreakdown ?? {}),
                       const SizedBox(height: 24),
-                      const SizedBox(height: 24),
-                      _buildLabInfo(),
-                      const SizedBox(height: 24),
-                      _buildRecruitmentStatus(),
-                      const SizedBox(height: 24),
-                      _buildResearchTopics(),
-                      const SizedBox(height: 24),
-                      _buildRecentPublications(),
+                      ReviewsList(labId: widget.lab.id),
                     ],
                   ),
-                ),
-                const SizedBox(width: 24),
-                Expanded(
-                  flex: 4,
-                  child: ReviewsList(labId: widget.lab.id),
                 ),
               ],
             );
           } else {
             return Column(
               children: [
-                // Always show rating breakdown with sample data if real data is not available
-                _isLoadingRatings
-                    ? const Center(child: CircularProgressIndicator())
-                    : RatingBreakdown(ratings: _ratingBreakdown ?? {}),
-                const SizedBox(height: 24),
-                const SizedBox(height: 24),
                 _buildLabInfo(),
                 const SizedBox(height: 24),
                 _buildRecruitmentStatus(),
                 const SizedBox(height: 24),
-                _buildResearchTopics(),
+                PublicationsWidget(labId: widget.lab.id),
                 const SizedBox(height: 24),
-                _buildRecentPublications(),
+                // Always show rating breakdown with sample data if real data is not available
+                _isLoadingRatings
+                    ? const Center(child: CircularProgressIndicator())
+                    : RatingBreakdown(ratings: _ratingBreakdown ?? {}),
                 const SizedBox(height: 24),
                 ReviewsList(labId: widget.lab.id),
               ],

@@ -114,6 +114,7 @@ class LabService {
     String? website,
     List<String>? researchAreas,
     List<String>? tags,
+    String? researchGroupId,
   }) async {
     try {
       final labData = {
@@ -125,6 +126,7 @@ class LabService {
         if (website != null) 'website': website,
         if (researchAreas != null) 'research_areas': researchAreas,
         if (tags != null) 'tags': tags,
+        if (researchGroupId != null) 'research_group': int.parse(researchGroupId),
       };
 
       final response = await ApiService.post(

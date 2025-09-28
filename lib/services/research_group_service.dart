@@ -7,7 +7,7 @@ class ResearchGroupService {
   /// Get all research groups with optional filtering
   static Future<List<ResearchGroup>> getResearchGroups({
     String? universityId,
-    String? department,
+    String? universityDepartmentId,
     String? search,
     String? ordering,
   }) async {
@@ -16,7 +16,7 @@ class ResearchGroupService {
       final params = <String>[];
 
       if (universityId != null) params.add('university=$universityId');
-      if (department != null) params.add('department=${Uri.encodeComponent(department)}');
+      if (universityDepartmentId != null) params.add('university_department=$universityDepartmentId');
       if (search != null) params.add('search=${Uri.encodeComponent(search)}');
       if (ordering != null) params.add('ordering=${Uri.encodeComponent(ordering)}');
 
@@ -40,21 +40,6 @@ class ResearchGroupService {
       }
 
       print('DEBUG: Processed ${groups.length} research groups from API');
-      if (department != null) {
-        print('DEBUG: Requested department filter: $department');
-        for (final group in groups) {
-          print('DEBUG: Group "${group.name}" is in department: "${group.department}"');
-        }
-
-        // Additional frontend filtering as backup
-        final filteredGroups = groups.where((group) =>
-          group.department.toLowerCase().trim() == department.toLowerCase().trim()
-        ).toList();
-
-        print('DEBUG: After frontend filtering: ${filteredGroups.length} groups remain');
-        return filteredGroups;
-      }
-
       return groups;
     } catch (e) {
       return [];
@@ -66,14 +51,12 @@ class ResearchGroupService {
     return await getResearchGroups(universityId: universityId);
   }
 
-  /// Get research groups by university and department
-  static Future<List<ResearchGroup>> getGroupsByUniversityAndDepartment(
-    String universityId,
-    String department
+  /// Get research groups by university department ID
+  static Future<List<ResearchGroup>> getGroupsByUniversityDepartment(
+    String universityDepartmentId
   ) async {
     return await getResearchGroups(
-      universityId: universityId,
-      department: department,
+      universityDepartmentId: universityDepartmentId,
     );
   }
 

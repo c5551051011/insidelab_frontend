@@ -18,111 +18,112 @@ class LabHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      height: 200,
       decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
+        gradient: AppColors.primaryGradient,
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 50,
-                backgroundColor: AppColors.primaryLight.withOpacity(0.2),
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Row(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF3b82f6), Color(0xFF1d4ed8)],
+                ),
+                borderRadius: BorderRadius.circular(40),
+              ),
+              child: Center(
                 child: Text(
-                  lab.name.substring(0, 2).toUpperCase(),
+                  lab.professorName.split(' ').map((name) => name.isNotEmpty ? name[0] : '').take(2).join().toUpperCase(),
                   style: const TextStyle(
-                    color: AppColors.primary,
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
                   ),
                 ),
               ),
-              const SizedBox(width: 24),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      lab.professorName,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '${lab.universityName} • ${lab.department}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: lab.tags.map((tag) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.secondaryLight.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            tag,
-                            style: const TextStyle(
-                              color: AppColors.secondary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    lab.overallRating.toStringAsFixed(1),
+                    lab.name,
                     style: const TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
                     ),
                   ),
-                  RatingStars(rating: lab.overallRating, size: 24),
                   const SizedBox(height: 4),
                   Text(
-                    '${lab.reviewCount} reviews',
+                    lab.professorName,
                     style: const TextStyle(
-                      color: AppColors.textSecondary,
+                      fontSize: 16,
+                      color: Colors.white70,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      AppRoutes.goToWriteReview(context, labId: lab.id);
-                    },
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Write Review'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.success,
+                  Text(
+                    '${lab.universityName} • ${lab.department}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
                     ),
                   ),
                 ],
               ),
-            ],
-          ),
-        ],
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  lab.overallRating.toStringAsFixed(1),
+                  style: const TextStyle(
+                    fontSize: 48,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+                RatingStars(rating: lab.overallRating, size: 20),
+                const SizedBox(height: 4),
+                Text(
+                  '${lab.reviewCount} reviews',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () {
+                    AppRoutes.goToWriteReview(context, labId: lab.id);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10b981),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  child: const Text(
+                    'Write Review',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
