@@ -159,18 +159,18 @@ class LabHeader extends StatelessWidget {
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF10b981),
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            minimumSize: const Size(85, 24),
+                            minimumSize: const Size(110, 32),
                           ),
                           child: const Text(
                             'Write Review',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
-                              fontSize: 12,
+                              fontSize: 14,
                             ),
                           ),
                         ),
