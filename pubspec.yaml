@@ -70,6 +70,8 @@ flutter:
   fonts:
     - family: Inter
       fonts:
+        - asset: assets/fonts/Inter_28pt-Light.ttf
+          weight: 300
         - asset: assets/fonts/Inter_28pt-Regular.ttf
           weight: 400
         - asset: assets/fonts/Inter_28pt-Medium.ttf
