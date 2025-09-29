@@ -1,8 +1,10 @@
 
 // presentation/screens/search/widgets/filter_sidebar.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/university.dart';
+import '../../../../data/providers/data_cache_provider.dart';
 import '../../../../services/university_service.dart';
 
 class FilterSidebar extends StatefulWidget {
@@ -33,6 +35,17 @@ class _FilterSidebarState extends State<FilterSidebar> {
 
   Future<void> _loadUniversities() async {
     try {
+      // Try to use cached universities first
+      final cacheProvider = context.read<DataCacheProvider>();
+      if (cacheProvider.hasUniversities) {
+        setState(() {
+          _universities = cacheProvider.getUniversitiesForFilter();
+          _universitiesLoading = false;
+        });
+        return;
+      }
+
+      // Fallback to API call if cache is empty
       final universities = await UniversityService.getAllUniversities();
       setState(() {
         _universities = universities;

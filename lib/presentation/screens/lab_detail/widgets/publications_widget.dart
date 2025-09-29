@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/publication.dart';
+import '../../../../services/publication_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PublicationsWidget extends StatefulWidget {

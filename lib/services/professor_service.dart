@@ -3,10 +3,15 @@ import '../data/models/professor.dart';
 import 'api_service.dart';
 
 class ProfessorService {
-  // Get all professors
-  static Future<List<Professor>> getAllProfessors() async {
+  // Get all professors (with optional lab filtering)
+  static Future<List<Professor>> getAllProfessors({String? labId}) async {
     try {
-      final response = await ApiService.get('/universities/professors/');
+      String endpoint = '/universities/professors/';
+      if (labId != null) {
+        endpoint += '?lab=$labId';
+      }
+
+      final response = await ApiService.get(endpoint);
 
       if (response is Map && response.containsKey('results')) {
         return (response['results'] as List)
@@ -17,6 +22,29 @@ class ProfessorService {
       }
     } catch (e) {
       print('Error fetching professors: $e');
+      return [];
+    }
+  }
+
+  /// Get top-cited authors (with optional lab filtering)
+  static Future<List<Professor>> getTopCitedAuthors({String? labId}) async {
+    try {
+      String endpoint = '/authors/top-cited/';
+      if (labId != null) {
+        endpoint += '?lab=$labId';
+      }
+
+      final response = await ApiService.get(endpoint);
+
+      if (response is Map && response.containsKey('results')) {
+        return (response['results'] as List)
+            .map((json) => Professor.fromJson(json))
+            .toList();
+      } else {
+        return (response as List).map((json) => Professor.fromJson(json)).toList();
+      }
+    } catch (e) {
+      print('Error fetching top-cited authors: $e');
       return [];
     }
   }

@@ -12,6 +12,7 @@ class Review {
   final List<String> pros;
   final List<String> cons;
   final int helpfulCount;
+  final bool? userVote; // null = no vote, true = helpful, false = not helpful
   final bool isVerified;
 
   Review({
@@ -27,6 +28,7 @@ class Review {
     required this.pros,
     required this.cons,
     this.helpfulCount = 0,
+    this.userVote,
     this.isVerified = false,
   });
 
@@ -48,6 +50,7 @@ class Review {
       pros: List<String>.from(json['pros'] ?? []),
       cons: List<String>.from(json['cons'] ?? []),
       helpfulCount: json['helpful_count'] ?? json['helpfulCount'] ?? 0,
+      userVote: json['user_vote'] ?? json['userVote'],
       isVerified: json['is_verified'] ?? json['isVerified'] ?? false,
     );
   }
@@ -66,6 +69,7 @@ class Review {
       'pros': pros,
       'cons': cons,
       'helpfulCount': helpfulCount,
+      'userVote': userVote,
       'isVerified': isVerified,
     };
   }
@@ -83,6 +87,7 @@ class Review {
     List<String>? pros,
     List<String>? cons,
     int? helpfulCount,
+    bool? userVote,
     bool? isVerified,
   }) {
     return Review(
@@ -98,6 +103,7 @@ class Review {
       pros: pros ?? this.pros,
       cons: cons ?? this.cons,
       helpfulCount: helpfulCount ?? this.helpfulCount,
+      userVote: userVote ?? this.userVote,
       isVerified: isVerified ?? this.isVerified,
     );
   }

@@ -2,9 +2,13 @@
 // presentation/screens/lab_detail/widgets/lab_header.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../data/models/lab.dart';
+import '../../../../data/providers/saved_labs_provider.dart';
+import '../../../../data/providers/data_providers.dart';
+import '../../../widgets/enhanced_bookmark_button.dart';
 import '../../../widgets/rating_stars.dart';
 
 class LabHeader extends StatelessWidget {
@@ -23,7 +27,7 @@ class LabHeader extends StatelessWidget {
         gradient: AppColors.primaryGradient,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
@@ -153,29 +157,50 @@ class LabHeader extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        ElevatedButton(
-                          onPressed: () {
-                            AppRoutes.goToWriteReview(context, labId: lab.id);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF10b981),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            const SizedBox(width: 8),
+                            // Write Review button
+                            ElevatedButton(
+                              onPressed: () {
+                                AppRoutes.goToWriteReview(context, labId: lab.id);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF10b981),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                minimumSize: const Size(110, 32),
+                              ),
+                              child: const Text(
+                                'Write Review',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
                             ),
-                            minimumSize: const Size(110, 32),
-                          ),
-                          child: const Text(
-                            'Write Review',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
+                          ],
                         ),
                       ],
                     ),
+                  ),
+                  const SizedBox(width: 16),
+                  // Enhanced save button
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      EnhancedBookmarkButton(
+                        labId: lab.id,
+                        size: 24,
+                        activeColor: Colors.white,
+                        inactiveColor: Colors.white70,
+                        showDropdown: true,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -185,4 +210,5 @@ class LabHeader extends StatelessWidget {
       ),
     );
   }
+
 }

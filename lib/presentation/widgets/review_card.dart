@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/review.dart';
 import 'rating_stars.dart';
+import 'review_helpful_widget.dart';
 
 class ReviewCard extends StatelessWidget {
   final Review review;
@@ -155,13 +156,14 @@ class ReviewCard extends StatelessWidget {
   Widget _buildFooter(BuildContext context) {
     return Row(
       children: [
-        TextButton.icon(
-          onPressed: () {
-            // TODO: Implement helpful vote
+        ReviewHelpfulWidget(
+          review: review,
+          onReviewUpdated: (updatedReview) {
+            // The parent widget should handle the review update
+            // This could be expanded to notify parent widgets if needed
           },
-          icon: const Icon(Icons.thumb_up_outlined, size: 16),
-          label: Text('Helpful (${review.helpfulCount})'),
         ),
+        const Spacer(),
         TextButton.icon(
           onPressed: () {
             // TODO: Implement report

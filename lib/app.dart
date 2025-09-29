@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/router/go_router_config.dart';
 import 'data/providers/data_providers.dart';
+import 'data/providers/data_cache_provider.dart';
+import 'data/providers/saved_labs_provider.dart';
 import 'data/repositories/lab_repository.dart';
 import 'data/repositories/review_repository.dart';
 import 'services/api_service.dart';
@@ -35,6 +37,12 @@ class InsideLabApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<AuthProvider>(
           create: (_) => AuthProvider(),
+        ),
+        ChangeNotifierProvider<DataCacheProvider>(
+          create: (_) => DataCacheProvider(),
+        ),
+        ChangeNotifierProvider<SavedLabsProvider>(
+          create: (_) => SavedLabsProvider(),
         ),
       ],
       child: MaterialApp.router(

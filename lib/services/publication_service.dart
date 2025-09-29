@@ -50,6 +50,91 @@ class PublicationService {
     }
   }
 
+  /// Get trending publications (with optional lab filtering)
+  static Future<List<Publication>> getTrendingPublications({String? labId}) async {
+    try {
+      String endpoint = '/publications/trending/';
+      if (labId != null) {
+        endpoint += '?lab=$labId';
+      }
+
+      final response = await ApiService.get(endpoint);
+      if (response is List) {
+        return response.map((json) => Publication.fromJson(json)).toList();
+      } else if (response is Map && response.containsKey('results')) {
+        return (response['results'] as List)
+            .map((json) => Publication.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error loading trending publications: $e');
+      return [];
+    }
+  }
+
+  /// Get top-cited publications (with optional lab filtering)
+  static Future<List<Publication>> getTopCitedPublications({String? labId}) async {
+    try {
+      String endpoint = '/publications/top-cited/';
+      if (labId != null) {
+        endpoint += '?lab=$labId';
+      }
+
+      final response = await ApiService.get(endpoint);
+      if (response is List) {
+        return response.map((json) => Publication.fromJson(json)).toList();
+      } else if (response is Map && response.containsKey('results')) {
+        return (response['results'] as List)
+            .map((json) => Publication.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error loading top-cited publications: $e');
+      return [];
+    }
+  }
+
+  /// Get recent publications (with optional lab filtering)
+  static Future<List<Publication>> getRecentPublications({String? labId}) async {
+    try {
+      String endpoint = '/publications/recent/';
+      if (labId != null) {
+        endpoint += '?lab=$labId';
+      }
+
+      final response = await ApiService.get(endpoint);
+      if (response is List) {
+        return response.map((json) => Publication.fromJson(json)).toList();
+      } else if (response is Map && response.containsKey('results')) {
+        return (response['results'] as List)
+            .map((json) => Publication.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      print('Error loading recent publications: $e');
+      return [];
+    }
+  }
+
+  /// Get publication statistics (with optional lab filtering)
+  static Future<Map<String, dynamic>?> getPublicationStatistics({String? labId}) async {
+    try {
+      String endpoint = '/publications/statistics/';
+      if (labId != null) {
+        endpoint += '?lab=$labId';
+      }
+
+      final response = await ApiService.get(endpoint);
+      return response as Map<String, dynamic>?;
+    } catch (e) {
+      print('Error loading publication statistics: $e');
+      return null;
+    }
+  }
+
   /// Get filtered publications
   static Future<List<Publication>> getFilteredPublications({
     String? labId,

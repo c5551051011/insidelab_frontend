@@ -1,7 +1,11 @@
 // presentation/widgets/lab_card.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/models/lab.dart';
+import '../../data/providers/saved_labs_provider.dart';
+import '../../data/providers/data_providers.dart';
+import 'enhanced_bookmark_button.dart';
 import 'rating_stars.dart';
 
 class LabCard extends StatelessWidget {
@@ -39,7 +43,7 @@ class LabCard extends StatelessWidget {
                   ),
                   Flexible(
                     flex: 1,
-                    child: _buildRatingInfo(),
+                    child: _buildRatingInfo(context),
                   ),
                 ],
               ),
@@ -234,7 +238,7 @@ class LabCard extends StatelessWidget {
     );
   }
 
-  Widget _buildRatingInfo() {
+  Widget _buildRatingInfo(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         // Check if we have very limited space
@@ -244,6 +248,12 @@ class LabCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Enhanced bookmark button with interest types
+            EnhancedBookmarkButton(
+              labId: lab.id,
+              size: 24,
+              showDropdown: true,
+            ),
             if (isVerySmall)
               // Stack rating vertically when space is very limited
               Column(
@@ -291,6 +301,7 @@ class LabCard extends StatelessWidget {
       },
     );
   }
+
 
   Widget _buildTags() {
     return Row(

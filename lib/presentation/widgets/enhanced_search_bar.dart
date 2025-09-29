@@ -1,7 +1,9 @@
 // lib/presentation/widgets/enhanced_search_bar.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'dart:async';
 import '../../core/constants/app_colors.dart';
+import '../../data/providers/data_cache_provider.dart';
 import '../../services/search_service.dart';
 
 class EnhancedSearchBar extends StatefulWidget {
@@ -450,6 +452,28 @@ class _EnhancedSearchBarState extends State<EnhancedSearchBar> {
 
     try {
       final suggestions = await SearchService.getSearchSuggestions(query);
+
+      // If no suggestions found, fallback to popular search terms from cache
+      if (suggestions.isEmpty && mounted) {
+        final cacheProvider = context.read<DataCacheProvider>();
+        if (cacheProvider.popularSearchTerms != null) {
+          final fallbackSuggestions = cacheProvider.popularSearchTerms!
+              .where((term) => term.toLowerCase().contains(query.toLowerCase()))
+              .take(5)
+              .toList();
+
+          if (fallbackSuggestions.isNotEmpty && _lastSuggestionQuery == query.trim()) {
+            setState(() {
+              _suggestions = fallbackSuggestions;
+            });
+            if (_showSuggestions) {
+              _showOverlay();
+            }
+            return;
+          }
+        }
+      }
+
       if (mounted && _lastSuggestionQuery == query.trim()) {
         setState(() {
           _suggestions = suggestions;

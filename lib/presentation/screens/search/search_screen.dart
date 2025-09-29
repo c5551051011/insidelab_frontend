@@ -1,8 +1,11 @@
 // presentation/screens/search/search_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/models/lab.dart';
+import '../../../data/providers/data_cache_provider.dart';
+import '../../../data/providers/saved_labs_provider.dart';
 import '../../../services/search_service.dart';
 import '../../widgets/lab_card.dart';
 import '../../widgets/enhanced_search_bar.dart';
@@ -36,8 +39,27 @@ class _SearchScreenState extends State<SearchScreen> {
   void initState() {
     super.initState();
     _currentQuery = widget.initialQuery ?? '';
-    // Always perform search - if query is empty, it will show all labs
-    _performSearch();
+
+    // Check if we have cached data first
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cacheProvider = context.read<DataCacheProvider>();
+      final savedLabsProvider = context.read<SavedLabsProvider>();
+
+      // Load saved lab IDs for proper save button states
+      savedLabsProvider.loadSavedLabIds();
+
+      if (_currentQuery.isEmpty && cacheProvider.hasPopularLabs) {
+        // Use cached popular labs for initial display
+        setState(() {
+          _searchResults = cacheProvider.getInitialSearchResults();
+          _totalCount = _searchResults.length;
+          _isLoading = false;
+        });
+      } else {
+        // Perform actual search
+        _performSearch();
+      }
+    });
   }
 
   @override

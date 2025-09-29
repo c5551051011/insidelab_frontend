@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/providers/data_providers.dart';
+import '../../../data/providers/data_cache_provider.dart';
 import '../../widgets/common/header_navigation.dart';
 import '../../widgets/common/footer.dart';
 import '../../widgets/common/role_switcher.dart';
@@ -20,6 +21,15 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Start preloading data as soon as the home screen loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<DataCacheProvider>().preloadEssentialData();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
