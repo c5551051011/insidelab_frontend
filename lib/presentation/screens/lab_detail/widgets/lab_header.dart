@@ -23,8 +23,9 @@ class LabHeader extends StatelessWidget {
         gradient: AppColors.primaryGradient,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             Flexible(
@@ -91,8 +92,8 @@ class LabHeader extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
+                          spacing: 10,
+                          runSpacing: 6,
                           children: lab.researchAreas.take(4).map((area) {
                             return Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -117,7 +118,7 @@ class LabHeader extends StatelessWidget {
                                 area,
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 10,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.3,
                                 ),
@@ -169,7 +170,7 @@ class LabHeader extends StatelessWidget {
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.w600,
-                              fontSize: 10,
+                              fontSize: 12,
                             ),
                           ),
                         ),
