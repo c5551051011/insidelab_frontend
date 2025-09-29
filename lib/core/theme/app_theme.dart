@@ -1,6 +1,5 @@
 // core/theme/app_theme.dart
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 
 class AppTheme {
@@ -31,96 +30,111 @@ class AppTheme {
       fontFamily: 'Inter',
       useMaterial3: true,
 
-      // Enhanced Text Theme with better typography using GoogleFonts
-      textTheme: TextTheme(
-        displayLarge: GoogleFonts.poppins(
+      // Enhanced Text Theme with Inter font from assets
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 57,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.25,
           color: AppColors.textPrimary,
         ),
-        displayMedium: GoogleFonts.poppins(
+        displayMedium: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 45,
           fontWeight: FontWeight.w600,
           letterSpacing: 0,
           color: AppColors.textPrimary,
         ),
-        displaySmall: GoogleFonts.poppins(
+        displaySmall: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 36,
           fontWeight: FontWeight.w600,
           letterSpacing: 0,
           color: AppColors.textPrimary,
         ),
-        headlineLarge: GoogleFonts.poppins(
+        headlineLarge: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 32,
           fontWeight: FontWeight.w600,
           letterSpacing: 0,
           color: AppColors.textPrimary,
         ),
-        headlineMedium: GoogleFonts.poppins(
+        headlineMedium: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 28,
           fontWeight: FontWeight.w600,
           letterSpacing: 0,
           color: AppColors.textPrimary,
         ),
-        headlineSmall: GoogleFonts.poppins(
+        headlineSmall: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 24,
           fontWeight: FontWeight.w600,
           letterSpacing: 0,
           color: AppColors.textPrimary,
         ),
-        titleLarge: GoogleFonts.inter(
+        titleLarge: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 22,
           fontWeight: FontWeight.w600,
           letterSpacing: 0,
           color: AppColors.textPrimary,
         ),
-        titleMedium: GoogleFonts.inter(
+        titleMedium: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 16,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.15,
           color: AppColors.textPrimary,
         ),
-        titleSmall: GoogleFonts.inter(
+        titleSmall: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 14,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.1,
           color: AppColors.textPrimary,
         ),
-        bodyLarge: GoogleFonts.inter(
+        bodyLarge: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 16,
           fontWeight: FontWeight.w400,
           letterSpacing: 0.15,
           color: AppColors.textPrimary,
           height: 1.5,
         ),
-        bodyMedium: GoogleFonts.inter(
+        bodyMedium: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 14,
           fontWeight: FontWeight.w400,
           letterSpacing: 0.25,
           color: AppColors.textSecondary,
           height: 1.43,
         ),
-        bodySmall: GoogleFonts.inter(
+        bodySmall: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 12,
           fontWeight: FontWeight.w400,
           letterSpacing: 0.4,
           color: AppColors.textSecondary,
           height: 1.33,
         ),
-        labelLarge: GoogleFonts.inter(
+        labelLarge: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 14,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.1,
           color: AppColors.textPrimary,
         ),
-        labelMedium: GoogleFonts.inter(
+        labelMedium: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 12,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.5,
           color: AppColors.textSecondary,
         ),
-        labelSmall: GoogleFonts.inter(
+        labelSmall: TextStyle(
+          fontFamily: 'Inter',
           fontSize: 11,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.5,
@@ -148,6 +162,7 @@ class AppTheme {
         centerTitle: false,
         iconTheme: IconThemeData(color: AppColors.textPrimary),
         titleTextStyle: TextStyle(
+          fontFamily: 'Inter',
           color: AppColors.textPrimary,
           fontSize: 20,
           fontWeight: FontWeight.w600,
@@ -192,6 +207,7 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.primaryLight.withOpacity(0.1),
         labelStyle: const TextStyle(
+          fontFamily: 'Inter',
           color: AppColors.primary,
           fontSize: 12,
           fontWeight: FontWeight.w500,
