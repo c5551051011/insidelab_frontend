@@ -9,7 +9,6 @@ import 'widgets/rating_breakdown.dart';
 import 'widgets/reviews_list.dart';
 import 'widgets/publications_widget.dart';
 import 'widgets/lab_information_widget.dart';
-import 'widgets/recruitment_status_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LabDetailScreen extends StatefulWidget {
@@ -122,8 +121,6 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
                     children: [
                       LabInformationWidget(lab: widget.lab),
                       const SizedBox(height: 24),
-                      RecruitmentStatusWidget(lab: widget.lab),
-                      const SizedBox(height: 24),
                       PublicationsWidget(labId: widget.lab.id),
                     ],
                   ),
@@ -149,8 +146,6 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
             return Column(
               children: [
                 LabInformationWidget(lab: widget.lab),
-                const SizedBox(height: 24),
-                RecruitmentStatusWidget(lab: widget.lab),
                 const SizedBox(height: 24),
                 PublicationsWidget(labId: widget.lab.id),
                 const SizedBox(height: 24),
@@ -301,201 +296,6 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
     );
   }
 
-  Widget _buildResearchTopics() {
-    if (widget.lab.researchTopics == null || widget.lab.researchTopics!.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Research Topics',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...widget.lab.researchTopics!.map((topic) => _buildResearchTopic(topic)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildResearchTopic(ResearchTopic topic) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            topic.title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            topic.description,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: topic.keywords.map((keyword) {
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryLight.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  keyword,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.secondary,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          if (topic.fundingInfo != null) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(
-                  Icons.monetization_on_outlined,
-                  size: 16,
-                  color: AppColors.success,
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    topic.fundingInfo!,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.success,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecentPublications() {
-    if (widget.lab.recentPublications == null || widget.lab.recentPublications!.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Recent Publications',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...widget.lab.recentPublications!.take(5).map((pub) => _buildPublication(pub)),
-            if (widget.lab.website != null) ...[
-              const SizedBox(height: 16),
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    // TODO: Open lab website
-                  },
-                  child: const Text('View All Publications →'),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPublication(Publication pub) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            pub.title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            pub.authors.join(', '),
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Text(
-                '${pub.venue} ${pub.year}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                  color: AppColors.textTertiary,
-                ),
-              ),
-              if (pub.citations != null) ...[
-                const SizedBox(width: 16),
-                Icon(
-                  Icons.format_quote,
-                  size: 14,
-                  color: AppColors.textTertiary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${pub.citations} citations',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
