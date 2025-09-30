@@ -12,6 +12,7 @@ import '../../widgets/sections/trusted_metrics_section.dart';
 import '../../widgets/sections/services_section.dart';
 import '../../widgets/sections/testimonials_section.dart';
 import '../../widgets/sections/cta_section.dart';
+import '../../widgets/floating_feedback_button.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -34,17 +35,22 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const HeaderNavigation(),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const HeroSection(),
-            const TrustedMetricsSection(),
-            const ServicesSection(),
-            const TestimonialsSection(),
-            const CtaSection(),
-            const Footer(),
-          ],
-        ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                const HeroSection(),
+                const TrustedMetricsSection(),
+                const ServicesSection(),
+                const TestimonialsSection(),
+                const CtaSection(),
+                const Footer(),
+              ],
+            ),
+          ),
+          const FloatingFeedbackButton(),
+        ],
       ),
     );
   }

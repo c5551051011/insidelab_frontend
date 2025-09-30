@@ -156,14 +156,17 @@ class ReviewCard extends StatelessWidget {
   Widget _buildFooter(BuildContext context) {
     return Row(
       children: [
-        ReviewHelpfulWidget(
-          review: review,
-          onReviewUpdated: (updatedReview) {
-            // The parent widget should handle the review update
-            // This could be expanded to notify parent widgets if needed
-          },
+        Flexible(
+          flex: 3,
+          child: ReviewHelpfulWidget(
+            review: review,
+            onReviewUpdated: (updatedReview) {
+              // The parent widget should handle the review update
+              // This could be expanded to notify parent widgets if needed
+            },
+          ),
         ),
-        const Spacer(),
+        const SizedBox(width: 8),
         TextButton.icon(
           onPressed: () {
             // TODO: Implement report

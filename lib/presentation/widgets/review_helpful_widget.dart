@@ -53,84 +53,100 @@ class _ReviewHelpfulWidgetState extends State<ReviewHelpfulWidget> {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppColors.border),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Helpful count display
-              Row(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Check available space and adapt accordingly
+              final hasLimitedSpace = constraints.maxWidth < 300;
+
+              return Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.thumb_up_outlined,
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$helpfulCount',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    helpfulCount == 1 ? 'helpful' : 'helpful',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(width: 16),
-
-              // Voting buttons
-              if (isAuthenticated) ...[
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Was this helpful?',
-                      style: TextStyle(
-                        fontSize: 13,
+                  // Helpful count display
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.thumb_up_outlined,
+                        size: 16,
                         color: AppColors.textSecondary,
                       ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '$helpfulCount',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      if (!hasLimitedSpace) ...[
+                        const SizedBox(width: 4),
+                        Text(
+                          'helpful',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+
+                  SizedBox(width: hasLimitedSpace ? 8 : 16),
+
+                  // Voting buttons
+                  if (isAuthenticated) ...[
+                    Flexible(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!hasLimitedSpace) ...[
+                            Text(
+                              'Was this helpful?',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+
+                          // Yes button
+                          _buildVoteButton(
+                            icon: Icons.thumb_up,
+                            label: hasLimitedSpace ? '' : 'Yes',
+                            isSelected: userVote == true,
+                            onPressed: _isVoting ? null : () => _handleVote(true),
+                          ),
+
+                          const SizedBox(width: 4),
+
+                          // No button
+                          _buildVoteButton(
+                            icon: Icons.thumb_down,
+                            label: hasLimitedSpace ? '' : 'No',
+                            isSelected: userVote == false,
+                            onPressed: _isVoting ? null : () => _handleVote(false),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 8),
-
-                    // Yes button
-                    _buildVoteButton(
-                      icon: Icons.thumb_up,
-                      label: 'Yes',
-                      isSelected: userVote == true,
-                      onPressed: _isVoting ? null : () => _handleVote(true),
-                    ),
-
-                    const SizedBox(width: 4),
-
-                    // No button
-                    _buildVoteButton(
-                      icon: Icons.thumb_down,
-                      label: 'No',
-                      isSelected: userVote == false,
-                      onPressed: _isVoting ? null : () => _handleVote(false),
+                  ] else ...[
+                    Flexible(
+                      child: Text(
+                        'Sign in to vote',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textTertiary,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
-                ),
-              ] else ...[
-                Text(
-                  'Sign in to vote',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textTertiary,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ],
+                ],
+              );
+            },
           ),
         );
       },
@@ -164,15 +180,17 @@ class _ReviewHelpfulWidgetState extends State<ReviewHelpfulWidget> {
               size: 14,
               color: isSelected ? AppColors.primary : AppColors.textSecondary,
             ),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            if (label.isNotEmpty) ...[
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),

@@ -8,6 +8,7 @@ import '../../../data/providers/data_providers.dart';
 import '../../widgets/common/header_navigation.dart';
 import '../../widgets/common/loading_state.dart';
 import '../../widgets/review_card.dart';
+import '../../widgets/floating_feedback_button.dart';
 import 'widgets/review_filters.dart';
 import 'widgets/review_stats.dart';
 
@@ -82,22 +83,27 @@ class _ReviewsBrowseScreenState extends State<ReviewsBrowseScreen> with SingleTi
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const HeaderNavigation(),
-      body: Column(
+      body: Stack(
         children: [
-          _buildHeader(context),
-          _buildStatsSection(),
-          _buildTabBar(),
-          if (_showFilters) _buildFiltersPanel(),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildReviewsList(context, 'all'),
-                _buildReviewsList(context, 'recent'),
-                _buildReviewsList(context, 'top_rated'),
-              ],
-            ),
+          Column(
+            children: [
+              _buildHeader(context),
+              _buildStatsSection(),
+              _buildTabBar(),
+              if (_showFilters) _buildFiltersPanel(),
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildReviewsList(context, 'all'),
+                    _buildReviewsList(context, 'recent'),
+                    _buildReviewsList(context, 'top_rated'),
+                  ],
+                ),
+              ),
+            ],
           ),
+          const FloatingFeedbackButton(bottomOffset: 90),
         ],
       ),
       floatingActionButton: Consumer<AuthProvider>(

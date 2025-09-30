@@ -7,6 +7,7 @@ class Lab {
   final String universityName;
   final String universityId;
   final String department;
+  final String? departmentId;
   final String? researchGroupName;
   final String? researchGroupId;
   final double overallRating;
@@ -29,6 +30,7 @@ class Lab {
     required this.universityName,
     required this.universityId,
     required this.department,
+    this.departmentId,
     this.researchGroupName,
     this.researchGroupId,
     required this.overallRating,
@@ -52,7 +54,8 @@ class Lab {
       professorId: json['professor_id']?.toString() ?? json['professor']?.toString() ?? '',
       universityName: json['university_name'] ?? json['university']?['name'] ?? '',
       universityId: json['university_id']?.toString() ?? json['university']?.toString() ?? '',
-      department: json['department'] ?? '',
+      department: json['department'] ?? json['department_name'] ?? json['department_local_name'] ?? '',
+      departmentId: json['department_id']?.toString() ?? json['university_department']?['id']?.toString(),
       researchGroupName: json['research_group_name'] ?? json['research_group']?['name'],
       researchGroupId: json['research_group_id']?.toString() ?? json['research_group']?['id']?.toString(),
       overallRating: double.tryParse(json['overall_rating']?.toString() ?? '0') ?? 0.0,
@@ -92,6 +95,7 @@ class Lab {
       'university_name': universityName,
       'university_id': universityId,
       'department': department,
+      'department_id': departmentId,
       'research_group_name': researchGroupName,
       'research_group_id': researchGroupId,
       'overall_rating': overallRating,

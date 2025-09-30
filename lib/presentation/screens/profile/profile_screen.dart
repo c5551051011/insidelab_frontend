@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../data/providers/data_providers.dart';
-import '../../../data/providers/saved_labs_provider.dart';
 import '../../../data/models/saved_lab.dart';
 import '../../widgets/common/header_navigation.dart';
+import '../../widgets/lab_interests_widget.dart';
+import '../../widgets/floating_feedback_button.dart';
+import '../../../services/university_email_verification_service.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -14,38 +15,45 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const HeaderNavigation(),
-      body: Consumer<AuthProvider>(
-        builder: (context, authProvider, child) {
-          final user = authProvider.currentUser;
-          
-          if (user == null) {
-            return const Center(
-              child: Text('Please sign in to view your profile'),
-            );
-          }
+      body: Stack(
+        children: [
+          Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              final user = authProvider.currentUser;
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildProfileHeader(user),
-                const SizedBox(height: 32),
-                _buildProfileStats(user),
-                const SizedBox(height: 32),
-                _buildAcademicProfile(user),
-                const SizedBox(height: 32),
-                _buildResearchInterests(user),
-                const SizedBox(height: 32),
-                _buildSavedLabs(context),
-                const SizedBox(height: 32),
-                _buildAccountInfo(user),
-                const SizedBox(height: 32),
-                _buildActions(context),
-              ],
-            ),
-          );
-        },
+              if (user == null) {
+                return const Center(
+                  child: Text('Please sign in to view your profile'),
+                );
+              }
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildProfileHeader(user),
+                    const SizedBox(height: 32),
+                    _buildProfileStats(user),
+                    const SizedBox(height: 32),
+                    _buildAcademicProfile(user),
+                    const SizedBox(height: 32),
+                    _buildResearchInterests(context, user),
+                    const SizedBox(height: 32),
+                    const LabInterestsWidget(),
+                    const SizedBox(height: 32),
+                    _buildAccountInfo(user),
+                    const SizedBox(height: 32),
+                    _buildVerificationStatus(context, user),
+                    const SizedBox(height: 32),
+                    _buildActions(context),
+                  ],
+                ),
+              );
+            },
+          ),
+          const FloatingFeedbackButton(),
+        ],
       ),
     );
   }
@@ -248,7 +256,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildResearchInterests(user) {
+  Widget _buildResearchInterests(BuildContext context, user) {
     final hasResearchData = user.researchArea != null ||
                            user.specialties.isNotEmpty ||
                            user.publications.isNotEmpty;
@@ -275,27 +283,32 @@ class ProfileScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.add, color: AppColors.primary, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Add your research interests to help others find you',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 14,
+              InkWell(
+                onTap: () => _showEditResearchInterestsDialog(context, user),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.add, color: AppColors.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Add your research interests to help others find you',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                      Icon(Icons.arrow_forward_ios, color: AppColors.primary, size: 16),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -311,16 +324,26 @@ class ProfileScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(Icons.science, color: AppColors.primary),
-                const SizedBox(width: 8),
-                Text(
-                  'Research Interests',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
+                Row(
+                  children: [
+                    Icon(Icons.science, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Research Interests',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+                IconButton(
+                  onPressed: () => _showEditResearchInterestsDialog(context, user),
+                  icon: const Icon(Icons.edit, size: 20),
+                  tooltip: 'Edit Research Interests',
                 ),
               ],
             ),
@@ -438,299 +461,163 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSavedLabs(BuildContext context) {
-    return Consumer<SavedLabsProvider>(
-      builder: (context, savedLabsProvider, child) {
-        // Load saved labs if not already loaded
-        if (!savedLabsProvider.hasLoadedSavedIds) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            savedLabsProvider.loadSavedLabs();
-          });
-        }
 
-        final savedLabs = savedLabsProvider.savedLabs;
-        final isLoading = savedLabsProvider.isLoading;
 
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.bookmark, color: AppColors.primary),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Saved Labs',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        if (savedLabs.isNotEmpty) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              '${savedLabs.length}',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    if (savedLabs.isNotEmpty)
-                      TextButton(
-                        onPressed: () {
-                          context.go('/profile/saved-labs');
-                        },
-                        child: const Text('View All'),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                if (isLoading)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
-                else if (savedLabs.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.bookmark_border,
-                          size: 48,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'No Saved Labs Yet',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Start bookmarking labs you\'re interested in to keep track of them',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            context.go('/search');
-                          },
-                          icon: const Icon(Icons.search, size: 18),
-                          label: const Text('Browse Labs'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  Column(
-                    children: savedLabs.take(3).map((lab) => _buildSavedLabCard(lab, context, savedLabsProvider)).toList(),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+  void _showEditResearchInterestsDialog(BuildContext context, user) {
+    final researchAreaController = TextEditingController(text: user.researchArea ?? '');
+    final specialtiesController = TextEditingController(text: user.specialties.join(', '));
+    final bioController = TextEditingController(text: user.bio ?? '');
 
-  Widget _buildSavedLabCard(lab, BuildContext context, SavedLabsProvider savedLabsProvider) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.white,
-      ),
-      child: InkWell(
-        onTap: () {
-          context.go('/lab/${lab.slug}');
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        lab.name,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${lab.professorName} • ${lab.universityName}',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.star, size: 16, color: AppColors.warning),
-                          const SizedBox(width: 4),
-                          Text(
-                            lab.overallRating.toStringAsFixed(1),
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${lab.reviewCount} reviews',
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                PopupMenuButton<String>(
-                  icon: Icon(Icons.more_vert, size: 18, color: AppColors.textSecondary),
-                  onSelected: (value) {
-                    switch (value) {
-                      case 'view':
-                        context.go('/lab/${lab.slug}');
-                        break;
-                      case 'remove':
-                        _showRemoveLabDialog(context, lab, savedLabsProvider);
-                        break;
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'view',
-                      child: Row(
-                        children: [
-                          Icon(Icons.open_in_new, size: 16),
-                          SizedBox(width: 8),
-                          Text('View Lab'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'remove',
-                      child: Row(
-                        children: [
-                          Icon(Icons.bookmark_remove, size: 16, color: AppColors.error),
-                          SizedBox(width: 8),
-                          Text('Remove', style: TextStyle(color: AppColors.error)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            if (lab.researchAreas.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: lab.researchAreas.take(3).map((area) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    area,
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                )).toList(),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showRemoveLabDialog(BuildContext context, lab, SavedLabsProvider savedLabsProvider) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Remove Saved Lab'),
-        content: Text('Remove "${lab.name}" from your saved labs?'),
+        title: const Text('Edit Research Interests'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Primary Research Area',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: researchAreaController,
+                  decoration: InputDecoration(
+                    hintText: 'e.g., Machine Learning, Bioengineering...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Specialties & Interests',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Separate multiple items with commas',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: specialtiesController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: 'e.g., Deep Learning, Computer Vision, NLP...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Research Bio',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: bioController,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    hintText: 'Tell others about your research interests and goals...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              final success = await savedLabsProvider.unsaveLab(lab.id);
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(success
-                        ? 'Lab removed from saved list'
-                        : 'Failed to remove lab'),
-                    backgroundColor: success ? AppColors.success : AppColors.error,
-                  ),
-                );
-              }
+              await _updateResearchInterests(
+                context,
+                researchAreaController.text.trim(),
+                specialtiesController.text.trim(),
+                bioController.text.trim(),
+              );
             },
-            child: const Text('Remove', style: TextStyle(color: AppColors.error)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+            ),
+            child: const Text('Save Changes', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _updateResearchInterests(
+    BuildContext context,
+    String researchArea,
+    String specialtiesText,
+    String bio,
+  ) async {
+    try {
+      // Parse specialties from comma-separated string
+      final specialties = specialtiesText
+          .split(',')
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+
+      // TODO: Implement API call to update user research interests
+      // This would typically call something like:
+      // await UserService.updateResearchInterests(
+      //   researchArea: researchArea.isEmpty ? null : researchArea,
+      //   specialties: specialties,
+      //   bio: bio.isEmpty ? null : bio,
+      // );
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Research interests updated successfully'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+
+        // TODO: Refresh user data or update provider state
+        // This would typically trigger a reload of the user data
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update research interests: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildAccountInfo(user) {
@@ -794,13 +681,129 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildVerificationStatus(BuildContext context, user) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: user.isVerified
+            ? AppColors.success.withOpacity(0.1)
+            : AppColors.warning.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: user.isVerified
+              ? AppColors.success.withOpacity(0.3)
+              : AppColors.warning.withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                user.isVerified ? Icons.verified : Icons.verified_user_outlined,
+                color: user.isVerified ? AppColors.success : AppColors.warning,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                user.isVerified ? 'Verified Account' : 'Account Verification',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          if (user.isVerified) ...[
+            Row(
+              children: [
+                Icon(Icons.check_circle, color: AppColors.success, size: 16),
+                const SizedBox(width: 8),
+                Text(
+                  'University email verified',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.security, color: AppColors.success, size: 16),
+                const SizedBox(width: 8),
+                Text(
+                  'Enhanced trust and credibility',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            Text(
+              'Verify your university email to increase trust and access exclusive features.',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/get-verified');
+                    },
+                    icon: const Icon(Icons.verified_user, size: 18),
+                    label: const Text('Get Verified'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton(
+                  onPressed: () {
+                    _showVerificationBenefitsDialog(context);
+                  },
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    side: BorderSide(color: AppColors.primary),
+                  ),
+                  child: Text(
+                    'Learn More',
+                    style: TextStyle(color: AppColors.primary),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildActions(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ElevatedButton.icon(
           onPressed: () {
-            context.go('/profile/my-reviews');
+            Navigator.pushNamed(context, '/my-reviews');
           },
           icon: const Icon(Icons.rate_review),
           label: const Text('View My Reviews'),
@@ -877,6 +880,81 @@ class ProfileScreen extends StatelessWidget {
       context: context,
       barrierDismissible: false,
       builder: (context) => EditProfileDialog(),
+    );
+  }
+
+  void _showVerificationBenefitsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.verified_user, color: AppColors.primary, size: 24),
+            const SizedBox(width: 8),
+            const Text('Verification Benefits'),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Get verified to unlock these benefits:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...[
+                'Verified badge on your profile',
+                'Higher trust from other users',
+                'Access to university-specific content',
+                'Priority support and features',
+                'Connect with verified users from your university',
+                'Enhanced credibility for reviews and recommendations',
+              ].map((benefit) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: AppColors.success, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        benefit,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/get-verified');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Get Verified'),
+          ),
+        ],
+      ),
     );
   }
 

@@ -44,7 +44,21 @@ class SavedLabsProvider extends ChangeNotifier {
 
   /// Legacy getter for backward compatibility
   @deprecated
-  List<Lab> get savedLabs => [];
+  List<Lab> get savedLabs {
+    return _labInterests.map((interest) => Lab(
+      id: interest.labId.toString(),
+      name: interest.labName,
+      professorName: interest.labProfessor,
+      professorId: '', // Not available in LabInterest
+      universityName: interest.labUniversity,
+      universityId: '', // Not available in LabInterest
+      department: interest.labDepartment,
+      overallRating: interest.labRating,
+      reviewCount: 0, // Not available in LabInterest
+      researchAreas: [], // Not available in LabInterest
+      tags: [],
+    )).toList();
+  }
 
   @deprecated
   Set<String> get savedLabIds => _interestedLabIds;

@@ -27,6 +27,9 @@ class _PublicationsWidgetState extends State<PublicationsWidget> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFe5e7eb),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
@@ -42,11 +45,12 @@ class _PublicationsWidgetState extends State<PublicationsWidget> {
           children: [
             const Row(
               children: [
-                Text(
+                /*Text(
                   '📚',
                   style: TextStyle(fontSize: 20),
                 ),
                 SizedBox(width: 8),
+                */
                 Text(
                   'Research Publications',
                   style: TextStyle(

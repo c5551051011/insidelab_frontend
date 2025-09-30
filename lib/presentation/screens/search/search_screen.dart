@@ -10,6 +10,7 @@ import '../../../services/search_service.dart';
 import '../../widgets/lab_card.dart';
 import '../../widgets/enhanced_search_bar.dart';
 import '../../widgets/common/header_navigation.dart';
+import '../../widgets/floating_feedback_button.dart';
 import 'widgets/filter_sidebar.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -66,26 +67,31 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const HeaderNavigation(),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth > 1000) {
-            return Row(
-              children: [
-                SizedBox(
-                  width: 300,
-                  child: FilterSidebar(
-                    onFiltersChanged: _onFiltersChanged,
-                  ),
-                ),
-                Expanded(
-                  child: _buildResults(),
-                ),
-              ],
-            );
-          } else {
-            return _buildResults();
-          }
-        },
+      body: Stack(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth > 1000) {
+                return Row(
+                  children: [
+                    SizedBox(
+                      width: 300,
+                      child: FilterSidebar(
+                        onFiltersChanged: _onFiltersChanged,
+                      ),
+                    ),
+                    Expanded(
+                      child: _buildResults(),
+                    ),
+                  ],
+                );
+              } else {
+                return _buildResults();
+              }
+            },
+          ),
+          const FloatingFeedbackButton(),
+        ],
       ),
     );
   }

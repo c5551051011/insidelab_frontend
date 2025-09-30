@@ -4,6 +4,9 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/lab.dart';
 import '../../../widgets/common/card_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../../../services/api_service.dart';
 
 class LabInformationWidget extends StatelessWidget {
   final Lab lab;
@@ -205,96 +208,6 @@ class LabInformationWidget extends StatelessWidget {
     );
   }
 
-  void _showReportIssueDialog(BuildContext context) {
-    final issueController = TextEditingController();
-    final correctionController = TextEditingController();
-    final sourceController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.report_outlined, color: Color(0xFF3b82f6)),
-            const SizedBox(width: 8),
-            const Text('Report Information Issue'),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Help us maintain accurate lab information by reporting any issues you\'ve found.',
-                style: TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: issueController,
-                decoration: const InputDecoration(
-                  labelText: 'What information is incorrect?',
-                  hintText: 'e.g., Website URL is broken, Department is wrong...',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: correctionController,
-                decoration: const InputDecoration(
-                  labelText: 'What should it be? (optional)',
-                  hintText: 'Provide the correct information if you know it',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: sourceController,
-                decoration: const InputDecoration(
-                  labelText: 'Source (optional)',
-                  hintText: 'Where did you find the correct information?',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (issueController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please describe the issue'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Thank you! Your report has been submitted.'),
-                  backgroundColor: Color(0xFF10b981),
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Color(0xFF3b82f6),
-            ),
-            child: const Text('Submit Report'),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildRecruitmentStatusSection() {
     final status = lab.recruitmentStatus!;
@@ -410,5 +323,367 @@ class LabInformationWidget extends StatelessWidget {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     }
+  }
+
+  void _showReportIssueDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => ReportIssueDialog(lab: lab),
+    );
+  }
+}
+
+class ReportIssueDialog extends StatefulWidget {
+  final Lab lab;
+
+  const ReportIssueDialog({
+    Key? key,
+    required this.lab,
+  }) : super(key: key);
+
+  @override
+  State<ReportIssueDialog> createState() => _ReportIssueDialogState();
+}
+
+class _ReportIssueDialogState extends State<ReportIssueDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _messageController = TextEditingController();
+  bool _isSubmitting = false;
+
+  String _selectedIssueType = 'Incorrect Information';
+  final List<String> _issueTypes = [
+    'Incorrect Information',
+    'Outdated Information',
+    'Missing Information',
+    'Website Link Issue',
+    'Contact Information Issue',
+    'Other',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 700),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Icon(
+                  Icons.report_outlined,
+                  color: AppColors.warning,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Report Information Issue',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // Lab Info
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.lab.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${widget.lab.professorName} • ${widget.lab.universityName}',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Issue Type Selection
+                      const Text(
+                        'Issue Type',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: _selectedIssueType,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        items: _issueTypes.map((type) {
+                          return DropdownMenuItem(
+                            value: type,
+                            child: Text(type),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedIssueType = value!;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Email Field
+                      const Text(
+                        'Your Email (Optional)',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          hintText: 'your-email@example.com',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          prefixIcon: const Icon(Icons.email_outlined),
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value != null && value.isNotEmpty) {
+                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value)) {
+                              return 'Please enter a valid email address';
+                            }
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Message Field
+                      const Text(
+                        'Issue Description',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        controller: _messageController,
+                        decoration: InputDecoration(
+                          hintText: 'Please describe the issue with this lab\'s information...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          alignLabelWithHint: true,
+                        ),
+                        maxLines: 5,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please describe the issue';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Help Text
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.info.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.info.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: AppColors.info,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Help us improve lab information accuracy. We will review your report and make necessary updates.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Actions
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: _isSubmitting ? null : () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: _isSubmitting || _messageController.text.trim().isEmpty
+                      ? null
+                      : _submitReport,
+                  icon: _isSubmitting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send, size: 18),
+                  label: Text(_isSubmitting ? 'Sending...' : 'Submit Report'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submitReport() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final labContext = '''
+Lab Information:
+- Lab Name: ${widget.lab.name}
+- Professor: ${widget.lab.professorName}
+- University: ${widget.lab.universityName}
+- Department: ${widget.lab.department}
+${widget.lab.hasResearchGroup ? '- Research Group: ${widget.lab.researchGroupName}' : ''}
+- Lab ID: ${widget.lab.id}
+- Lab URL: ${widget.lab.website ?? 'N/A'}
+''';
+
+      final message = '''
+Issue Type: $_selectedIssueType
+
+Issue Description:
+${_messageController.text.trim()}
+
+$labContext
+''';
+
+      final response = await http.post(
+        Uri.parse('${ApiService.baseUrl}/auth/feedback/'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'email': _emailController.text.trim().isEmpty
+              ? 'anonymous@insidelab.com'
+              : _emailController.text.trim(),
+          'name': _emailController.text.trim().isEmpty
+              ? 'Anonymous User'
+              : 'Lab Information Reporter',
+          'subject': '[Lab Information Issue] ${widget.lab.name}',
+          'message': message,
+        }),
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Thank you for your report! We will review the information and make necessary updates.'),
+              backgroundColor: AppColors.success,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Failed to submit report. Please try again.'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _messageController.dispose();
+    super.dispose();
   }
 }

@@ -131,14 +131,24 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           _selectedUniversityName = lab.universityName;
           _universityController.text = lab.universityName;
 
-          // Set department - we'll need to load the university department
+          // Set department information from API response
           _departmentController.text = lab.department;
 
+          // If we have department_id from API, use it directly
+          if (lab.departmentId != null) {
+            _selectedUniversityDepartmentId = lab.departmentId;
+          }
+
           // Set research group if it exists
-          if (lab.hasResearchGroup) {
+          if (lab.hasResearchGroup && lab.researchGroupId != null) {
             _selectedResearchGroupId = lab.researchGroupId;
             _selectedResearchGroupName = lab.researchGroupName;
             _researchGroupController.text = lab.researchGroupName ?? '';
+          } else {
+            // Clear research group if lab doesn't have one
+            _selectedResearchGroupId = null;
+            _selectedResearchGroupName = null;
+            _researchGroupController.text = '';
           }
 
           // Set lab information
@@ -154,6 +164,9 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
         await _loadLabFormData(lab);
 
         print('Successfully pre-filled form with ${lab.name} information');
+        print('University: ${lab.universityName}');
+        print('Department: ${lab.department} (ID: ${lab.departmentId})');
+        print('Research Group: ${lab.researchGroupName} (ID: ${lab.researchGroupId})');
       }
     } catch (e) {
       print('Error loading lab details for form: $e');
@@ -167,11 +180,15 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
       // Load university departments for the university
       final departmentsFuture = UniversityDepartmentService.getDepartmentsByUniversity(lab.universityId);
 
-      // Load research groups - we need to find the university department ID first
-      final researchGroupsFuture = Future.value(<ResearchGroup>[]);
-
-      // Load all labs for the university
-      final labsFuture = LabService.getLabsByUniversity(lab.universityId);
+      // Load labs based on research group or department
+      Future<List<Lab>> labsFuture;
+      if (lab.hasResearchGroup && lab.researchGroupId != null) {
+        labsFuture = LabService.getLabsByResearchGroup(lab.researchGroupId!);
+      } else if (lab.departmentId != null) {
+        labsFuture = LabService.getLabsByUniversityDepartment(lab.universityId, lab.departmentId!);
+      } else {
+        labsFuture = LabService.getLabsByUniversity(lab.universityId);
+      }
 
       // Wait for all data to load
       final results = await Future.wait([
@@ -184,14 +201,25 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           final departments = results[0] as List<UniversityDepartment>;
 
           // Find the matching department and set it
-          final matchingDept = departments.where((dept) => dept.displayName == lab.department).firstOrNull;
+          UniversityDepartment? matchingDept;
+
+          // First try to match by department ID if available
+          if (lab.departmentId != null) {
+            matchingDept = departments.where((dept) => dept.id == lab.departmentId).firstOrNull;
+          }
+
+          // Fallback to matching by name
+          if (matchingDept == null) {
+            matchingDept = departments.where((dept) =>
+              dept.displayName == lab.department ||
+              dept.departmentName == lab.department
+            ).firstOrNull;
+          }
+
           if (matchingDept != null) {
             _selectedUniversityDepartmentId = matchingDept.id;
             _selectedUniversityDepartment = matchingDept;
           }
-
-          // Research groups will be loaded later when department is selected
-          _filteredResearchGroups = [];
 
           _filteredLabs = results[1] as List<Lab>;
 
@@ -1980,11 +2008,19 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   // Load labs for selected university and department (when no research group is selected)
   Future<void> _loadLabsForDepartment(String universityId, String department) async {
     try {
-      final allLabs = await LabService.getLabsByUniversity(universityId);
-      final departmentLabs = allLabs.where((lab) => lab.department == department).toList();
+      List<Lab> labs;
+
+      // If we have a specific university department ID, use it for more precise filtering
+      if (_selectedUniversityDepartmentId != null) {
+        labs = await LabService.getLabsByUniversityDepartment(universityId, _selectedUniversityDepartmentId!);
+      } else {
+        // Fallback to filtering by department name
+        final allLabs = await LabService.getLabsByUniversity(universityId);
+        labs = allLabs.where((lab) => lab.department == department).toList();
+      }
 
       setState(() {
-        _filteredLabs = departmentLabs;
+        _filteredLabs = labs;
       });
     } catch (e) {
       print('Error loading labs for department: $e');
@@ -1999,16 +2035,21 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   // Load labs for selected research group
   Future<void> _loadLabsForGroup(String groupId) async {
     try {
-      final labs = await ResearchGroupService.getLabsInGroup(groupId);
-      // Convert to Lab objects if needed
+      // Use the new LabService method to get labs by research group
+      final labs = await LabService.getLabsByResearchGroup(groupId);
+
       setState(() {
-        // For now, we'll assume the API returns Lab-compatible data
-        _filteredLabs = labs.map((labData) => Lab.fromJson(labData)).toList();
+        _filteredLabs = labs;
       });
     } catch (e) {
+      print('Error loading labs for research group: $e');
       // Fallback to loading labs by department if group fails
       if (_selectedUniversityId != null && _selectedUniversityDepartment != null) {
         await _loadLabsForDepartment(_selectedUniversityId!, _selectedUniversityDepartment!.displayName);
+      } else {
+        setState(() {
+          _filteredLabs = [];
+        });
       }
     }
   }

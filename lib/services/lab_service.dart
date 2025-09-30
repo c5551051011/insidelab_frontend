@@ -104,6 +104,46 @@ class LabService {
     }
   }
 
+  // Get labs by research group
+  static Future<List<Lab>> getLabsByResearchGroup(String researchGroupId) async {
+    try {
+      final response = await ApiService.get('/labs/?research_group=$researchGroupId');
+
+      List<Lab> labs;
+      if (response is Map && response.containsKey('results')) {
+        labs = (response['results'] as List)
+            .map((json) => Lab.fromJson(json))
+            .toList();
+      } else {
+        labs = (response as List).map((json) => Lab.fromJson(json)).toList();
+      }
+
+      return labs;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  // Get labs by university and department (when no research group is selected)
+  static Future<List<Lab>> getLabsByUniversityDepartment(String universityId, String departmentId) async {
+    try {
+      final response = await ApiService.get('/labs/?university=$universityId&department=$departmentId');
+
+      List<Lab> labs;
+      if (response is Map && response.containsKey('results')) {
+        labs = (response['results'] as List)
+            .map((json) => Lab.fromJson(json))
+            .toList();
+      } else {
+        labs = (response as List).map((json) => Lab.fromJson(json)).toList();
+      }
+
+      return labs;
+    } catch (e) {
+      return [];
+    }
+  }
+
   // Add a new lab (requires authentication)
   static Future<Lab> addLab({
     required String name,

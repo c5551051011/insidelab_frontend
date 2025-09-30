@@ -22,6 +22,7 @@ import '../../presentation/screens/provider/provider_dashboard_screen.dart';
 import '../../presentation/screens/provider/my_services_screen.dart';
 import '../../presentation/screens/provider/booking_management_screen.dart';
 import '../../presentation/screens/provider/earnings_screen.dart';
+import '../../presentation/screens/verification/get_verified_screen.dart';
 import '../../data/models/lab.dart';
 import '../../data/models/review.dart';
 
@@ -49,6 +50,7 @@ class AppRouter {
   static const String myServices = '/my-services';
   static const String bookingManagement = '/booking-management';
   static const String earnings = '/earnings';
+  static const String getVerified = '/get-verified';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -170,6 +172,11 @@ class AppRouter {
       case earnings:
         return MaterialPageRoute(
           builder: (_) => const EarningsScreen(),
+        );
+
+      case getVerified:
+        return MaterialPageRoute(
+          builder: (_) => const GetVerifiedScreen(),
         );
 
       case sopEditing:

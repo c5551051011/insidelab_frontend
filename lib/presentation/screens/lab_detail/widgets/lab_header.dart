@@ -74,7 +74,7 @@ class LabHeader extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 1),
+                        const SizedBox(height: 0),
                         Text(
                           lab.name,
                           style: const TextStyle(
@@ -94,13 +94,15 @@ class LabHeader extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 10,
-                          runSpacing: 6,
-                          children: lab.researchAreas.take(4).map((area) {
+                        const SizedBox(height: 4),
+                        Flexible(
+                          child: SingleChildScrollView(
+                            child: Wrap(
+                              spacing: 6,
+                              runSpacing: 3,
+                              children: lab.researchAreas.take(2).map((area) {
                             return Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
@@ -122,13 +124,15 @@ class LabHeader extends StatelessWidget {
                                 area,
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.3,
+                                  letterSpacing: 0.2,
                                 ),
                               ),
                             );
                           }).toList(),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -153,10 +157,10 @@ class LabHeader extends StatelessWidget {
                           '${lab.reviewCount} reviews',
                           style: const TextStyle(
                             color: Colors.white70,
-                            fontSize: 9,
+                            fontSize: 13,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 20),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
