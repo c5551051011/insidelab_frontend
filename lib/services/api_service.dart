@@ -78,21 +78,30 @@ class ApiService {
   // Generic HTTP methods
   static Future<dynamic> get(String endpoint, {bool requireAuth = false}) async {
     try {
+      final fullUrl = '$baseUrl$endpoint';
+      print('ApiService GET: $fullUrl');
+
       final response = await http.get(
-        Uri.parse('$baseUrl$endpoint'),
+        Uri.parse(fullUrl),
         headers: await _getHeaders(requireAuth: requireAuth),
       );
+
+      print('ApiService GET Response: ${response.statusCode}');
+      if (response.statusCode != 200) {
+        print('ApiService GET Response Body: ${response.body}');
+      }
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else if (response.statusCode == 404) {
-        throw UnsupportedEndpointException(endpoint, 'Endpoint not found');
+        throw UnsupportedEndpointException(endpoint, 'Endpoint not found - ${response.body}');
       } else if (response.statusCode == 405) {
-        throw UnsupportedEndpointException(endpoint, 'Method not allowed');
+        throw UnsupportedEndpointException(endpoint, 'Method not allowed - ${response.body}');
       } else {
         throw ApiException(response.statusCode, response.body);
       }
     } catch (e) {
+      print('ApiService GET Exception: $e');
       if (e is UnsupportedEndpointException || e is ApiException) {
         rethrow;
       }

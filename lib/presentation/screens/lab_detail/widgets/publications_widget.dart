@@ -17,12 +17,172 @@ class PublicationsWidget extends StatefulWidget {
   State<PublicationsWidget> createState() => _PublicationsWidgetState();
 }
 
-class _PublicationsWidgetState extends State<PublicationsWidget> {
+class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticKeepAliveClientMixin {
   String selectedFilter = 'All';
-  final List<String> filters = ['All', 'Top-tier', 'Robotics', 'Control Systems', '2024'];
+  List<String> availableFilters = ['All'];
+  List<Publication> publications = [];
+  PublicationStats? stats;
+  bool isLoading = true;
+  bool isLoadingPublications = false;
+  String? errorMessage;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    await Future.wait([
+      _loadStats(),
+      _loadFilters(),
+      _loadPublications(),
+    ]);
+  }
+
+  Future<void> _loadStats() async {
+    if (!mounted) return;
+
+    try {
+      final loadedStats = await PublicationService.getLabPublicationStats(widget.labId);
+
+      if (mounted) {
+        setState(() {
+          stats = loadedStats;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Failed to load publication stats: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadPublications() async {
+    if (!mounted) return;
+
+    setState(() {
+      isLoadingPublications = true;
+      errorMessage = null;
+    });
+
+    try {
+      List<Publication> loadedPublications;
+
+      // Handle different filter types
+      switch (selectedFilter) {
+        case 'All':
+          loadedPublications = await PublicationService.getLabPublications(
+            widget.labId,
+            ordering: '-citation_count',
+            limit: 6,
+          );
+          break;
+        case 'Top-tier':
+          loadedPublications = await PublicationService.getTopTierPublications(
+            widget.labId,
+            limit: 6,
+          );
+          break;
+        case 'Award Papers':
+          loadedPublications = await PublicationService.getAwardPublications(
+            widget.labId,
+            limit: 6,
+          );
+          break;
+        case 'Open Access':
+          loadedPublications = await PublicationService.getOpenAccessPublications(
+            widget.labId,
+            limit: 6,
+          );
+          break;
+        case 'Recent (3 Years)':
+          loadedPublications = await PublicationService.getRecentPublications(
+            widget.labId,
+            limit: 6,
+          );
+          break;
+        case 'conference':
+        case 'journal':
+        case 'workshop':
+        case 'preprint':
+          loadedPublications = await PublicationService.getLabPublications(
+            widget.labId,
+            venueType: selectedFilter,
+            ordering: '-citation_count',
+            limit: 6,
+          );
+          break;
+        default:
+          // Check if it's a year or research area
+          if (RegExp(r'^\d{4}$').hasMatch(selectedFilter)) {
+            // It's a year
+            loadedPublications = await PublicationService.getLabPublications(
+              widget.labId,
+              year: selectedFilter,
+              ordering: '-citation_count',
+              limit: 6,
+            );
+          } else {
+            // It's likely a research area
+            loadedPublications = await PublicationService.getLabPublications(
+              widget.labId,
+              researchArea: selectedFilter,
+              ordering: '-citation_count',
+              limit: 6,
+            );
+          }
+      }
+
+      if (mounted) {
+        setState(() {
+          publications = loadedPublications;
+          isLoadingPublications = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          errorMessage = 'Failed to load publications: ${e.toString()}';
+          isLoadingPublications = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadFilters() async {
+    try {
+      final allFilters = await PublicationService.getAvailableFilters(widget.labId);
+
+      if (mounted) {
+        setState(() {
+          availableFilters = [
+            'All',
+            'Top-tier',
+            'Award Papers',
+            'Open Access',
+            'Recent (3 Years)',
+            ...allFilters['years']?.where((y) => y != 'All').take(3) ?? [],
+            ...allFilters['venue_types']?.where((vt) => vt != 'All').take(2) ?? [],
+            ...allFilters['research_areas']?.where((a) => a != 'All').take(2) ?? [],
+          ];
+        });
+      }
+    } catch (e) {
+      print('Failed to load filters: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -62,11 +222,48 @@ class _PublicationsWidgetState extends State<PublicationsWidget> {
               ],
             ),
             const SizedBox(height: 20),
-            _buildPublicationStats(),
-            const SizedBox(height: 24),
-            _buildFilters(),
-            const SizedBox(height: 20),
-            _buildPublicationsList(),
+            if (isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(20),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else ...[
+              _buildPublicationStats(),
+              const SizedBox(height: 24),
+              _buildFilters(),
+              const SizedBox(height: 20),
+              if (errorMessage != null)
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.red, size: 48),
+                      const SizedBox(height: 8),
+                      Text(
+                        errorMessage!,
+                        style: TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadPublications,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              else if (isLoadingPublications)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              else
+                _buildPublicationsList(),
+            ],
             const SizedBox(height: 16),
             _buildViewAllButton(),
           ],
@@ -76,6 +273,26 @@ class _PublicationsWidgetState extends State<PublicationsWidget> {
   }
 
   Widget _buildPublicationStats() {
+    if (stats == null) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFf0f9ff), Color(0xFFe0f2fe)],
+          ),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFF0ea5e9)),
+        ),
+        child: const Text(
+          'Publication statistics not available',
+          style: TextStyle(color: Color(0xFF0369a1)),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -89,10 +306,10 @@ class _PublicationsWidgetState extends State<PublicationsWidget> {
       ),
       child: Row(
         children: [
-          Expanded(child: _buildStatItem('2,847', 'Total Citations')),
-          Expanded(child: _buildStatItem('34', 'H-Index')),
-          Expanded(child: _buildStatItem('156', 'Publications')),
-          Expanded(child: _buildStatItem('12', 'This Year')),
+          Expanded(child: _buildStatItem(_formatNumber(stats!.totalCitations), 'Total Citations')),
+          Expanded(child: _buildStatItem(stats!.hIndex.toString(), 'H-Index')),
+          Expanded(child: _buildStatItem(stats!.totalPublications.toString(), 'Publications')),
+          Expanded(child: _buildStatItem(stats!.thisYearPublications.toString(), 'This Year')),
         ],
       ),
     );
@@ -127,13 +344,16 @@ class _PublicationsWidgetState extends State<PublicationsWidget> {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: filters.map((filter) {
+      children: availableFilters.map((filter) {
         final isActive = filter == selectedFilter;
         return GestureDetector(
           onTap: () {
-            setState(() {
-              selectedFilter = filter;
-            });
+            if (mounted) {
+              setState(() {
+                selectedFilter = filter;
+              });
+              _loadPublications();
+            }
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -159,44 +379,63 @@ class _PublicationsWidgetState extends State<PublicationsWidget> {
   }
 
   Widget _buildPublicationsList() {
+    if (publications.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          children: [
+            Icon(
+              Icons.article_outlined,
+              size: 48,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No publications found',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              selectedFilter == 'All'
+                  ? 'This lab has no publications yet.'
+                  : 'No publications found for the selected filter.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
     return Column(
-      children: [
-        _buildPublicationItem(
-          venue: 'ICRA 2024',
-          isTopTier: true,
-          year: '2024',
-          title: 'Haptic-Enabled Robotic Manipulation in Unstructured Environments',
-          authors: ['Sarah Chen', 'Michael Johnson', 'Oussama Khatib'],
-          labAuthors: ['Sarah Chen', 'Oussama Khatib'],
-          citations: 42,
-          githubStars: 234,
-          award: 'Best Paper Award',
-          abstract: 'This paper presents a novel approach for haptic-enabled robotic manipulation in unstructured environments. Our method combines advanced force feedback with real-time visual processing to enable precise object manipulation in complex scenarios...',
-          tags: ['Robotics', 'Haptic Technology', 'Manipulation'],
-          links: {
-            'Paper': '#',
-            'Code': '#',
-            'Video': '#',
-          },
+      children: publications.take(2).map((publication) =>
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: _buildPublicationItemFromModel(publication),
         ),
-        const SizedBox(height: 16),
-        _buildPublicationItem(
-          venue: 'IEEE Robotics',
-          isTopTier: false,
-          year: '2024',
-          title: 'Multi-Robot Coordination for Dynamic Task Allocation',
-          authors: ['Alex Rodriguez', 'Oussama Khatib', 'David Wilson'],
-          labAuthors: ['Alex Rodriguez', 'Oussama Khatib'],
-          citations: 28,
-          githubStars: 156,
-          abstract: 'We propose a distributed algorithm for multi-robot coordination that enables dynamic task allocation in real-time. The approach demonstrates significant improvements in efficiency and adaptability compared to existing methods...',
-          tags: ['Multi-Robot Systems', 'Task Allocation', 'Coordination'],
-          links: {
-            'Paper': '#',
-            'Code': '#',
-          },
-        ),
-      ],
+      ).toList(),
+    );
+  }
+
+  Widget _buildPublicationItemFromModel(Publication publication) {
+    return _buildPublicationItem(
+      venue: publication.venue,
+      isTopTier: publication.isTopTier,
+      year: publication.year,
+      title: publication.title,
+      authors: publication.authors,
+      labAuthors: publication.labAuthors,
+      citations: publication.citationCount,
+      abstract: publication.abstract ?? '',
+      tags: [...publication.researchAreaNames, ...publication.keywords],
+      links: publication.links,
     );
   }
 
@@ -208,8 +447,6 @@ class _PublicationsWidgetState extends State<PublicationsWidget> {
     required List<String> authors,
     required List<String> labAuthors,
     required int citations,
-    int? githubStars,
-    String? award,
     required String abstract,
     required List<String> tags,
     required Map<String, String> links,
@@ -285,8 +522,6 @@ class _PublicationsWidgetState extends State<PublicationsWidget> {
             spacing: 16,
             children: [
               _buildMetric('📈', '$citations citations'),
-              if (githubStars != null) _buildMetric('⭐', '$githubStars GitHub stars'),
-              if (award != null) _buildMetric('🏆', award),
             ],
           ),
           const SizedBox(height: 12),
@@ -364,21 +599,36 @@ class _PublicationsWidgetState extends State<PublicationsWidget> {
   }
 
   Widget _buildViewAllButton() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFf8fafc),
-        border: Border.all(color: const Color(0xFFe5e7eb)),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: const Text(
-        'View All Publications (154 more)',
-        style: TextStyle(
-          color: AppColors.primary,
-          fontWeight: FontWeight.w500,
+    final totalPubs = stats?.totalPublications ?? publications.length;
+    final remainingPubs = totalPubs - publications.take(2).length;
+
+    return GestureDetector(
+      onTap: () {
+        // TODO: Navigate to full publications page
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Full publications page coming soon!'),
+          ),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFf8fafc),
+          border: Border.all(color: const Color(0xFFe5e7eb)),
+          borderRadius: BorderRadius.circular(6),
         ),
-        textAlign: TextAlign.center,
+        child: Text(
+          remainingPubs > 0
+              ? 'View All Publications ($remainingPubs more)'
+              : 'View All Publications',
+          style: const TextStyle(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w500,
+          ),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -400,5 +650,12 @@ class _PublicationsWidgetState extends State<PublicationsWidget> {
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
     }
+  }
+
+  String _formatNumber(int number) {
+    if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(1)}k';
+    }
+    return number.toString();
   }
 }

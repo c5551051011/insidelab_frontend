@@ -59,137 +59,128 @@ class LabHeader extends StatelessWidget {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          lab.professorName,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 0),
-                        Text(
-                          lab.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.white70,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          '${lab.universityName} • ${lab.department}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.white70,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Flexible(
-                          child: SingleChildScrollView(
-                            child: Wrap(
-                              spacing: 6,
-                              runSpacing: 3,
-                              children: lab.researchAreas.take(2).map((area) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.white.withOpacity(0.25),
-                                    Colors.white.withOpacity(0.15),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                area,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.2,
-                                ),
-                              ),
-                            );
-                          }).toList(),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            lab.professorName,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                          Text(
+                            lab.name,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            '${lab.universityName} • ${lab.department}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.white70,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          if (lab.researchAreas.isNotEmpty)
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxHeight: 30),
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: lab.researchAreas.take(1).map((area) {
+                                    return Container(
+                                      margin: const EdgeInsets.only(right: 4),
+                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.white.withOpacity(0.25),
+                                            Colors.white.withOpacity(0.15),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
+                                      ),
+                                      child: Text(
+                                        area,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                   SizedBox(
                     width: 130,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          lab.overallRating.toStringAsFixed(1),
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            lab.overallRating.toStringAsFixed(1),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        RatingStars(rating: lab.overallRating, size: 12),
-                        Text(
-                          '${lab.reviewCount} reviews',
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
+                          RatingStars(rating: lab.overallRating, size: 10),
+                          Text(
+                            '${lab.reviewCount} reviews',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            const SizedBox(width: 8),
-                            // Write Review button
-                            ElevatedButton(
-                              onPressed: () {
-                                AppRoutes.goToWriteReview(context, labId: lab.id);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF10b981),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                minimumSize: const Size(110, 32),
+                          const SizedBox(height: 8),
+                          // Write Review button
+                          ElevatedButton(
+                            onPressed: () {
+                              AppRoutes.goToWriteReview(context, labId: lab.id);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF10b981),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
                               ),
-                              child: const Text(
-                                'Write Review',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14,
-                                ),
+                              minimumSize: const Size(100, 28),
+                            ),
+                            child: const Text(
+                              'Write Review',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
                               ),
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),

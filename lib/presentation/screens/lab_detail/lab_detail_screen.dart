@@ -26,10 +26,16 @@ class LabDetailScreen extends StatefulWidget {
 class _LabDetailScreenState extends State<LabDetailScreen> {
   Map<String, double>? _ratingBreakdown;
   bool _isLoadingRatings = true;
+  late final Widget _publicationsWidget;
+  final GlobalKey _publicationsKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
+    _publicationsWidget = PublicationsWidget(
+      key: _publicationsKey,
+      labId: widget.lab.id,
+    );
     _loadRatingBreakdown();
   }
 
@@ -121,7 +127,7 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
                     children: [
                       LabInformationWidget(lab: widget.lab),
                       const SizedBox(height: 24),
-                      PublicationsWidget(labId: widget.lab.id),
+                      _publicationsWidget,
                     ],
                   ),
                 ),
@@ -147,7 +153,7 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
               children: [
                 LabInformationWidget(lab: widget.lab),
                 const SizedBox(height: 24),
-                PublicationsWidget(labId: widget.lab.id),
+                _publicationsWidget,
                 const SizedBox(height: 24),
                 // Always show rating breakdown with sample data if real data is not available
                 _isLoadingRatings
