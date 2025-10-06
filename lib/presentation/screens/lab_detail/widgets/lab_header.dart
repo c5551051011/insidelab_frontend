@@ -68,33 +68,35 @@ class LabHeader extends StatelessWidget {
                           Text(
                             lab.professorName,
                             style: const TextStyle(
-                              fontSize: 20,
+                              fontSize: 22,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          const SizedBox(height: 4),
                           Text(
                             lab.name,
                             style: const TextStyle(
-                              fontSize: 14,
+                              fontSize: 16,
                               color: Colors.white70,
                               fontWeight: FontWeight.w500,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          const SizedBox(height: 2),
                           Text(
                             '${lab.universityName} • ${lab.department}',
                             style: const TextStyle(
-                              fontSize: 12,
+                              fontSize: 13,
                               color: Colors.white70,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 4),
                           if (lab.researchAreas.isNotEmpty)
                             ConstrainedBox(
                               constraints: const BoxConstraints(maxHeight: 30),
@@ -143,20 +145,22 @@ class LabHeader extends StatelessWidget {
                           Text(
                             lab.overallRating.toStringAsFixed(1),
                             style: const TextStyle(
-                              fontSize: 20,
+                              fontSize: 24,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
                             ),
                           ),
-                          RatingStars(rating: lab.overallRating, size: 10),
+                          const SizedBox(height: 4),
+                          RatingStars(rating: lab.overallRating, size: 12),
+                          const SizedBox(height: 4),
                           Text(
                             '${lab.reviewCount} reviews',
                             style: const TextStyle(
                               color: Colors.white70,
-                              fontSize: 11,
+                              fontSize: 13,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 16),
                           // Write Review button
                           ElevatedButton(
                             onPressed: () {
@@ -164,18 +168,18 @@ class LabHeader extends StatelessWidget {
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF10b981),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                              minimumSize: const Size(100, 28),
+                              minimumSize: const Size(110, 32),
                             ),
                             child: const Text(
                               'Write Review',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
-                                fontSize: 12,
+                                fontSize: 14,
                               ),
                             ),
                           ),

@@ -79,20 +79,23 @@ class ResearchGroupService {
   static Future<ResearchGroup> createResearchGroup({
     required String name,
     required String description,
-    required String universityId,
-    required String department,
+    required String universityDepartmentId,
     List<String>? researchAreas,
     String? website,
+    String? headProfessorId,
   }) async {
     try {
       final groupData = {
         'name': name,
         'description': description,
-        'university_id': int.parse(universityId),
-        'department': department,
+        'university_department': int.parse(universityDepartmentId),
         if (researchAreas != null) 'research_areas': researchAreas,
         if (website != null) 'website': website,
+        if (headProfessorId != null) 'head_professor': int.parse(headProfessorId),
       };
+
+      print('DEBUG: Creating research group with data: $groupData');
+      print('DEBUG: university_department ID: ${int.parse(universityDepartmentId)}');
 
       final response = await ApiService.post(
         '/universities/research-groups/',

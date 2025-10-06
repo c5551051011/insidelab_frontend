@@ -66,6 +66,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   void initState() {
     super.initState();
     _selectedLabId = widget.labId;
+    print('DEBUG WriteReviewScreen: initState called with labId: ${widget.labId}');
     _checkAuthenticationStatus();
   }
 
@@ -82,8 +83,12 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           });
           _loadRatingCategories();
           // Auto-populate form if labId is provided
+          print('DEBUG WriteReviewScreen: Checking if labId is provided: ${widget.labId}');
           if (widget.labId != null) {
+            print('DEBUG WriteReviewScreen: Starting auto-populate for labId: ${widget.labId}');
             _loadAndPopulateLabDetails(widget.labId!);
+          } else {
+            print('DEBUG WriteReviewScreen: No labId provided, skipping auto-populate');
           }
         }
         return;
@@ -106,8 +111,12 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
           });
           _loadRatingCategories();
           // Auto-populate form if labId is provided
+          print('DEBUG WriteReviewScreen: Checking if labId is provided: ${widget.labId}');
           if (widget.labId != null) {
+            print('DEBUG WriteReviewScreen: Starting auto-populate for labId: ${widget.labId}');
             _loadAndPopulateLabDetails(widget.labId!);
+          } else {
+            print('DEBUG WriteReviewScreen: No labId provided, skipping auto-populate');
           }
         }
       } catch (error) {
@@ -122,8 +131,11 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
 
   // Load lab details and auto-populate form fields
   Future<void> _loadAndPopulateLabDetails(String labId) async {
+    print('DEBUG _loadAndPopulateLabDetails: Starting with labId: $labId');
     try {
+      print('DEBUG _loadAndPopulateLabDetails: Calling LabService.getLabById($labId)');
       final lab = await LabService.getLabById(labId);
+      print('DEBUG _loadAndPopulateLabDetails: Got lab: ${lab.name} (${lab.id})');
       if (mounted) {
         setState(() {
           // Set university information
@@ -177,24 +189,38 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   // Load all related form data based on lab information
   Future<void> _loadLabFormData(Lab lab) async {
     try {
-      // Load university departments for the university
+      // Load all data in parallel (병렬적으로)
       final departmentsFuture = UniversityDepartmentService.getDepartmentsByUniversity(lab.universityId);
+
+      // Load research groups in parallel if we have department ID
+      Future<List<ResearchGroup>>? researchGroupsFuture;
+      if (lab.departmentId != null) {
+        researchGroupsFuture = ResearchGroupService.getGroupsByUniversityDepartment(lab.departmentId!);
+        print('DEBUG: Loading research groups in parallel for department ${lab.departmentId}');
+      }
 
       // Load labs based on research group or department
       Future<List<Lab>> labsFuture;
+      print ('[TEST] lab has research group ? ${lab.hasResearchGroup} / if then what is the id ? ${lab.researchGroupId}');
       if (lab.hasResearchGroup && lab.researchGroupId != null) {
         labsFuture = LabService.getLabsByResearchGroup(lab.researchGroupId!);
+        print ('[TEST] 1 : lab future: ${labsFuture}');
       } else if (lab.departmentId != null) {
         labsFuture = LabService.getLabsByUniversityDepartment(lab.universityId, lab.departmentId!);
+        print ('[TEST] 2 : departmet (${lab.departmentId}) / university (${lab.universityId}) / lab future: ${labsFuture}');
       } else {
         labsFuture = LabService.getLabsByUniversity(lab.universityId);
+        print ('[TEST] 3 : university (${lab.universityId}) / lab future: ${labsFuture}');
       }
 
-      // Wait for all data to load
-      final results = await Future.wait([
+      // Wait for all data to load in parallel
+      final futures = [
         departmentsFuture,
         labsFuture,
-      ]);
+        if (researchGroupsFuture != null) researchGroupsFuture,
+      ];
+
+      final results = await Future.wait(futures);
 
       if (mounted) {
         setState(() {
@@ -223,8 +249,26 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
 
           _filteredLabs = results[1] as List<Lab>;
 
-          // Load research groups for the department after university departments are loaded
-          if (_selectedUniversityDepartmentId != null) {
+          // Handle research groups if they were loaded in parallel
+          if (researchGroupsFuture != null && results.length > 2) {
+            final researchGroups = results[2] as List<ResearchGroup>;
+            _filteredResearchGroups = researchGroups;
+            print('DEBUG: Loaded ${researchGroups.length} research groups in parallel');
+
+            // Now safely set the research group selection since we have the data
+            if (lab.hasResearchGroup && lab.researchGroupId != null) {
+              final matchingGroup = researchGroups.where((group) => group.id == lab.researchGroupId).firstOrNull;
+              if (matchingGroup != null) {
+                _selectedResearchGroupId = matchingGroup.id;
+                _selectedResearchGroupName = matchingGroup.name;
+                _researchGroupController.text = matchingGroup.name;
+                print('DEBUG: Set research group to ${matchingGroup.name} (${matchingGroup.id})');
+              } else {
+                print('DEBUG: Research group ${lab.researchGroupId} not found in loaded groups');
+              }
+            }
+          } else if (_selectedUniversityDepartmentId != null) {
+            // Fallback: load research groups separately if parallel loading failed
             _loadResearchGroups(_selectedUniversityDepartmentId!);
           }
         });
@@ -379,10 +423,12 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                             _filteredLabs.clear();
                           });
 
-                          // Load research groups for the selected department ONLY
+                          // Load research groups and labs for the selected department
                           if (_selectedUniversityId != null) {
-                            print('DEBUG: Department changed to ${department.displayName}, loading research groups...');
+                            print('DEBUG: Department changed to ${department.displayName}, loading research groups and labs...');
                             _loadResearchGroups(department.id);
+                            // Also load labs for this department (since no research group is selected yet)
+                            _loadLabsForDepartment(_selectedUniversityId!, department.displayName);
                           }
                         },
                       ),
@@ -543,7 +589,9 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
         ),
         const SizedBox(height: 8),
         _buildStandardDropdown<String>(
-          value: _selectedResearchGroupName,
+          value: _filteredResearchGroups.any((group) => group.id == _selectedResearchGroupId)
+              ? _selectedResearchGroupId
+              : null,
           labelText: 'Research Group',
           hintText: _selectedUniversityDepartment != null
               ? 'Select a research group or add new (optional)'
@@ -555,7 +603,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
               child: Text('No Research Group'),
             ),
             ..._filteredResearchGroups.map((group) => DropdownMenuItem<String>(
-              value: group.name,
+              value: group.id,
               child: Text(
                 group.name,
                 overflow: TextOverflow.ellipsis,
@@ -597,7 +645,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
               }
             } else if (value != null) {
               final selectedGroup = _filteredResearchGroups.firstWhere(
-                (group) => group.name == value,
+                (group) => group.id == value,
                 orElse: () => _filteredResearchGroups.isEmpty
                     ? ResearchGroup(
                         id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
@@ -689,20 +737,51 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
             if (_selectedUniversityId == null) return <Lab>[];
 
             try {
-              // Always fetch labs for the selected university to ensure correct filtering
+              // Use already filtered labs if available, otherwise fetch based on current selection
               List<Lab> labs;
 
-              if (pattern.isEmpty) {
-                // Always fetch fresh labs for the selected university
-                labs = await LabService.getLabsByUniversity(_selectedUniversityId!);
-                print('Fetched ${labs.length} labs for university $_selectedUniversityId');
+              if (_filteredLabs.isNotEmpty || _selectedResearchGroupId != null) {
+                // If we have filtered labs (from research group or department), use those
+                labs = _filteredLabs;
+                print('DEBUG TypeAhead: Using filtered labs (${labs.length} labs)');
+
+                // Filter further by pattern if provided
+                if (pattern.isNotEmpty) {
+                  labs = labs.where((lab) =>
+                    lab.name.toLowerCase().contains(pattern.toLowerCase()) ||
+                    lab.professorName.toLowerCase().contains(pattern.toLowerCase())
+                  ).toList();
+                  print('DEBUG TypeAhead: Filtered to ${labs.length} labs matching "$pattern"');
+                }
               } else {
-                // Search within the university's labs
-                labs = await LabService.searchLabsAdvanced(
-                  query: pattern,
-                  university: _selectedUniversityId!,
-                );
-                print('Found ${labs.length} labs matching "$pattern" in university $_selectedUniversityId');
+                // Fallback: fetch labs by university department if available, otherwise all university labs
+                if (_selectedUniversityDepartmentId != null) {
+                  // Use university department filtering when available
+                  if (pattern.isEmpty) {
+                    labs = await LabService.getLabsByUniversityDepartment(_selectedUniversityId!, _selectedUniversityDepartmentId!);
+                    print('DEBUG TypeAhead: Fetched ${labs.length} labs for university department $_selectedUniversityDepartmentId');
+                  } else {
+                    // For search with pattern, get department labs first then filter
+                    final departmentLabs = await LabService.getLabsByUniversityDepartment(_selectedUniversityId!, _selectedUniversityDepartmentId!);
+                    labs = departmentLabs.where((lab) =>
+                      lab.name.toLowerCase().contains(pattern.toLowerCase()) ||
+                      lab.professorName.toLowerCase().contains(pattern.toLowerCase())
+                    ).toList();
+                    print('DEBUG TypeAhead: Filtered ${departmentLabs.length} department labs to ${labs.length} matching "$pattern"');
+                  }
+                } else {
+                  // Final fallback: all university labs
+                  if (pattern.isEmpty) {
+                    labs = await LabService.getLabsByUniversity(_selectedUniversityId!);
+                    print('DEBUG TypeAhead: Fetched ${labs.length} labs for university $_selectedUniversityId');
+                  } else {
+                    labs = await LabService.searchLabsAdvanced(
+                      query: pattern,
+                      university: _selectedUniversityId!,
+                    );
+                    print('DEBUG TypeAhead: Found ${labs.length} labs matching "$pattern" in university $_selectedUniversityId');
+                  }
+                }
               }
 
               return labs;
@@ -1495,8 +1574,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                     final newGroup = await ResearchGroupService.createResearchGroup(
                       name: groupName!,
                       description: groupDescription ?? '',
-                      universityId: _selectedUniversityId!,
-                      department: _selectedUniversityDepartment!.displayName,
+                      universityDepartmentId: _selectedUniversityDepartment!.id,
                       researchAreas: researchAreas,
                       website: groupWebsite,
                     );
@@ -2035,22 +2113,25 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   // Load labs for selected research group
   Future<void> _loadLabsForGroup(String groupId) async {
     try {
+      print('DEBUG _loadLabsForGroup: Loading labs for research group $groupId');
       // Use the new LabService method to get labs by research group
       final labs = await LabService.getLabsByResearchGroup(groupId);
+      print('DEBUG _loadLabsForGroup: Got ${labs.length} labs from research group $groupId');
 
       setState(() {
         _filteredLabs = labs;
       });
+
+      // No fallback - if research group has no labs, that's a valid state
+      if (labs.isEmpty) {
+        print('DEBUG _loadLabsForGroup: Research group $groupId has no labs - this is valid');
+      }
     } catch (e) {
       print('Error loading labs for research group: $e');
-      // Fallback to loading labs by department if group fails
-      if (_selectedUniversityId != null && _selectedUniversityDepartment != null) {
-        await _loadLabsForDepartment(_selectedUniversityId!, _selectedUniversityDepartment!.displayName);
-      } else {
-        setState(() {
-          _filteredLabs = [];
-        });
-      }
+      // Only fallback on actual API errors, not empty results
+      setState(() {
+        _filteredLabs = [];
+      });
     }
   }
 

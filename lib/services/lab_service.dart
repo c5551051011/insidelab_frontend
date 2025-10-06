@@ -18,8 +18,25 @@ class LabService {
   static Future<Lab> getLabById(String id) async {
     try {
       final response = await ApiService.get('/labs/$id/');
-      return Lab.fromJson(response);
+      print('DEBUG getLabById: Raw response type: ${response.runtimeType}');
+      print('DEBUG getLabById: Raw response: $response');
+
+      if (response is List) {
+        print('DEBUG getLabById: Response is a List with ${response.length} items');
+        if (response.isEmpty) {
+          throw Exception('Lab with ID $id not found (empty response)');
+        }
+        // If it's a list, take the first item
+        print('DEBUG getLabById: Using first item from list: ${response.first}');
+        return Lab.fromJson(response.first);
+      } else if (response is Map) {
+        print('DEBUG getLabById: Response is a Map, parsing directly');
+        return Lab.fromJson(Map<String, dynamic>.from(response));
+      } else {
+        throw Exception('Unexpected response type: ${response.runtimeType}');
+      }
     } catch (e) {
+      print('DEBUG getLabById: Error occurred: $e');
       rethrow;
     }
   }
@@ -125,9 +142,10 @@ class LabService {
   }
 
   // Get labs by university and department (when no research group is selected)
-  static Future<List<Lab>> getLabsByUniversityDepartment(String universityId, String departmentId) async {
+  static Future<List<Lab>> getLabsByUniversityDepartment(String universityId, String universityDepartmentId) async {
     try {
-      final response = await ApiService.get('/labs/?university=$universityId&department=$departmentId');
+      print('DEBUG getLabsByUniversityDepartment: Using university_department=$universityDepartmentId');
+      final response = await ApiService.get('/labs/?university_department=$universityDepartmentId');
 
       List<Lab> labs;
       if (response is Map && response.containsKey('results')) {
