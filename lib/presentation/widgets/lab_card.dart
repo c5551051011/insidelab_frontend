@@ -131,6 +131,7 @@ class LabCard extends StatelessWidget {
     );
   }
 
+
   Widget _buildResearchAreas() {
     return LayoutBuilder(
       builder: (context, constraints) {

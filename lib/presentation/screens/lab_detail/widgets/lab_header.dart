@@ -88,7 +88,7 @@ class LabHeader extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${lab.universityName} • ${lab.department}',
+                            lab.hierarchyLine,
                             style: const TextStyle(
                               fontSize: 13,
                               color: Colors.white70,

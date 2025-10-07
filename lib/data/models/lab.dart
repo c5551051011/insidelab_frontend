@@ -56,7 +56,7 @@ class Lab {
       universityId: json['university']?.toString() ?? '',
       department: json['department'] ?? json['department_name'] ?? json['department_local_name'] ?? '',
       departmentId: json['university_department']?.toString(),
-      researchGroupName: json['professor']?['research_group_name'],
+      researchGroupName: json['research_group_name'] ?? json['professor']?['research_group_name'],
       researchGroupId: json['research_group']?.toString(),
       overallRating: double.tryParse(json['overall_rating']?.toString() ?? '0') ?? 0.0,
       reviewCount: json['review_count'] ?? 0,
