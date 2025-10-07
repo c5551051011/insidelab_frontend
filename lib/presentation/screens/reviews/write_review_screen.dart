@@ -13,6 +13,7 @@ import '../../../services/university_service.dart';
 import '../../../services/university_department_service.dart';
 import '../../../services/research_group_service.dart';
 import '../../../services/lab_service.dart';
+import '../../../services/professor_service.dart';
 import '../../../services/review_service.dart';
 import '../../widgets/common/header_navigation.dart';
 import '../../widgets/common/university_department_selector.dart';
@@ -1775,10 +1776,12 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
 
                 try {
                   // First create the professor, then use their ID for the lab
-                  final newProfessor = await UniversityService.addProfessor(
+                  final newProfessor = await ProfessorService.addProfessor(
                     name: professorName!,
                     universityId: _selectedUniversityId!,
                     department: _selectedUniversityDepartment!.displayName,
+                    universityDepartmentId: _selectedUniversityDepartmentId!,
+                    researchGroupId: _selectedResearchGroupId,
                   );
 
                   // Add lab via API using the newly created professor's ID
@@ -1912,7 +1915,13 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
               ),
             );
 
-            Navigator.pop(context);
+            // Use GoRouter to navigate safely
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              // If no page to pop back to, go to home
+              context.go('/');
+            }
           }
         });
       }

@@ -24,7 +24,6 @@ class LabInformationWidget extends StatelessWidget {
         children: [
           const CardTitle(
             title: 'Lab Information',
-            icon: 'ℹ️',
           ),
           const SizedBox(height: 16),
           if (lab.description != null) ...[

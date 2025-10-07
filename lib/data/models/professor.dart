@@ -6,6 +6,8 @@ class Professor {
   final String email;
   final String universityId;
   final String department;
+  final String? universityDepartmentId;
+  final String? researchGroupId;
   final String? profileUrl;
   final String? googleScholarUrl;
   final String? personalWebsite;
@@ -18,6 +20,8 @@ class Professor {
     required this.email,
     required this.universityId,
     required this.department,
+    this.universityDepartmentId,
+    this.researchGroupId,
     this.profileUrl,
     this.googleScholarUrl,
     this.personalWebsite,
@@ -32,6 +36,8 @@ class Professor {
       email: json['email'] ?? '',
       universityId: json['university_id']?.toString() ?? json['university']?.toString() ?? '',
       department: json['department'] ?? '',
+      universityDepartmentId: json['university_department']?.toString(),
+      researchGroupId: json['research_group']?.toString(),
       profileUrl: json['profile_url'],
       googleScholarUrl: json['google_scholar_url'],
       personalWebsite: json['personal_website'],
@@ -47,6 +53,8 @@ class Professor {
       'email': email,
       'university_id': universityId,
       'department': department,
+      'university_department': universityDepartmentId,
+      'research_group': researchGroupId,
       'profile_url': profileUrl,
       'google_scholar_url': googleScholarUrl,
       'personal_website': personalWebsite,
