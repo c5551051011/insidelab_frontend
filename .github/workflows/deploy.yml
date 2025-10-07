@@ -1,8 +1,9 @@
-name: Deploy Flutter Web to GitHub Pages
+name: 🚀 Deploy Flutter Web to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 # Add permissions for GitHub Pages
 permissions:
@@ -20,29 +21,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      # 1. 저장소 가져오기
+      - name: 📦 Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.24.5'
-        cache: true
+      # 2. Flutter 설치
+      - name: 🛠️ Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.4'
+          channel: 'stable'
+          cache: true
 
-    - name: Install dependencies
-      run: flutter pub get
+      # 3. 의존성 설치
+      - name: 📚 Install dependencies
+        run: flutter pub get
 
-    - name: Build web
-      run: flutter build web --web-renderer html --base-href "/insidelab_frontend/"
+      # 4. Flutter 웹 빌드
+      - name: 🏗️ Build Flutter Web
+        run: flutter build web --release --web-renderer html --base-href "/insidelab_frontend/"
 
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
+      # 5. SPA 라우팅 지원 (404.html 생성)
+      - name: 🔁 Copy 404.html for SPA routing
+        run: cp build/web/index.html build/web/404.html
 
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: 'build/web'
+      # 6. 커스텀 도메인 (insidelab.io)
+      - name: 🌐 Add custom domain (CNAME)
+        run: echo "insidelab.io" > build/web/CNAME
 
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      # 7. Artifact 업로드
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'build/web'
+
+      # 8. GitHub Pages로 배포
+      - name: 🚀 Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+          publish_branch: gh-pages
