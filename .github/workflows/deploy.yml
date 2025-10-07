@@ -7,7 +7,7 @@ on:
 
 # Add permissions for GitHub Pages
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
