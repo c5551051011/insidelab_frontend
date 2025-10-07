@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../presentation/screens/home/home_screen.dart';
 import '../../presentation/screens/lab_detail/lab_detail_screen.dart';
+import '../../presentation/screens/publications/all_publications_screen.dart';
 import '../../presentation/screens/search/search_screen.dart';
 import '../../presentation/screens/reviews/write_review_screen.dart';
 import '../../presentation/screens/reviews/reviews_browse_screen.dart';
@@ -29,6 +30,7 @@ import '../../data/models/review.dart';
 class AppRouter {
   static const String home = '/';
   static const String labDetail = '/lab-detail';
+  static const String allPublications = '/all-publications';
   static const String search = '/search';
   static const String writeReview = '/write-review';
   static const String browseReviews = '/browse-reviews';
@@ -63,6 +65,12 @@ class AppRouter {
         final lab = settings.arguments as Lab;
         return MaterialPageRoute(
           builder: (_) => LabDetailScreen(lab: lab),
+        );
+
+      case allPublications:
+        final lab = settings.arguments as Lab;
+        return MaterialPageRoute(
+          builder: (_) => AllPublicationsScreen(lab: lab),
         );
 
       case search:

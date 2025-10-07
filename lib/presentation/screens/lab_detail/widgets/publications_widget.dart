@@ -1,16 +1,20 @@
 // presentation/screens/lab_detail/widgets/publications_widget.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/publication.dart';
+import '../../../../data/models/lab.dart' hide Publication;
 import '../../../../services/publication_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PublicationsWidget extends StatefulWidget {
   final String labId;
+  final Lab? lab; // Optional lab object for navigation
 
   const PublicationsWidget({
     Key? key,
     required this.labId,
+    this.lab,
   }) : super(key: key);
 
   @override
@@ -415,7 +419,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     }
 
     return Column(
-      children: publications.take(2).map((publication) =>
+      children: publications.take(2).map<Widget>((publication) =>
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: _buildPublicationItemFromModel(publication),
@@ -434,7 +438,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
       labAuthors: publication.labAuthors,
       citations: publication.citationCount,
       abstract: publication.abstract ?? '',
-      tags: [...publication.researchAreaNames, ...publication.keywords],
+      tags: [...publication.researchAreaNames ?? [], ...publication.keywords ?? []],
       links: publication.links,
     );
   }
@@ -602,16 +606,21 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     final totalPubs = stats?.totalPublications ?? publications.length;
     final remainingPubs = totalPubs - publications.take(2).length;
 
-    return GestureDetector(
-      onTap: () {
-        // TODO: Navigate to full publications page
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Full publications page coming soon!'),
-          ),
-        );
-      },
-      child: Container(
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          if (widget.lab != null) {
+            context.push('/all-publications', extra: widget.lab!);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please try again from the lab detail page'),
+              ),
+            );
+          }
+        },
+        child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -628,6 +637,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             fontWeight: FontWeight.w500,
           ),
           textAlign: TextAlign.center,
+        ),
         ),
       ),
     );

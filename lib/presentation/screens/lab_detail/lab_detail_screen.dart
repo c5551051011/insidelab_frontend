@@ -35,6 +35,7 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
     _publicationsWidget = PublicationsWidget(
       key: _publicationsKey,
       labId: widget.lab.id,
+      lab: widget.lab,
     );
     _loadRatingBreakdown();
   }

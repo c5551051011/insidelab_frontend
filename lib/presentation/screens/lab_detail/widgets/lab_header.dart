@@ -66,7 +66,7 @@ class LabHeader extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            lab.professorName,
+                            '${lab.professorName} • ${lab.universityName}',
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w600,
@@ -99,14 +99,14 @@ class LabHeader extends StatelessWidget {
                           const SizedBox(height: 4),
                           if (lab.researchAreas.isNotEmpty)
                             ConstrainedBox(
-                              constraints: const BoxConstraints(maxHeight: 30),
+                              constraints: const BoxConstraints(maxHeight: 40),
                               child: SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
                                 child: Row(
                                   children: lab.researchAreas.take(1).map((area) {
                                     return Container(
-                                      margin: const EdgeInsets.only(right: 4),
-                                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                      margin: const EdgeInsets.only(right: 6),
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
                                           colors: [
@@ -114,14 +114,14 @@ class LabHeader extends StatelessWidget {
                                             Colors.white.withOpacity(0.15),
                                           ],
                                         ),
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(12),
                                         border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
                                       ),
                                       child: Text(
                                         area,
                                         style: const TextStyle(
                                           color: Colors.white,
-                                          fontSize: 10,
+                                          fontSize: 13,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),

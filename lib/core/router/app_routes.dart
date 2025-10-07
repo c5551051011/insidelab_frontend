@@ -46,6 +46,10 @@ class AppRoutes {
     context.go('/lab/$slug');
   }
 
+  static void goToAllPublications(BuildContext context, String labId, {String? labName}) {
+    context.go('/lab/$labId/publications');
+  }
+
   static void goToReview(BuildContext context, String reviewId) {
     context.go('/reviews/$reviewId');
   }

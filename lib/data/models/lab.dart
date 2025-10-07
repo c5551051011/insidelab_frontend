@@ -121,7 +121,7 @@ class Lab {
   }
 
   String get hierarchyLine {
-    final parts = <String>[universityName, department];
+    final parts = <String>[department];
     if (researchGroupName != null) {
       parts.add(researchGroupName!);
     }

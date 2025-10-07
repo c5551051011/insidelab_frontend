@@ -22,6 +22,11 @@ class Publication {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // Additional fields for all publications view
+  final bool isAwardPaper;
+  final int githubStars;
+  final String presentationType;
+
   Publication({
     required this.id,
     required this.title,
@@ -44,6 +49,11 @@ class Publication {
     this.isOpenAccess = false,
     required this.createdAt,
     required this.updatedAt,
+
+    // Additional fields for all publications view
+    this.isAwardPaper = false,
+    this.githubStars = 0,
+    this.presentationType = '',
   });
 
   factory Publication.fromJson(Map<String, dynamic> json) {
@@ -95,8 +105,14 @@ class Publication {
       isOpenAccess: json['is_open_access'] ?? false,
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updated_at'] ?? '') ?? DateTime.now(),
+
+      // Additional fields for all publications view
+      isAwardPaper: json['is_award_paper'] ?? false,
+      githubStars: json['github_stars'] ?? 0,
+      presentationType: json['presentation_type'] ?? '',
     );
   }
+
 
   Map<String, dynamic> toJson() {
     return {
@@ -148,7 +164,7 @@ class Publication {
   String get venue => primaryVenueName;
   String get year => publicationYear;
   List<String> get researchAreas => researchAreaNames;
-  List<String> get labAuthors => []; // Not available in new API
+  List<String> get labAuthors => []; // Not available in current API, could be enhanced later
   bool get isTopTier => primaryVenueTier?.toLowerCase() == 'top';
   DateTime get publicationDateNonNull => publicationDate ?? createdAt;
 }

@@ -3,6 +3,91 @@ import '../data/models/publication.dart';
 import 'api_service.dart';
 
 class PublicationService {
+  /// Get research areas breakdown for a lab
+  static Future<Map<String, dynamic>?> getResearchAreasBreakdown(String labId) async {
+    try {
+      final response = await ApiService.get('/publications/research-areas/$labId/');
+      return Map<String, dynamic>.from(response);
+    } catch (e) {
+      print('Failed to load research areas breakdown: $e');
+      return null;
+    }
+  }
+
+  /// Get yearly publication statistics for a lab
+  static Future<Map<String, int>?> getYearlyPublicationStats(String labId) async {
+    try {
+      final response = await ApiService.get('/publications/yearly-stats/$labId/');
+      return Map<String, int>.from(response);
+    } catch (e) {
+      print('Failed to load yearly stats: $e');
+      return null;
+    }
+  }
+
+  /// Get publications with pagination support
+  static Future<Map<String, dynamic>> getLabPublicationsWithPagination(String labId, {
+    int page = 1,
+    int limit = 10,
+    String? query,
+    String? year,
+    String? venueType,
+    String? researchArea,
+    String? ordering = '-citation_count',
+  }) async {
+    try {
+      String endpoint = '/publications/';
+      final params = ['lab_id=$labId', 'page=$page', 'limit=$limit'];
+
+      if (query != null && query.isNotEmpty) {
+        params.add('search=${Uri.encodeComponent(query)}');
+      }
+      if (year != null && year != 'All Years') {
+        if (year == 'Last 5 years') {
+          final currentYear = DateTime.now().year;
+          params.add('year_from=${currentYear - 5}');
+        } else {
+          params.add('publication_year=$year');
+        }
+      }
+      if (venueType != null) {
+        params.add('venue_type=$venueType');
+      }
+      if (researchArea != null) {
+        params.add('research_area=${Uri.encodeComponent(researchArea)}');
+      }
+      if (ordering != null) {
+        params.add('ordering=$ordering');
+      }
+
+      final response = await ApiService.get('$endpoint?${params.join('&')}');
+
+      if (response is Map && response.containsKey('results')) {
+        return {
+          'publications': (response['results'] as List).map((json) => Publication.fromJson(json)).toList(),
+          'total': response['count'] ?? 0,
+          'page': page,
+          'totalPages': ((response['count'] ?? 0) / limit).ceil(),
+        };
+      } else {
+        final publications = (response as List).map((json) => Publication.fromJson(json)).toList();
+        return {
+          'publications': publications,
+          'total': publications.length,
+          'page': 1,
+          'totalPages': 1,
+        };
+      }
+    } catch (e) {
+      print('Failed to load publications: $e');
+      return {
+        'publications': <Publication>[],
+        'total': 0,
+        'page': 1,
+        'totalPages': 1,
+      };
+    }
+  }
   /// Get publications for a specific lab
   static Future<List<Publication>> getLabPublications(String labId, {
     String? year,
