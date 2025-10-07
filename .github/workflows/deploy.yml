@@ -39,7 +39,7 @@ jobs:
 
       # 4. Flutter 웹 빌드
       - name: 🏗️ Build Flutter Web
-        run: flutter build web --release --web-renderer html --base-href "/insidelab_frontend/"
+        run: flutter build web --release --web-renderer html --base-href "/"
 
       # 5. SPA 라우팅 지원 (404.html 생성)
       - name: 🔁 Copy 404.html for SPA routing
