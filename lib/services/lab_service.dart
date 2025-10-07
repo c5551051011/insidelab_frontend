@@ -92,10 +92,15 @@ class LabService {
   }
 
   // Get labs by university
-  static Future<List<Lab>> getLabsByUniversity(String universityId) async {
+  static Future<List<Lab>> getLabsByUniversity(String universityId, {bool useMinimalFields = false}) async {
     try {
       // Try both parameter formats in case backend expects different naming
-      final response = await ApiService.get('/labs/?university=$universityId');
+      String endpoint = '/labs/?university=$universityId';
+      if (useMinimalFields) {
+        endpoint += '&fields=minimal';
+      }
+
+      final response = await ApiService.get(endpoint);
 
       List<Lab> labs;
       if (response is Map && response.containsKey('results')) {
@@ -142,10 +147,15 @@ class LabService {
   }
 
   // Get labs by university and department (when no research group is selected)
-  static Future<List<Lab>> getLabsByUniversityDepartment(String universityId, String universityDepartmentId) async {
+  static Future<List<Lab>> getLabsByUniversityDepartment(String universityId, String universityDepartmentId, {bool useMinimalFields = false}) async {
     try {
       print('DEBUG getLabsByUniversityDepartment: Using university_department=$universityDepartmentId');
-      final response = await ApiService.get('/labs/?university_department=$universityDepartmentId');
+      String endpoint = '/labs/?university_department=$universityDepartmentId';
+      if (useMinimalFields) {
+        endpoint += '&fields=minimal';
+      }
+
+      final response = await ApiService.get(endpoint);
 
       List<Lab> labs;
       if (response is Map && response.containsKey('results')) {
@@ -216,6 +226,7 @@ class LabService {
     String? ordering,
     int page = 1,
     int limit = 20,
+    bool useMinimalFields = false,
   }) async {
     try {
       String queryParams = 'page=$page&limit=$limit';
@@ -234,6 +245,7 @@ class LabService {
       if (recruitingPostdoc != null) queryParams += '&recruiting_postdoc=$recruitingPostdoc';
       if (recruitingIntern != null) queryParams += '&recruiting_intern=$recruitingIntern';
       if (ordering != null) queryParams += '&ordering=${Uri.encodeComponent(ordering)}';
+      if (useMinimalFields) queryParams += '&fields=minimal';
 
       final response = await ApiService.get('/labs/?$queryParams');
 
@@ -268,6 +280,7 @@ class LabService {
     String? ordering,
     int page = 1,
     int limit = 20,
+    bool useMinimalFields = false,
   }) async {
     try {
       String queryParams = 'page=$page&limit=$limit';
@@ -286,6 +299,7 @@ class LabService {
       if (recruitingPostdoc != null) queryParams += '&recruiting_postdoc=$recruitingPostdoc';
       if (recruitingIntern != null) queryParams += '&recruiting_intern=$recruitingIntern';
       if (ordering != null) queryParams += '&ordering=${Uri.encodeComponent(ordering)}';
+      if (useMinimalFields) queryParams += '&fields=minimal';
 
       final response = await ApiService.get('/labs/?$queryParams');
 

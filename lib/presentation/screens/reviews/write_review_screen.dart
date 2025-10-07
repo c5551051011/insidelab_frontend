@@ -759,11 +759,11 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                 if (_selectedUniversityDepartmentId != null) {
                   // Use university department filtering when available
                   if (pattern.isEmpty) {
-                    labs = await LabService.getLabsByUniversityDepartment(_selectedUniversityId!, _selectedUniversityDepartmentId!);
+                    labs = await LabService.getLabsByUniversityDepartment(_selectedUniversityId!, _selectedUniversityDepartmentId!, useMinimalFields: true);
                     print('DEBUG TypeAhead: Fetched ${labs.length} labs for university department $_selectedUniversityDepartmentId');
                   } else {
                     // For search with pattern, get department labs first then filter
-                    final departmentLabs = await LabService.getLabsByUniversityDepartment(_selectedUniversityId!, _selectedUniversityDepartmentId!);
+                    final departmentLabs = await LabService.getLabsByUniversityDepartment(_selectedUniversityId!, _selectedUniversityDepartmentId!, useMinimalFields: true);
                     labs = departmentLabs.where((lab) =>
                       lab.name.toLowerCase().contains(pattern.toLowerCase()) ||
                       lab.professorName.toLowerCase().contains(pattern.toLowerCase())
@@ -773,12 +773,13 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
                 } else {
                   // Final fallback: all university labs
                   if (pattern.isEmpty) {
-                    labs = await LabService.getLabsByUniversity(_selectedUniversityId!);
+                    labs = await LabService.getLabsByUniversity(_selectedUniversityId!, useMinimalFields: true);
                     print('DEBUG TypeAhead: Fetched ${labs.length} labs for university $_selectedUniversityId');
                   } else {
                     labs = await LabService.searchLabsAdvanced(
                       query: pattern,
                       university: _selectedUniversityId!,
+                      useMinimalFields: true,
                     );
                     print('DEBUG TypeAhead: Found ${labs.length} labs matching "$pattern" in university $_selectedUniversityId');
                   }
