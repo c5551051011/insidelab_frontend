@@ -15,9 +15,28 @@ class PublicationService {
   }
 
   /// Get yearly publication statistics for a lab
-  static Future<Map<String, int>?> getYearlyPublicationStats(String labId) async {
+  static Future<Map<String, int>?> getYearlyPublicationStats(String labId, {
+    int? startYear,
+    int? endYear,
+    bool fillEmpty = true,
+  }) async {
     try {
-      final response = await ApiService.get('/publications/yearly-stats/$labId/');
+      String endpoint = '/publications/yearly_stats/?lab_id=$labId';
+
+      if (startYear != null) {
+        endpoint += '&start_year=$startYear';
+      }
+      if (endYear != null) {
+        endpoint += '&end_year=$endYear';
+      }
+      endpoint += '&fill_empty=$fillEmpty';
+
+      final response = await ApiService.get(endpoint);
+
+      // Extract yearly_stats from response
+      if (response is Map && response.containsKey('yearly_stats')) {
+        return Map<String, int>.from(response['yearly_stats']);
+      }
       return Map<String, int>.from(response);
     } catch (e) {
       print('Failed to load yearly stats: $e');

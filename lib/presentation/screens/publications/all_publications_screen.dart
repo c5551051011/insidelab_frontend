@@ -116,7 +116,10 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
 
   Future<void> _loadYearlyStats() async {
     try {
-      final yearly = await PublicationService.getYearlyPublicationStats(widget.lab.id);
+      final yearly = await PublicationService.getYearlyPublicationStats(
+        widget.lab.id,
+        fillEmpty: true,
+      );
       if (mounted) {
         setState(() {
           yearlyStats = yearly;

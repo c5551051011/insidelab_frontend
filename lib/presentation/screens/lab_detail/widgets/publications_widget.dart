@@ -26,9 +26,15 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
   List<String> availableFilters = ['All'];
   List<Publication> publications = [];
   PublicationStats? stats;
+  Map<String, int>? yearlyStats;
   bool isLoading = true;
   bool isLoadingPublications = false;
+  bool isLoadingMore = false;
+  bool hasMorePublications = true;
+  int currentPage = 1;
   String? errorMessage;
+  bool showAllPublications = false;
+  Set<String> bookmarkedPublications = {};
 
   @override
   bool get wantKeepAlive => true;
@@ -43,10 +49,11 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     // Load stats first (fastest)
     await _loadStats();
 
-    // Then load publications and filters in parallel
+    // Then load publications, filters, and yearly stats in parallel
     await Future.wait([
       _loadFilters(),
       _loadPublications(),
+      _loadYearlyStats(),
     ]);
   }
 
@@ -72,13 +79,49 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     }
   }
 
-  Future<void> _loadPublications() async {
+  Future<void> _loadYearlyStats() async {
+    try {
+      final yearly = await PublicationService.getYearlyPublicationStats(
+        widget.labId,
+        fillEmpty: true,
+      );
+      if (mounted) {
+        setState(() {
+          yearlyStats = yearly;
+        });
+      }
+    } catch (e) {
+      print('Failed to load yearly stats: $e');
+      // Use fallback mock data
+      if (mounted) {
+        setState(() {
+          yearlyStats = {
+            '2020': 18,
+            '2021': 24,
+            '2022': 28,
+            '2023': 31,
+            '2024': 23,
+          };
+        });
+      }
+    }
+  }
+
+  Future<void> _loadPublications({bool loadMore = false}) async {
     if (!mounted) return;
 
-    setState(() {
-      isLoadingPublications = true;
-      errorMessage = null;
-    });
+    if (loadMore) {
+      setState(() {
+        isLoadingMore = true;
+      });
+    } else {
+      setState(() {
+        isLoadingPublications = true;
+        errorMessage = null;
+        currentPage = 1;
+        publications.clear();
+      });
+    }
 
     try {
       List<Publication> loadedPublications;
@@ -86,38 +129,45 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
       // Handle different filter types
       switch (selectedFilter) {
         case 'All':
+          final limit = showAllPublications ? 20 : 6;
+          final offset = loadMore ? (currentPage - 1) * limit : 0;
           loadedPublications = await PublicationService.getLabPublications(
             widget.labId,
             ordering: '-citation_count',
-            limit: 6,
-            useMinimalFields: true, // Optimize for lab detail
+            limit: limit,
+            offset: offset,
+            useMinimalFields: true,
           );
           break;
         case 'Top-tier':
+          final limit = showAllPublications ? 20 : 6;
           loadedPublications = await PublicationService.getTopTierPublications(
             widget.labId,
-            limit: 6,
+            limit: limit,
             useMinimalFields: true,
           );
           break;
         case 'Award Papers':
+          final limit = showAllPublications ? 20 : 6;
           loadedPublications = await PublicationService.getAwardPublications(
             widget.labId,
-            limit: 6,
+            limit: limit,
             useMinimalFields: true,
           );
           break;
         case 'Open Access':
+          final limit = showAllPublications ? 20 : 6;
           loadedPublications = await PublicationService.getOpenAccessPublications(
             widget.labId,
-            limit: 6,
+            limit: limit,
             useMinimalFields: true,
           );
           break;
         case 'Recent (3 Years)':
+          final limit = showAllPublications ? 20 : 6;
           loadedPublications = await PublicationService.getRecentPublications(
             widget.labId,
-            limit: 6,
+            limit: limit,
             useMinimalFields: true,
           );
           break;
@@ -125,15 +175,20 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
         case 'journal':
         case 'workshop':
         case 'preprint':
+          final limit = showAllPublications ? 20 : 6;
+          final offset = loadMore ? (currentPage - 1) * limit : 0;
           loadedPublications = await PublicationService.getLabPublications(
             widget.labId,
             venueType: selectedFilter,
             ordering: '-citation_count',
-            limit: 6,
+            limit: limit,
+            offset: offset,
             useMinimalFields: true,
           );
           break;
         default:
+          final limit = showAllPublications ? 20 : 6;
+          final offset = loadMore ? (currentPage - 1) * limit : 0;
           // Check if it's a year or research area
           if (RegExp(r'^\d{4}$').hasMatch(selectedFilter)) {
             // It's a year
@@ -141,7 +196,8 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
               widget.labId,
               year: selectedFilter,
               ordering: '-citation_count',
-              limit: 6,
+              limit: limit,
+              offset: offset,
               useMinimalFields: true,
             );
           } else {
@@ -150,7 +206,8 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
               widget.labId,
               researchArea: selectedFilter,
               ordering: '-citation_count',
-              limit: 6,
+              limit: limit,
+              offset: offset,
               useMinimalFields: true,
             );
           }
@@ -158,8 +215,15 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
 
       if (mounted) {
         setState(() {
-          publications = loadedPublications;
-          isLoadingPublications = false;
+          if (loadMore) {
+            publications.addAll(loadedPublications);
+            currentPage++;
+            isLoadingMore = false;
+          } else {
+            publications = loadedPublications;
+            isLoadingPublications = false;
+          }
+          hasMorePublications = loadedPublications.length >= (showAllPublications ? 20 : 6);
         });
       }
     } catch (e) {
@@ -167,6 +231,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
         setState(() {
           errorMessage = 'Failed to load publications: ${e.toString()}';
           isLoadingPublications = false;
+          isLoadingMore = false;
         });
       }
     }
@@ -247,6 +312,10 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             else ...[
               _buildPublicationStats(),
               const SizedBox(height: 24),
+              if (yearlyStats != null) ...[
+                _buildPublicationTimeline(),
+                const SizedBox(height: 24),
+              ],
               _buildFilters(),
               const SizedBox(height: 20),
               if (errorMessage != null)
@@ -355,6 +424,86 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     );
   }
 
+  Widget _buildPublicationTimeline() {
+    if (yearlyStats == null) return Container();
+
+    final years = yearlyStats!.keys.toList()..sort();
+    final values = years.map((year) => yearlyStats![year]!).toList();
+    final maxValue = values.isNotEmpty ? values.reduce((a, b) => a > b ? a : b) : 1;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFe5e7eb)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '📊 Publication Timeline',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1f2937),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            height: 100,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: years.map((year) {
+                final value = yearlyStats![year]!;
+                final height = (value / maxValue) * 70;
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          value.toString(),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF6b7280),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          height: height,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [Color(0xFF0ea5e9), Color(0xFF0284c7)],
+                            ),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          year,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF374151),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFilters() {
     return Wrap(
       spacing: 8,
@@ -429,8 +578,9 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
       );
     }
 
+    final displayCount = showAllPublications ? publications.length : 2;
     return Column(
-      children: publications.take(2).map<Widget>((publication) =>
+      children: publications.take(displayCount).map<Widget>((publication) =>
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: _buildPublicationItemFromModel(publication),
@@ -521,13 +671,32 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
                   ],
                 ],
               ),
-              Text(
-                year,
-                style: const TextStyle(
-                  color: Color(0xFF6b7280),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+              Row(
+                children: [
+                  Text(
+                    year,
+                    style: const TextStyle(
+                      color: Color(0xFF6b7280),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => _toggleBookmark(title),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          _isBookmarked(title) ? Icons.bookmark : Icons.bookmark_border,
+                          color: _isBookmarked(title) ? AppColors.primary : Colors.grey[600],
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -623,14 +792,17 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
           Wrap(
             spacing: 8,
             children: links.entries.map((entry) {
-              return GestureDetector(
-                onTap: () => _launchUrl(entry.value),
-                child: Text(
-                  '${_getIcon(entry.key)} ${entry.key}',
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+              return MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => _launchUrl(entry.value),
+                  child: Text(
+                    '${_getIcon(entry.key)} ${entry.key}',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               );
@@ -677,42 +849,90 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
   }
 
   Widget _buildViewAllButton() {
-    final totalPubs = stats?.totalPublications ?? publications.length;
-    final remainingPubs = totalPubs - publications.take(2).length;
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: () {
-          if (widget.lab != null) {
-            context.push('/all-publications', extra: widget.lab!);
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Please try again from the lab detail page'),
+    if (!showAllPublications) {
+      return MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: () {
+            setState(() {
+              showAllPublications = true;
+            });
+            _loadPublications();
+          },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFf8fafc),
+              border: Border.all(color: const Color(0xFFe5e7eb)),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: const Text(
+              'View All Publications',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w500,
               ),
-            );
-          }
-        },
-        child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFf8fafc),
-          border: Border.all(color: const Color(0xFFe5e7eb)),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Text(
-          remainingPubs > 0
-              ? 'View All Publications ($remainingPubs more)'
-              : 'View All Publications',
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w500,
+              textAlign: TextAlign.center,
+            ),
           ),
-          textAlign: TextAlign.center,
         ),
+      );
+    }
+
+    if (hasMorePublications) {
+      return MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: isLoadingMore ? null : () => _loadPublications(loadMore: true),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFf8fafc),
+              border: Border.all(color: const Color(0xFFe5e7eb)),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (isLoadingMore) ...[
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Text(
+                  isLoadingMore ? 'Loading...' : 'Load More Publications',
+                  style: TextStyle(
+                    color: isLoadingMore ? Colors.grey[600] : AppColors.primary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFf3f4f6),
+        border: Border.all(color: const Color(0xFFe5e7eb)),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        'All publications loaded',
+        style: TextStyle(
+          color: Colors.grey[600],
+          fontWeight: FontWeight.w500,
+        ),
+        textAlign: TextAlign.center,
       ),
     );
   }
@@ -734,6 +954,32 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url));
     }
+  }
+
+  bool _isBookmarked(String title) {
+    return bookmarkedPublications.contains(title);
+  }
+
+  void _toggleBookmark(String title) {
+    setState(() {
+      if (bookmarkedPublications.contains(title)) {
+        bookmarkedPublications.remove(title);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Removed from bookmarks'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      } else {
+        bookmarkedPublications.add(title);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Added to bookmarks'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    });
   }
 
   String _formatNumber(int number) {

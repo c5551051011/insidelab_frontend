@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../presentation/screens/home/home_screen.dart';
 import '../../presentation/screens/lab_detail/lab_detail_screen.dart';
-import '../../presentation/screens/publications/all_publications_screen.dart';
 import '../../presentation/screens/search/search_screen.dart';
 import '../../presentation/screens/reviews/write_review_screen.dart';
 import '../../presentation/screens/reviews/reviews_browse_screen.dart';
@@ -122,41 +121,6 @@ class GoRouterConfig {
         },
       ),
 
-      // All Publications
-      GoRoute(
-        path: '/all-publications',
-        name: 'all-publications',
-        pageBuilder: (context, state) {
-          final lab = state.extra as Lab?;
-          if (lab == null) {
-            return _buildPageWithoutTransition(
-              child: Scaffold(
-                appBar: const HeaderNavigation(),
-                body: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error_outline, size: 64),
-                      const SizedBox(height: 16),
-                      const Text('Lab information missing'),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => context.go('/'),
-                        child: const Text('Go Home'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              state: state,
-            );
-          }
-          return _buildPageWithoutTransition(
-            child: AllPublicationsScreen(lab: lab),
-            state: state,
-          );
-        },
-      ),
 
       // Write Review
       GoRoute(
