@@ -105,6 +105,7 @@ class PublicationService {
     String? ordering = '-citation_count', // Default sort by citations
     int limit = 20,
     int offset = 0,
+    bool useMinimalFields = false, // For lab detail optimization
   }) async {
     try {
       String endpoint = '/publications/';
@@ -151,6 +152,11 @@ class PublicationService {
       if (ordering != null) params.add('ordering=$ordering');
       params.add('limit=$limit');
       params.add('offset=$offset');
+
+      // Add minimal fields optimization for lab detail
+      if (useMinimalFields) {
+        params.add('fields=minimal');
+      }
 
       if (params.isNotEmpty) {
         endpoint += '?${params.join('&')}';
@@ -199,17 +205,18 @@ class PublicationService {
   }
 
   /// Get top-tier publications for a lab
-  static Future<List<Publication>> getTopTierPublications(String labId, {int limit = 20}) async {
+  static Future<List<Publication>> getTopTierPublications(String labId, {int limit = 20, bool useMinimalFields = false}) async {
     return getLabPublications(
       labId,
       venueTier: 'top',
       ordering: '-citation_count',
       limit: limit,
+      useMinimalFields: useMinimalFields,
     );
   }
 
   /// Get recent publications for a lab (last 3 years)
-  static Future<List<Publication>> getRecentPublications(String labId, {int limit = 20}) async {
+  static Future<List<Publication>> getRecentPublications(String labId, {int limit = 20, bool useMinimalFields = false}) async {
     final currentYear = DateTime.now().year;
     return getLabPublications(
       labId,
@@ -217,6 +224,7 @@ class PublicationService {
       yearTo: currentYear.toString(),
       ordering: '-publication_year',
       limit: limit,
+      useMinimalFields: useMinimalFields,
     );
   }
 
@@ -230,22 +238,24 @@ class PublicationService {
   }
 
   /// Get award-winning publications for a lab
-  static Future<List<Publication>> getAwardPublications(String labId, {int limit = 20}) async {
+  static Future<List<Publication>> getAwardPublications(String labId, {int limit = 20, bool useMinimalFields = false}) async {
     return getLabPublications(
       labId,
       awardPaper: true,
       ordering: '-citation_count',
       limit: limit,
+      useMinimalFields: useMinimalFields,
     );
   }
 
   /// Get open access publications for a lab
-  static Future<List<Publication>> getOpenAccessPublications(String labId, {int limit = 20}) async {
+  static Future<List<Publication>> getOpenAccessPublications(String labId, {int limit = 20, bool useMinimalFields = false}) async {
     return getLabPublications(
       labId,
       openAccess: true,
       ordering: '-citation_count',
       limit: limit,
+      useMinimalFields: useMinimalFields,
     );
   }
 

@@ -40,8 +40,11 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
   }
 
   Future<void> _loadInitialData() async {
+    // Load stats first (fastest)
+    await _loadStats();
+
+    // Then load publications and filters in parallel
     await Future.wait([
-      _loadStats(),
       _loadFilters(),
       _loadPublications(),
     ]);
@@ -87,30 +90,35 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             widget.labId,
             ordering: '-citation_count',
             limit: 6,
+            useMinimalFields: true, // Optimize for lab detail
           );
           break;
         case 'Top-tier':
           loadedPublications = await PublicationService.getTopTierPublications(
             widget.labId,
             limit: 6,
+            useMinimalFields: true,
           );
           break;
         case 'Award Papers':
           loadedPublications = await PublicationService.getAwardPublications(
             widget.labId,
             limit: 6,
+            useMinimalFields: true,
           );
           break;
         case 'Open Access':
           loadedPublications = await PublicationService.getOpenAccessPublications(
             widget.labId,
             limit: 6,
+            useMinimalFields: true,
           );
           break;
         case 'Recent (3 Years)':
           loadedPublications = await PublicationService.getRecentPublications(
             widget.labId,
             limit: 6,
+            useMinimalFields: true,
           );
           break;
         case 'conference':
@@ -122,6 +130,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             venueType: selectedFilter,
             ordering: '-citation_count',
             limit: 6,
+            useMinimalFields: true,
           );
           break;
         default:
@@ -133,6 +142,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
               year: selectedFilter,
               ordering: '-citation_count',
               limit: 6,
+              useMinimalFields: true,
             );
           } else {
             // It's likely a research area
@@ -141,6 +151,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
               researchArea: selectedFilter,
               ordering: '-citation_count',
               limit: 6,
+              useMinimalFields: true,
             );
           }
       }
@@ -440,6 +451,9 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
       abstract: publication.abstract ?? '',
       tags: [...publication.researchAreaNames ?? [], ...publication.keywords ?? []],
       links: publication.links,
+      isAwardPaper: publication.isAwardPaper,
+      githubStars: publication.githubStars,
+      additionalNotes: publication.additionalNotes,
     );
   }
 
@@ -454,6 +468,9 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     required String abstract,
     required List<String> tags,
     required Map<String, String> links,
+    bool isAwardPaper = false,
+    int githubStars = 0,
+    String? additionalNotes,
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -467,20 +484,42 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isTopTier ? const Color(0xFFf59e0b) : const Color(0xFF10b981),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  venue,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isTopTier ? const Color(0xFFf59e0b) : const Color(0xFF10b981),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      venue,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                ),
+                  if (isAwardPaper) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFfef3c7),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        '🏆 Best Paper',
+                        style: TextStyle(
+                          color: Color(0xFF92400e),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
               Text(
                 year,
@@ -526,6 +565,8 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             spacing: 16,
             children: [
               _buildMetric('📈', '$citations citations'),
+              if (githubStars > 0)
+                _buildMetric('⭐', '$githubStars GitHub stars'),
             ],
           ),
           const SizedBox(height: 12),
@@ -539,6 +580,39 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
+          if (additionalNotes != null && additionalNotes!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFf8fafc),
+                border: Border.all(color: const Color(0xFFe2e8f0)),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '💡 ',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  Expanded(
+                    child: Text(
+                      additionalNotes!,
+                      style: const TextStyle(
+                        color: Color(0xFF475569),
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        height: 1.4,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           Wrap(
             spacing: 6,

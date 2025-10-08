@@ -32,7 +32,6 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
   String selectedYear = 'All Years';
   String selectedArea = 'All Areas';
   String selectedSort = 'Sort: Most Cited';
-  String searchQuery = '';
   Set<String> activeFilters = {};
 
   // Pagination
@@ -100,6 +99,18 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
       }
     } catch (e) {
       print('Failed to load research areas: $e');
+      // Use fallback mock data for now
+      if (mounted) {
+        setState(() {
+          researchAreas = {
+            'Computer Vision': 48,
+            'Natural Language Processing': 42,
+            'Robotics': 35,
+            'Machine Learning Theory': 21,
+            'Reinforcement Learning': 10,
+          };
+        });
+      }
     }
   }
 
@@ -113,6 +124,18 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
       }
     } catch (e) {
       print('Failed to load yearly stats: $e');
+      // Use fallback mock data for now
+      if (mounted) {
+        setState(() {
+          yearlyStats = {
+            '2020': 18,
+            '2021': 24,
+            '2022': 28,
+            '2023': 31,
+            '2024': 23,
+          };
+        });
+      }
     }
   }
 
@@ -176,7 +199,6 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
         widget.lab.id,
         page: currentPage,
         limit: itemsPerPage,
-        query: searchQuery.isNotEmpty ? searchQuery : null,
         venueType: venueType,
         year: year,
         researchArea: researchArea,
@@ -232,11 +254,11 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
           Expanded(
             child: SingleChildScrollView(
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 1400),
-                margin: const EdgeInsets.symmetric(horizontal: 24),
+                constraints: const BoxConstraints(maxWidth: 1200),
+                margin: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   children: [
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
                     if (isLoading)
                       const Center(
                         child: Padding(
@@ -246,16 +268,16 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
                       )
                     else ...[
                       _buildOverviewSection(),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
                       _buildResearchAreasSection(),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
                       _buildControlsSection(),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
                       _buildPublicationsList(),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
                       _buildPagination(),
                     ],
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
@@ -270,8 +292,8 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
     return Container(
       color: Colors.white,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 1400),
-        margin: const EdgeInsets.symmetric(horizontal: 24),
+        constraints: const BoxConstraints(maxWidth: 1200),
+        margin: const EdgeInsets.symmetric(horizontal: 20),
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
@@ -342,24 +364,14 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
   Widget _buildOverviewSection() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth > 1000) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(flex: 2, child: _buildResearchImpact()),
-              const SizedBox(width: 24),
-              Expanded(flex: 1, child: _buildTimelineWidget()),
-            ],
-          );
-        } else {
-          return Column(
-            children: [
-              _buildResearchImpact(),
-              const SizedBox(height: 24),
-              _buildTimelineWidget(),
-            ],
-          );
-        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: 3, child: _buildResearchImpact()),
+            const SizedBox(width: 20),
+            Expanded(flex: 2, child: _buildTimelineWidget()),
+          ],
+        );
       },
     );
   }
@@ -377,21 +389,21 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             '📊 Research Impact Overview',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 20,
               fontWeight: FontWeight.w600,
               color: Color(0xFF1f2937),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           _buildImpactGrid(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           _buildTrendInfo(),
         ],
       ),
@@ -415,23 +427,21 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         int columns = 3;
-        if (constraints.maxWidth < 600) columns = 2;
-        if (constraints.maxWidth < 400) columns = 1;
 
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
-            crossAxisSpacing: 24,
-            mainAxisSpacing: 24,
-            childAspectRatio: 2.5,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 2.2,
           ),
           itemCount: impactItems.length,
           itemBuilder: (context, index) {
             final item = impactItems[index];
             return Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
@@ -447,16 +457,16 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
                   Text(
                     item['number']!,
                     style: const TextStyle(
-                      fontSize: 36,
+                      fontSize: 22,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF0369a1),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     item['label']!,
                     style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 11,
                       color: Color(0xFF64748b),
                     ),
                     textAlign: TextAlign.center,
@@ -524,19 +534,19 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             '📅 Publication Timeline',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 18,
               fontWeight: FontWeight.w600,
               color: Color(0xFF1f2937),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           _buildTimelineChart(),
         ],
       ),
@@ -549,7 +559,7 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
     final maxValue = values.reduce((a, b) => a > b ? a : b);
 
     return Container(
-      height: 200,
+      height: 120,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.bottomCenter,
@@ -562,7 +572,7 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: List.generate(years.length, (index) {
-          final height = (values[index] / maxValue) * 120;
+          final height = (values[index] / maxValue) * 80;
           return Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -617,19 +627,19 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             '🔬 Research Areas Distribution',
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 18,
               fontWeight: FontWeight.w600,
               color: Color(0xFF1f2937),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           _buildAreasGrid(),
         ],
       ),
@@ -648,18 +658,20 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        int columns = 3;
-        if (constraints.maxWidth < 800) columns = 2;
-        if (constraints.maxWidth < 500) columns = 1;
+        int columns = 5;
+        if (constraints.maxWidth < 1200) columns = 4;
+        if (constraints.maxWidth < 900) columns = 3;
+        if (constraints.maxWidth < 600) columns = 2;
+        if (constraints.maxWidth < 400) columns = 1;
 
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 2.5,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            childAspectRatio: 2.8,
           ),
           itemCount: areas.length,
           itemBuilder: (context, index) {
@@ -677,7 +689,7 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
                   _applyFilters();
                 },
                 child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: isActive ? AppColors.primary : const Color(0xFFe5e7eb),
@@ -692,32 +704,32 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
                     Text(
                       area['name'] as String,
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF1f2937),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           '${area['papers']} papers',
                           style: const TextStyle(
-                            fontSize: 13,
+                            fontSize: 12,
                             color: Color(0xFF6b7280),
                           ),
                         ),
                         Text(
                           '${area['percentage']}%',
                           style: const TextStyle(
-                            fontSize: 13,
+                            fontSize: 12,
                             color: Color(0xFF6b7280),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Container(
                       height: 4,
                       decoration: BoxDecoration(
@@ -758,37 +770,16 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth > 800) {
-                return Row(
-                  children: [
-                    Expanded(child: _buildSearchBox()),
-                    const SizedBox(width: 16),
-                    _buildFilterDropdowns(),
-                    const SizedBox(width: 16),
-                    _buildSortDropdown(),
-                  ],
-                );
-              } else {
-                return Column(
-                  children: [
-                    _buildSearchBox(),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(child: _buildFilterDropdowns()),
-                        const SizedBox(width: 16),
-                        _buildSortDropdown(),
-                      ],
-                    ),
-                  ],
-                );
-              }
-            },
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildFilterDropdowns(),
+              const SizedBox(width: 16),
+              _buildSortDropdown(),
+            ],
           ),
           if (activeFilters.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -799,52 +790,33 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
     );
   }
 
-  Widget _buildSearchBox() {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFe5e7eb)),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: TextField(
-        onChanged: (value) {
-          setState(() {
-            searchQuery = value;
-          });
-        },
-        onSubmitted: (value) => _applyFilters(),
-        decoration: const InputDecoration(
-          hintText: 'Search publications by title, author, or keyword...',
-          prefixIcon: Icon(Icons.search, color: Color(0xFF9ca3af)),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-      ),
-    );
-  }
 
   Widget _buildFilterDropdowns() {
-    return Row(
-      children: [
-        _buildDropdown(selectedVenue, venueOptions, (value) {
-          setState(() {
-            selectedVenue = value!;
-            if (value != 'All Venues') {
-              activeFilters.add('Venue: $value');
-            }
-          });
-          _applyFilters();
-        }),
-        const SizedBox(width: 8),
-        _buildDropdown(selectedYear, yearOptions, (value) {
-          setState(() {
-            selectedYear = value!;
-            if (value != 'All Years') {
-              activeFilters.add('Year: $value');
-            }
-          });
-          _applyFilters();
-        }),
-      ],
+    return IntrinsicWidth(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildDropdown(selectedVenue, venueOptions, (value) {
+            setState(() {
+              selectedVenue = value!;
+              if (value != 'All Venues') {
+                activeFilters.add('Venue: $value');
+              }
+            });
+            _applyFilters();
+          }),
+          const SizedBox(width: 8),
+          _buildDropdown(selectedYear, yearOptions, (value) {
+            setState(() {
+              selectedYear = value!;
+              if (value != 'All Years') {
+                activeFilters.add('Year: $value');
+              }
+            });
+            _applyFilters();
+          }),
+        ],
+      ),
     );
   }
 
@@ -992,7 +964,7 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1056,7 +1028,7 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
             ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           // Title
           MouseRegion(
@@ -1068,7 +1040,7 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
               child: Text(
                 publication.title,
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF1f2937),
                   height: 1.4,
@@ -1077,7 +1049,7 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // Authors
           RichText(
@@ -1099,7 +1071,7 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // Metrics
           Row(
@@ -1114,7 +1086,7 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
             ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // Abstract
           if (publication.abstract != null)
@@ -1129,7 +1101,7 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
               overflow: TextOverflow.ellipsis,
             ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // Tags
           Wrap(
@@ -1141,11 +1113,11 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
             ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
 
           // Actions
           Container(
-            padding: const EdgeInsets.only(top: 16),
+            padding: const EdgeInsets.only(top: 12),
             decoration: const BoxDecoration(
               border: Border(
                 top: BorderSide(color: Color(0xFFf3f4f6)),

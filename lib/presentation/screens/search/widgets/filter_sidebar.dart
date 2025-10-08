@@ -9,10 +9,12 @@ import '../../../../services/university_service.dart';
 
 class FilterSidebar extends StatefulWidget {
   final Function(Map<String, dynamic>) onFiltersChanged;
+  final Map<String, dynamic>? initialFilters;
 
   const FilterSidebar({
     Key? key,
     required this.onFiltersChanged,
+    this.initialFilters,
   }) : super(key: key);
 
   @override
@@ -31,6 +33,37 @@ class _FilterSidebarState extends State<FilterSidebar> {
   void initState() {
     super.initState();
     _loadUniversities();
+    _initializeFilters();
+  }
+
+  void _initializeFilters() {
+    setState(() {
+      // Always clear existing filters first
+      _minRating = 0.0;
+      _selectedUniversityIds.clear();
+      _selectedResearchAreas.clear();
+      _selectedTags.clear();
+
+      // Then apply initial filters if provided
+      if (widget.initialFilters != null) {
+        _minRating = widget.initialFilters!['minRating']?.toDouble() ?? 0.0;
+        if (widget.initialFilters!['universities'] != null) {
+          _selectedUniversityIds.addAll(
+            (widget.initialFilters!['universities'] as List).cast<String>()
+          );
+        }
+        if (widget.initialFilters!['researchAreas'] != null) {
+          _selectedResearchAreas.addAll(
+            (widget.initialFilters!['researchAreas'] as List).cast<String>()
+          );
+        }
+        if (widget.initialFilters!['tags'] != null) {
+          _selectedTags.addAll(
+            (widget.initialFilters!['tags'] as List).cast<String>()
+          );
+        }
+      }
+    });
   }
 
   Future<void> _loadUniversities() async {

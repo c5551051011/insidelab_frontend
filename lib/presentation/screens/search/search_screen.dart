@@ -6,6 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../data/models/lab.dart';
 import '../../../data/providers/data_cache_provider.dart';
 import '../../../data/providers/saved_labs_provider.dart';
+import '../../../data/providers/search_state_provider.dart';
 import '../../../services/search_service.dart';
 import '../../widgets/lab_card.dart';
 import '../../widgets/enhanced_search_bar.dart';
@@ -39,26 +40,40 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
-    _currentQuery = widget.initialQuery ?? '';
 
     // Check if we have cached data first
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cacheProvider = context.read<DataCacheProvider>();
       final savedLabsProvider = context.read<SavedLabsProvider>();
+      final searchStateProvider = context.read<SearchStateProvider>();
 
       // Load saved lab IDs for proper save button states
       savedLabsProvider.loadSavedLabIds();
 
-      if (_currentQuery.isEmpty && cacheProvider.hasPopularLabs) {
+      // Restore search state if available, otherwise use initialQuery
+      if (searchStateProvider.shouldRestoreState()) {
+        final savedState = searchStateProvider.searchState;
+        setState(() {
+          _currentQuery = savedState.query;
+          _filters = Map<String, dynamic>.from(savedState.filters);
+          _searchResults = List<Lab>.from(savedState.results);
+          _totalCount = savedState.totalCount;
+          _sortBy = savedState.sortBy;
+          _currentPage = savedState.currentPage;
+          _hasMoreResults = savedState.hasMoreResults;
+          _isLoading = false;
+        });
+        print('Restored search state: query="${_currentQuery}", filters=${searchStateProvider.getFiltersDescription()}');
+      } else if (widget.initialQuery != null && widget.initialQuery!.isNotEmpty) {
+        _currentQuery = widget.initialQuery!;
+        _performSearch();
+      } else if (_currentQuery.isEmpty && cacheProvider.hasPopularLabs) {
         // Use cached popular labs for initial display
         setState(() {
           _searchResults = cacheProvider.getInitialSearchResults();
           _totalCount = _searchResults.length;
           _isLoading = false;
         });
-      } else {
-        // Perform actual search
-        _performSearch();
       }
     });
   }
@@ -77,7 +92,9 @@ class _SearchScreenState extends State<SearchScreen> {
                     SizedBox(
                       width: 300,
                       child: FilterSidebar(
+                        key: ValueKey(_filters.hashCode), // Force rebuild when filters change
                         onFiltersChanged: _onFiltersChanged,
+                        initialFilters: _filters,
                       ),
                     ),
                     Expanded(
@@ -303,9 +320,14 @@ class _SearchScreenState extends State<SearchScreen> {
                 ActionChip(
                   label: const Text('Clear search'),
                   onPressed: () {
+                    final searchStateProvider = context.read<SearchStateProvider>();
+                    searchStateProvider.clearSearch();
                     setState(() {
                       _currentQuery = '';
                       _searchResults.clear();
+                      _totalCount = 0;
+                      _currentPage = 1;
+                      _hasMoreResults = true;
                     });
                   },
                 ),
@@ -374,10 +396,18 @@ class _SearchScreenState extends State<SearchScreen> {
 
   // Event handlers
   void _onSearchSubmitted(String query) {
+    // Clear search state and filters when starting a new search
+    final searchStateProvider = context.read<SearchStateProvider>();
+    searchStateProvider.clearSearch();
+
     setState(() {
       _currentQuery = query.trim();
+      _filters.clear(); // Clear all filters for new search
       _currentPage = 1;
       _hasMoreResults = true;
+      _searchResults.clear(); // Clear previous results
+      _totalCount = 0;
+      _errorMessage = null;
     });
     _performSearch();
   }
@@ -424,6 +454,20 @@ class _SearchScreenState extends State<SearchScreen> {
         }
         _hasMoreResults = searchResult.labs.length >= 20;
       });
+
+      // Save search state to provider for restoration later
+      if (mounted) {
+        final searchStateProvider = context.read<SearchStateProvider>();
+        searchStateProvider.updateSearchState(
+          query: _currentQuery,
+          filters: _filters,
+          results: _searchResults,
+          totalCount: _totalCount,
+          sortBy: _sortBy,
+          currentPage: _currentPage,
+          hasMoreResults: _hasMoreResults,
+        );
+      }
     } catch (e) {
       setState(() {
         _errorMessage = 'Failed to search labs: ${e.toString()}';

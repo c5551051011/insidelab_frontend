@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stanford AI Lab - Publications | InsideLab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f8fafc;
+            color: #374151;
+        }
+
+        /* Header */
+        .page-header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .back-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-btn {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .lab-name-small {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .export-btn, .share-btn {
+            padding: 8px 16px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .export-btn:hover, .share-btn:hover {
+            background: #f9fafb;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Overview Section */
+        .overview-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .research-impact {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: #1f2937;
+        }
+
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .impact-card {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 12px;
+            border: 1px solid #bae6fd;
+        }
+
+        .impact-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #0369a1;
+            display: block;
+            font-feature-settings: 'tnum';
+        }
+
+        .impact-label {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .trend-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 8px;
+        }
+
+        .trend-text {
+            font-size: 14px;
+            color: #166534;
+        }
+
+        .trend-chart {
+            font-size: 24px;
+        }
+
+        /* Research Timeline */
+        .timeline-widget {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-chart {
+            height: 200px;
+            background: linear-gradient(to top, #f1f5f9 0%, #f8fafc 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-end;
+            padding: 16px;
+            gap: 8px;
+        }
+
+        .timeline-bar {
+            flex: 1;
+            background: #3b82f6;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .timeline-bar:hover {
+            background: #2563eb;
+            transform: translateY(-4px);
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #64748b;
+            white-space: nowrap;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        /* Research Areas Breakdown */
+        .research-areas-section {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .areas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .area-card {
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .area-card:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+
+        .area-card.active {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .area-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .area-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .area-progress {
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .area-progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            border-radius: 2px;
+        }
+
+        /* Filters and Search */
+        .controls-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-select {
+            padding: 10px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .sort-select {
+            padding: 10px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* Active Filters */
+        .active-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .filter-tag {
+            padding: 6px 12px;
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            border-radius: 16px;
+            font-size: 13px;
+            color: #1e40af;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-tag-remove {
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Publications List */
+        .publications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .publication-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+
+        .publication-card:hover {
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .pub-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .pub-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .venue-badge {
+            background: #10b981;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .venue-badge.top-tier {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .pub-year {
+            color: #6b7280;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .award-badge {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .bookmark-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0.5;
+        }
+
+        .bookmark-btn:hover {
+            opacity: 1;
+        }
+
+        .pub-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .pub-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .pub-title a:hover {
+            color: #3b82f6;
+        }
+
+        .pub-authors {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+
+        .lab-author {
+            color: #3b82f6;
+            font-weight: 500;
+        }
+
+        .pub-abstract {
+            font-size: 14px;
+            color: #4b5563;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .pub-metrics {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .metric {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #6b7280;
+        }
+
+        .metric strong {
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .pub-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .pub-tag {
+            padding: 4px 10px;
+            background: #f3f4f6;
+            color: #374151;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .pub-actions {
+            display: flex;
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .action-link {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 32px;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .page-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .page-btn:hover:not(.active) {
+            background: #f9fafb;
+        }
+
+        /* Sidebar Insights */
+        .sidebar-insights {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .insight-item {
+            padding: 16px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .insight-item:last-child {
+            border-bottom: none;
+        }
+
+        .insight-label {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .insight-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .top-collaborators {
+            margin-top: 8px;
+        }
+
+        .collaborator-item {
+            padding: 8px 0;
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        @media (max-width: 1024px) {
+            .overview-section {
+                grid-template-columns: 1fr;
+            }
+
+            .impact-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+
+            .impact-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pub-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .pub-metrics {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Header -->
+<div class="page-header">
+    <div class="header-content">
+        <div class="back-nav">
+            <a href="#" class="back-btn">← Back to Lab</a>
+            <div class="lab-name-small">Stanford AI Lab - Publications</div>
+        </div>
+        <div class="header-actions">
+            <button class="export-btn">📊 Export Data</button>
+            <button class="share-btn">🔗 Share</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Overview Section -->
+    <div class="overview-section">
+        <div class="research-impact">
+            <h2 class="section-title">📊 Research Impact Overview</h2>
+            <div class="impact-grid">
+                <div class="impact-card">
+                    <span class="impact-number">15,420</span>
+                    <div class="impact-label">Total Citations</div>
+                </div>
+                <div class="impact-card">
+                    <span class="impact-number">42</span>
+                    <div class="impact-label">H-Index</div>
+                </div>
+                <div class="impact-card">
+                    <span class="impact-number">156</span>
+                    <div class="impact-label">Total Publications</div>
+                </div>
+                <div class="impact-card">
+                    <span class="impact-number">89%</span>
+                    <div class="impact-label">Top-tier Rate</div>
+                </div>
+                <div class="impact-card">
+                    <span class="impact-number">23</span>
+                    <div class="impact-label">Publications (2024)</div>
+                </div>
+                <div class="impact-card">
+                    <span class="impact-number">2,847</span>
+                    <div class="impact-label">Citations (2024)</div>
+                </div>
+            </div>
+            <div class="trend-info">
+                <div class="trend-text">
+                    <strong>📈 Growing Research Output</strong><br>
+                    35% increase in publications compared to last year
+                </div>
+                <div class="trend-chart">📊</div>
+            </div>
+        </div>
+
+        <div class="timeline-widget">
+            <h2 class="section-title">📅 Publication Timeline</h2>
+            <div class="timeline-chart">
+                <div class="timeline-bar" style="height: 60%">
+                    <div class="bar-value">18</div>
+                    <div class="bar-label">2020</div>
+                </div>
+                <div class="timeline-bar" style="height: 75%">
+                    <div class="bar-value">24</div>
+                    <div class="bar-label">2021</div>
+                </div>
+                <div class="timeline-bar" style="height: 85%">
+                    <div class="bar-value">28</div>
+                    <div class="bar-label">2022</div>
+                </div>
+                <div class="timeline-bar" style="height: 95%">
+                    <div class="bar-value">31</div>
+                    <div class="bar-label">2023</div>
+                </div>
+                <div class="timeline-bar" style="height: 70%">
+                    <div class="bar-value">23</div>
+                    <div class="bar-label">2024</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Research Areas Breakdown -->
+    <div class="research-areas-section">
+        <h2 class="section-title">🔬 Research Areas Distribution</h2>
+        <div class="areas-grid">
+            <div class="area-card active">
+                <div class="area-name">Computer Vision</div>
+                <div class="area-stats">
+                    <span>48 papers</span>
+                    <span>31%</span>
+                </div>
+                <div class="area-progress">
+                    <div class="area-progress-fill" style="width: 31%"></div>
+                </div>
+            </div>
+            <div class="area-card">
+                <div class="area-name">Natural Language Processing</div>
+                <div class="area-stats">
+                    <span>42 papers</span>
+                    <span>27%</span>
+                </div>
+                <div class="area-progress">
+                    <div class="area-progress-fill" style="width: 27%"></div>
+                </div>
+            </div>
+            <div class="area-card">
+                <div class="area-name">Robotics</div>
+                <div class="area-stats">
+                    <span>35 papers</span>
+                    <span>22%</span>
+                </div>
+                <div class="area-progress">
+                    <div class="area-progress-fill" style="width: 22%"></div>
+                </div>
+            </div>
+            <div class="area-card">
+                <div class="area-name">Machine Learning Theory</div>
+                <div class="area-stats">
+                    <span>21 papers</span>
+                    <span>13%</span>
+                </div>
+                <div class="area-progress">
+                    <div class="area-progress-fill" style="width: 13%"></div>
+                </div>
+            </div>
+            <div class="area-card">
+                <div class="area-name">Reinforcement Learning</div>
+                <div class="area-stats">
+                    <span>10 papers</span>
+                    <span>7%</span>
+                </div>
+                <div class="area-progress">
+                    <div class="area-progress-fill" style="width: 7%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="controls-section">
+        <div class="controls-grid">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Search publications by title, author, or keyword...">
+            </div>
+            <div class="filter-group">
+                <select class="filter-select">
+                    <option>All Venues</option>
+                    <option>Top-tier Only</option>
+                    <option>NIPS/ICML/ICLR</option>
+                    <option>CVPR/ICCV/ECCV</option>
+                </select>
+                <select class="filter-select">
+                    <option>All Years</option>
+                    <option>2024</option>
+                    <option>2023</option>
+                    <option>2022</option>
+                    <option>Last 5 years</option>
+                </select>
+            </div>
+            <select class="sort-select">
+                <option>Sort: Most Cited</option>
+                <option>Sort: Most Recent</option>
+                <option>Sort: Oldest First</option>
+                <option>Sort: Title A-Z</option>
+            </select>
+        </div>
+        <div class="active-filters">
+            <div class="filter-tag">
+                Computer Vision <span class="filter-tag-remove">×</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Publications List -->
+    <div class="publications-list">
+        <div class="publication-card">
+            <div class="pub-header">
+                <div class="pub-meta">
+                    <span class="venue-badge top-tier">NIPS 2024</span>
+                    <span class="pub-year">2024</span>
+                    <span class="award-badge">🏆 Best Paper</span>
+                </div>
+                <button class="bookmark-btn">🔖</button>
+            </div>
+
+            <h3 class="pub-title">
+                <a href="#">Large-Scale Vision-Language Models for Autonomous Driving: A Comprehensive Study</a>
+            </h3>
+
+            <div class="pub-authors">
+                <span class="lab-author">John Smith</span>, <span class="lab-author">Sarah Kim</span>, Michael Johnson, <span class="lab-author">Andrew Ng</span>
+            </div>
+
+            <div class="pub-metrics">
+                <div class="metric">📈 <strong>342</strong> citations</div>
+                <div class="metric">⭐ <strong>1.2K</strong> GitHub stars</div>
+                <div class="metric">💬 Oral presentation</div>
+                <div class="metric">📊 <strong>15</strong> citations this year</div>
+            </div>
+
+            <div class="pub-abstract">
+                This paper presents a comprehensive study of large-scale vision-language models for autonomous driving applications. We introduce a novel architecture that combines transformer-based vision encoders with language models to achieve state-of-the-art performance on multiple driving benchmarks. Our approach demonstrates significant improvements in scene understanding, object detection, and decision-making capabilities across diverse weather and lighting conditions.
+            </div>
+
+            <div class="pub-tags">
+                <span class="pub-tag">Computer Vision</span>
+                <span class="pub-tag">NLP</span>
+                <span class="pub-tag">Autonomous Driving</span>
+                <span class="pub-tag">Multimodal Learning</span>
+            </div>
+
+            <div class="pub-actions">
+                <a href="#" class="action-link">📄 PDF</a>
+                <a href="#" class="action-link">💻 Code</a>
+                <a href="#" class="action-link">🎥 Video</a>
+                <a href="#" class="action-link">📊 Slides</a>
+                <a href="#" class="action-link">🔗 DOI</a>
+                <a href="#" class="action-link">📖 BibTeX</a>
+            </div>
+        </div>
+
+        <div class="publication-card">
+            <div class="pub-header">
+                <div class="pub-meta">
+                    <span class="venue-badge top-tier">ICML 2024</span>
+                    <span class="pub-year">2024</span>
+                </div>
+                <button class="bookmark-btn">🔖</button>
+            </div>
+
+            <h3 class="pub-title">
+                <a href="#">Meta-Learning for Few-Shot Domain Adaptation in Neural Machine Translation</a>
+            </h3>
+
+            <div class="pub-authors">
+                <span class="lab-author">Lisa Chen</span>, David Wilson, <span class="lab-author">Andrew Ng</span>
+            </div>
+
+            <div class="pub-metrics">
+                <div class="metric">📈 <strong>156</strong> citations</div>
+                <div class="metric">⭐ <strong>892</strong> GitHub stars</div>
+                <div class="metric">💬 Spotlight</div>
+            </div>
+
+            <div class="pub-abstract">
+                We propose a meta-learning framework for few-shot domain adaptation in neural machine translation. Our method learns to quickly adapt translation models to new domains with minimal training data, achieving significant improvements over existing approaches. The framework is evaluated on multiple language pairs and domains, demonstrating its effectiveness and generalizability.
+            </div>
+
+            <div class="pub-tags">
+                <span class="
