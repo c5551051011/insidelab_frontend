@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../data/models/publication.dart';
-import '../../../../data/models/lab.dart' hide Publication;
+import '../../../../data/models/publication.dart' as pub;
+import '../../../../data/models/lab.dart';
 import '../../../../services/publication_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -24,8 +24,8 @@ class PublicationsWidget extends StatefulWidget {
 class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticKeepAliveClientMixin {
   String selectedFilter = 'All';
   List<String> availableFilters = ['All'];
-  List<Publication> publications = [];
-  PublicationStats? stats;
+  List<pub.Publication> publications = [];
+  pub.PublicationStats? stats;
   Map<String, int>? yearlyStats;
   bool isLoading = true;
   bool isLoadingPublications = false;
@@ -124,7 +124,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     }
 
     try {
-      List<Publication> loadedPublications;
+      List<pub.Publication> loadedPublications;
 
       // Handle different filter types
       switch (selectedFilter) {
@@ -442,7 +442,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '📊 Publication Timeline',
+            '📈 Publication Timeline',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -450,53 +450,11 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             ),
           ),
           const SizedBox(height: 16),
-          Container(
-            height: 100,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: years.map((year) {
-                final value = yearlyStats![year]!;
-                final height = (value / maxValue) * 70;
-                return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 2),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          value.toString(),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF6b7280),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          height: height,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.bottomCenter,
-                              end: Alignment.topCenter,
-                              colors: [Color(0xFF0ea5e9), Color(0xFF0284c7)],
-                            ),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          year,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF374151),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
+          SizedBox(
+            height: 80,
+            child: CustomPaint(
+              size: Size(double.infinity, 80),
+              painter: TimelineChartPainter(years, values, maxValue),
             ),
           ),
         ],
@@ -505,40 +463,60 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
   }
 
   Widget _buildFilters() {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: availableFilters.map((filter) {
-        final isActive = filter == selectedFilter;
-        return GestureDetector(
-          onTap: () {
-            if (mounted) {
-              setState(() {
-                selectedFilter = filter;
-              });
-              _loadPublications();
-            }
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: isActive ? AppColors.primary : const Color(0xFFf1f5f9),
-              border: Border.all(
-                color: isActive ? AppColors.primary : const Color(0xFFe2e8f0),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: availableFilters.map((filter) {
+            final isActive = filter == selectedFilter;
+            return MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: () {
+                  if (mounted) {
+                    setState(() {
+                      selectedFilter = filter;
+                    });
+                    _loadPublications();
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isActive ? AppColors.primary : const Color(0xFFf1f5f9),
+                    border: Border.all(
+                      color: isActive ? AppColors.primary : const Color(0xFFe2e8f0),
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    filter,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isActive ? Colors.white : const Color(0xFF64748b),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              filter,
-              style: TextStyle(
-                fontSize: 13,
-                color: isActive ? Colors.white : const Color(0xFF64748b),
-                fontWeight: FontWeight.w500,
-              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Text(
+            'Sorted by: Citations (high to low)',
+            style: TextStyle(
+              fontSize: 12,
+              color: const Color(0xFF6b7280),
+              fontStyle: FontStyle.italic,
             ),
           ),
-        );
-      }).toList(),
+        ),
+      ],
     );
   }
 
@@ -589,7 +567,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     );
   }
 
-  Widget _buildPublicationItemFromModel(Publication publication) {
+  Widget _buildPublicationItemFromModel(pub.Publication publication) {
     return _buildPublicationItem(
       venue: publication.venue,
       isTopTier: publication.isTopTier,
@@ -599,7 +577,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
       labAuthors: publication.labAuthors,
       citations: publication.citationCount,
       abstract: publication.abstract ?? '',
-      tags: [...publication.researchAreaNames ?? [], ...publication.keywords ?? []],
+      tags: [...(publication.researchAreaNames ?? []), ...(publication.keywords ?? [])],
       links: publication.links,
       isAwardPaper: publication.isAwardPaper,
       githubStars: publication.githubStars,
@@ -857,7 +835,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             setState(() {
               showAllPublications = true;
             });
-            _loadPublications();
+            _loadPublications(loadMore: true);
           },
           child: Container(
             width: double.infinity,
@@ -988,4 +966,79 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     }
     return number.toString();
   }
+}
+
+class TimelineChartPainter extends CustomPainter {
+  final List<String> years;
+  final List<int> values;
+  final int maxValue;
+
+  TimelineChartPainter(this.years, this.values, this.maxValue);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (years.isEmpty || values.isEmpty) return;
+
+    final paint = Paint()
+      ..color = const Color(0xFF0ea5e9)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+
+    final pointPaint = Paint()
+      ..color = const Color(0xFF0ea5e9)
+      ..style = PaintingStyle.fill;
+
+    final textPainter = TextPainter(
+      textAlign: TextAlign.center,
+      textDirection: TextDirection.ltr,
+    );
+
+    final chartHeight = size.height - 30; // Reserve space for labels
+    final chartWidth = size.width - 40; // Reserve space for margins
+    final stepX = chartWidth / (years.length - 1);
+
+    // Draw line chart
+    final path = Path();
+    for (int i = 0; i < values.length; i++) {
+      final x = 20 + i * stepX;
+      final y = 10 + (chartHeight - 20) * (1 - values[i] / maxValue);
+
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+
+      // Draw points
+      canvas.drawCircle(Offset(x, y), 3, pointPaint);
+
+      // Draw values on top of points
+      textPainter.text = TextSpan(
+        text: values[i].toString(),
+        style: const TextStyle(
+          fontSize: 10,
+          color: Color(0xFF374151),
+          fontWeight: FontWeight.w500,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(x - textPainter.width / 2, y - 20));
+
+      // Draw year labels at bottom
+      textPainter.text = TextSpan(
+        text: years[i],
+        style: const TextStyle(
+          fontSize: 9,
+          color: Color(0xFF6b7280),
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(x - textPainter.width / 2, size.height - 15));
+    }
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => true;
 }

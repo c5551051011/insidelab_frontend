@@ -107,9 +107,9 @@ class Publication {
       updatedAt: DateTime.tryParse(json['updated_at'] ?? '') ?? DateTime.now(),
 
       // Additional fields for all publications view
-      isAwardPaper: json['is_award_paper'] ?? false,
-      githubStars: json['github_stars'] ?? 0,
-      presentationType: json['presentation_type'] ?? '',
+      isAwardPaper: json['is_award_paper'] is bool ? json['is_award_paper'] : false,
+      githubStars: json['github_stars'] is int ? json['github_stars'] : (json['github_stars'] is String ? int.tryParse(json['github_stars']) ?? 0 : 0),
+      presentationType: json['presentation_type']?.toString() ?? '',
     );
   }
 
