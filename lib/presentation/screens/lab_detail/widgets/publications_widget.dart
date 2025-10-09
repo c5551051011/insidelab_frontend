@@ -573,35 +573,30 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
         value: stats!.totalPublications.toString(),
         label: 'Total Publications',
         trend: '↗ ${stats!.thisYearPublications} in last 5 years',
-        accentColor: const Color(0xFF3B82F6),
       ),
       MetricData(
         icon: '📈',
         value: _formatNumber(stats!.totalCitations),
         label: 'Total Citations',
         trend: 'Active research impact',
-        accentColor: const Color(0xFF3B82F6),
       ),
       MetricData(
         icon: '⭐',
         value: stats!.averageCitationsPerPaper?.toStringAsFixed(1) ?? '0.0',
         label: 'Avg Citations/Paper',
         trend: 'Research quality',
-        accentColor: const Color(0xFF3B82F6),
       ),
       MetricData(
         icon: '🔬',
         value: stats!.hIndex.toString(),
         label: 'H-Index',
         trend: 'Impact measure',
-        accentColor: const Color(0xFF3B82F6),
       ),
       MetricData(
         icon: '🔓',
         value: '100%',
         label: 'Open Access',
         trend: 'Excellent accessibility',
-        accentColor: const Color(0xFF3B82F6),
       ),
     ];
   }

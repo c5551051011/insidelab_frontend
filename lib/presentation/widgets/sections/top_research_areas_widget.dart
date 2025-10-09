@@ -159,7 +159,7 @@ class TopResearchAreasWidget extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 15),
                     Text(
                       '$count paper${count == 1 ? '' : 's'}',
                       style: const TextStyle(

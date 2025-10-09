@@ -127,7 +127,7 @@ class _MetricCardState extends State<MetricCard>
             );
           },
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,9 +135,9 @@ class _MetricCardState extends State<MetricCard>
                 // Icon
                 Text(
                   widget.data.icon,
-                  style: const TextStyle(fontSize: 24),
+                  style: const TextStyle(fontSize: 20),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
 
                 // Value
                 FittedBox(
@@ -146,20 +146,20 @@ class _MetricCardState extends State<MetricCard>
                   child: Text(
                     widget.data.value,
                     style: const TextStyle(
-                      fontSize: 28,
+                      fontSize: 24,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF1F2937),
                       height: 1.1,
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
 
                 // Label
                 Text(
                   widget.data.label,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF6B7280),
                     height: 1.3,
@@ -175,7 +175,7 @@ class _MetricCardState extends State<MetricCard>
                     child: Text(
                       widget.data.trend!,
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight: FontWeight.w500,
                         color: Color(0xFF10B981),
                         height: 1.3,
@@ -219,22 +219,22 @@ class ResponsiveMetricsGrid extends StatelessWidget {
         if (constraints.maxWidth < 600) {
           // Mobile
           crossAxisCount = 2;
-          spacing = 12;
-          childAspectRatio = 1.0;
+          spacing = 24;
+          childAspectRatio = 1.2;
         } else if (constraints.maxWidth < 900) {
           // Tablet
-          crossAxisCount = 3;
-          spacing = 16;
-          childAspectRatio = 1.1;
+          crossAxisCount = 5;
+          spacing = 24;
+          childAspectRatio = 1.0;
         } else if (constraints.maxWidth < 1200) {
           // Small Desktop
-          crossAxisCount = 4;
-          spacing = 16;
+          crossAxisCount = 5;
+          spacing = 24;
           childAspectRatio = 1.0;
         } else {
           // Large Desktop
           crossAxisCount = 5;
-          spacing = 16;
+          spacing = 24;
           childAspectRatio = 0.95;
         }
 

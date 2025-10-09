@@ -168,13 +168,13 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
               children: [
                 LabInformationWidget(lab: widget.lab),
                 const SizedBox(height: 24),
-                _publicationsWidget,
-                const SizedBox(height: 24),
                 // Top Research Areas Widget
                 if (_topResearchAreas != null && _topResearchAreas!.isNotEmpty) ...[
                   TopResearchAreasWidget(topResearchAreas: _topResearchAreas),
                   const SizedBox(height: 24),
                 ],
+                _publicationsWidget,
+                const SizedBox(height: 24),
                 // Always show rating breakdown with sample data if real data is not available
                 _isLoadingRatings
                     ? const Center(child: CircularProgressIndicator())
