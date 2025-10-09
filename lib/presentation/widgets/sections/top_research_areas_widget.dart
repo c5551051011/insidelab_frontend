@@ -41,11 +41,6 @@ class TopResearchAreasWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(
-                  '🔬',
-                  style: const TextStyle(fontSize: 20),
-                ),
-                const SizedBox(width: 8),
                 const Text(
                   'Top Research Areas',
                   style: TextStyle(

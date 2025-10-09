@@ -538,24 +538,6 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
-          children: [
-            Text(
-              '📊',
-              style: TextStyle(fontSize: 20),
-            ),
-            SizedBox(width: 8),
-            Text(
-              'Research Publications Overview',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF1f2937),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
         ResponsiveMetricsGrid(
           metrics: _buildMetricsData(),
           onMetricTap: _onMetricTap,
@@ -625,7 +607,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '📈 Publication Timeline',
+            'Publication Timeline',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
