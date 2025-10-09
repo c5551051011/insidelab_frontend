@@ -14,30 +14,46 @@ class PublicationService {
     }
   }
 
-  /// Get yearly publication statistics for a lab
+  /// Get yearly publication statistics for a lab using the new stats endpoint
   static Future<Map<String, int>?> getYearlyPublicationStats(String labId, {
     int? startYear,
     int? endYear,
     bool fillEmpty = true,
   }) async {
     try {
-      String endpoint = '/publications/yearly_stats/?lab_id=$labId';
+      // Use the new combined stats endpoint
+      final statsData = await getLabPublicationStatsAndYearly(labId);
 
-      if (startYear != null) {
-        endpoint += '&start_year=$startYear';
-      }
-      if (endYear != null) {
-        endpoint += '&end_year=$endYear';
-      }
-      endpoint += '&fill_empty=$fillEmpty';
+      if (statsData != null && statsData['yearly_stats'] is Map) {
+        var yearlyStats = Map<String, int>.from(statsData['yearly_stats']);
 
-      final response = await ApiService.get(endpoint);
+        // Apply year filtering if specified
+        if (startYear != null || endYear != null) {
+          yearlyStats = Map.fromEntries(
+            yearlyStats.entries.where((entry) {
+              final year = int.tryParse(entry.key);
+              if (year == null) return false;
 
-      // Extract yearly_stats from response
-      if (response is Map && response.containsKey('yearly_stats')) {
-        return Map<String, int>.from(response['yearly_stats']);
+              bool includeYear = true;
+              if (startYear != null && year < startYear) includeYear = false;
+              if (endYear != null && year > endYear) includeYear = false;
+
+              return includeYear;
+            })
+          );
+        }
+
+        // Fill empty years if requested
+        if (fillEmpty && (startYear != null && endYear != null)) {
+          for (int year = startYear!; year <= endYear!; year++) {
+            yearlyStats.putIfAbsent(year.toString(), () => 0);
+          }
+        }
+
+        return yearlyStats;
       }
-      return Map<String, int>.from(response);
+
+      return null;
     } catch (e) {
       print('Failed to load yearly stats: $e');
       return null;
@@ -206,19 +222,33 @@ class PublicationService {
     }
   }
 
-  /// Get publication statistics for a lab using by_lab endpoint
-  static Future<PublicationStats?> getLabPublicationStats(String labId) async {
+  /// Get publication statistics for a lab using the new optimized stats endpoint
+  static Future<Map<String, dynamic>?> getLabPublicationStatsAndYearly(String labId) async {
     try {
       print('PublicationService: Getting stats for lab $labId');
-      final response = await ApiService.get('/publications/by_lab/?lab_id=$labId', requireAuth: false);
+      final response = await ApiService.get('/publications/stats/?lab_id=$labId', requireAuth: false);
       print('PublicationService: Stats response type: ${response.runtimeType}');
       if (response is Map) {
-        return PublicationStats.fromJson(Map<String, dynamic>.from(response));
+        return Map<String, dynamic>.from(response);
       }
       return null;
     } catch (e) {
       print('Error loading publication stats: $e');
       print('Error type: ${e.runtimeType}');
+      return null;
+    }
+  }
+
+  /// Get publication statistics for a lab (backward compatibility)
+  static Future<PublicationStats?> getLabPublicationStats(String labId) async {
+    try {
+      final statsData = await getLabPublicationStatsAndYearly(labId);
+      if (statsData != null) {
+        return PublicationStats.fromJson(statsData);
+      }
+      return null;
+    } catch (e) {
+      print('Error loading publication stats: $e');
       return null;
     }
   }
@@ -288,45 +318,46 @@ class PublicationService {
     );
   }
 
-  /// Get available filters for the lab
+  /// Get available filters for the lab using the new optimized endpoint
   static Future<Map<String, List<String>>> getAvailableFilters(String labId) async {
     try {
-      // Get a larger sample to extract filter options
-      final publications = await getLabPublications(labId, limit: 1000);
+      print('PublicationService: Getting filters for lab $labId');
+      final response = await ApiService.get('/publications/filters/?lab_id=$labId', requireAuth: false);
+      print('PublicationService: Filters response type: ${response.runtimeType}');
 
-      // Extract unique years
-      final years = publications
-          .map((p) => p.publicationYear)
-          .where((year) => year.isNotEmpty)
-          .toSet()
-          .toList();
-      years.sort((a, b) => b.compareTo(a)); // Sort descending
+      if (response is Map) {
+        final filters = Map<String, dynamic>.from(response);
 
-      // Extract unique venues
-      final venues = publications
-          .map((p) => p.primaryVenueName)
-          .where((venue) => venue.isNotEmpty)
-          .toSet()
-          .toList();
-      venues.sort();
+        // Ensure all filter arrays include 'All' option and are properly formatted
+        final processedFilters = <String, List<String>>{};
 
-      // Extract unique research areas
-      final areas = <String>{};
-      for (final pub in publications) {
-        areas.addAll(pub.researchAreaNames);
+        // Process years
+        final years = filters['years'] as List?;
+        processedFilters['years'] = ['All', ...(years?.map((y) => y.toString()) ?? [])];
+
+        // Process venues
+        final venues = filters['venues'] as List?;
+        processedFilters['venues'] = ['All', ...(venues?.map((v) => v.toString()) ?? [])];
+
+        // Process research areas
+        final researchAreas = filters['research_areas'] as List?;
+        processedFilters['research_areas'] = ['All', ...(researchAreas?.map((r) => r.toString()) ?? [])];
+
+        // Process venue tiers - use API response or fallback to defaults
+        final venueTiers = filters['venue_tiers'] as List?;
+        processedFilters['venue_tiers'] = ['All', ...(venueTiers?.map((vt) => vt.toString()) ?? ['top', 'good', 'regular', 'unknown'])];
+
+        // Process venue types - use API response or fallback to defaults
+        final venueTypes = filters['venue_types'] as List?;
+        processedFilters['venue_types'] = ['All', ...(venueTypes?.map((vt) => vt.toString()) ?? ['conference', 'journal', 'workshop', 'preprint'])];
+
+        return processedFilters;
       }
-      final areasList = areas.toList();
-      areasList.sort();
 
-      return {
-        'years': ['All', ...years],
-        'venues': ['All', ...venues],
-        'research_areas': ['All', ...areasList],
-        'venue_tiers': ['All', 'top', 'good', 'regular', 'unknown'],
-        'venue_types': ['All', 'conference', 'journal', 'workshop', 'preprint'],
-      };
+      throw Exception('Invalid response format');
     } catch (e) {
       print('Error getting available filters: $e');
+      // Fallback to basic filters
       final currentYear = DateTime.now().year;
       return {
         'years': ['All', ...List.generate(5, (i) => (currentYear - i).toString())],

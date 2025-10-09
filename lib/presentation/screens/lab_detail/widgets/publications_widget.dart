@@ -24,6 +24,15 @@ class PublicationsWidget extends StatefulWidget {
 class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticKeepAliveClientMixin {
   String selectedFilter = 'All';
   List<String> availableFilters = ['All'];
+  String selectedSorting = '-citation_count';
+  final Map<String, String> sortingOptions = {
+    '-citation_count': 'Citations (high to low)',
+    'citation_count': 'Citations (low to high)',
+    '-publication_year': 'Year (newest first)',
+    'publication_year': 'Year (oldest first)',
+    'title': 'Title (A-Z)',
+    '-title': 'Title (Z-A)',
+  };
   List<pub.Publication> publications = [];
   pub.PublicationStats? stats;
   Map<String, int>? yearlyStats;
@@ -46,31 +55,41 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
   }
 
   Future<void> _loadInitialData() async {
-    // Load stats first (fastest)
-    await _loadStats();
+    // Load stats and yearly stats together (optimized)
+    await _loadStatsAndYearly();
 
-    // Then load publications, filters, and yearly stats in parallel
+    // Then load publications and filters in parallel
     await Future.wait([
       _loadFilters(),
       _loadPublications(),
-      _loadYearlyStats(),
     ]);
   }
 
-  Future<void> _loadStats() async {
+  Future<void> _loadStatsAndYearly() async {
     if (!mounted) return;
 
     try {
-      final loadedStats = await PublicationService.getLabPublicationStats(widget.labId);
+      final statsData = await PublicationService.getLabPublicationStatsAndYearly(widget.labId);
 
-      if (mounted) {
+      if (mounted && statsData != null) {
         setState(() {
-          stats = loadedStats;
+          // Parse stats
+          stats = pub.PublicationStats.fromJson(statsData);
+
+          // Parse yearly stats
+          if (statsData['yearly_stats'] is Map) {
+            yearlyStats = Map<String, int>.from(statsData['yearly_stats']);
+          }
+
+          isLoading = false;
+        });
+      } else if (mounted) {
+        setState(() {
           isLoading = false;
         });
       }
     } catch (e) {
-      print('Failed to load publication stats: $e');
+      print('Failed to load publication stats and yearly data: $e');
       if (mounted) {
         setState(() {
           isLoading = false;
@@ -79,33 +98,6 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     }
   }
 
-  Future<void> _loadYearlyStats() async {
-    try {
-      final yearly = await PublicationService.getYearlyPublicationStats(
-        widget.labId,
-        fillEmpty: true,
-      );
-      if (mounted) {
-        setState(() {
-          yearlyStats = yearly;
-        });
-      }
-    } catch (e) {
-      print('Failed to load yearly stats: $e');
-      // Use fallback mock data
-      if (mounted) {
-        setState(() {
-          yearlyStats = {
-            '2020': 18,
-            '2021': 24,
-            '2022': 28,
-            '2023': 31,
-            '2024': 23,
-          };
-        });
-      }
-    }
-  }
 
   Future<void> _loadPublications({bool loadMore = false}) async {
     if (!mounted) return;
@@ -133,7 +125,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
           final offset = loadMore ? (currentPage - 1) * limit : 0;
           loadedPublications = await PublicationService.getLabPublications(
             widget.labId,
-            ordering: '-citation_count',
+            ordering: selectedSorting,
             limit: limit,
             offset: offset,
             useMinimalFields: true,
@@ -180,7 +172,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
           loadedPublications = await PublicationService.getLabPublications(
             widget.labId,
             venueType: selectedFilter,
-            ordering: '-citation_count',
+            ordering: selectedSorting,
             limit: limit,
             offset: offset,
             useMinimalFields: true,
@@ -195,7 +187,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             loadedPublications = await PublicationService.getLabPublications(
               widget.labId,
               year: selectedFilter,
-              ordering: '-citation_count',
+              ordering: selectedSorting,
               limit: limit,
               offset: offset,
               useMinimalFields: true,
@@ -205,7 +197,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             loadedPublications = await PublicationService.getLabPublications(
               widget.labId,
               researchArea: selectedFilter,
-              ordering: '-citation_count',
+              ordering: selectedSorting,
               limit: limit,
               offset: offset,
               useMinimalFields: true,
@@ -257,6 +249,90 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
       }
     } catch (e) {
       print('Failed to load filters: $e');
+    }
+  }
+
+  Future<void> _loadMorePublications() async {
+    if (isLoadingMore) return;
+
+    setState(() {
+      isLoadingMore = true;
+    });
+
+    try {
+      List<pub.Publication> loadedPublications;
+      final currentPublicationsCount = publications.length;
+
+      // Load additional publications starting from current count
+      switch (selectedFilter) {
+        case 'All':
+          loadedPublications = await PublicationService.getLabPublications(
+            widget.labId,
+            ordering: selectedSorting,
+            limit: 20,
+            offset: currentPublicationsCount,
+            useMinimalFields: true,
+          );
+          break;
+        case 'Top-tier':
+          loadedPublications = await PublicationService.getTopTierPublications(
+            widget.labId,
+            limit: 20,
+            useMinimalFields: true,
+          );
+          // Remove already shown publications to avoid duplicates
+          loadedPublications = loadedPublications.skip(currentPublicationsCount).toList();
+          break;
+        case 'Award Papers':
+          loadedPublications = await PublicationService.getAwardPublications(
+            widget.labId,
+            limit: 20,
+            useMinimalFields: true,
+          );
+          loadedPublications = loadedPublications.skip(currentPublicationsCount).toList();
+          break;
+        case 'Open Access':
+          loadedPublications = await PublicationService.getOpenAccessPublications(
+            widget.labId,
+            limit: 20,
+            useMinimalFields: true,
+          );
+          loadedPublications = loadedPublications.skip(currentPublicationsCount).toList();
+          break;
+        case 'Recent (3 Years)':
+          loadedPublications = await PublicationService.getRecentPublications(
+            widget.labId,
+            limit: 20,
+            useMinimalFields: true,
+          );
+          loadedPublications = loadedPublications.skip(currentPublicationsCount).toList();
+          break;
+        default:
+          // Handle year, venue type, or research area filters
+          loadedPublications = await PublicationService.getLabPublications(
+            widget.labId,
+            researchArea: selectedFilter,
+            ordering: selectedSorting,
+            limit: 20,
+            offset: currentPublicationsCount,
+            useMinimalFields: true,
+          );
+      }
+
+      if (mounted) {
+        setState(() {
+          publications.addAll(loadedPublications);
+          hasMorePublications = loadedPublications.length >= 20;
+          isLoadingMore = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          errorMessage = 'Failed to load more publications: ${e.toString()}';
+          isLoadingMore = false;
+        });
+      }
     }
   }
 
@@ -505,16 +581,49 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
           }).toList(),
         ),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Text(
-            'Sorted by: Citations (high to low)',
-            style: TextStyle(
-              fontSize: 12,
-              color: const Color(0xFF6b7280),
-              fontStyle: FontStyle.italic,
+        Row(
+          children: [
+            Text(
+              'Sort by: ',
+              style: TextStyle(
+                fontSize: 12,
+                color: const Color(0xFF6b7280),
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xFFe2e8f0)),
+                borderRadius: BorderRadius.circular(6),
+                color: Colors.white,
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: selectedSorting,
+                  isDense: true,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF374151),
+                  ),
+                  items: sortingOptions.entries.map((entry) {
+                    return DropdownMenuItem<String>(
+                      value: entry.key,
+                      child: Text(entry.value),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    if (newValue != null && mounted) {
+                      setState(() {
+                        selectedSorting = newValue;
+                      });
+                      _loadPublications();
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -834,8 +943,9 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
           onTap: () {
             setState(() {
               showAllPublications = true;
+              currentPage = 1; // Reset page for proper offset calculation
             });
-            _loadPublications(loadMore: true);
+            _loadMorePublications();
           },
           child: Container(
             width: double.infinity,
