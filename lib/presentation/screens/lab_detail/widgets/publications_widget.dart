@@ -70,26 +70,39 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
 
     try {
       final statsData = await PublicationService.getLabPublicationStatsAndYearly(widget.labId);
+      print('PublicationsWidget: Received stats data: $statsData');
 
       if (mounted && statsData != null) {
         setState(() {
           // Parse stats
-          stats = pub.PublicationStats.fromJson(statsData);
+          try {
+            stats = pub.PublicationStats.fromJson(statsData);
+            print('PublicationsWidget: Successfully parsed stats: ${stats?.totalPublications}');
+          } catch (e) {
+            print('PublicationsWidget: Error parsing stats: $e');
+            print('PublicationsWidget: Stats data keys: ${statsData.keys}');
+          }
 
           // Parse yearly stats
           if (statsData['yearly_stats'] is Map) {
             yearlyStats = Map<String, int>.from(statsData['yearly_stats']);
+            print('PublicationsWidget: Successfully parsed yearly stats: $yearlyStats');
+          } else {
+            print('PublicationsWidget: No yearly_stats found or wrong type: ${statsData['yearly_stats']?.runtimeType}');
+            print('PublicationsWidget: Available keys: ${statsData.keys}');
           }
 
           isLoading = false;
         });
       } else if (mounted) {
+        print('PublicationsWidget: No stats data received or widget not mounted');
         setState(() {
           isLoading = false;
         });
       }
     } catch (e) {
       print('Failed to load publication stats and yearly data: $e');
+      print('Error details: ${e.toString()}');
       if (mounted) {
         setState(() {
           isLoading = false;

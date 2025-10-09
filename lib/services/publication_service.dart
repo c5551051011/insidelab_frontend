@@ -242,6 +242,8 @@ class PublicationService {
 
       if (response is Map) {
         final rawResponse = Map<String, dynamic>.from(response);
+        print('PublicationService: Raw response keys: ${rawResponse.keys}');
+        print('PublicationService: Raw response structure: $rawResponse');
 
         // Transform the response to match our expected format
         final transformedResponse = <String, dynamic>{};
@@ -249,16 +251,28 @@ class PublicationService {
         // Extract summary data
         if (rawResponse.containsKey('summary')) {
           final summary = rawResponse['summary'] as Map<String, dynamic>;
-          transformedResponse['total_publications'] = summary['total_publications'];
-          transformedResponse['total_citations'] = summary['total_citations'];
-          transformedResponse['h_index'] = summary['h_index'];
-          transformedResponse['this_year_publications'] = summary['recent_publications_5years']; // Map to closest field
+          transformedResponse['total_publications'] = summary['total_publications'] ?? 0;
+          transformedResponse['total_citations'] = summary['total_citations'] ?? 0;
+          transformedResponse['h_index'] = summary['h_index'] ?? 0;
+          transformedResponse['this_year_publications'] = summary['recent_publications_5years'] ?? 0; // Map to closest field
           transformedResponse['average_citations_per_paper'] = summary['avg_citations_per_paper'];
+
+          print('PublicationService: Extracted summary data: total_publications=${summary['total_publications']}, total_citations=${summary['total_citations']}');
+        } else {
+          print('PublicationService: No summary key found in response');
+          // Set default values if no summary is available
+          transformedResponse['total_publications'] = 0;
+          transformedResponse['total_citations'] = 0;
+          transformedResponse['h_index'] = 0;
+          transformedResponse['this_year_publications'] = 0;
         }
 
         // Extract yearly distribution
         if (rawResponse.containsKey('yearly_distribution')) {
           transformedResponse['yearly_stats'] = rawResponse['yearly_distribution'];
+          print('PublicationService: Extracted yearly_distribution: ${rawResponse['yearly_distribution']}');
+        } else {
+          print('PublicationService: No yearly_distribution key found in response');
         }
 
         // Keep original response for additional data
