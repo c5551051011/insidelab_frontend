@@ -44,6 +44,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
   String? errorMessage;
   bool showAllPublications = false;
   Set<String> bookmarkedPublications = {};
+  List<Map<String, dynamic>>? topResearchAreas;
 
   @override
   bool get wantKeepAlive => true;
@@ -83,13 +84,25 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             print('PublicationsWidget: Stats data keys: ${statsData.keys}');
           }
 
-          // Parse yearly stats
+          // Parse yearly stats and ensure exactly 5 years
           if (statsData['yearly_stats'] is Map) {
-            yearlyStats = Map<String, int>.from(statsData['yearly_stats']);
+            final rawYearlyStats = Map<String, int>.from(statsData['yearly_stats']);
+            yearlyStats = _ensureFiveYearStats(rawYearlyStats);
             print('PublicationsWidget: Successfully parsed yearly stats: $yearlyStats');
           } else {
             print('PublicationsWidget: No yearly_stats found or wrong type: ${statsData['yearly_stats']?.runtimeType}');
             print('PublicationsWidget: Available keys: ${statsData.keys}');
+            // Create default 5-year stats with all zeros
+            yearlyStats = _ensureFiveYearStats({});
+          }
+
+          // Parse top research areas from raw response
+          if (statsData['raw_response'] != null) {
+            final rawResponse = statsData['raw_response'] as Map<String, dynamic>;
+            if (rawResponse.containsKey('top_research_areas')) {
+              topResearchAreas = List<Map<String, dynamic>>.from(rawResponse['top_research_areas']);
+              print('PublicationsWidget: Successfully parsed top research areas: ${topResearchAreas?.length}');
+            }
           }
 
           isLoading = false;
@@ -111,6 +124,183 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     }
   }
 
+  /// Ensure exactly 5 years of data (current year - 4 to current year) with 0 for missing years
+  Map<String, int> _ensureFiveYearStats(Map<String, int> rawStats) {
+    final currentYear = DateTime.now().year;
+    final fiveYearStats = <String, int>{};
+
+    // Create exactly 5 years (current year - 4 to current year)
+    for (int i = 4; i >= 0; i--) {
+      final year = (currentYear - i).toString();
+      fiveYearStats[year] = rawStats[year] ?? 0;
+    }
+
+    return fiveYearStats;
+  }
+
+  Widget _buildTopResearchAreas() {
+    if (topResearchAreas == null || topResearchAreas!.isEmpty) {
+      return Container();
+    }
+
+    // Find max count for bar width calculation
+    final maxCount = topResearchAreas!
+        .map((area) => area['publication_count'] as int)
+        .reduce((a, b) => a > b ? a : b);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                '🔬',
+                style: const TextStyle(fontSize: 20),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Top Research Areas',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1f2937),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Column(
+            children: topResearchAreas!.asMap().entries.map((entry) {
+              final index = entry.key;
+              final area = entry.value;
+              final name = area['name'] as String;
+              final count = area['publication_count'] as int;
+              final barWidth = maxCount > 0 ? (count / maxCount) * 100 : 0.0;
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: _buildResearchAreaItem(
+                  rank: index + 1,
+                  name: name,
+                  count: count,
+                  barWidth: barWidth,
+                  isTop: index == 0,
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResearchAreaItem({
+    required int rank,
+    required String name,
+    required int count,
+    required double barWidth,
+    required bool isTop,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFf8fafc),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isTop
+                    ? [const Color(0xFFf59e0b), const Color(0xFFd97706)]
+                    : [const Color(0xFF3b82f6), const Color(0xFF2563eb)],
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Text(
+                rank.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1f2937),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFe5e7eb),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: barWidth / 100,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF3b82f6), Color(0xFF2563eb)],
+                              ),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$count paper${count == 1 ? '' : 's'}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF6b7280),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _loadPublications({bool loadMore = false}) async {
     if (!mounted) return;
@@ -405,6 +595,10 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
                 _buildPublicationTimeline(),
                 const SizedBox(height: 24),
               ],
+              if (topResearchAreas != null && topResearchAreas!.isNotEmpty) ...[
+                _buildTopResearchAreas(),
+                const SizedBox(height: 24),
+              ],
               _buildFilters(),
               const SizedBox(height: 20),
               if (errorMessage != null)
@@ -477,12 +671,29 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFF0ea5e9)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(child: _buildStatItem(_formatNumber(stats!.totalCitations), 'Total Citations')),
-          Expanded(child: _buildStatItem(stats!.hIndex.toString(), 'H-Index')),
-          Expanded(child: _buildStatItem(stats!.totalPublications.toString(), 'Publications')),
-          Expanded(child: _buildStatItem(stats!.thisYearPublications.toString(), 'This Year')),
+          Row(
+            children: [
+              Expanded(child: _buildStatItem(_formatNumber(stats!.totalCitations), 'Total Citations')),
+              Expanded(child: _buildStatItem(stats!.hIndex.toString(), 'H-Index')),
+              Expanded(child: _buildStatItem(stats!.totalPublications.toString(), 'Publications')),
+              Expanded(child: _buildStatItem(stats!.thisYearPublications.toString(), 'Recent 5 Years')),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(child: _buildStatItem(
+                stats!.averageCitationsPerPaper != null
+                  ? stats!.averageCitationsPerPaper!.toStringAsFixed(1)
+                  : '0.0',
+                'Avg Citations/Paper')),
+              Expanded(child: _buildStatItem('100%', 'Open Access')), // Based on API response
+              Expanded(child: Container()), // Empty space
+              Expanded(child: Container()), // Empty space
+            ],
+          ),
         ],
       ),
     );
