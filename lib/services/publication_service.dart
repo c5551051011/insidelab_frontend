@@ -25,7 +25,16 @@ class PublicationService {
       final statsData = await getLabPublicationStatsAndYearly(labId);
 
       if (statsData != null && statsData['yearly_stats'] is Map) {
-        var yearlyStats = Map<String, int>.from(statsData['yearly_stats']);
+        // The yearly_stats from yearly_distribution contains year as key and count as value
+        final yearlyDistribution = statsData['yearly_stats'] as Map;
+        var yearlyStats = <String, int>{};
+
+        // Convert to proper format (ensure int values)
+        for (final entry in yearlyDistribution.entries) {
+          final year = entry.key.toString();
+          final count = entry.value is int ? entry.value as int : int.tryParse(entry.value.toString()) ?? 0;
+          yearlyStats[year] = count;
+        }
 
         // Apply year filtering if specified
         if (startYear != null || endYear != null) {
@@ -50,9 +59,11 @@ class PublicationService {
           }
         }
 
+        print('PublicationService: Processed yearly stats: $yearlyStats');
         return yearlyStats;
       }
 
+      print('PublicationService: No yearly_stats found in response');
       return null;
     } catch (e) {
       print('Failed to load yearly stats: $e');
@@ -228,8 +239,32 @@ class PublicationService {
       print('PublicationService: Getting stats for lab $labId');
       final response = await ApiService.get('/publications/stats/?lab_id=$labId', requireAuth: false);
       print('PublicationService: Stats response type: ${response.runtimeType}');
+
       if (response is Map) {
-        return Map<String, dynamic>.from(response);
+        final rawResponse = Map<String, dynamic>.from(response);
+
+        // Transform the response to match our expected format
+        final transformedResponse = <String, dynamic>{};
+
+        // Extract summary data
+        if (rawResponse.containsKey('summary')) {
+          final summary = rawResponse['summary'] as Map<String, dynamic>;
+          transformedResponse['total_publications'] = summary['total_publications'];
+          transformedResponse['total_citations'] = summary['total_citations'];
+          transformedResponse['h_index'] = summary['h_index'];
+          transformedResponse['this_year_publications'] = summary['recent_publications_5years']; // Map to closest field
+          transformedResponse['average_citations_per_paper'] = summary['avg_citations_per_paper'];
+        }
+
+        // Extract yearly distribution
+        if (rawResponse.containsKey('yearly_distribution')) {
+          transformedResponse['yearly_stats'] = rawResponse['yearly_distribution'];
+        }
+
+        // Keep original response for additional data
+        transformedResponse['raw_response'] = rawResponse;
+
+        return transformedResponse;
       }
       return null;
     } catch (e) {
@@ -325,36 +360,51 @@ class PublicationService {
       final response = await ApiService.get('/publications/filters/?lab_id=$labId', requireAuth: false);
       print('PublicationService: Filters response type: ${response.runtimeType}');
 
-      if (response is Map) {
-        final filters = Map<String, dynamic>.from(response);
-
-        // Ensure all filter arrays include 'All' option and are properly formatted
+      if (response is Map && response.containsKey('filters')) {
+        final filters = Map<String, dynamic>.from(response['filters']);
         final processedFilters = <String, List<String>>{};
 
-        // Process years
+        // Process years (they come as numbers)
         final years = filters['years'] as List?;
-        processedFilters['years'] = ['All', ...(years?.map((y) => y.toString()) ?? [])];
+        final yearStrings = years?.map((y) => y.toString()).toList() ?? [];
+        yearStrings.sort((a, b) => b.compareTo(a)); // Sort descending (newest first)
+        processedFilters['years'] = ['All', ...yearStrings];
 
-        // Process venues
+        // Process venues (they come as objects with name property)
         final venues = filters['venues'] as List?;
-        processedFilters['venues'] = ['All', ...(venues?.map((v) => v.toString()) ?? [])];
+        final venueNames = venues?.map((v) {
+          if (v is Map) {
+            return v['name']?.toString() ?? v['short_name']?.toString() ?? '';
+          }
+          return v.toString();
+        }).where((name) => name.isNotEmpty).toSet().toList() ?? [];
+        venueNames.sort();
+        processedFilters['venues'] = ['All', ...venueNames];
 
-        // Process research areas
+        // Process research areas (they come as objects with name property)
         final researchAreas = filters['research_areas'] as List?;
-        processedFilters['research_areas'] = ['All', ...(researchAreas?.map((r) => r.toString()) ?? [])];
+        final areaNames = researchAreas?.map((area) {
+          if (area is Map) {
+            return area['name']?.toString() ?? '';
+          }
+          return area.toString();
+        }).where((name) => name.isNotEmpty).toSet().toList() ?? [];
+        areaNames.sort();
+        processedFilters['research_areas'] = ['All', ...areaNames];
 
-        // Process venue tiers - use API response or fallback to defaults
+        // Process venue tiers
         final venueTiers = filters['venue_tiers'] as List?;
         processedFilters['venue_tiers'] = ['All', ...(venueTiers?.map((vt) => vt.toString()) ?? ['top', 'good', 'regular', 'unknown'])];
 
-        // Process venue types - use API response or fallback to defaults
+        // Process venue types
         final venueTypes = filters['venue_types'] as List?;
         processedFilters['venue_types'] = ['All', ...(venueTypes?.map((vt) => vt.toString()) ?? ['conference', 'journal', 'workshop', 'preprint'])];
 
+        print('PublicationService: Processed filters: ${processedFilters.keys}');
         return processedFilters;
       }
 
-      throw Exception('Invalid response format');
+      throw Exception('Invalid response format - missing filters key');
     } catch (e) {
       print('Error getting available filters: $e');
       // Fallback to basic filters
