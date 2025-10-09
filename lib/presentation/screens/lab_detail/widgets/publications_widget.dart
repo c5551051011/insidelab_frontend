@@ -1376,45 +1376,54 @@ class TimelineChartPainter extends CustomPainter {
 
     final chartHeight = size.height - 30; // Reserve space for labels
     final chartWidth = size.width - 40; // Reserve space for margins
-    final stepX = chartWidth / (years.length - 1);
+
+    // Prevent division by zero for stepX
+    final stepX = years.length > 1 ? chartWidth / (years.length - 1) : chartWidth / 2;
+
+    // Prevent division by zero for y calculation
+    final safeMaxValue = maxValue > 0 ? maxValue : 1;
 
     // Draw line chart
     final path = Path();
     for (int i = 0; i < values.length; i++) {
       final x = 20 + i * stepX;
-      final y = 10 + (chartHeight - 20) * (1 - values[i] / maxValue);
+      final normalizedValue = values[i] / safeMaxValue;
+      final y = 10 + (chartHeight - 20) * (1 - normalizedValue.clamp(0.0, 1.0));
 
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
+      // Ensure coordinates are valid (not NaN or infinite)
+      if (x.isFinite && y.isFinite && !x.isNaN && !y.isNaN) {
+        if (i == 0) {
+          path.moveTo(x, y);
+        } else {
+          path.lineTo(x, y);
+        }
+
+        // Draw points
+        canvas.drawCircle(Offset(x, y), 3, pointPaint);
+
+        // Draw values on top of points
+        textPainter.text = TextSpan(
+          text: values[i].toString(),
+          style: const TextStyle(
+            fontSize: 10,
+            color: Color(0xFF374151),
+            fontWeight: FontWeight.w500,
+          ),
+        );
+        textPainter.layout();
+        textPainter.paint(canvas, Offset(x - textPainter.width / 2, y - 20));
+
+        // Draw year labels at bottom
+        textPainter.text = TextSpan(
+          text: years[i],
+          style: const TextStyle(
+            fontSize: 9,
+            color: Color(0xFF6b7280),
+          ),
+        );
+        textPainter.layout();
+        textPainter.paint(canvas, Offset(x - textPainter.width / 2, size.height - 15));
       }
-
-      // Draw points
-      canvas.drawCircle(Offset(x, y), 3, pointPaint);
-
-      // Draw values on top of points
-      textPainter.text = TextSpan(
-        text: values[i].toString(),
-        style: const TextStyle(
-          fontSize: 10,
-          color: Color(0xFF374151),
-          fontWeight: FontWeight.w500,
-        ),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(x - textPainter.width / 2, y - 20));
-
-      // Draw year labels at bottom
-      textPainter.text = TextSpan(
-        text: years[i],
-        style: const TextStyle(
-          fontSize: 9,
-          color: Color(0xFF6b7280),
-        ),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(x - textPainter.width / 2, size.height - 15));
     }
 
     canvas.drawPath(path, paint);
