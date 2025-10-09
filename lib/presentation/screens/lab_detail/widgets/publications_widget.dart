@@ -677,83 +677,162 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFf0f9ff), Color(0xFFe0f2fe)],
-          ),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFF0ea5e9)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: const Text(
           'Publication statistics not available',
-          style: TextStyle(color: Color(0xFF0369a1)),
+          style: TextStyle(color: Color(0xFF6b7280)),
           textAlign: TextAlign.center,
         ),
       );
     }
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFf0f9ff), Color(0xFFe0f2fe)],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          children: [
+            Text(
+              '📊',
+              style: TextStyle(fontSize: 20),
+            ),
+            SizedBox(width: 8),
+            Text(
+              'Research Publications Overview',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1f2937),
+              ),
+            ),
+          ],
         ),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFF0ea5e9)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(child: _buildStatItem(_formatNumber(stats!.totalCitations), 'Total Citations')),
-              Expanded(child: _buildStatItem(stats!.hIndex.toString(), 'H-Index')),
-              Expanded(child: _buildStatItem(stats!.totalPublications.toString(), 'Publications')),
-              Expanded(child: _buildStatItem(stats!.thisYearPublications.toString(), 'Recent 5 Years')),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(child: _buildStatItem(
-                stats!.averageCitationsPerPaper != null
-                  ? stats!.averageCitationsPerPaper!.toStringAsFixed(1)
-                  : '0.0',
-                'Avg Citations/Paper')),
-              Expanded(child: _buildStatItem('100%', 'Open Access')), // Based on API response
-              Expanded(child: Container()), // Empty space
-              Expanded(child: Container()), // Empty space
-            ],
-          ),
-        ],
-      ),
+        const SizedBox(height: 20),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            // Responsive grid: 2 columns on mobile, 3-5 columns on desktop
+            final isSmallScreen = constraints.maxWidth < 600;
+            final crossAxisCount = isSmallScreen ? 2 : 5;
+
+            return GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: crossAxisCount,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: isSmallScreen ? 1.1 : 1.0,
+              children: [
+                _buildMetricCard(
+                  icon: '📚',
+                  value: stats!.totalPublications.toString(),
+                  label: 'Total Publications',
+                  trend: '↗ ${stats!.thisYearPublications} in last 5 years',
+                ),
+                _buildMetricCard(
+                  icon: '📈',
+                  value: _formatNumber(stats!.totalCitations),
+                  label: 'Total Citations',
+                  trend: 'Active research impact',
+                ),
+                _buildMetricCard(
+                  icon: '⭐',
+                  value: stats!.averageCitationsPerPaper?.toStringAsFixed(1) ?? '0.0',
+                  label: 'Avg Citations/Paper',
+                  trend: 'Research quality',
+                ),
+                _buildMetricCard(
+                  icon: '🔬',
+                  value: stats!.hIndex.toString(),
+                  label: 'H-Index',
+                  trend: 'Impact measure',
+                ),
+                _buildMetricCard(
+                  icon: '🔓',
+                  value: '100%',
+                  label: 'Open Access',
+                  trend: 'Excellent accessibility',
+                ),
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 
-  Widget _buildStatItem(String number, String label) {
-    return Column(
-      children: [
-        Text(
-          number,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF0369a1),
-          ),
+  Widget _buildMetricCard({
+    required String icon,
+    required String value,
+    required String label,
+    required String trend,
+  }) {
+    return MouseRegion(
+      onEnter: (_) {},
+      onExit: (_) {},
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.transparent, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Color(0xFF64748b),
-            fontWeight: FontWeight.w500,
-          ),
-          textAlign: TextAlign.center,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              icon,
+              style: const TextStyle(
+                fontSize: 28,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1f2937),
+                height: 1.1,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF6b7280),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              trend,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF10b981),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
