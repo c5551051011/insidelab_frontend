@@ -138,6 +138,35 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     return fiveYearStats;
   }
 
+  /// Get venue tier colors based on primary_venue_tier
+  Map<String, dynamic> _getVenueTierStyle(String? venueTier) {
+    switch (venueTier?.toLowerCase()) {
+      case 'top': // S급 - 금색/주황색
+        return {
+          'gradient': [const Color(0xFFf59e0b), const Color(0xFFd97706)],
+          'isGradient': true,
+        };
+      case 'good': // A급 - 파란색
+        return {
+          'gradient': [const Color(0xFF3b82f6), const Color(0xFF2563eb)],
+          'isGradient': true,
+        };
+      case 'regular': // B급 - 초록색
+        return {
+          'gradient': [const Color(0xFF10b981), const Color(0xFF059669)],
+          'isGradient': true,
+        };
+      case 'workshop':
+      case 'preprint':
+      case 'unknown':
+      default: // Workshop/Preprint - 회색
+        return {
+          'color': const Color(0xFF6b7280),
+          'isGradient': false,
+        };
+    }
+  }
+
   Widget _buildTopResearchAreas() {
     if (topResearchAreas == null || topResearchAreas!.isEmpty) {
       return Container();
@@ -903,7 +932,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
   Widget _buildPublicationItemFromModel(pub.Publication publication) {
     return _buildPublicationItem(
       venue: publication.venue,
-      isTopTier: publication.isTopTier,
+      venueTier: publication.primaryVenueTier,
       year: publication.year,
       title: publication.title,
       authors: publication.authors,
@@ -920,7 +949,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
 
   Widget _buildPublicationItem({
     required String venue,
-    required bool isTopTier,
+    String? venueTier,
     required String year,
     required String title,
     required List<String> authors,
@@ -947,20 +976,34 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isTopTier ? const Color(0xFFf59e0b) : const Color(0xFF10b981),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      venue,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                  Builder(
+                    builder: (context) {
+                      final tierStyle = _getVenueTierStyle(venueTier);
+                      final isGradient = tierStyle['isGradient'] as bool;
+
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          gradient: isGradient
+                              ? LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: tierStyle['gradient'] as List<Color>,
+                                )
+                              : null,
+                          color: isGradient ? null : tierStyle['color'] as Color,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          venue,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   if (isAwardPaper) ...[
                     const SizedBox(width: 8),
