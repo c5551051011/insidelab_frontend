@@ -542,7 +542,7 @@ class _AllPublicationsScreenState extends State<AllPublicationsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '📅 Publication Timeline',
+            'Publication Timeline',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,

@@ -5,16 +5,19 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/publication.dart' as pub;
 import '../../../../data/models/lab.dart';
 import '../../../../services/publication_service.dart';
+import '../../../../presentation/widgets/common/metric_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PublicationsWidget extends StatefulWidget {
   final String labId;
   final Lab? lab; // Optional lab object for navigation
+  final Function(List<Map<String, dynamic>>?)? onTopResearchAreasChanged;
 
   const PublicationsWidget({
     Key? key,
     required this.labId,
     this.lab,
+    this.onTopResearchAreasChanged,
   }) : super(key: key);
 
   @override
@@ -106,6 +109,10 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             if (rawResponse.containsKey('top_research_areas')) {
               topResearchAreas = List<Map<String, dynamic>>.from(rawResponse['top_research_areas']);
               print('PublicationsWidget: Successfully parsed top research areas: ${topResearchAreas?.length}');
+              // Notify parent widget about the top research areas
+              if (widget.onTopResearchAreasChanged != null) {
+                widget.onTopResearchAreasChanged!(topResearchAreas);
+              }
             }
           }
 
@@ -171,169 +178,6 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
     }
   }
 
-  Widget _buildTopResearchAreas() {
-    if (topResearchAreas == null || topResearchAreas!.isEmpty) {
-      return Container();
-    }
-
-    // Find max count for bar width calculation
-    final maxCount = topResearchAreas!
-        .map((area) => area['publication_count'] as int)
-        .reduce((a, b) => a > b ? a : b);
-
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                '🔬',
-                style: const TextStyle(fontSize: 20),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Top Research Areas',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1f2937),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Column(
-            children: topResearchAreas!.asMap().entries.map((entry) {
-              final index = entry.key;
-              final area = entry.value;
-              final name = area['name'] as String;
-              final count = area['publication_count'] as int;
-              final barWidth = maxCount > 0 ? (count / maxCount) * 100 : 0.0;
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                child: _buildResearchAreaItem(
-                  rank: index + 1,
-                  name: name,
-                  count: count,
-                  barWidth: barWidth,
-                  isTop: index == 0,
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildResearchAreaItem({
-    required int rank,
-    required String name,
-    required int count,
-    required double barWidth,
-    required bool isTop,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFf8fafc),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isTop
-                    ? [const Color(0xFFf59e0b), const Color(0xFFd97706)]
-                    : [const Color(0xFF3b82f6), const Color(0xFF2563eb)],
-              ),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Center(
-              child: Text(
-                rank.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1f2937),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFe5e7eb),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: barWidth / 100,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF3b82f6), Color(0xFF2563eb)],
-                              ),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '$count paper${count == 1 ? '' : 's'}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF6b7280),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Future<void> _loadPublications({bool loadMore = false}) async {
     if (!mounted) return;
@@ -628,10 +472,6 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
                 _buildPublicationTimeline(),
                 const SizedBox(height: 24),
               ],
-              if (topResearchAreas != null && topResearchAreas!.isNotEmpty) ...[
-                _buildTopResearchAreas(),
-                const SizedBox(height: 24),
-              ],
               _buildFilters(),
               const SizedBox(height: 20),
               if (errorMessage != null)
@@ -716,135 +556,61 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
           ],
         ),
         const SizedBox(height: 20),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            // Responsive grid: 2 columns on mobile, 3-5 columns on desktop
-            final isSmallScreen = constraints.maxWidth < 600;
-            final crossAxisCount = isSmallScreen ? 2 : 5;
-
-            return GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: crossAxisCount,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              childAspectRatio: isSmallScreen ? 1.0 : 0.9,
-              children: [
-                _buildMetricCard(
-                  icon: '📚',
-                  value: stats!.totalPublications.toString(),
-                  label: 'Total Publications',
-                  trend: '↗ ${stats!.thisYearPublications} in last 5 years',
-                ),
-                _buildMetricCard(
-                  icon: '📈',
-                  value: _formatNumber(stats!.totalCitations),
-                  label: 'Total Citations',
-                  trend: 'Active research impact',
-                ),
-                _buildMetricCard(
-                  icon: '⭐',
-                  value: stats!.averageCitationsPerPaper?.toStringAsFixed(1) ?? '0.0',
-                  label: 'Avg Citations/Paper',
-                  trend: 'Research quality',
-                ),
-                _buildMetricCard(
-                  icon: '🔬',
-                  value: stats!.hIndex.toString(),
-                  label: 'H-Index',
-                  trend: 'Impact measure',
-                ),
-                _buildMetricCard(
-                  icon: '🔓',
-                  value: '100%',
-                  label: 'Open Access',
-                  trend: 'Excellent accessibility',
-                ),
-              ],
-            );
-          },
+        ResponsiveMetricsGrid(
+          metrics: _buildMetricsData(),
+          onMetricTap: _onMetricTap,
         ),
       ],
     );
   }
 
-  Widget _buildMetricCard({
-    required String icon,
-    required String value,
-    required String label,
-    required String trend,
-  }) {
-    return MouseRegion(
-      onEnter: (_) {},
-      onExit: (_) {},
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.transparent, width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              icon,
-              style: const TextStyle(
-                fontSize: 24,
-              ),
-            ),
-            const SizedBox(height: 6),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1f2937),
-                  height: 1.1,
-                ),
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF6b7280),
-                fontWeight: FontWeight.w500,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Flexible(
-              child: Text(
-                trend,
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: Color(0xFF10b981),
-                  fontWeight: FontWeight.w500,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
+  List<MetricData> _buildMetricsData() {
+    if (stats == null) return [];
+
+    return [
+      MetricData(
+        icon: '📚',
+        value: stats!.totalPublications.toString(),
+        label: 'Total Publications',
+        trend: '↗ ${stats!.thisYearPublications} in last 5 years',
+        accentColor: const Color(0xFF3B82F6),
       ),
-    );
+      MetricData(
+        icon: '📈',
+        value: _formatNumber(stats!.totalCitations),
+        label: 'Total Citations',
+        trend: 'Active research impact',
+        accentColor: const Color(0xFF3B82F6),
+      ),
+      MetricData(
+        icon: '⭐',
+        value: stats!.averageCitationsPerPaper?.toStringAsFixed(1) ?? '0.0',
+        label: 'Avg Citations/Paper',
+        trend: 'Research quality',
+        accentColor: const Color(0xFF3B82F6),
+      ),
+      MetricData(
+        icon: '🔬',
+        value: stats!.hIndex.toString(),
+        label: 'H-Index',
+        trend: 'Impact measure',
+        accentColor: const Color(0xFF3B82F6),
+      ),
+      MetricData(
+        icon: '🔓',
+        value: '100%',
+        label: 'Open Access',
+        trend: 'Excellent accessibility',
+        accentColor: const Color(0xFF3B82F6),
+      ),
+    ];
   }
+
+  void _onMetricTap(int index) {
+    // TODO: 메트릭 클릭 시 상세 정보 표시 또는 필터링 기능 구현
+    print('Metric $index tapped');
+  }
+
 
   Widget _buildPublicationTimeline() {
     if (yearlyStats == null) return Container();

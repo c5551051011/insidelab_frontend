@@ -9,6 +9,7 @@ import 'widgets/rating_breakdown.dart';
 import 'widgets/reviews_list.dart';
 import 'widgets/publications_widget.dart';
 import 'widgets/lab_information_widget.dart';
+import '../../widgets/sections/top_research_areas_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LabDetailScreen extends StatefulWidget {
@@ -28,6 +29,7 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
   bool _isLoadingRatings = true;
   late final Widget _publicationsWidget;
   final GlobalKey _publicationsKey = GlobalKey();
+  List<Map<String, dynamic>>? _topResearchAreas;
 
   @override
   void initState() {
@@ -36,6 +38,13 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
       key: _publicationsKey,
       labId: widget.lab.id,
       lab: widget.lab,
+      onTopResearchAreasChanged: (topResearchAreas) {
+        if (mounted) {
+          setState(() {
+            _topResearchAreas = topResearchAreas;
+          });
+        }
+      },
     );
     _loadRatingBreakdown();
   }
@@ -133,11 +142,16 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
                   ),
                 ),
                 const SizedBox(width: 24),
-                // Right Column: Rating Breakdown + Reviews
+                // Right Column: Top Research Areas + Rating Breakdown + Reviews
                 Expanded(
                   flex: 2,
                   child: Column(
                     children: [
+                      // Top Research Areas Widget
+                      if (_topResearchAreas != null && _topResearchAreas!.isNotEmpty) ...[
+                        TopResearchAreasWidget(topResearchAreas: _topResearchAreas),
+                        const SizedBox(height: 24),
+                      ],
                       // Always show rating breakdown with sample data if real data is not available
                       _isLoadingRatings
                           ? const Center(child: CircularProgressIndicator())
@@ -156,6 +170,11 @@ class _LabDetailScreenState extends State<LabDetailScreen> {
                 const SizedBox(height: 24),
                 _publicationsWidget,
                 const SizedBox(height: 24),
+                // Top Research Areas Widget
+                if (_topResearchAreas != null && _topResearchAreas!.isNotEmpty) ...[
+                  TopResearchAreasWidget(topResearchAreas: _topResearchAreas),
+                  const SizedBox(height: 24),
+                ],
                 // Always show rating breakdown with sample data if real data is not available
                 _isLoadingRatings
                     ? const Center(child: CircularProgressIndicator())
