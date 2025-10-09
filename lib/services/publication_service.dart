@@ -267,10 +267,10 @@ class PublicationService {
           transformedResponse['this_year_publications'] = 0;
         }
 
-        // Extract yearly distribution
+        // Extract yearly distribution (but don't include in transformed response to avoid type conflict)
         if (rawResponse.containsKey('yearly_distribution')) {
-          transformedResponse['yearly_stats'] = rawResponse['yearly_distribution'];
-          print('PublicationService: Extracted yearly_distribution: ${rawResponse['yearly_distribution']}');
+          // Store yearly_distribution separately to avoid type conflicts with PublicationStats.fromJson
+          print('PublicationService: Found yearly_distribution: ${rawResponse['yearly_distribution']}');
         } else {
           print('PublicationService: No yearly_distribution key found in response');
         }

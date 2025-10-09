@@ -84,15 +84,19 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             print('PublicationsWidget: Stats data keys: ${statsData.keys}');
           }
 
-          // Parse yearly stats and ensure exactly 5 years
-          if (statsData['yearly_stats'] is Map) {
-            final rawYearlyStats = Map<String, int>.from(statsData['yearly_stats']);
-            yearlyStats = _ensureFiveYearStats(rawYearlyStats);
-            print('PublicationsWidget: Successfully parsed yearly stats: $yearlyStats');
+          // Parse yearly stats from raw response (not from transformed statsData)
+          if (statsData['raw_response'] != null) {
+            final rawResponse = statsData['raw_response'] as Map<String, dynamic>;
+            if (rawResponse.containsKey('yearly_distribution')) {
+              final rawYearlyStats = Map<String, int>.from(rawResponse['yearly_distribution']);
+              yearlyStats = _ensureFiveYearStats(rawYearlyStats);
+              print('PublicationsWidget: Successfully parsed yearly stats from raw response: $yearlyStats');
+            } else {
+              print('PublicationsWidget: No yearly_distribution found in raw response');
+              yearlyStats = _ensureFiveYearStats({});
+            }
           } else {
-            print('PublicationsWidget: No yearly_stats found or wrong type: ${statsData['yearly_stats']?.runtimeType}');
-            print('PublicationsWidget: Available keys: ${statsData.keys}');
-            // Create default 5-year stats with all zeros
+            print('PublicationsWidget: No raw_response found');
             yearlyStats = _ensureFiveYearStats({});
           }
 
