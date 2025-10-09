@@ -708,7 +708,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
             Text(
               'Research Publications Overview',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF1f2937),
               ),
@@ -728,7 +728,7 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
               crossAxisCount: crossAxisCount,
               mainAxisSpacing: 16,
               crossAxisSpacing: 16,
-              childAspectRatio: isSmallScreen ? 1.1 : 1.0,
+              childAspectRatio: isSmallScreen ? 1.0 : 0.9,
               children: [
                 _buildMetricCard(
                   icon: '📚',
@@ -794,40 +794,50 @@ class _PublicationsWidgetState extends State<PublicationsWidget> with AutomaticK
           ],
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               icon,
               style: const TextStyle(
-                fontSize: 28,
+                fontSize: 24,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1f2937),
-                height: 1.1,
+            const SizedBox(height: 6),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1f2937),
+                  height: 1.1,
+                ),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
               label,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 color: Color(0xFF6b7280),
                 fontWeight: FontWeight.w500,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 8),
-            Text(
-              trend,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF10b981),
-                fontWeight: FontWeight.w500,
+            const SizedBox(height: 4),
+            Flexible(
+              child: Text(
+                trend,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Color(0xFF10b981),
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
