@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Search, FileText, Video } from 'lucide-react';
-import { colors, gradients, textStyles, spacing, sectionSpacing } from '../theme';
+import { PrimaryButton, SecondaryButton } from './Button';
+import { colors, gradients, textStyles, spacing, sectionSpacing, borderRadius } from '../theme';
 
 const HeroSection = () => {
   const [searchValue, setSearchValue] = useState('');
-  const [overlayOpen, setOverlayOpen] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
 
   const isMobile = window.innerWidth < 768;
 
@@ -18,8 +18,8 @@ const HeroSection = () => {
   return (
     <section
       style={{
-        height: '90vh',
-        minHeight: '300px',
+        minHeight: '100vh',
+        height: '100vh',
         backgroundImage: `${gradients.heroOverlay}, url('/assets/images/hero_background.png')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -27,178 +27,170 @@ const HeroSection = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
+      {/* Fixed Container - Prevents layout shifts */}
       <div
         style={{
-          maxWidth: '1200px',
           width: '100%',
-          padding: `${isMobile ? sectionSpacing.mobile.large : sectionSpacing.desktop.large} ${sectionSpacing.horizontal[isMobile ? 'mobile' : 'desktop']}`,
+          maxWidth: '1200px',
+          height: '100%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: '600px',
+          padding: `0 ${sectionSpacing.horizontal[isMobile ? 'mobile' : 'desktop']}`,
+          position: 'relative',
         }}
       >
-        {/* Hero Content */}
+        {/* Content Container - Fixed positioning */}
         <div
           style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '100%',
             maxWidth: '920px',
             textAlign: 'center',
-            marginBottom: isMobile ? spacing[8] : spacing[10],
+            position: 'relative',
+            zIndex: 1,
           }}
         >
-          {/* Main Headline */}
-          <h1
+          {/* Hero Title - Fixed space */}
+          <div
             style={{
-              ...textStyles[isMobile ? 'heroTitleMobile' : 'heroTitle'],
-              color: colors.heroText,
-              marginBottom: isMobile ? spacing[4] : spacing[6],
+              marginBottom: isMobile ? spacing[8] : spacing[10],
+              width: '100%',
             }}
           >
-            Your Gateway to Graduate School Success
-          </h1>
-
-          {/* Subheading */}
-          <p
-            style={{
-              ...textStyles[isMobile ? 'heroSubtitleMobile' : 'heroSubtitle'],
-              color: colors.heroSubtext,
-              maxWidth: '760px',
-              margin: '0 auto',
-            }}
-          >
-            Search labs with detailed ratings, read honest reviews from current grad students,
-            and find the perfect research environment for your goals.
-          </p>
-        </div>
-
-        {/* Search Section */}
-        <div
-          style={{
-            width: '100%',
-            maxWidth: '600px',
-            marginBottom: !overlayOpen ? (isMobile ? spacing[6] : spacing[8]) : spacing[4],
-          }}
-        >
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} style={{ position: 'relative' }}>
-            <Search
-              size={20}
+            <h1
               style={{
-                position: 'absolute',
-                left: spacing[4],
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: colors.textTertiary,
-                zIndex: 1,
-              }}
-            />
-            <input
-              type="text"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onFocus={() => setOverlayOpen(true)}
-              onBlur={() => setOverlayOpen(false)}
-              placeholder="Search by university, professor, lab name, or research area"
-              style={{
-                width: '100%',
-                padding: `${spacing[4]} ${spacing[4]} ${spacing[4]} ${spacing[12]}`,
-                fontSize: isMobile ? '16px' : '18px',
-                border: 'none',
-                borderRadius: '12px',
-                outline: 'none',
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-                transition: 'all 0.2s ease',
-              }}
-            />
-          </form>
-
-          {/* Help Guide */}
-          {!overlayOpen && (
-            <p
-              style={{
+                fontSize: isMobile ? '36px' : '56px',
+                fontWeight: '800',
+                color: colors.heroText,
+                lineHeight: 1.1,
+                letterSpacing: '-0.02em',
+                fontFamily: 'Inter',
+                marginBottom: isMobile ? spacing[4] : spacing[6],
                 textAlign: 'center',
-                marginTop: isMobile ? spacing[2] : spacing[4],
-                fontSize: isMobile ? '14px' : '16px',
-                color: `${colors.heroSubtext}CC`, // 80% opacity
-                maxWidth: '500px',
-                margin: `${isMobile ? spacing[2] : spacing[4]} auto 0`,
+                overflow: 'visible',
               }}
             >
-              Search by university, professor, lab name, or research area
-            </p>
-          )}
-        </div>
+              Your Gateway to Graduate School Success
+            </h1>
 
-        {/* Action Buttons */}
-        {!overlayOpen && (
+            <p
+              style={{
+                fontSize: isMobile ? '16px' : '20px',
+                color: colors.heroSubtext,
+                lineHeight: 1.5,
+                fontFamily: 'Inter',
+                maxWidth: '760px',
+                margin: '0 auto',
+              }}
+            >
+              Search labs with detailed ratings, read honest reviews from current grad students,
+              and find the perfect research environment for your goals.
+            </p>
+          </div>
+
+          {/* Search Container - Fixed height */}
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '600px',
+              height: '60px', // Reduced height since help text is removed
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              marginBottom: isMobile ? spacing[8] : spacing[10],
+            }}
+          >
+            {/* Search Form */}
+            <form
+              onSubmit={handleSearch}
+              style={{
+                position: 'relative',
+                width: '100%',
+                marginBottom: spacing[4],
+              }}
+            >
+              <Search
+                size={20}
+                style={{
+                  position: 'absolute',
+                  left: spacing[4],
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: colors.textTertiary,
+                  zIndex: 2,
+                }}
+              />
+              <input
+                type="text"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                placeholder="Search by university, professor, lab name, or research area"
+                style={{
+                  width: '100%',
+                  height: '60px', // Fixed height
+                  padding: `0 ${spacing[4]} 0 ${spacing[12]}`,
+                  fontSize: isMobile ? '16px' : '18px',
+                  border: 'none',
+                  borderRadius: '12px',
+                  outline: 'none',
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: searchFocused
+                    ? '0 12px 40px rgba(0, 0, 0, 0.15)'
+                    : '0 8px 32px rgba(0, 0, 0, 0.1)',
+                  transition: 'box-shadow 0.2s ease',
+                  fontFamily: 'Inter',
+                }}
+              />
+            </form>
+
+          </div>
+
+          {/* Action Buttons - Fixed positioning */}
           <div
             style={{
               display: 'flex',
               flexDirection: isMobile ? 'column' : 'row',
-              gap: isMobile ? spacing[3] : spacing[4],
+              gap: isMobile ? spacing[4] : spacing[6],
               alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              maxWidth: '500px',
+              position: 'relative',
+              opacity: 1,
+              transition: 'none',
             }}
           >
-            <Link
+            <PrimaryButton
               to="/write-review"
-              style={{
-                ...textStyles.buttonText,
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing[2],
-                padding: `${spacing[4]} ${spacing[8]}`,
-                backgroundColor: colors.primary,
-                color: colors.buttonText,
-                textDecoration: 'none',
-                borderRadius: '8px',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = colors.primaryHover;
-                e.target.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = colors.primary;
-                e.target.style.transform = 'translateY(0)';
-              }}
+              icon={FileText}
+              size="small"
+              variant="outline"
             >
-              <FileText size={20} />
               Write Review
-            </Link>
+            </PrimaryButton>
 
-            <Link
+            <SecondaryButton
               to="/services/mock-interview"
-              style={{
-                ...textStyles.buttonText,
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing[2],
-                padding: `${spacing[4]} ${spacing[8]}`,
-                backgroundColor: 'transparent',
-                color: colors.heroText,
-                textDecoration: 'none',
-                borderRadius: '8px',
-                border: `2px solid ${colors.heroText}`,
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = 'transparent';
-              }}
+              icon={Video}
+              size="small"
+              variant="outline"
             >
-              <Video size={20} />
               Book Mock Interview
-            </Link>
+            </SecondaryButton>
           </div>
-        )}
+        </div>
       </div>
     </section>
   );

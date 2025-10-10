@@ -1,116 +1,146 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search, User } from 'lucide-react';
+import { colors, spacing } from '../theme';
 
 const Header = () => {
+  const screenWidth = window.innerWidth;
+  const isMobile = screenWidth < 850;
+
   return (
     <header style={{
-      background: 'white',
-      borderBottom: '1px solid #e5e7eb',
+      height: '72px',
+      background: 'rgba(255, 255, 255, 0.95)',
+      borderBottom: `1px solid ${colors.border}`,
       position: 'sticky',
       top: 0,
-      zIndex: 50
+      zIndex: 50,
+      backdropFilter: 'blur(10px)'
     }}>
-      <nav className="container" style={{
+      <div style={{
+        height: '100%',
+        maxWidth: '1200px',
+        margin: '0 auto',
+        padding: '0 24px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '16px 24px'
+        justifyContent: 'space-between'
       }}>
-        {/* Logo */}
-        <Link to="/" style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          textDecoration: 'none',
-          color: '#1f2937'
-        }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontWeight: '700',
-            fontSize: '18px'
-          }}>
-            IL
-          </div>
+        {/* Logo - Flutter와 동일한 스타일 */}
+        <Link
+          to="/"
+          style={{
+            textDecoration: 'none',
+          }}
+        >
           <span style={{
-            fontSize: '20px',
+            fontSize: '22px',
             fontWeight: '700',
-            color: '#1f2937'
+            color: colors.primary,
+            fontFamily: 'Inter'
           }}>
-            InsideLab
+            Insidelab
           </span>
         </Link>
 
-        {/* Search Bar */}
-        <div style={{
-          position: 'relative',
-          maxWidth: '400px',
-          width: '100%',
-          margin: '0 32px'
-        }}>
-          <Search
-            size={20}
-            style={{
-              position: 'absolute',
-              left: '12px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#9ca3af'
-            }}
-          />
-          <input
-            type="text"
-            placeholder="Search labs, professors, universities..."
-            style={{
-              width: '100%',
-              padding: '12px 16px 12px 44px',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              fontSize: '14px',
-              outline: 'none'
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = '#3b82f6';
-              e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = '#e5e7eb';
-              e.target.style.boxShadow = 'none';
-            }}
-          />
-        </div>
+        <div style={{ flex: 1 }} />
 
-        {/* Navigation Links */}
+        {/* Desktop Navigation */}
+        {!isMobile && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing[3]
+          }}>
+            <NavLink to="/search">Search</NavLink>
+          </div>
+        )}
+
+        {/* Auth Buttons */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '16px'
+          gap: spacing[3],
+          marginLeft: isMobile ? 0 : spacing[4]
         }}>
           <Link
             to="/login"
-            className="btn btn-secondary"
-            style={{ textDecoration: 'none' }}
+            style={{
+              padding: `${spacing[2]} ${spacing[4]}`,
+              fontSize: '14px',
+              fontWeight: '500',
+              color: colors.textPrimary,
+              textDecoration: 'none',
+              borderRadius: '6px',
+              transition: 'all 0.2s ease',
+              fontFamily: 'Inter'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = colors.backgroundLight;
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+            }}
           >
-            <User size={16} />
             Sign In
           </Link>
           <Link
             to="/signup"
-            className="btn btn-primary"
-            style={{ textDecoration: 'none' }}
+            style={{
+              padding: `${spacing[2]} ${spacing[4]}`,
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'white',
+              backgroundColor: colors.primary,
+              textDecoration: 'none',
+              borderRadius: '6px',
+              transition: 'all 0.2s ease',
+              fontFamily: 'Inter',
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = colors.primaryHover;
+              e.target.style.transform = 'translateY(-1px)';
+              e.target.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = colors.primary;
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
+            }}
           >
             Get Started
           </Link>
         </div>
-      </nav>
+      </div>
     </header>
+  );
+};
+
+const NavLink = ({ to, children }) => {
+  return (
+    <Link
+      to={to}
+      style={{
+        padding: `${spacing[2]} ${spacing[3]}`,
+        fontSize: '14px',
+        fontWeight: '500',
+        color: colors.textSecondary,
+        textDecoration: 'none',
+        borderRadius: '6px',
+        transition: 'all 0.2s ease',
+        fontFamily: 'Inter'
+      }}
+      onMouseEnter={(e) => {
+        e.target.style.color = colors.primary;
+        e.target.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.color = colors.textSecondary;
+        e.target.style.backgroundColor = 'transparent';
+      }}
+    >
+      {children}
+    </Link>
   );
 };
 
