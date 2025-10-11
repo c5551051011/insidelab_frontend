@@ -67,7 +67,7 @@ const HeroSection = () => {
           >
             <h1
               style={{
-                fontSize: isMobile ? '36px' : '56px',
+                fontSize: isMobile ? '28px' : '56px',
                 fontWeight: '800',
                 color: colors.heroText,
                 lineHeight: 1.1,
@@ -83,7 +83,7 @@ const HeroSection = () => {
 
             <p
               style={{
-                fontSize: isMobile ? '16px' : '20px',
+                fontSize: isMobile ? '14px' : '20px',
                 color: colors.heroSubtext,
                 lineHeight: 1.5,
                 fontFamily: 'Inter',
@@ -140,7 +140,7 @@ const HeroSection = () => {
                   width: '100%',
                   height: '60px', // Fixed height
                   padding: `0 ${spacing[4]} 0 ${spacing[12]}`,
-                  fontSize: isMobile ? '16px' : '18px',
+                  fontSize: isMobile ? '14px' : '18px',
                   border: 'none',
                   borderRadius: '12px',
                   outline: 'none',

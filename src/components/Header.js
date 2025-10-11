@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
 import { colors, spacing } from '../theme';
 
 const Header = () => {
   const screenWidth = window.innerWidth;
   const isMobile = screenWidth < 850;
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <header style={{
@@ -33,7 +35,7 @@ const Header = () => {
           }}
         >
           <span style={{
-            fontSize: '22px',
+            fontSize: isMobile ? '18px' : '22px',
             fontWeight: '700',
             color: colors.primary,
             fontFamily: 'Inter'
@@ -55,13 +57,37 @@ const Header = () => {
           </div>
         )}
 
-        {/* Auth Buttons */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing[3],
-          marginLeft: isMobile ? 0 : spacing[4]
-        }}>
+        {/* Mobile Menu Button */}
+        {isMobile && (
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: spacing[2],
+              borderRadius: '6px',
+              transition: 'background-color 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = colors.backgroundLight;
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+            }}
+          >
+            <Menu size={24} color={colors.textPrimary} />
+          </button>
+        )}
+
+        {/* Auth Buttons - Hidden on mobile */}
+        {!isMobile && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing[3],
+            marginLeft: spacing[4]
+          }}>
           <Link
             to="/login"
             style={{
@@ -110,8 +136,120 @@ const Header = () => {
           >
             Get Started
           </Link>
-        </div>
+          </div>
+        )}
       </div>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 999,
+          }}
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: '100%',
+              height: '100%',
+              backgroundColor: colors.background,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Mobile Menu Header */}
+            <div style={{
+              padding: '24px',
+              borderBottom: `1px solid ${colors.border}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <span style={{
+                fontSize: '18px',
+                fontWeight: '700',
+                color: colors.primary,
+                fontFamily: 'Inter'
+              }}>
+                Insidelab
+              </span>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: spacing[2],
+                  borderRadius: '6px',
+                }}
+              >
+                <X size={24} color={colors.textPrimary} />
+              </button>
+            </div>
+
+            {/* Mobile Menu Items */}
+            <div style={{
+              flex: 1,
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: spacing[4]
+            }}>
+              <MobileNavLink
+                to="/search"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Search
+              </MobileNavLink>
+
+              <div style={{ height: '32px' }} />
+
+              <MobileNavLink
+                to="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ color: colors.textPrimary }}
+              >
+                Sign In
+              </MobileNavLink>
+
+              <Link
+                to="/signup"
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  padding: `${spacing[4]} ${spacing[6]}`,
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: 'white',
+                  backgroundColor: colors.primary,
+                  textDecoration: 'none',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                  fontFamily: 'Inter',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = colors.primaryHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = colors.primary;
+                }}
+              >
+                Get Started
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
@@ -137,6 +275,29 @@ const NavLink = ({ to, children }) => {
       onMouseLeave={(e) => {
         e.target.style.color = colors.textSecondary;
         e.target.style.backgroundColor = 'transparent';
+      }}
+    >
+      {children}
+    </Link>
+  );
+};
+
+const MobileNavLink = ({ to, children, onClick, style = {} }) => {
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      style={{
+        padding: `${spacing[4]} 0`,
+        fontSize: '18px',
+        fontWeight: '500',
+        color: colors.textPrimary,
+        textDecoration: 'none',
+        borderRadius: '8px',
+        transition: 'all 0.2s ease',
+        fontFamily: 'Inter',
+        borderBottom: `1px solid ${colors.border}`,
+        ...style
       }}
     >
       {children}
