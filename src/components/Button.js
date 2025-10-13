@@ -39,14 +39,14 @@ export const PrimaryButton = ({
     backgroundColor: variant === 'outline' ? 'rgba(255, 255, 255, 0.1)' : (disabled ? colors.textTertiary : colors.primary),
     color: variant === 'outline' ? colors.heroText : 'white',
     border: variant === 'outline' ? `2px solid ${colors.heroText}` : 'none',
-    borderRadius: borderRadius.base,
+    borderRadius: '6px',
     fontSize: sizes[size].fontSize,
     fontWeight: '600',
     fontFamily: 'Inter',
     textDecoration: 'none',
     cursor: disabled ? 'not-allowed' : 'pointer',
     transition: 'all 0.2s ease',
-    boxShadow: disabled ? 'none' : '0 4px 12px rgba(0, 0, 0, 0.2)',
+    boxShadow: disabled ? 'none' : (variant === 'outline' ? '0 4px 12px rgba(0, 0, 0, 0.2)' : '0 1px 2px rgba(0, 0, 0, 0.05)'),
     backdropFilter: variant === 'outline' ? 'blur(10px)' : 'none',
     whiteSpace: 'nowrap',
     ...props.style
@@ -57,11 +57,13 @@ export const PrimaryButton = ({
       if (variant === 'outline') {
         e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
         e.target.style.borderColor = 'rgba(255, 255, 255, 0.9)';
+        e.target.style.transform = 'translateY(-2px)';
+        e.target.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.3)';
       } else {
         e.target.style.backgroundColor = colors.primaryHover;
+        e.target.style.transform = 'translateY(-1px)';
+        e.target.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.3)';
       }
-      e.target.style.transform = 'translateY(-2px)';
-      e.target.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.3)';
     }
   };
 
@@ -70,11 +72,13 @@ export const PrimaryButton = ({
       if (variant === 'outline') {
         e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
         e.target.style.borderColor = colors.heroText;
+        e.target.style.transform = 'translateY(0)';
+        e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
       } else {
         e.target.style.backgroundColor = colors.primary;
+        e.target.style.transform = 'translateY(0)';
+        e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
       }
-      e.target.style.transform = 'translateY(0)';
-      e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
     }
   };
 

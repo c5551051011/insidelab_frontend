@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import { PrimaryButton } from './Button';
 import { colors, spacing } from '../theme';
 
 const Header = () => {
@@ -89,7 +90,7 @@ const Header = () => {
             marginLeft: spacing[4]
           }}>
           <Link
-            to="/login"
+            to="/sign-in"
             style={{
               padding: `${spacing[2]} ${spacing[4]}`,
               fontSize: '14px',
@@ -109,33 +110,12 @@ const Header = () => {
           >
             Sign In
           </Link>
-          <Link
+          <PrimaryButton
             to="/signup"
-            style={{
-              padding: `${spacing[2]} ${spacing[4]}`,
-              fontSize: '14px',
-              fontWeight: '600',
-              color: 'white',
-              backgroundColor: colors.primary,
-              textDecoration: 'none',
-              borderRadius: '6px',
-              transition: 'all 0.2s ease',
-              fontFamily: 'Inter',
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = colors.primaryHover;
-              e.target.style.transform = 'translateY(-1px)';
-              e.target.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.3)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = colors.primary;
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
-            }}
+            size="small"
           >
             Get Started
-          </Link>
+          </PrimaryButton>
           </div>
         )}
       </div>
@@ -215,37 +195,21 @@ const Header = () => {
               <div style={{ height: '32px' }} />
 
               <MobileNavLink
-                to="/login"
+                to="/sign-in"
                 onClick={() => setMobileMenuOpen(false)}
                 style={{ color: colors.textPrimary }}
               >
                 Sign In
               </MobileNavLink>
 
-              <Link
+              <PrimaryButton
                 to="/signup"
                 onClick={() => setMobileMenuOpen(false)}
-                style={{
-                  padding: `${spacing[4]} ${spacing[6]}`,
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  color: 'white',
-                  backgroundColor: colors.primary,
-                  textDecoration: 'none',
-                  borderRadius: '12px',
-                  textAlign: 'center',
-                  fontFamily: 'Inter',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = colors.primaryHover;
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = colors.primary;
-                }}
+                size="medium"
+                style={{ textAlign: 'center' }}
               >
                 Get Started
-              </Link>
+              </PrimaryButton>
             </div>
           </div>
         </div>
