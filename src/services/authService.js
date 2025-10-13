@@ -75,6 +75,18 @@ class AuthService {
     }
   }
 
+  // Send verification email
+  static async sendVerificationEmail(email) {
+    console.log('DEBUG: Sending verification email for:', email);
+
+    const response = await ApiService.post('/auth/send-verification/', {
+      email,
+    });
+
+    console.log('DEBUG: Verification email sent successfully');
+    return response;
+  }
+
   // Google Sign In
   static async signInWithGoogle(idToken, email, displayName) {
     console.log('DEBUG: Google Sign-In with backend sync');

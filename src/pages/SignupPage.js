@@ -1,34 +1,208 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User, Building } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Mail, Lock, User, Building, RefreshCw, Send, Info } from 'lucide-react';
+import Header from '../components/Header';
+import { FormInput } from '../components/FormInput';
+import { colors, spacing } from '../theme';
+import { AuthService } from '../services/authService';
+import { ApiException } from '../services/apiService';
+import { UniversityService } from '../services/universityService';
 
 const SignupPage = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+  const navigate = useNavigate();
+const [formData, setFormData] = useState({
     email: '',
+    username: '',
+    name: '',
+    position: '',
     university: '',
+    department: '',
     password: '',
     confirmPassword: '',
-    role: 'student',
-    agreeToTerms: false
   });
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [sendingVerification, setSendingVerification] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [allowEmails, setAllowEmails] = useState(false);
+  const [universities, setUniversities] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [showAddUniversity, setShowAddUniversity] = useState(false);
+  const [showAddDepartment, setShowAddDepartment] = useState(false);
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const isMobile = window.innerWidth < 768;
+
+  // Generate random username and load universities on component mount
+  useEffect(() => {
+    generateRandomUsername();
+    loadUniversities();
+  }, []);
+
+  // Load departments when university is selected
+  useEffect(() => {
+    if (formData.university && formData.university !== 'Add New University') {
+      loadDepartments(formData.university);
+    } else {
+      setDepartments([]);
+      setFormData(prev => ({ ...prev, department: '' }));
+    }
+  }, [formData.university]);
+
+  const loadUniversities = async () => {
+    try {
+      const universitiesList = await UniversityService.getAllUniversities();
+      setUniversities(universitiesList);
+    } catch (error) {
+      console.error('Error loading universities:', error);
+    }
+  };
+
+  const loadDepartments = async (universityId) => {
+    setLoadingDepartments(true);
+    try {
+      const departmentsList = await UniversityService.getDepartmentsByUniversity(universityId);
+      setDepartments(departmentsList);
+    } catch (error) {
+      console.error('Error loading departments:', error);
+    } finally {
+      setLoadingDepartments(false);
+    }
+  };
+
+  const generateRandomUsername = () => {
+    const adjectives = [
+      'Smart', 'Bright', 'Quick', 'Swift', 'Sharp', 'Wise', 'Bold', 'Cool',
+      'Fast', 'Strong', 'Clear', 'Fresh', 'Young', 'New', 'Pure', 'True',
+      'Deep', 'High', 'Wild', 'Free', 'Safe', 'Easy', 'Fine', 'Good',
+      'Kind', 'Nice', 'Calm', 'Fair', 'Real', 'Rich', 'Soft', 'Warm'
+    ];
+
+    const nouns = [
+      'Scholar', 'Student', 'Learner', 'Thinker', 'Reader', 'Writer', 'Seeker',
+      'Explorer', 'Finder', 'Builder', 'Maker', 'Creator', 'Helper', 'Leader',
+      'Dreamer', 'Planner', 'Doer', 'Walker', 'Runner', 'Climber', 'Flyer',
+      'Star', 'Moon', 'Sun', 'River', 'Ocean', 'Mountain', 'Forest', 'Garden',
+      'Bridge', 'Tower', 'Castle', 'House', 'Path', 'Journey', 'Quest', 'Goal'
+    ];
+
+    const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    const number = Math.floor(Math.random() * 999) + 1;
+
+    const username = `${adjective}${noun}${number}`;
+    setFormData(prev => ({ ...prev, username }));
+  };
+
+  const sendVerificationEmail = async () => {
+    if (!formData.email.trim()) {
+      setErrors(prev => ({ ...prev, email: 'Please enter your email address first' }));
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
+      return;
+    }
+
+    setSendingVerification(true);
+    try {
+      await AuthService.sendVerificationEmail(formData.email.trim());
+      alert('Verification email sent! Please check your inbox.');
+      setErrors(prev => ({ ...prev, email: '' }));
+    } catch (error) {
+      console.error('Error sending verification email:', error);
+      let errorMessage = 'Email verification feature is not yet available. Please proceed with account creation.';
+
+      if (error instanceof ApiException) {
+        if (error.statusCode === 0) {
+          errorMessage = 'Cannot connect to server. Please try again later.';
+        } else if (error.statusCode === 409) {
+          errorMessage = 'This email is already registered.';
+        } else if (error.statusCode === 400) {
+          errorMessage = 'Invalid email address.';
+        } else if (error.statusCode === 404 || error.statusCode === 405) {
+          errorMessage = 'Email verification feature is not yet available. Please proceed with account creation.';
+        }
+      }
+
+      alert(errorMessage);
+    } finally {
+      setSendingVerification(false);
+    }
+  };
+
+  const getUniversityName = (universityId) => {
+    const university = universities.find(u => (u.id || u) === universityId);
+    return university ? (university.name || university) : universityId;
+  };
+
+  const getDepartmentName = (departmentId) => {
+    const department = departments.find(d => (d.id || d) === departmentId);
+    return department ? (department.name || department) : departmentId;
+  };
+
+  const handleAddUniversity = async (universityData) => {
+    try {
+      const newUniversity = await UniversityService.addUniversity(universityData);
+      setUniversities(prev => [...prev, newUniversity]);
+      setFormData(prev => ({ ...prev, university: newUniversity.id }));
+      setShowAddUniversity(false);
+      // Load departments for the new university
+      loadDepartments(newUniversity.id);
+    } catch (error) {
+      console.error('Error adding university:', error);
+      alert('Failed to add university. Please try again.');
+    }
+  };
+
+  const handleAddDepartment = async (departmentData) => {
+    try {
+      const newDepartment = await UniversityService.addDepartment(formData.university, departmentData);
+      setDepartments(prev => [...prev, newDepartment]);
+      setFormData(prev => ({ ...prev, department: newDepartment.id }));
+      setShowAddDepartment(false);
+    } catch (error) {
+      console.error('Error adding department:', error);
+      alert('Failed to add department. Please try again.');
+    }
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password) => {
+    if (!password) return 'Password is required';
+    if (password.length < 8) return 'Password must be at least 8 characters';
+    return null;
+  };
+
+  const handleInputChange = (field) => (e) => {
+    const value = e.target.value;
+
+    if (field === 'university' && value === 'Add New University') {
+      setShowAddUniversity(true);
+      return;
+    }
+
+    if (field === 'department' && value === 'Add New Department') {
+      setShowAddDepartment(true);
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [field]: value
     }));
+
     // Clear error when user starts typing
-    if (errors[name]) {
+    if (errors[field]) {
       setErrors(prev => ({
         ...prev,
-        [name]: ''
+        [field]: ''
       }));
     }
   };
@@ -36,28 +210,39 @@ const SignupPage = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-    }
-
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-    }
-
     if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = 'Please enter your email';
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = 'Please enter a valid email';
     }
 
-    if (!formData.university.trim()) {
-      newErrors.university = 'University is required';
+    if (!formData.username) {
+      newErrors.username = 'Please choose a username';
+    } else if (formData.username.length < 3) {
+      newErrors.username = 'Username must be at least 3 characters';
+    } else if (formData.username.length > 20) {
+      newErrors.username = 'Username must be less than 20 characters';
     }
 
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long';
+    if (!formData.name) {
+      newErrors.name = 'Please enter your full name';
+    }
+
+    if (!formData.position) {
+      newErrors.position = 'Please select your position';
+    }
+
+if (!formData.university) {
+      newErrors.university = 'Please select your university';
+    }
+
+    if (!formData.department) {
+      newErrors.department = 'Please select your department';
+    }
+
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      newErrors.password = passwordError;
     }
 
     if (!formData.confirmPassword) {
@@ -66,458 +251,1271 @@ const SignupPage = () => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    if (!formData.agreeToTerms) {
-      newErrors.agreeToTerms = 'You must agree to the terms and conditions';
+    if (!agreedToTerms) {
+      newErrors.terms = 'You must agree to the Terms of Service and Privacy Policy';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    setIsLoading(true);
+    setLoading(true);
 
     try {
-      // TODO: Implement actual signup API call
-      console.log('Signup attempt:', formData);
+      console.log('Sign up with:', formData);
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+const response = await AuthService.register({
+        email: formData.email.trim(),
+        username: formData.username.trim(),
+        name: formData.name.trim(),
+        password: formData.password,
+        password_confirm: formData.confirmPassword,
+        position: formData.position,
+        university_department: `${getUniversityName(formData.university)} - ${getDepartmentName(formData.department)}`,
+      });
 
-      // Handle successful signup here
-      alert('Account created successfully!');
+      console.log('Sign up successful:', response);
+
+      // Show success message and navigate
+      alert('Account created successfully! Please check your email for verification.');
+      navigate('/sign-in');
 
     } catch (error) {
-      console.error('Signup error:', error);
-      setErrors({ general: 'Signup failed. Please try again.' });
+      console.error('Sign up error:', error);
+
+      let errorMessage = 'Sign up failed. Please try again.';
+
+      if (error instanceof ApiException) {
+        if (error.statusCode === 0) {
+          errorMessage = 'Cannot connect to server. Please try again later.';
+        } else if (error.statusCode === 409) {
+          errorMessage = 'This email or username is already registered.';
+        } else if (error.statusCode === 400) {
+          try {
+            const errorData = JSON.parse(error.message);
+            if (errorData.email) {
+              errorMessage = `Email: ${errorData.email[0]}`;
+            } else if (errorData.username) {
+              errorMessage = `Username: ${errorData.username[0]}`;
+            } else if (errorData.password) {
+              errorMessage = `Password: ${errorData.password[0]}`;
+            } else if (errorData.error || errorData.detail) {
+              errorMessage = errorData.error || errorData.detail;
+            }
+          } catch (parseError) {
+            // Use default message if parsing fails
+          }
+        }
+      }
+
+      alert(errorMessage);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    if (!agreedToTerms) {
+      alert('Please agree to the Terms of Service and Privacy Policy');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      console.log('Google sign up - starting...');
+
+      // For now, show message that Google Sign-Up needs frontend Google integration
+      alert('Google Sign-Up functionality requires Google OAuth setup. Please use email/password sign-up for now.');
+
+    } catch (error) {
+      console.error('Google sign up error:', error);
+      alert('Google Sign-Up failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+const positions = [
+    'PhD Student',
+    'MS Student',
+    'Undergrad',
+    'PostDoc',
+    'Research Assistant',
+    'faculty',
+  ];
+
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: colors.background }}>
+      <Header />
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: 'calc(100vh - 72px)',
+          padding: spacing[6],
+        }}
+      >
+        <div
+          style={{
+            width: '100%',
+            maxWidth: '500px',
+            padding: isMobile ? spacing[6] : spacing[8],
+          }}
+        >
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: spacing[8] }}>
+            <h1
+              style={{
+                fontSize: isMobile ? '36px' : '48px',
+                fontWeight: '700',
+                color: colors.primary,
+                marginBottom: spacing[2],
+                fontFamily: 'Inter',
+              }}
+            >
+              Insidelab
+            </h1>
+            <h2
+              style={{
+                fontSize: isMobile ? '20px' : '24px',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: spacing[2],
+                fontFamily: 'Inter',
+              }}
+            >
+              Join the community
+            </h2>
+            <p
+              style={{
+                fontSize: isMobile ? '14px' : '16px',
+                color: colors.textSecondary,
+                margin: 0,
+                fontFamily: 'Inter',
+              }}
+            >
+              Share your lab experiences anonymously
+            </p>
+          </div>
+
+          {/* Verification Notice */}
+          <div
+            style={{
+              padding: spacing[4],
+              backgroundColor: colors.info + '1A',
+              border: `1px solid ${colors.info}4D`,
+              borderRadius: '12px',
+              marginBottom: spacing[6],
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: spacing[3] }}>
+              <div
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  backgroundColor: colors.info,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginTop: '2px',
+                }}
+              >
+<span style={{ color: 'white', fontSize: '14px', fontWeight: 'bold' }}>✓</span>
+              </div>
+              <div>
+                <div
+style={{
+                    fontWeight: '600',
+                    color: colors.info,
+                    fontSize: '16px',
+                    marginBottom: '4px',
+                    fontFamily: 'Inter',
+                  }}
+                >
+                  Verification Notice
+                </div>
+                <div
+style={{
+                    fontSize: '14px',
+                    color: colors.textSecondary,
+                    fontFamily: 'Inter',
+                  }}
+                >
+                  Use any valid email address to create your account
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSignUp}>
+            {/* Email with verification button */}
+            <div style={{ marginBottom: spacing[4] }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: isMobile ? '14px' : '16px',
+                  fontWeight: '500',
+                  color: colors.textPrimary,
+                  marginBottom: spacing[2],
+                  fontFamily: 'Inter',
+                }}
+              >
+                Email Address <span style={{ color: colors.error }}>*</span>
+              </label>
+              <div style={{ display: 'flex', gap: spacing[2] }}>
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <Mail
+                    size={20}
+                    style={{
+                      position: 'absolute',
+                      left: spacing[3],
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: colors.textTertiary,
+                      zIndex: 1,
+                    }}
+                  />
+                  <input
+                    type="text"
+                    value={formData.email}
+                    onChange={handleInputChange('email')}
+                    placeholder="your.email@example.com"
+                    style={{
+                      width: '100%',
+                      height: '48px',
+                      padding: `0 ${spacing[3]} 0 48px`,
+                      fontSize: isMobile ? '14px' : '16px',
+                      border: `2px solid ${errors.email ? colors.error : colors.border}`,
+                      borderRadius: '8px',
+                      outline: 'none',
+                      backgroundColor: colors.background,
+                      color: colors.textPrimary,
+                      fontFamily: 'Inter',
+                      transition: 'all 0.2s ease',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={sendVerificationEmail}
+                  disabled={sendingVerification}
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    backgroundColor: sendingVerification ? colors.textTertiary : colors.primary + '1A',
+                    border: 'none',
+                    borderRadius: '50%',
+                    color: sendingVerification ? 'white' : colors.primary,
+                    cursor: sendingVerification ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s ease',
+                  }}
+                  title="Send verification email"
+                  onMouseEnter={(e) => {
+                    if (!sendingVerification) {
+                      e.target.style.backgroundColor = colors.primary + '33';
+                      e.target.style.transform = 'scale(1.05)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!sendingVerification) {
+                      e.target.style.backgroundColor = colors.primary + '1A';
+                      e.target.style.transform = 'scale(1)';
+                    }
+                  }}
+                >
+                  {sendingVerification ? (
+                    <div
+                      style={{
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid transparent',
+                        borderTop: '2px solid white',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite',
+                      }}
+                    />
+                  ) : (
+                    <Send size={20} />
+                  )}
+                </button>
+              </div>
+              {errors.email && (
+                <p
+                  style={{
+                    fontSize: isMobile ? '12px' : '14px',
+                    color: colors.error,
+                    marginTop: spacing[1],
+                    marginBottom: 0,
+                    fontFamily: 'Inter',
+                  }}
+                >
+                  {errors.email}
+                </p>
+              )}
+            </div>
+
+            {/* Username with refresh button */}
+            <div style={{ marginBottom: spacing[4] }}>
+<label
+                style={{
+                  display: 'block',
+                  fontSize: isMobile ? '14px' : '16px',
+                  fontWeight: '500',
+                  color: colors.textPrimary,
+                  marginBottom: spacing[2],
+                  fontFamily: 'Inter',
+                }}
+              >
+                Username (Anonymous) <span style={{ color: colors.error }}>*</span>
+              </label>
+              <div style={{ display: 'flex', gap: spacing[2] }}>
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <User
+                    size={20}
+                    style={{
+                      position: 'absolute',
+                      left: spacing[3],
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: colors.textTertiary,
+                      zIndex: 1,
+                    }}
+                  />
+                  <input
+                    type="text"
+                    value={formData.username}
+                    onChange={handleInputChange('username')}
+                    placeholder="Auto-generated for privacy"
+                    style={{
+                      width: '100%',
+                      height: '48px',
+                      padding: `0 ${spacing[3]} 0 48px`,
+                      fontSize: isMobile ? '14px' : '16px',
+                      border: `2px solid ${errors.username ? colors.error : colors.border}`,
+                      borderRadius: '8px',
+                      outline: 'none',
+                      backgroundColor: colors.background,
+                      color: colors.textPrimary,
+                      fontFamily: 'Inter',
+                      transition: 'all 0.2s ease',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+<button
+                  type="button"
+                  onClick={generateRandomUsername}
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    backgroundColor: colors.primary + '1A',
+                    border: 'none',
+                    borderRadius: '50%',
+                    color: colors.primary,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s ease',
+                  }}
+                  title="Generate new username"
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = colors.primary + '33';
+                    e.target.style.transform = 'scale(1.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = colors.primary + '1A';
+                    e.target.style.transform = 'scale(1)';
+                  }}
+                >
+                  <RefreshCw size={20} />
+                </button>
+              </div>
+              {errors.username && (
+                <p
+                  style={{
+                    fontSize: isMobile ? '12px' : '14px',
+                    color: colors.error,
+                    marginTop: spacing[1],
+                    marginBottom: 0,
+                    fontFamily: 'Inter',
+                  }}
+                >
+                  {errors.username}
+                </p>
+              )}
+            </div>
+
+            {/* Privacy Notice for Username */}
+            <div
+              style={{
+                padding: spacing[3],
+                backgroundColor: colors.info + '1A',
+                border: `1px solid ${colors.info}4D`,
+                borderRadius: '8px',
+                marginBottom: spacing[4],
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: spacing[3] }}>
+<div
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    backgroundColor: colors.info,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginTop: '2px',
+                    flexShrink: 0,
+                  }}
+                >
+                  <Info size={12} color="white" />
+                </div>
+                <div>
+<div
+                    style={{
+                      fontWeight: '600',
+                      color: colors.info,
+                      fontSize: '16px',
+                      marginBottom: '4px',
+                      fontFamily: 'Inter',
+                    }}
+                  >
+                    Privacy Recommendation
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '14px',
+                      color: colors.textSecondary,
+                      fontFamily: 'Inter',
+                    }}
+                  >
+                    We recommend using the auto-generated username to protect your privacy. You can change it, but random usernames help keep your reviews anonymous.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <FormInput
+              label="Full Name"
+              type="text"
+              placeholder="Enter your full name"
+              value={formData.name}
+              onChange={handleInputChange('name')}
+              error={errors.name}
+              icon={User}
+              required
+            />
+
+            {/* Position Dropdown */}
+            <div style={{ marginBottom: spacing[4] }}>
+<label
+                style={{
+                  display: 'block',
+                  fontSize: isMobile ? '14px' : '16px',
+                  fontWeight: '500',
+                  color: colors.textPrimary,
+                  marginBottom: spacing[2],
+                  fontFamily: 'Inter',
+                }}
+              >
+                Current Position <span style={{ color: colors.error }}>*</span>
+              </label>
+              <div style={{ position: 'relative' }}>
+                <select
+                  value={formData.position}
+                  onChange={handleInputChange('position')}
+                  style={{
+                    width: '100%',
+                    height: '48px',
+                    padding: `0 ${isMobile ? '32px' : '40px'} 0 ${spacing[3]}`,
+                    fontSize: isMobile ? '14px' : '16px',
+                    border: `2px solid ${errors.position ? colors.error : colors.border}`,
+                    borderRadius: '8px',
+                    outline: 'none',
+                    backgroundColor: colors.background,
+                    color: colors.textPrimary,
+                    fontFamily: 'Inter',
+                    transition: 'all 0.2s ease',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='%23666' d='m2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: `right ${isMobile ? '8px' : '12px'} center`,
+                    backgroundSize: isMobile ? '10px' : '12px',
+                  }}
+                >
+                  <option value="">Select your position</option>
+                  {positions.map((position) => (
+                    <option key={position} value={position}>
+                      {position}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {errors.position && (
+                <p
+                  style={{
+                    fontSize: isMobile ? '12px' : '14px',
+                    color: colors.error,
+                    marginTop: spacing[1],
+                    marginBottom: 0,
+                    fontFamily: 'Inter',
+                  }}
+                >
+                  {errors.position}
+                </p>
+              )}
+            </div>
+
+            {/* University Dropdown */}
+            <div style={{ marginBottom: spacing[4] }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: isMobile ? '14px' : '16px',
+                  fontWeight: '500',
+                  color: colors.textPrimary,
+                  marginBottom: spacing[2],
+                  fontFamily: 'Inter',
+                }}
+              >
+                University <span style={{ color: colors.error }}>*</span>
+              </label>
+              <div style={{ position: 'relative' }}>
+                <select
+                  value={formData.university}
+                  onChange={handleInputChange('university')}
+                  style={{
+                    width: '100%',
+                    height: '48px',
+                    padding: `0 ${isMobile ? '32px' : '40px'} 0 ${spacing[3]}`,
+                    fontSize: isMobile ? '14px' : '16px',
+                    border: `2px solid ${errors.university ? colors.error : colors.border}`,
+                    borderRadius: '8px',
+                    outline: 'none',
+                    backgroundColor: colors.background,
+                    color: colors.textPrimary,
+                    fontFamily: 'Inter',
+                    transition: 'all 0.2s ease',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='%23666' d='m2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: `right ${isMobile ? '8px' : '12px'} center`,
+                    backgroundSize: isMobile ? '10px' : '12px',
+                  }}
+                >
+                  <option value="">Select your university</option>
+                  {universities.map((university) => (
+                    <option key={university.id || university} value={university.id || university}>
+                      {university.name || university}
+                    </option>
+                  ))}
+                  <option value="Add New University" style={{ fontStyle: 'italic', color: colors.primary }}>
+                    + Add New University
+                  </option>
+                </select>
+              </div>
+              {errors.university && (
+                <p
+                  style={{
+                    fontSize: isMobile ? '12px' : '14px',
+                    color: colors.error,
+                    marginTop: spacing[1],
+                    marginBottom: 0,
+                    fontFamily: 'Inter',
+                  }}
+                >
+                  {errors.university}
+                </p>
+              )}
+            </div>
+
+            {/* Department Dropdown */}
+            <div style={{ marginBottom: spacing[4] }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: isMobile ? '14px' : '16px',
+                  fontWeight: '500',
+                  color: colors.textPrimary,
+                  marginBottom: spacing[2],
+                  fontFamily: 'Inter',
+                }}
+              >
+                Department <span style={{ color: colors.error }}>*</span>
+              </label>
+              <div style={{ position: 'relative' }}>
+                <select
+                  value={formData.department}
+                  onChange={handleInputChange('department')}
+                  style={{
+                    width: '100%',
+                    height: '48px',
+                    padding: `0 ${isMobile ? '32px' : '40px'} 0 ${spacing[3]}`,
+                    fontSize: isMobile ? '14px' : '16px',
+                    border: `2px solid ${errors.department ? colors.error : colors.border}`,
+                    borderRadius: '8px',
+                    outline: 'none',
+                    backgroundColor: colors.background,
+                    color: colors.textPrimary,
+                    fontFamily: 'Inter',
+                    transition: 'all 0.2s ease',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='%23666' d='m2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: `right ${isMobile ? '8px' : '12px'} center`,
+                    backgroundSize: isMobile ? '10px' : '12px',
+                  }}
+                >
+                  <option value="">
+                    {loadingDepartments ? 'Loading departments...' : 'Select your department'}
+                  </option>
+                  {departments.map((department) => (
+                    <option key={department.id || department} value={department.id || department}>
+                      {department.name || department}
+                    </option>
+                  ))}
+                  {formData.university && formData.university !== 'Add New University' && (
+                    <option value="Add New Department" style={{ fontStyle: 'italic', color: colors.primary }}>
+                      + Add New Department
+                    </option>
+                  )}
+                </select>
+              </div>
+              {errors.department && (
+                <p
+                  style={{
+                    fontSize: isMobile ? '12px' : '14px',
+                    color: colors.error,
+                    marginTop: spacing[1],
+                    marginBottom: 0,
+                    fontFamily: 'Inter',
+                  }}
+                >
+                  {errors.department}
+                </p>
+              )}
+            </div>
+
+            <FormInput
+              label="Password"
+              type="password"
+              placeholder="At least 8 characters"
+              value={formData.password}
+              onChange={handleInputChange('password')}
+              error={errors.password}
+              icon={Lock}
+              required
+            />
+
+            <FormInput
+              label="Confirm Password"
+              type="password"
+              placeholder="Confirm your password"
+              value={formData.confirmPassword}
+              onChange={handleInputChange('confirmPassword')}
+              error={errors.confirmPassword}
+              icon={Lock}
+              required
+            />
+
+            {/* Terms and Conditions */}
+            <div style={{ marginBottom: spacing[4] }}>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: spacing[2],
+                  fontSize: isMobile ? '14px' : '16px',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  fontFamily: 'Inter',
+                  marginBottom: spacing[2],
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    accentColor: colors.primary,
+                    marginTop: '2px',
+                    flexShrink: 0,
+                  }}
+                />
+                <span>
+                  I agree to the{' '}
+                  <Link to="/terms" style={{ color: colors.primary, textDecoration: 'none' }}>
+                    Terms of Service
+                  </Link>
+                  {' '}and{' '}
+                  <Link to="/privacy" style={{ color: colors.primary, textDecoration: 'none' }}>
+                    Privacy Policy
+                  </Link>
+                </span>
+              </label>
+
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: spacing[2],
+                  fontSize: isMobile ? '14px' : '16px',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  fontFamily: 'Inter',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={allowEmails}
+                  onChange={(e) => setAllowEmails(e.target.checked)}
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    accentColor: colors.primary,
+                    marginTop: '2px',
+                    flexShrink: 0,
+                  }}
+                />
+                <span>Send me helpful emails about new features (optional)</span>
+              </label>
+
+              {errors.terms && (
+                <p
+                  style={{
+                    fontSize: isMobile ? '12px' : '14px',
+                    color: colors.error,
+                    marginTop: spacing[1],
+                    marginBottom: 0,
+                    fontFamily: 'Inter',
+                  }}
+                >
+                  {errors.terms}
+                </p>
+              )}
+            </div>
+
+            {/* Sign Up Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                height: '48px',
+                backgroundColor: loading ? colors.textTertiary : colors.primary,
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '16px',
+                fontWeight: '600',
+                fontFamily: 'Inter',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: spacing[4],
+                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+              }}
+              onMouseEnter={(e) => {
+                if (!loading) {
+                  e.target.style.backgroundColor = colors.primaryHover;
+                  e.target.style.transform = 'translateY(-1px)';
+                  e.target.style.boxShadow = '0 4px 8px rgba(59, 130, 246, 0.3)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!loading) {
+                  e.target.style.backgroundColor = colors.primary;
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
+                }
+              }}
+            >
+              {loading ? (
+                <div
+                  style={{
+                    width: '20px',
+                    height: '20px',
+                    border: '2px solid transparent',
+                    borderTop: '2px solid white',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                  }}
+                />
+              ) : (
+                'Create Account'
+              )}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              marginBottom: spacing[4],
+            }}
+          >
+            <div
+              style={{
+                flex: 1,
+                height: '1px',
+                backgroundColor: colors.border,
+              }}
+            />
+            <span
+              style={{
+                padding: `0 ${spacing[4]}`,
+                fontSize: isMobile ? '14px' : '16px',
+                color: colors.textSecondary,
+                fontWeight: '500',
+                fontFamily: 'Inter',
+              }}
+            >
+              OR
+            </span>
+            <div
+              style={{
+                flex: 1,
+                height: '1px',
+                backgroundColor: colors.border,
+              }}
+            />
+          </div>
+
+          {/* Google Sign Up */}
+          <button
+            type="button"
+            onClick={handleGoogleSignUp}
+            disabled={loading}
+            style={{
+              width: '100%',
+              height: '48px',
+              backgroundColor: 'white',
+              color: colors.textPrimary,
+              border: `1px solid ${colors.textTertiary}`,
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: '500',
+              fontFamily: 'Inter',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: spacing[2],
+              marginBottom: spacing[6],
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.target.style.backgroundColor = colors.backgroundLight;
+                e.target.style.borderColor = colors.textSecondary;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                e.target.style.backgroundColor = 'white';
+                e.target.style.borderColor = colors.textTertiary;
+              }
+            }}
+          >
+            {loading ? (
+              <div
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  border: '2px solid transparent',
+                  borderTop: `2px solid ${colors.primary}`,
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                }}
+              />
+            ) : (
+              <>
+                <img
+                  src="/assets/icons/google_logo.png"
+                  alt="Google"
+                  style={{ width: '20px', height: '20px' }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+                Continue with Google
+              </>
+            )}
+          </button>
+
+          {/* Sign In Link */}
+          <div style={{ textAlign: 'center', marginBottom: spacing[6] }}>
+            <span
+              style={{
+                fontSize: isMobile ? '14px' : '16px',
+                color: colors.textSecondary,
+                fontFamily: 'Inter',
+              }}
+            >
+              Already have an account?{' '}
+            </span>
+            <Link
+              to="/sign-in"
+              style={{
+                fontSize: isMobile ? '14px' : '16px',
+                color: colors.primary,
+                textDecoration: 'none',
+                fontWeight: '600',
+                fontFamily: 'Inter',
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.textDecoration = 'underline';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.textDecoration = 'none';
+              }}
+            >
+              Sign In
+            </Link>
+          </div>
+
+          {/* Privacy Note */}
+          <div
+            style={{
+              padding: spacing[4],
+              backgroundColor: colors.success + '0D',
+              borderRadius: '8px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: spacing[2] }}>
+              <div
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  borderRadius: '50%',
+                  backgroundColor: colors.success,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginTop: '2px',
+                }}
+              >
+                <span style={{ color: 'white', fontSize: '10px', fontWeight: 'bold' }}>🔒</span>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontWeight: '600',
+                    color: colors.success,
+                    fontSize: '14px',
+                    marginBottom: '8px',
+                    fontFamily: 'Inter',
+                  }}
+                >
+                  Your Privacy Matters
+                </div>
+                <div
+                  style={{
+                    fontSize: '12px',
+                    color: colors.textSecondary,
+                    fontFamily: 'Inter',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  • Your real name is never shown<br />
+                  • Reviews are posted under your username only<br />
+                  • Email is only used for verification
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Add University Modal */}
+      {showAddUniversity && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: spacing[4],
+        }}>
+          <AddUniversityModal
+            onAdd={handleAddUniversity}
+            onCancel={() => setShowAddUniversity(false)}
+          />
+        </div>
+      )}
+
+      {/* Add Department Modal */}
+      {showAddDepartment && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: spacing[4],
+        }}>
+          <AddDepartmentModal
+            onAdd={handleAddDepartment}
+            onCancel={() => setShowAddDepartment(false)}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Add University Modal Component
+const AddUniversityModal = ({ onAdd, onCancel }) => {
+  const [universityData, setUniversityData] = useState({
+    name: '',
+    website: '',
+    country: '',
+    state: '',
+    city: '',
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!universityData.name.trim() || !universityData.website.trim()) {
+      alert('Please fill in university name and website');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onAdd(universityData);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px'
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: spacing[6],
+      maxWidth: '500px',
+      width: '100%',
+      maxHeight: '80vh',
+      overflowY: 'auto',
     }}>
-      <div style={{
-        width: '100%',
-        maxWidth: '500px'
+      <h3 style={{
+        fontSize: '20px',
+        fontWeight: '700',
+        color: colors.textPrimary,
+        marginBottom: spacing[4],
+        fontFamily: 'Inter',
       }}>
-        {/* Logo */}
-        <Link to="/" style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '12px',
-          textDecoration: 'none',
-          color: 'white',
-          marginBottom: '32px'
-        }}>
-          <div style={{
-            width: '40px',
-            height: '40px',
-            background: 'white',
-            borderRadius: '10px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#667eea',
-            fontWeight: '700',
-            fontSize: '20px'
-          }}>
-            IL
-          </div>
-          <span style={{
-            fontSize: '24px',
-            fontWeight: '700'
-          }}>
-            InsideLab
-          </span>
-        </Link>
+        Add New University
+      </h3>
 
-        {/* Signup Card */}
-        <div className="card">
-          <div className="card-header">
-            <h1 style={{
-              fontSize: '28px',
-              fontWeight: '700',
-              color: '#1f2937',
-              textAlign: 'center',
-              marginBottom: '8px'
-            }}>
-              Join InsideLab
-            </h1>
-            <p style={{
-              color: '#6b7280',
-              textAlign: 'center',
-              fontSize: '16px'
-            }}>
-              Create your account and start exploring research labs
-            </p>
-          </div>
+      <form onSubmit={handleSubmit}>
+        <FormInput
+          label="University Name"
+          type="text"
+          placeholder="e.g., Stanford University"
+          value={universityData.name}
+          onChange={(e) => setUniversityData(prev => ({ ...prev, name: e.target.value }))}
+          required
+        />
 
-          <div className="card-content">
-            {errors.general && (
-              <div style={{
-                background: '#fef2f2',
-                border: '1px solid #fecaca',
-                color: '#dc2626',
-                padding: '12px',
-                borderRadius: '8px',
-                marginBottom: '20px',
-                fontSize: '14px'
-              }}>
-                {errors.general}
-              </div>
-            )}
+        <FormInput
+          label="Website"
+          type="text"
+          placeholder="e.g., https://www.stanford.edu"
+          value={universityData.website}
+          onChange={(e) => setUniversityData(prev => ({ ...prev, website: e.target.value }))}
+          required
+        />
 
-            <form onSubmit={handleSubmit}>
-              {/* Name Fields */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '16px',
-                marginBottom: '20px'
-              }}>
-                <div>
-                  <label className="form-label">First Name</label>
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className={`form-input ${errors.firstName ? 'error' : ''}`}
-                    placeholder="First name"
-                    disabled={isLoading}
-                  />
-                  {errors.firstName && (
-                    <div className="error-message">{errors.firstName}</div>
-                  )}
-                </div>
-                <div>
-                  <label className="form-label">Last Name</label>
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    className={`form-input ${errors.lastName ? 'error' : ''}`}
-                    placeholder="Last name"
-                    disabled={isLoading}
-                  />
-                  {errors.lastName && (
-                    <div className="error-message">{errors.lastName}</div>
-                  )}
-                </div>
-              </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing[3], marginBottom: spacing[4] }}>
+          <FormInput
+            label="Country"
+            type="text"
+            placeholder="e.g., United States"
+            value={universityData.country}
+            onChange={(e) => setUniversityData(prev => ({ ...prev, country: e.target.value }))}
+          />
 
-              {/* Email */}
-              <div className="form-group">
-                <label className="form-label">Email Address</label>
-                <div style={{ position: 'relative' }}>
-                  <Mail
-                    size={18}
-                    style={{
-                      position: 'absolute',
-                      left: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: '#9ca3af'
-                    }}
-                  />
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className={`form-input ${errors.email ? 'error' : ''}`}
-                    style={{ paddingLeft: '44px' }}
-                    placeholder="Enter your email"
-                    disabled={isLoading}
-                  />
-                </div>
-                {errors.email && (
-                  <div className="error-message">{errors.email}</div>
-                )}
-              </div>
-
-              {/* University */}
-              <div className="form-group">
-                <label className="form-label">University</label>
-                <div style={{ position: 'relative' }}>
-                  <Building
-                    size={18}
-                    style={{
-                      position: 'absolute',
-                      left: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: '#9ca3af'
-                    }}
-                  />
-                  <input
-                    type="text"
-                    name="university"
-                    value={formData.university}
-                    onChange={handleInputChange}
-                    className={`form-input ${errors.university ? 'error' : ''}`}
-                    style={{ paddingLeft: '44px' }}
-                    placeholder="Your university"
-                    disabled={isLoading}
-                  />
-                </div>
-                {errors.university && (
-                  <div className="error-message">{errors.university}</div>
-                )}
-              </div>
-
-              {/* Role */}
-              <div className="form-group">
-                <label className="form-label">I am a</label>
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleInputChange}
-                  className="form-input"
-                  disabled={isLoading}
-                >
-                  <option value="student">Student</option>
-                  <option value="researcher">Researcher</option>
-                  <option value="professor">Professor</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              {/* Password */}
-              <div className="form-group">
-                <label className="form-label">Password</label>
-                <div style={{ position: 'relative' }}>
-                  <Lock
-                    size={18}
-                    style={{
-                      position: 'absolute',
-                      left: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: '#9ca3af'
-                    }}
-                  />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className={`form-input ${errors.password ? 'error' : ''}`}
-                    style={{ paddingLeft: '44px', paddingRight: '44px' }}
-                    placeholder="Create a password"
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      color: '#9ca3af',
-                      cursor: 'pointer',
-                      padding: '4px'
-                    }}
-                    disabled={isLoading}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                {errors.password && (
-                  <div className="error-message">{errors.password}</div>
-                )}
-              </div>
-
-              {/* Confirm Password */}
-              <div className="form-group">
-                <label className="form-label">Confirm Password</label>
-                <div style={{ position: 'relative' }}>
-                  <Lock
-                    size={18}
-                    style={{
-                      position: 'absolute',
-                      left: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: '#9ca3af'
-                    }}
-                  />
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    className={`form-input ${errors.confirmPassword ? 'error' : ''}`}
-                    style={{ paddingLeft: '44px', paddingRight: '44px' }}
-                    placeholder="Confirm your password"
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      color: '#9ca3af',
-                      cursor: 'pointer',
-                      padding: '4px'
-                    }}
-                    disabled={isLoading}
-                  >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                {errors.confirmPassword && (
-                  <div className="error-message">{errors.confirmPassword}</div>
-                )}
-              </div>
-
-              {/* Terms Agreement */}
-              <div style={{ marginBottom: '24px' }}>
-                <label style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px',
-                  fontSize: '14px',
-                  color: '#374151',
-                  cursor: 'pointer'
-                }}>
-                  <input
-                    type="checkbox"
-                    name="agreeToTerms"
-                    checked={formData.agreeToTerms}
-                    onChange={handleInputChange}
-                    style={{
-                      width: '16px',
-                      height: '16px',
-                      accentColor: '#3b82f6',
-                      marginTop: '2px',
-                      flexShrink: 0
-                    }}
-                    disabled={isLoading}
-                  />
-                  <span>
-                    I agree to the{' '}
-                    <Link to="/terms" style={{ color: '#3b82f6', textDecoration: 'none' }}>
-                      Terms of Service
-                    </Link>
-                    {' '}and{' '}
-                    <Link to="/privacy" style={{ color: '#3b82f6', textDecoration: 'none' }}>
-                      Privacy Policy
-                    </Link>
-                  </span>
-                </label>
-                {errors.agreeToTerms && (
-                  <div className="error-message" style={{ marginTop: '4px' }}>
-                    {errors.agreeToTerms}
-                  </div>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-primary w-full"
-                style={{
-                  marginBottom: '20px',
-                  position: 'relative'
-                }}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px'
-                  }}>
-                    <div style={{
-                      width: '16px',
-                      height: '16px',
-                      border: '2px solid transparent',
-                      borderTop: '2px solid white',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }} />
-                    Creating Account...
-                  </div>
-                ) : (
-                  'Create Account'
-                )}
-              </button>
-            </form>
-          </div>
-
-          <div className="card-footer">
-            <div style={{
-              textAlign: 'center',
-              paddingTop: '20px',
-              borderTop: '1px solid #e5e7eb'
-            }}>
-              <span style={{ color: '#6b7280', fontSize: '14px' }}>
-                Already have an account?{' '}
-              </span>
-              <Link
-                to="/login"
-                style={{
-                  color: '#3b82f6',
-                  textDecoration: 'none',
-                  fontWeight: '500',
-                  fontSize: '14px'
-                }}
-              >
-                Sign in here
-              </Link>
-            </div>
-          </div>
+          <FormInput
+            label="State/Province"
+            type="text"
+            placeholder="e.g., California"
+            value={universityData.state}
+            onChange={(e) => setUniversityData(prev => ({ ...prev, state: e.target.value }))}
+          />
         </div>
 
-        {/* Back to Home */}
-        <div style={{ textAlign: 'center', marginTop: '20px' }}>
-          <Link
-            to="/"
+        <FormInput
+          label="City"
+          type="text"
+          placeholder="e.g., Stanford"
+          value={universityData.city}
+          onChange={(e) => setUniversityData(prev => ({ ...prev, city: e.target.value }))}
+        />
+
+        <div style={{ display: 'flex', gap: spacing[3], justifyContent: 'flex-end' }}>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
             style={{
-              color: 'white',
-              textDecoration: 'none',
-              fontSize: '14px',
-              opacity: 0.8
+              padding: `${spacing[2]} ${spacing[4]}`,
+              backgroundColor: 'transparent',
+              color: colors.textSecondary,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontFamily: 'Inter',
             }}
           >
-            ← Back to Homepage
-          </Link>
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              padding: `${spacing[2]} ${spacing[4]}`,
+              backgroundColor: loading ? colors.textTertiary : colors.primary,
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontFamily: 'Inter',
+            }}
+          >
+            {loading ? 'Adding...' : 'Add University'}
+          </button>
         </div>
-      </div>
+      </form>
+    </div>
+  );
+};
 
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}
-      </style>
+// Add Department Modal Component
+const AddDepartmentModal = ({ onAdd, onCancel }) => {
+  const [departmentName, setDepartmentName] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!departmentName.trim()) {
+      alert('Please enter department name');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onAdd({ name: departmentName.trim() });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: spacing[6],
+      maxWidth: '400px',
+      width: '100%',
+    }}>
+      <h3 style={{
+        fontSize: '20px',
+        fontWeight: '700',
+        color: colors.textPrimary,
+        marginBottom: spacing[4],
+        fontFamily: 'Inter',
+      }}>
+        Add New Department
+      </h3>
+
+      <form onSubmit={handleSubmit}>
+        <FormInput
+          label="Department Name"
+          type="text"
+          placeholder="e.g., Computer Science"
+          value={departmentName}
+          onChange={(e) => setDepartmentName(e.target.value)}
+          required
+        />
+
+        <div style={{ display: 'flex', gap: spacing[3], justifyContent: 'flex-end' }}>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            style={{
+              padding: `${spacing[2]} ${spacing[4]}`,
+              backgroundColor: 'transparent',
+              color: colors.textSecondary,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontFamily: 'Inter',
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              padding: `${spacing[2]} ${spacing[4]}`,
+              backgroundColor: loading ? colors.textTertiary : colors.primary,
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontFamily: 'Inter',
+            }}
+          >
+            {loading ? 'Adding...' : 'Add Department'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
