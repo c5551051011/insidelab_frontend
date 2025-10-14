@@ -25,7 +25,6 @@ const SearchPage = () => {
 
   // Responsive breakpoints
   const isMobile = window.innerWidth < 1000;
-  const isTablet = window.innerWidth >= 768 && window.innerWidth < 1000;
 
   // Debounced search function
   const performSearch = useCallback(async (searchQuery, searchFilters, page = 1, append = false) => {

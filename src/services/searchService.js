@@ -1,5 +1,4 @@
 // Search Service - Handles all search-related API calls and logic
-import { ApiService } from './apiService';
 
 export class SearchService {
   static searchCache = new Map();

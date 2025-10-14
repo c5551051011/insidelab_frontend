@@ -212,8 +212,6 @@ const EnhancedSearchBar = ({
           value={value}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
           placeholder={placeholder || intentInfo.placeholder}
           style={{
             width: '100%',

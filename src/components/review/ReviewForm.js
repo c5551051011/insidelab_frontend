@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronDown, Search, Plus, AlertCircle, CheckCircle } from 'lucide-react';
+import { Plus, AlertCircle, CheckCircle } from 'lucide-react';
 import { colors, spacing } from '../../theme';
-import { FormInput } from '../FormInput';
 import StarRating from './StarRating';
 import AddUniversityModal from './AddUniversityModal';
 import AddDepartmentModal from './AddDepartmentModal';
@@ -34,7 +33,6 @@ const ReviewForm = ({
   // Loading states
   const [loadingDepartments, setLoadingDepartments] = useState(false);
   const [loadingResearchGroups, setLoadingResearchGroups] = useState(false);
-  const [loadingLabs, setLoadingLabs] = useState(false);
 
   // Modal states
   const [showAddUniversity, setShowAddUniversity] = useState(false);
@@ -52,7 +50,7 @@ const ReviewForm = ({
   // Load initial data
   useEffect(() => {
     loadInitialData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load universities and rating categories
   const loadInitialData = async () => {
@@ -112,7 +110,7 @@ const ReviewForm = ({
       setResearchGroups([]);
       setLabs([]);
     }
-  }, [formData.university]);
+  }, [formData.university]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load research groups when department changes
   useEffect(() => {
@@ -128,7 +126,7 @@ const ReviewForm = ({
       setResearchGroups([]);
       setLabs([]);
     }
-  }, [formData.department]);
+  }, [formData.department]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load labs when research group changes
   useEffect(() => {
@@ -136,7 +134,7 @@ const ReviewForm = ({
       loadLabs();
       updateFormData({ lab: '' });
     }
-  }, [formData.researchGroup]);
+  }, [formData.researchGroup]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load departments
   const loadDepartments = async (universityId) => {
@@ -168,7 +166,6 @@ const ReviewForm = ({
 
   // Load labs
   const loadLabs = async () => {
-    setLoadingLabs(true);
     try {
       const labsData = await ReviewService.searchLabsForReview(
         labSearchQuery,
@@ -181,14 +178,12 @@ const ReviewForm = ({
     } catch (error) {
       console.error('Error loading labs:', error);
       setErrors({ lab: 'Failed to load labs' });
-    } finally {
-      setLoadingLabs(false);
     }
   };
 
   // Debounced lab search
-  const debouncedLabSearch = useCallback(
-    debounce(async (query) => {
+  const debouncedLabSearch = useCallback((query) => {
+    const timeoutId = setTimeout(async () => {
       if (!query.trim()) {
         setLabSearchResults(labs);
         return;
@@ -205,9 +200,10 @@ const ReviewForm = ({
       } catch (error) {
         console.error('Error searching labs:', error);
       }
-    }, 300),
-    [labs, formData.university, formData.department, formData.researchGroup]
-  );
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [labs, formData.university, formData.department, formData.researchGroup]);
 
   // Handle lab search
   const handleLabSearchChange = (query) => {
@@ -1030,18 +1026,5 @@ const ReviewForm = ({
     </form>
   );
 };
-
-// Utility function for debouncing
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
 
 export default ReviewForm;
