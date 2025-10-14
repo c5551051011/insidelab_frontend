@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Building, RefreshCw, Info, Check } from 'lucide-react';
+import { Mail, Lock, User, RefreshCw, Info, Check } from 'lucide-react';
 import Header from '../components/Header';
 import { FormInput } from '../components/FormInput';
 import { colors, spacing } from '../theme';
@@ -94,15 +94,6 @@ const [formData, setFormData] = useState({
   };
 
 
-  const getUniversityName = (universityId) => {
-    const university = universities.find(u => (u.id || u) === universityId);
-    return university ? (university.name || university) : universityId;
-  };
-
-  const getDepartmentName = (departmentId) => {
-    const department = departments.find(d => (d.id || d) === departmentId);
-    return department ? (department.name || department) : departmentId;
-  };
 
   const handleAddUniversity = async (universityData) => {
     try {

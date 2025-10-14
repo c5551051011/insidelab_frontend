@@ -127,7 +127,7 @@ const ServicesSection = () => {
 };
 
 const ServiceCard = ({ service }) => {
-  const { emoji, title, description, features, buttonText, imagePath, route, icon: Icon } = service;
+  const { emoji, title, description, features, buttonText, imagePath, route } = service;
 
   return (
     <Link

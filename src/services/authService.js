@@ -1,5 +1,5 @@
 // Auth Service for authentication operations
-import { ApiService, ApiException } from './apiService';
+import { ApiService } from './apiService';
 
 class AuthService {
   static async login(email, password) {

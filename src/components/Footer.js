@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin } from 'lucide-react';
-import { colors, textStyles, spacing, sectionSpacing } from '../theme';
+import { colors, spacing, sectionSpacing } from '../theme';
 
 const Footer = () => {
   const screenWidth = window.innerWidth;

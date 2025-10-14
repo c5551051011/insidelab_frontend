@@ -26,6 +26,9 @@ jobs:
     - name: Build
       run: npm run build
 
+    - name: Copy CNAME to build directory
+      run: cp CNAME build/
+
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       if: github.ref == 'refs/heads/react-version'

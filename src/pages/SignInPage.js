@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock } from 'lucide-react';
 import Header from '../components/Header';
-import { FormInput, FormButton } from '../components/FormInput';
+import { FormInput } from '../components/FormInput';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { ApiException } from '../services/apiService';

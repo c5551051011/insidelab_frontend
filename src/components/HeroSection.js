@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search, FileText, Video } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from './Button';
-import { colors, gradients, textStyles, spacing, sectionSpacing, borderRadius } from '../theme';
+import { colors, gradients, spacing, sectionSpacing } from '../theme';
 
 const HeroSection = () => {
   const [searchValue, setSearchValue] = useState('');
