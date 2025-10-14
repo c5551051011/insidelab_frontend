@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, Building, RefreshCw, Send, Info } from 'lucide-react';
+import { Mail, Lock, User, Building, RefreshCw, Info, Check } from 'lucide-react';
 import Header from '../components/Header';
 import { FormInput } from '../components/FormInput';
 import { colors, spacing } from '../theme';
@@ -22,7 +22,6 @@ const [formData, setFormData] = useState({
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [sendingVerification, setSendingVerification] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [allowEmails, setAllowEmails] = useState(false);
   const [universities, setUniversities] = useState([]);
@@ -94,44 +93,6 @@ const [formData, setFormData] = useState({
     setFormData(prev => ({ ...prev, username }));
   };
 
-  const sendVerificationEmail = async () => {
-    if (!formData.email.trim()) {
-      setErrors(prev => ({ ...prev, email: 'Please enter your email address first' }));
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
-      return;
-    }
-
-    setSendingVerification(true);
-    try {
-      await AuthService.sendVerificationEmail(formData.email.trim());
-      alert('Verification email sent! Please check your inbox.');
-      setErrors(prev => ({ ...prev, email: '' }));
-    } catch (error) {
-      console.error('Error sending verification email:', error);
-      let errorMessage = 'Email verification feature is not yet available. Please proceed with account creation.';
-
-      if (error instanceof ApiException) {
-        if (error.statusCode === 0) {
-          errorMessage = 'Cannot connect to server. Please try again later.';
-        } else if (error.statusCode === 409) {
-          errorMessage = 'This email is already registered.';
-        } else if (error.statusCode === 400) {
-          errorMessage = 'Invalid email address.';
-        } else if (error.statusCode === 404 || error.statusCode === 405) {
-          errorMessage = 'Email verification feature is not yet available. Please proceed with account creation.';
-        }
-      }
-
-      alert(errorMessage);
-    } finally {
-      setSendingVerification(false);
-    }
-  };
 
   const getUniversityName = (universityId) => {
     const university = universities.find(u => (u.id || u) === universityId);
@@ -271,20 +232,27 @@ if (!formData.university) {
     try {
       console.log('Sign up with:', formData);
 
-const response = await AuthService.register({
+      const response = await AuthService.register({
         email: formData.email.trim(),
         username: formData.username.trim(),
         name: formData.name.trim(),
         password: formData.password,
         password_confirm: formData.confirmPassword,
         position: formData.position,
-        university_department: `${getUniversityName(formData.university)} - ${getDepartmentName(formData.department)}`,
+        university_department: formData.university,
+        department: formData.department,
+        language: 'en', // Default to English
       });
 
       console.log('Sign up successful:', response);
 
-      // Show success message and navigate
-      alert('Account created successfully! Please check your email for verification.');
+      // Show success message based on backend response
+      if (response.email_sent) {
+        alert(`Account created successfully! ${response.message || 'Please check your email for verification.'}`);
+      } else {
+        alert('Account created successfully!');
+      }
+
       navigate('/sign-in');
 
     } catch (error) {
@@ -430,9 +398,10 @@ const positions = [
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginTop: '2px',
+                  flexShrink: 0,
                 }}
               >
-<span style={{ color: 'white', fontSize: '14px', fontWeight: 'bold' }}>✓</span>
+                <Check size={12} color="white" />
               </div>
               <div>
                 <div
@@ -461,115 +430,16 @@ style={{
 
           {/* Form */}
           <form onSubmit={handleSignUp}>
-            {/* Email with verification button */}
-            <div style={{ marginBottom: spacing[4] }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: isMobile ? '14px' : '16px',
-                  fontWeight: '500',
-                  color: colors.textPrimary,
-                  marginBottom: spacing[2],
-                  fontFamily: 'Inter',
-                }}
-              >
-                Email Address <span style={{ color: colors.error }}>*</span>
-              </label>
-              <div style={{ display: 'flex', gap: spacing[2] }}>
-                <div style={{ flex: 1, position: 'relative' }}>
-                  <Mail
-                    size={20}
-                    style={{
-                      position: 'absolute',
-                      left: spacing[3],
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: colors.textTertiary,
-                      zIndex: 1,
-                    }}
-                  />
-                  <input
-                    type="text"
-                    value={formData.email}
-                    onChange={handleInputChange('email')}
-                    placeholder="your.email@example.com"
-                    style={{
-                      width: '100%',
-                      height: '48px',
-                      padding: `0 ${spacing[3]} 0 48px`,
-                      fontSize: isMobile ? '14px' : '16px',
-                      border: `2px solid ${errors.email ? colors.error : colors.border}`,
-                      borderRadius: '8px',
-                      outline: 'none',
-                      backgroundColor: colors.background,
-                      color: colors.textPrimary,
-                      fontFamily: 'Inter',
-                      transition: 'all 0.2s ease',
-                      boxSizing: 'border-box',
-                    }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={sendVerificationEmail}
-                  disabled={sendingVerification}
-                  style={{
-                    width: '48px',
-                    height: '48px',
-                    backgroundColor: sendingVerification ? colors.textTertiary : colors.primary + '1A',
-                    border: 'none',
-                    borderRadius: '50%',
-                    color: sendingVerification ? 'white' : colors.primary,
-                    cursor: sendingVerification ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.2s ease',
-                  }}
-                  title="Send verification email"
-                  onMouseEnter={(e) => {
-                    if (!sendingVerification) {
-                      e.target.style.backgroundColor = colors.primary + '33';
-                      e.target.style.transform = 'scale(1.05)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!sendingVerification) {
-                      e.target.style.backgroundColor = colors.primary + '1A';
-                      e.target.style.transform = 'scale(1)';
-                    }
-                  }}
-                >
-                  {sendingVerification ? (
-                    <div
-                      style={{
-                        width: '16px',
-                        height: '16px',
-                        border: '2px solid transparent',
-                        borderTop: '2px solid white',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite',
-                      }}
-                    />
-                  ) : (
-                    <Send size={20} />
-                  )}
-                </button>
-              </div>
-              {errors.email && (
-                <p
-                  style={{
-                    fontSize: isMobile ? '12px' : '14px',
-                    color: colors.error,
-                    marginTop: spacing[1],
-                    marginBottom: 0,
-                    fontFamily: 'Inter',
-                  }}
-                >
-                  {errors.email}
-                </p>
-              )}
-            </div>
+            <FormInput
+              label="Email Address"
+              type="email"
+              placeholder="your.email@example.com"
+              value={formData.email}
+              onChange={handleInputChange('email')}
+              error={errors.email}
+              icon={Mail}
+              required
+            />
 
             {/* Username with refresh button */}
             <div style={{ marginBottom: spacing[4] }}>
@@ -678,8 +548,6 @@ style={{
                   style={{
                     width: '20px',
                     height: '20px',
-                    borderRadius: '50%',
-                    backgroundColor: colors.info,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -687,7 +555,7 @@ style={{
                     flexShrink: 0,
                   }}
                 >
-                  <Info size={12} color="white" />
+                  <Info size={20} color={colors.info} />
                 </div>
                 <div>
 <div
