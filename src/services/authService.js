@@ -75,6 +75,11 @@ class AuthService {
     }
   }
 
+  static isAuthenticated() {
+    const token = ApiService.getAuthToken();
+    return !!token;
+  }
+
 
   // Google Sign In
   static async signInWithGoogle(idToken, email, displayName) {
