@@ -3,16 +3,18 @@ name: Deploy React App to GitHub Pages
 on:
   push:
     branches: [ react-version ]
-  pull_request:
-    branches: [ react-version ]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -37,3 +39,4 @@ jobs:
         publish_dir: ./build
         publish_branch: gh-pages-react
         force_orphan: true
+        enable_jekyll: false
