@@ -111,17 +111,6 @@ const [formData, setFormData] = useState({
     }
   };
 
-  const handleAddDepartment = async (departmentData) => {
-    try {
-      const newDepartment = await ReviewService.addDepartment(formData.university, departmentData);
-      setDepartments(prev => [...prev, newDepartment]);
-      setFormData(prev => ({ ...prev, department: newDepartment.id }));
-      setShowAddDepartment(false);
-    } catch (error) {
-      console.error('Error adding department:', error);
-      alert('Failed to add department. Please try again.');
-    }
-  };
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
