@@ -178,7 +178,7 @@ const [formData, setFormData] = useState({
         name: response?.department_name || response?.name || departmentData.name,
         department_name: response?.department_name || response?.name || departmentData.name,
         university_id: formData.university,
-        university_name: universities.find(u => u.id == formData.university)?.name || 'Unknown University'
+        university_name: universities.find(u => u.id === formData.university)?.name || 'Unknown University'
       };
 
       console.log('📝 Processed new department:', newDepartment);
