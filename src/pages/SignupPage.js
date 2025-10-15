@@ -7,7 +7,6 @@ import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { ApiException } from '../services/apiService';
 import { UniversityService } from '../services/universityService';
-import { ReviewService } from '../services/reviewService';
 import AddDepartmentModal from '../components/review/AddDepartmentModal';
 
 const SignupPage = () => {
