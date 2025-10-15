@@ -7,7 +7,7 @@ import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { ApiException } from '../services/apiService';
 import { UniversityService } from '../services/universityService';
-import AddDepartmentModal from '../components/review/AddDepartmentModal';
+import { ReviewService } from '../services/reviewService';
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -110,6 +110,19 @@ const [formData, setFormData] = useState({
     }
   };
 
+  const handleAddDepartment = async (departmentData) => {
+    try {
+      const newDepartment = await ReviewService.addDepartment(formData.university, {
+        department_name: departmentData.name
+      });
+      setDepartments(prev => [...prev, newDepartment]);
+      setFormData(prev => ({ ...prev, department: newDepartment.id }));
+      setShowAddDepartment(false);
+    } catch (error) {
+      console.error('Error adding department:', error);
+      alert('Failed to add department. Please try again.');
+    }
+  };
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1131,15 +1144,24 @@ style={{
 
       {/* Add Department Modal */}
       {showAddDepartment && (
-        <AddDepartmentModal
-          universityId={formData.university}
-          onClose={() => setShowAddDepartment(false)}
-          onAdd={(department) => {
-            setDepartments(prev => [...prev, department]);
-            setFormData(prev => ({ ...prev, department: department.id }));
-            setShowAddDepartment(false);
-          }}
-        />
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: spacing[4],
+        }}>
+          <AddDepartmentModal
+            onAdd={handleAddDepartment}
+            onCancel={() => setShowAddDepartment(false)}
+          />
+        </div>
       )}
     </div>
   );
@@ -1274,5 +1296,90 @@ const AddUniversityModal = ({ onAdd, onCancel }) => {
   );
 };
 
+// Simple Add Department Modal Component (only department name)
+const AddDepartmentModal = ({ onAdd, onCancel }) => {
+  const [departmentName, setDepartmentName] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!departmentName.trim()) {
+      alert('Please enter department name');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onAdd({ name: departmentName.trim() });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: spacing[6],
+      maxWidth: '400px',
+      width: '100%',
+    }}>
+      <h3 style={{
+        fontSize: '20px',
+        fontWeight: '700',
+        color: colors.textPrimary,
+        marginBottom: spacing[4],
+        fontFamily: 'Inter',
+      }}>
+        Add New Department
+      </h3>
+
+      <form onSubmit={handleSubmit}>
+        <FormInput
+          label="Department Name"
+          type="text"
+          placeholder="e.g., Computer Science"
+          value={departmentName}
+          onChange={(e) => setDepartmentName(e.target.value)}
+          required
+        />
+
+        <div style={{ display: 'flex', gap: spacing[3], justifyContent: 'flex-end' }}>
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            style={{
+              padding: `${spacing[2]} ${spacing[4]}`,
+              backgroundColor: 'transparent',
+              color: colors.textSecondary,
+              border: `1px solid ${colors.border}`,
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontFamily: 'Inter',
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              padding: `${spacing[2]} ${spacing[4]}`,
+              backgroundColor: loading ? colors.textTertiary : colors.primary,
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontFamily: 'Inter',
+            }}
+          >
+            {loading ? 'Adding...' : 'Add Department'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
 
 export default SignupPage;
