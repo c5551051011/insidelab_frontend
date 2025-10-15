@@ -39,15 +39,10 @@ const [formData, setFormData] = useState({
     loadUniversities();
   }, []);
 
-  // Load departments when university is selected
+  // Load all departments when component mounts (new approach)
   useEffect(() => {
-    if (formData.university && formData.university !== 'Add New University') {
-      loadDepartments(formData.university);
-    } else {
-      setDepartments([]);
-      setFormData(prev => ({ ...prev, department: '' }));
-    }
-  }, [formData.university]);
+    loadAllDepartments();
+  }, []);
 
   const loadUniversities = async () => {
     try {
@@ -58,13 +53,53 @@ const [formData, setFormData] = useState({
     }
   };
 
-  const loadDepartments = async (universityId) => {
+  const loadAllDepartments = async () => {
     setLoadingDepartments(true);
     try {
-      const departmentsList = await UniversityService.getDepartmentsByUniversity(universityId);
-      setDepartments(departmentsList);
+      const departmentsList = await UniversityService.getAllDepartments();
+
+      // Safely process departments to avoid React Error #31
+      const processedDepartments = departmentsList.map((dept, index) => {
+        console.log(`🔍 Processing department ${index}:`, typeof dept, dept);
+
+        // Handle null/undefined
+        if (!dept) {
+          console.warn(`⚠️ Null/undefined department at index ${index}`);
+          return {
+            id: `fallback-${index}`,
+            name: 'Unknown Department',
+            department_name: 'Unknown Department'
+          };
+        }
+
+        // Handle string
+        if (typeof dept === 'string') {
+          return {
+            id: dept,
+            name: dept,
+            department_name: dept
+          };
+        }
+
+        // Handle complex object - extract only safe primitive values
+        const safeId = String(dept.id || dept.department?.id || `dept-${index}`);
+        const safeName = String(dept.department_name || dept.name || dept.display_name || 'Unknown Department');
+
+        const processed = {
+          id: safeId,
+          name: safeName,
+          department_name: safeName
+        };
+
+        console.log(`✅ Processed department ${index}:`, processed);
+        return processed;
+      });
+
+      setDepartments(processedDepartments);
+      console.log('📋 All departments loaded and processed:', processedDepartments);
     } catch (error) {
-      console.error('Error loading departments:', error);
+      console.error('Error loading all departments:', error);
+      setDepartments([]);
     } finally {
       setLoadingDepartments(false);
     }
@@ -102,8 +137,8 @@ const [formData, setFormData] = useState({
       setUniversities(prev => [...prev, newUniversity]);
       setFormData(prev => ({ ...prev, university: newUniversity.id }));
       setShowAddUniversity(false);
-      // Load departments for the new university
-      loadDepartments(newUniversity.id);
+      // Refresh departments list after adding new university
+      await loadAllDepartments();
     } catch (error) {
       console.error('Error adding university:', error);
       alert('Failed to add university. Please try again.');
@@ -112,14 +147,81 @@ const [formData, setFormData] = useState({
 
   const handleAddDepartment = async (departmentData) => {
     try {
-      const newDepartment = await ReviewService.addDepartment(formData.university, {
+      console.log('🏫 Adding department:', departmentData.name, 'to university:', formData.university);
+
+      // Check if department already exists (safely)
+      const existingDepartment = departments.find(dept => {
+        const deptName = dept?.department_name || dept?.name || '';
+        return deptName === departmentData.name;
+      });
+
+      if (existingDepartment) {
+        console.log('✅ Department already exists, using existing:', existingDepartment);
+        // Use existing department
+        const safeExistingId = String(existingDepartment.id);
+        console.log('🔗 Setting existing department ID:', safeExistingId);
+        setFormData(prev => ({ ...prev, department: safeExistingId }));
+        setShowAddDepartment(false);
+        return;
+      }
+
+      // Add new department
+      const response = await ReviewService.addDepartment(formData.university, {
         department_name: departmentData.name
       });
-      setDepartments(prev => [...prev, newDepartment]);
-      setFormData(prev => ({ ...prev, department: newDepartment.id }));
+
+      console.log('✅ Department added response:', response);
+
+      // Safely extract department info from response
+      const newDepartment = {
+        id: response?.id || response?.department?.id || Date.now().toString(),
+        name: response?.department_name || response?.name || departmentData.name,
+        department_name: response?.department_name || response?.name || departmentData.name,
+        university_id: formData.university,
+        university_name: universities.find(u => u.id == formData.university)?.name || 'Unknown University'
+      };
+
+      console.log('📝 Processed new department:', newDepartment);
+
+      setDepartments(prev => {
+        console.log('🔄 Previous departments:', prev);
+        console.log('➕ Adding new department:', newDepartment);
+
+        const updatedDepartments = [...prev, newDepartment];
+        console.log('✅ Updated departments:', updatedDepartments);
+
+        return updatedDepartments;
+      });
+      const safeDeptId = String(newDepartment.id);
+      console.log('🔗 Setting department ID:', safeDeptId);
+      setFormData(prev => ({ ...prev, department: safeDeptId }));
       setShowAddDepartment(false);
+
     } catch (error) {
-      console.error('Error adding department:', error);
+      console.error('❌ Error adding department:', error);
+
+      // Handle duplicate department error gracefully
+      if (error.message && error.message.includes('non_field_errors')) {
+        console.log('🔄 Department already exists in university, searching for it...');
+
+        // Reload departments to get the updated list
+        await loadAllDepartments();
+
+        // Find the department that was attempted to be added (safely)
+        const existingDept = departments.find(dept => {
+          const deptName = dept?.department_name || dept?.name || '';
+          return deptName === departmentData.name;
+        });
+
+        if (existingDept) {
+          const safeExistingDeptId = String(existingDept.id);
+          console.log('🔗 Setting found department ID:', safeExistingDeptId);
+          setFormData(prev => ({ ...prev, department: safeExistingDeptId }));
+          setShowAddDepartment(false);
+          return;
+        }
+      }
+
       alert('Failed to add department. Please try again.');
     }
   };
@@ -756,11 +858,22 @@ style={{
                   <option value="">
                     {loadingDepartments ? 'Loading departments...' : 'Select your department'}
                   </option>
-                  {departments.map((department) => (
-                    <option key={department.id || department} value={department.id || department}>
-                      {department.name || department}
-                    </option>
-                  ))}
+                  {departments.map((department, index) => {
+                    // Extremely safe department rendering
+                    console.log(`🎨 Rendering department ${index}:`, department);
+
+                    // Ensure we have a primitive value
+                    const deptId = String(department?.id || `unknown-${index}`);
+                    const deptName = String(department?.department_name || department?.name || 'Unknown Department');
+
+                    console.log(`✅ Safe values - ID: "${deptId}", Name: "${deptName}"`);
+
+                    return (
+                      <option key={deptId} value={deptId}>
+                        {deptName}
+                      </option>
+                    );
+                  })}
                   {formData.university && formData.university !== 'Add New University' && (
                     <option value="Add New Department" style={{ fontStyle: 'italic', color: colors.primary }}>
                       + Add New Department

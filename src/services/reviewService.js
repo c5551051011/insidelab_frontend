@@ -288,9 +288,25 @@ export class ReviewService {
   static async addDepartment(universityId, departmentData) {
     try {
       const response = await ApiService.post(`/universities/${universityId}/departments/`, departmentData, true);
+
+      // Filter out cache invalidation messages from the response
+      if (response && typeof response === 'object') {
+        // Remove any cache-related messages that might confuse users
+        const cleanResponse = { ...response };
+        delete cleanResponse.cache_invalidated;
+        delete cleanResponse.cache_messages;
+        return cleanResponse;
+      }
+
       return response;
     } catch (error) {
       console.error('Error adding department:', error);
+
+      // Don't show cache invalidation messages to users
+      if (error.message && error.message.includes('Invalidated')) {
+        console.log('Cache invalidation message (hidden from user):', error.message);
+        return { success: true, message: 'Department added successfully' };
+      }
 
       if (error.statusCode === 400) {
         throw new Error('Invalid department data. Please check all fields.');

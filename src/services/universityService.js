@@ -5,10 +5,22 @@ class UniversityService {
   static async getAllUniversities(search = '') {
     try {
       const endpoint = search ? `/universities/?search=${encodeURIComponent(search)}` : '/universities/';
+      console.log('🔥 API Call:', `https://insidelab.up.railway.app/api/v1${endpoint}`);
+
       const response = await ApiService.get(endpoint);
+      console.log('✅ API Response successful:', response);
+      console.log('📊 University count from DB:', (response.results || response).length);
+
       return response.results || response;
     } catch (error) {
-      console.log('DEBUG: Error fetching universities:', error);
+      console.error('❌ API Call failed:', error);
+      console.log('🔍 Error details:', {
+        message: error.message,
+        statusCode: error.statusCode,
+        stack: error.stack
+      });
+      console.log('📋 Using fallback universities instead');
+
       // Return fallback universities if API fails
       return [
         { id: '1', name: 'MIT', website: 'https://mit.edu' },
@@ -49,6 +61,19 @@ class UniversityService {
         state: universityData.state,
         city: universityData.city,
       };
+    }
+  }
+
+  // Get all departments globally (new approach)
+  static async getAllDepartments() {
+    try {
+      console.log('🔥 API Call: https://insidelab.up.railway.app/api/v1/departments/');
+      const response = await ApiService.get('/departments/');
+      console.log('✅ All departments response:', response);
+      return response.results || response;
+    } catch (error) {
+      console.error('❌ Error fetching all departments:', error);
+      return [];
     }
   }
 
