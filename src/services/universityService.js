@@ -4,7 +4,8 @@ import { ApiService } from './apiService';
 class UniversityService {
   static async getAllUniversities(search = '') {
     try {
-      const endpoint = search ? `/universities/?search=${encodeURIComponent(search)}` : '/universities/';
+      const baseEndpoint = search ? `/universities/?search=${encodeURIComponent(search)}` : '/universities/';
+      const endpoint = search ? `${baseEndpoint}&fields=minimal` : `${baseEndpoint}?fields=minimal`;
       console.log('🔥 API Call:', `https://insidelab.up.railway.app/api/v1${endpoint}`);
 
       const response = await ApiService.get(endpoint);
@@ -48,27 +49,28 @@ class UniversityService {
 
   static async addUniversity(universityData) {
     try {
+      console.log('🔥 Adding university with data:', universityData);
       const response = await ApiService.post('/universities/', universityData);
+      console.log('✅ University added successfully:', response);
       return response;
     } catch (error) {
-      console.log('DEBUG: Error adding university:', error);
-      // For demo purposes, return mock success
-      return {
-        id: Date.now().toString(),
-        name: universityData.name,
-        website: universityData.website,
-        country: universityData.country,
-        state: universityData.state,
-        city: universityData.city,
-      };
+      console.error('❌ Error adding university:', error);
+      console.error('Error details:', {
+        message: error.message,
+        statusCode: error.statusCode,
+        response: error.response
+      });
+
+      // Re-throw the error instead of returning mock data
+      throw new Error(`Failed to add university: ${error.message}`);
     }
   }
 
   // Get all departments globally (new approach)
   static async getAllDepartments() {
     try {
-      console.log('🔥 API Call: https://insidelab.up.railway.app/api/v1/departments/');
-      const response = await ApiService.get('/departments/');
+      console.log('🔥 API Call: https://insidelab.up.railway.app/api/v1/departments/?fields=minimal');
+      const response = await ApiService.get('/departments/?fields=minimal');
       console.log('✅ All departments response:', response);
       return response.results || response;
     } catch (error) {
