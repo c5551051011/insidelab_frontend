@@ -6,6 +6,7 @@ import Header from '../components/Header';
 import UniversityDepartmentSelector from '../components/UniversityDepartmentSelector';
 import StarRating from '../components/review/StarRating';
 import { ReviewService } from '../services/reviewService';
+import { UniversityService } from '../services/universityService';
 import { AuthService } from '../services/authService';
 
 const WriteReviewPage = () => {
@@ -38,6 +39,11 @@ const WriteReviewPage = () => {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isFormPreFilled, setIsFormPreFilled] = useState(false);
+  const [showAddResearchGroupModal, setShowAddResearchGroupModal] = useState(false);
+
+  // Research groups state
+  const [researchGroups, setResearchGroups] = useState([]);
+  const [isLoadingResearchGroups, setIsLoadingResearchGroups] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -125,7 +131,7 @@ const WriteReviewPage = () => {
     }));
   };
 
-  const handleDepartmentSelected = (departmentId, departmentName) => {
+  const handleDepartmentSelected = async (departmentId, departmentName) => {
     console.log('Department selected:', departmentId, departmentName);
     setFormData(prev => ({
       ...prev,
@@ -137,6 +143,142 @@ const WriteReviewPage = () => {
       labId: '',
       labName: ''
     }));
+
+    // Load research groups for the selected department
+    if (departmentId) {
+      setIsLoadingResearchGroups(true);
+      try {
+        const groups = await UniversityService.getResearchGroupsByDepartment(departmentId);
+        setResearchGroups(groups);
+        console.log('✅ Research groups loaded:', groups);
+      } catch (error) {
+        console.error('❌ Error loading research groups:', error);
+        setResearchGroups([]);
+      } finally {
+        setIsLoadingResearchGroups(false);
+      }
+    } else {
+      setResearchGroups([]);
+    }
+  };
+
+  const handleResearchGroupChange = (e) => {
+    const value = e.target.value;
+
+    if (value === '___ADD_NEW___') {
+      setShowAddResearchGroupModal(true);
+      return;
+    }
+
+    if (value === '___NONE___' || value === '') {
+      setFormData(prev => ({
+        ...prev,
+        researchGroupId: '',
+        researchGroupName: '',
+        // Clear dependent fields
+        labId: '',
+        labName: ''
+      }));
+    } else {
+      // Handle existing research group selection
+      const selectedGroup = researchGroups.find(group => group.id === value);
+      setFormData(prev => ({
+        ...prev,
+        researchGroupId: value,
+        researchGroupName: selectedGroup ? selectedGroup.name : '',
+        // Clear dependent fields
+        labId: '',
+        labName: ''
+      }));
+    }
+  };
+
+  const handleAddResearchGroup = async (researchGroupData) => {
+    try {
+      console.log('🚀 Starting research group creation process...');
+      console.log('📋 University ID:', formData.universityId);
+      console.log('📋 Department ID:', formData.departmentId);
+      console.log('📋 Department Name:', formData.departmentName);
+
+      // First, ensure department is saved to the university
+      let universityDepartmentId = null;
+
+      try {
+        // Check if department already exists in university
+        console.log('🔍 Checking existing departments for university...');
+        const existingDepartments = await UniversityService.getDepartmentsByUniversity(formData.universityId);
+        console.log('📋 Existing departments:', existingDepartments);
+
+        const universityDepartment = existingDepartments.find(dept =>
+          dept.department_name === formData.departmentName ||
+          dept.name === formData.departmentName ||
+          String(dept.department) === String(formData.departmentId)
+        );
+
+        if (universityDepartment) {
+          console.log('✅ Department found in university:', universityDepartment);
+          universityDepartmentId = universityDepartment.id;
+        } else {
+          console.log('📝 Department not found in university, checking if we need to create university-department link...');
+
+          // For now, we'll use the departmentId from form data
+          // In a real scenario, you might need to create the university-department relationship
+          if (formData.departmentId) {
+            console.log('📝 Using existing department ID from form:', formData.departmentId);
+            universityDepartmentId = parseInt(formData.departmentId);
+          } else {
+            throw new Error('No valid university department ID available');
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error checking department:', error);
+        // Use fallback department ID
+        universityDepartmentId = parseInt(formData.departmentId);
+      }
+
+      console.log('📍 Final university_department ID to use:', universityDepartmentId);
+
+      // Prepare research group data for API
+      const apiData = {
+        name: researchGroupData.name,
+        university_department: universityDepartmentId,
+        description: researchGroupData.description || '',
+        website: researchGroupData.website || '',
+        research_areas: researchGroupData.researchAreas || []
+      };
+
+      console.log('📤 Sending research group data:', apiData);
+
+      // Create research group via API
+      const newResearchGroup = await UniversityService.addResearchGroup(apiData);
+      console.log('🎉 Research group created successfully:', newResearchGroup);
+
+      // Set the new research group as selected
+      setFormData(prev => ({
+        ...prev,
+        researchGroupId: newResearchGroup.id,
+        researchGroupName: newResearchGroup.name,
+        // Clear dependent fields
+        labId: '',
+        labName: ''
+      }));
+
+      // Close the modal
+      setShowAddResearchGroupModal(false);
+
+      alert(`Research Group "${researchGroupData.name}" created and saved successfully!`);
+
+    } catch (error) {
+      console.error('❌ Error creating research group:', error);
+
+      // Show detailed error information
+      if (error.response?.data) {
+        console.error('❌ API Error Response:', error.response.data);
+        throw new Error(`Failed to create research group: ${JSON.stringify(error.response.data)}`);
+      } else {
+        throw new Error(`Failed to create research group: ${error.message}`);
+      }
+    }
   };
 
   const handleInputChange = (field) => (e) => {
@@ -354,41 +496,21 @@ const WriteReviewPage = () => {
 
             {/* Research Group Selection */}
             <div style={{ marginBottom: spacing[6] }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                marginBottom: spacing[2]
+              <label style={{
+                display: 'block',
+                fontSize: '16px',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: spacing[2],
+                fontFamily: 'Inter'
               }}>
-                <label style={{
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  color: colors.textPrimary,
-                  fontFamily: 'Inter',
-                  marginRight: spacing[2]
-                }}>
-                  Research Group
-                </label>
-                <div style={{
-                  padding: `${spacing[1]} ${spacing[2]}`,
-                  backgroundColor: colors.primary + '1A',
-                  borderRadius: '12px',
-                  border: `1px solid ${colors.primary}33`
-                }}>
-                  <span style={{
-                    fontSize: '12px',
-                    color: colors.primary,
-                    fontWeight: '500',
-                    fontFamily: 'Inter'
-                  }}>
-                    Optional
-                  </span>
-                </div>
-              </div>
+                Research Group
+              </label>
 
               <select
                 value={formData.researchGroupId}
-                onChange={handleInputChange('researchGroupId')}
-                disabled={!formData.departmentId}
+                onChange={handleResearchGroupChange}
+                disabled={!formData.departmentId || isLoadingResearchGroups}
                 style={{
                   width: '100%',
                   height: '56px',
@@ -400,18 +522,28 @@ const WriteReviewPage = () => {
                   backgroundColor: colors.background,
                   color: colors.textPrimary,
                   fontFamily: 'Inter',
-                  cursor: formData.departmentId ? 'pointer' : 'not-allowed',
-                  opacity: !formData.departmentId ? 0.6 : 1
+                  cursor: formData.departmentId && !isLoadingResearchGroups ? 'pointer' : 'not-allowed',
+                  opacity: !formData.departmentId || isLoadingResearchGroups ? 0.6 : 1
                 }}
               >
                 <option value="">
                   {!formData.departmentId
                     ? 'Select a department first'
+                    : isLoadingResearchGroups
+                    ? 'Loading research groups...'
                     : 'Select a research group or add new (optional)'
                   }
                 </option>
                 <option value="___NONE___">No Research Group</option>
-                {formData.departmentId && (
+
+                {/* Show existing research groups */}
+                {researchGroups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+
+                {formData.departmentId && !isLoadingResearchGroups && (
                   <option value="___ADD_NEW___" style={{ fontStyle: 'italic', color: colors.primary }}>
                     + Add New Research Group
                   </option>
@@ -1016,6 +1148,361 @@ const WriteReviewPage = () => {
             </button>
           </form>
         </div>
+      </div>
+
+      {/* Add Research Group Modal */}
+      {showAddResearchGroupModal && (
+        <AddResearchGroupModal
+          universityName={formData.universityName}
+          departmentName={formData.departmentName}
+          onAdd={handleAddResearchGroup}
+          onCancel={() => setShowAddResearchGroupModal(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+// Add Research Group Modal Component
+const AddResearchGroupModal = ({ universityName, departmentName, onAdd, onCancel }) => {
+  const [researchGroupData, setResearchGroupData] = useState({
+    name: '',
+    description: '',
+    website: '',
+    researchAreas: []
+  });
+  const [newResearchArea, setNewResearchArea] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!researchGroupData.name.trim()) {
+      alert('Please enter a research group name');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await onAdd(researchGroupData);
+    } catch (error) {
+      alert(`Failed to add research group: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addResearchArea = () => {
+    if (newResearchArea.trim() && !researchGroupData.researchAreas.includes(newResearchArea.trim())) {
+      setResearchGroupData(prev => ({
+        ...prev,
+        researchAreas: [...prev.researchAreas, newResearchArea.trim()]
+      }));
+      setNewResearchArea('');
+    }
+  };
+
+  const removeResearchArea = (area) => {
+    setResearchGroupData(prev => ({
+      ...prev,
+      researchAreas: prev.researchAreas.filter(a => a !== area)
+    }));
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: spacing[4]
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: spacing[6],
+        maxWidth: '600px',
+        width: '100%',
+        maxHeight: '80vh',
+        overflowY: 'auto'
+      }}>
+        <h3 style={{
+          fontSize: '20px',
+          fontWeight: '700',
+          color: colors.textPrimary,
+          marginBottom: spacing[2],
+          fontFamily: 'Inter'
+        }}>
+          Add New Research Group
+        </h3>
+
+        <div style={{
+          fontSize: '14px',
+          color: colors.textSecondary,
+          marginBottom: spacing[4],
+          fontFamily: 'Inter'
+        }}>
+          <p style={{ margin: 0, marginBottom: spacing[1] }}>
+            University: {universityName}
+          </p>
+          <p style={{ margin: 0 }}>
+            Department: {departmentName}
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          {/* Research Group Name */}
+          <div style={{ marginBottom: spacing[4] }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: colors.textPrimary,
+              marginBottom: spacing[2],
+              fontFamily: 'Inter'
+            }}>
+              Research Group Name *
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., Machine Learning Lab"
+              value={researchGroupData.name}
+              onChange={(e) => setResearchGroupData(prev => ({ ...prev, name: e.target.value }))}
+              required
+              style={{
+                width: '100%',
+                height: '48px',
+                padding: `0 ${spacing[3]}`,
+                fontSize: '14px',
+                border: `2px solid ${colors.border}`,
+                borderRadius: '8px',
+                outline: 'none',
+                backgroundColor: colors.background,
+                color: colors.textPrimary,
+                fontFamily: 'Inter'
+              }}
+            />
+          </div>
+
+          {/* Description */}
+          <div style={{ marginBottom: spacing[4] }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: colors.textPrimary,
+              marginBottom: spacing[2],
+              fontFamily: 'Inter'
+            }}>
+              Description
+            </label>
+            <textarea
+              placeholder="Brief description of research group"
+              value={researchGroupData.description}
+              onChange={(e) => setResearchGroupData(prev => ({ ...prev, description: e.target.value }))}
+              rows={3}
+              style={{
+                width: '100%',
+                padding: spacing[3],
+                fontSize: '14px',
+                border: `2px solid ${colors.border}`,
+                borderRadius: '8px',
+                outline: 'none',
+                backgroundColor: colors.background,
+                color: colors.textPrimary,
+                fontFamily: 'Inter',
+                resize: 'vertical'
+              }}
+            />
+          </div>
+
+          {/* Website */}
+          <div style={{ marginBottom: spacing[4] }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: colors.textPrimary,
+              marginBottom: spacing[2],
+              fontFamily: 'Inter'
+            }}>
+              Website (Optional)
+            </label>
+            <input
+              type="url"
+              placeholder="https://example.com/group"
+              value={researchGroupData.website}
+              onChange={(e) => setResearchGroupData(prev => ({ ...prev, website: e.target.value }))}
+              style={{
+                width: '100%',
+                height: '48px',
+                padding: `0 ${spacing[3]}`,
+                fontSize: '14px',
+                border: `2px solid ${colors.border}`,
+                borderRadius: '8px',
+                outline: 'none',
+                backgroundColor: colors.background,
+                color: colors.textPrimary,
+                fontFamily: 'Inter'
+              }}
+            />
+          </div>
+
+          {/* Research Areas */}
+          <div style={{ marginBottom: spacing[4] }}>
+            <label style={{
+              display: 'block',
+              fontSize: '16px',
+              fontWeight: '600',
+              color: colors.textPrimary,
+              marginBottom: spacing[2],
+              fontFamily: 'Inter'
+            }}>
+              Research Areas
+            </label>
+
+            <div style={{
+              display: 'flex',
+              gap: spacing[2],
+              marginBottom: spacing[2]
+            }}>
+              <input
+                type="text"
+                placeholder="Add research area"
+                value={newResearchArea}
+                onChange={(e) => setNewResearchArea(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addResearchArea();
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  height: '40px',
+                  padding: `0 ${spacing[3]}`,
+                  fontSize: '14px',
+                  border: `2px solid ${colors.border}`,
+                  borderRadius: '8px',
+                  outline: 'none',
+                  backgroundColor: colors.background,
+                  color: colors.textPrimary,
+                  fontFamily: 'Inter'
+                }}
+              />
+              <button
+                type="button"
+                onClick={addResearchArea}
+                style={{
+                  padding: `${spacing[2]} ${spacing[3]}`,
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  fontFamily: 'Inter',
+                  border: 'none',
+                  borderRadius: '8px',
+                  backgroundColor: colors.primary,
+                  color: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing[1]
+                }}
+              >
+                <Plus size={16} />
+                Add
+              </button>
+            </div>
+
+            {/* Research Areas Tags */}
+            {researchGroupData.researchAreas.length > 0 && (
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: spacing[2]
+              }}>
+                {researchGroupData.researchAreas.map((area, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: `${spacing[1]} ${spacing[2]}`,
+                      backgroundColor: colors.primary + '1A',
+                      borderRadius: '16px',
+                      border: `1px solid ${colors.primary}33`
+                    }}
+                  >
+                    <span style={{
+                      fontSize: '12px',
+                      color: colors.primary,
+                      fontFamily: 'Inter',
+                      marginRight: spacing[1]
+                    }}>
+                      {area}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeResearchArea(area)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 0,
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <X size={14} color={colors.primary} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: spacing[3], justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={loading}
+              style={{
+                padding: `${spacing[2]} ${spacing[4]}`,
+                backgroundColor: 'transparent',
+                color: colors.textSecondary,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontFamily: 'Inter'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                padding: `${spacing[2]} ${spacing[4]}`,
+                backgroundColor: loading ? colors.textTertiary : colors.primary,
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontFamily: 'Inter'
+              }}
+            >
+              {loading ? 'Adding...' : 'Add Research Group'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

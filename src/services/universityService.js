@@ -103,16 +103,39 @@ class UniversityService {
 
   static async addDepartment(universityId, departmentData) {
     try {
+      console.log(`🔥 Adding department to university ${universityId}:`, departmentData);
       const response = await ApiService.post(`/universities/${universityId}/departments/`, departmentData);
+      console.log('✅ Department added to university:', response);
       return response;
     } catch (error) {
-      console.log('DEBUG: Error adding department:', error);
-      // For demo purposes, return mock success
-      return {
-        id: Date.now().toString(),
-        name: departmentData.name,
-        university_id: universityId,
-      };
+      console.error('❌ Error adding department:', error);
+      throw new Error(`Failed to add department: ${error.message}`);
+    }
+  }
+
+  // Get research groups for a university department
+  static async getResearchGroupsByDepartment(universityDepartmentId) {
+    try {
+      console.log(`🔥 Loading research groups for university department ${universityDepartmentId}`);
+      const response = await ApiService.get(`/universities/research-groups/?university_department=${universityDepartmentId}&fields=minimal`);
+      console.log('✅ Research groups loaded:', response);
+      return response.results || response;
+    } catch (error) {
+      console.error('❌ Error loading research groups:', error);
+      return [];
+    }
+  }
+
+  // Add research group
+  static async addResearchGroup(researchGroupData) {
+    try {
+      console.log('🔥 Adding research group:', researchGroupData);
+      const response = await ApiService.post('/universities/research-groups/', researchGroupData);
+      console.log('✅ Research group added:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Error adding research group:', error);
+      throw new Error(`Failed to add research group: ${error.message}`);
     }
   }
 }
