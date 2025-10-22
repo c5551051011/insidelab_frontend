@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, AlertCircle, Search, X, Plus, Info, Shield } from 'lucide-react';
+import { CheckCircle, Search, X, Plus, Info, Shield } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import Header from '../components/Header';
 import UniversityDepartmentSelector from '../components/UniversityDepartmentSelector';
@@ -38,37 +38,14 @@ const WriteReviewPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-  const [isFormPreFilled, setIsFormPreFilled] = useState(false);
+  const [isFormPreFilled] = useState(false);
   const [showAddResearchGroupModal, setShowAddResearchGroupModal] = useState(false);
 
   // Research groups state
   const [researchGroups, setResearchGroups] = useState([]);
   const [isLoadingResearchGroups, setIsLoadingResearchGroups] = useState(false);
 
-  // Check authentication on mount
-  useEffect(() => {
-    checkAuthenticationStatus();
-  }, []);
-
-  const checkAuthenticationStatus = async () => {
-    try {
-      const isAuthenticated = AuthService.isAuthenticated();
-
-      if (!isAuthenticated) {
-        navigate('/sign-in');
-        return;
-      }
-
-      setIsCheckingAuth(false);
-      await loadRatingCategories();
-
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      navigate('/sign-in');
-    }
-  };
-
-  const loadRatingCategories = async () => {
+  const loadRatingCategories = useCallback(async () => {
     try {
       const categories = await ReviewService.getRatingCategories();
 
@@ -113,7 +90,30 @@ const WriteReviewPage = () => {
       );
       setIsLoadingCategories(false);
     }
-  };
+  }, []);
+
+  const checkAuthenticationStatus = useCallback(async () => {
+    try {
+      const isAuthenticated = AuthService.isAuthenticated();
+
+      if (!isAuthenticated) {
+        navigate('/sign-in');
+        return;
+      }
+
+      setIsCheckingAuth(false);
+      await loadRatingCategories();
+
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      navigate('/sign-in');
+    }
+  }, [navigate, loadRatingCategories]);
+
+  // Check authentication on mount
+  useEffect(() => {
+    checkAuthenticationStatus();
+  }, [checkAuthenticationStatus]);
 
   const handleUniversitySelected = (universityId, universityName) => {
     console.log('University selected:', universityId, universityName);
