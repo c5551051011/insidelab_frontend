@@ -202,24 +202,26 @@ const Header = () => {
               position: 'absolute',
               top: 0,
               right: 0,
-              width: '100%',
+              width: '320px',
               height: '100%',
               backgroundColor: colors.background,
               display: 'flex',
               flexDirection: 'column',
+              boxShadow: '-4px 0 20px rgba(0, 0, 0, 0.1)'
             }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Mobile Menu Header */}
             <div style={{
-              padding: '24px',
+              padding: '20px 24px',
               borderBottom: `1px solid ${colors.border}`,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between'
+              justifyContent: 'space-between',
+              backgroundColor: colors.background
             }}>
               <span style={{
-                fontSize: '18px',
+                fontSize: '20px',
                 fontWeight: '700',
                 color: colors.primary,
                 fontFamily: 'Inter'
@@ -232,89 +234,194 @@ const Header = () => {
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  padding: spacing[2],
+                  padding: '8px',
                   borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = colors.backgroundLight;
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = 'transparent';
                 }}
               >
                 <X size={24} color={colors.textPrimary} />
               </button>
             </div>
 
+            {/* User Info Section (if logged in) */}
+            {isAuthenticated && user && (
+              <div style={{
+                padding: '20px 24px',
+                borderBottom: `1px solid ${colors.border}`,
+                backgroundColor: colors.backgroundLight
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing[3]
+                }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    backgroundColor: colors.primary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: '600'
+                  }}>
+                    {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                  <div>
+                    <div style={{
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      color: colors.textPrimary,
+                      fontFamily: 'Inter'
+                    }}>
+                      {user?.email || 'User'}
+                    </div>
+                    <div style={{
+                      fontSize: '14px',
+                      color: colors.textSecondary,
+                      fontFamily: 'Inter'
+                    }}>
+                      Signed in
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Mobile Menu Items */}
             <div style={{
               flex: 1,
-              padding: '24px',
+              padding: '20px 0',
               display: 'flex',
               flexDirection: 'column',
-              gap: spacing[4]
+              backgroundColor: colors.background
             }}>
-              <MobileNavLink
-                to="/search"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Search
-              </MobileNavLink>
-
-              <div style={{ height: '32px' }} />
+              {/* Navigation Links */}
+              <MobileMenuItem
+                icon={<span style={{ fontSize: '18px' }}>🔍</span>}
+                text="Search"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  window.location.href = '/search';
+                }}
+              />
 
               {isAuthenticated ? (
                 <>
-                  <MobileNavLink
-                    to="/profile"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{ color: colors.textPrimary }}
-                  >
-                    My Profile
-                  </MobileNavLink>
+                  <div style={{
+                    height: '1px',
+                    backgroundColor: colors.border,
+                    margin: '16px 24px'
+                  }} />
 
-                  <MobileNavLink
-                    to="/my-reviews"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{ color: colors.textPrimary }}
-                  >
-                    My Reviews
-                  </MobileNavLink>
+                  <MobileMenuItem
+                    icon={<User size={20} color={colors.textSecondary} />}
+                    text="My Profile"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      window.location.href = '/profile';
+                    }}
+                  />
 
-                  <button
+                  <MobileMenuItem
+                    icon={<FileText size={20} color={colors.textSecondary} />}
+                    text="My Reviews"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      window.location.href = '/my-reviews';
+                    }}
+                  />
+
+                  <div style={{
+                    height: '1px',
+                    backgroundColor: colors.border,
+                    margin: '16px 24px'
+                  }} />
+
+                  <MobileMenuItem
+                    icon={<LogOut size={20} color={colors.error} />}
+                    text="Sign Out"
                     onClick={() => {
                       handleLogout();
                       setMobileMenuOpen(false);
                     }}
-                    style={{
-                      padding: `${spacing[4]} 0`,
-                      fontSize: '18px',
-                      fontWeight: '500',
-                      color: colors.error,
-                      background: 'none',
-                      border: 'none',
-                      borderRadius: '8px',
-                      borderBottom: `1px solid ${colors.border}`,
-                      fontFamily: 'Inter',
-                      cursor: 'pointer',
-                      textAlign: 'left'
-                    }}
-                  >
-                    Sign Out
-                  </button>
+                    style={{ color: colors.error }}
+                  />
                 </>
               ) : (
                 <>
-                  <MobileNavLink
-                    to="/sign-in"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{ color: colors.textPrimary }}
-                  >
-                    Log In
-                  </MobileNavLink>
+                  <div style={{
+                    height: '1px',
+                    backgroundColor: colors.border,
+                    margin: '16px 24px'
+                  }} />
 
-                  <PrimaryButton
-                    to="/signup"
-                    onClick={() => setMobileMenuOpen(false)}
-                    size="medium"
-                    style={{ textAlign: 'center' }}
-                  >
-                    Sign Up
-                  </PrimaryButton>
+                  <div style={{ padding: '0 24px', marginTop: 'auto' }}>
+                    <Link
+                      to="/sign-in"
+                      onClick={() => setMobileMenuOpen(false)}
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        padding: '16px',
+                        fontSize: '16px',
+                        fontWeight: '500',
+                        color: colors.textPrimary,
+                        textDecoration: 'none',
+                        borderRadius: '8px',
+                        border: `1px solid ${colors.border}`,
+                        textAlign: 'center',
+                        fontFamily: 'Inter',
+                        marginBottom: '12px',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = colors.backgroundLight;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      Log In
+                    </Link>
+
+                    <Link
+                      to="/signup"
+                      onClick={() => setMobileMenuOpen(false)}
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        padding: '16px',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        color: 'white',
+                        textDecoration: 'none',
+                        borderRadius: '8px',
+                        backgroundColor: colors.primary,
+                        textAlign: 'center',
+                        fontFamily: 'Inter',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = colors.primaryDark || '#2563eb';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = colors.primary;
+                      }}
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
                 </>
               )}
             </div>
@@ -353,26 +460,37 @@ const NavLink = ({ to, children }) => {
   );
 };
 
-const MobileNavLink = ({ to, children, onClick, style = {} }) => {
+const MobileMenuItem = ({ icon, text, onClick, style = {} }) => {
   return (
-    <Link
-      to={to}
+    <button
       onClick={onClick}
       style={{
-        padding: `${spacing[4]} 0`,
-        fontSize: '18px',
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        gap: spacing[3],
+        padding: '16px 24px',
+        backgroundColor: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '16px',
         fontWeight: '500',
         color: colors.textPrimary,
-        textDecoration: 'none',
-        borderRadius: '8px',
-        transition: 'all 0.2s ease',
         fontFamily: 'Inter',
-        borderBottom: `1px solid ${colors.border}`,
+        textAlign: 'left',
+        transition: 'background-color 0.2s ease',
         ...style
       }}
+      onMouseEnter={(e) => {
+        e.target.style.backgroundColor = colors.backgroundLight;
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.backgroundColor = 'transparent';
+      }}
     >
-      {children}
-    </Link>
+      {icon}
+      {text}
+    </button>
   );
 };
 
