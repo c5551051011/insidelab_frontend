@@ -515,6 +515,7 @@ const WriteReviewPage = () => {
                   width: '100%',
                   height: '56px',
                   padding: `0 ${spacing[4]}`,
+                  paddingRight: '40px',
                   fontSize: '14px',
                   border: `2px solid ${colors.border}`,
                   borderRadius: '8px',
@@ -523,7 +524,12 @@ const WriteReviewPage = () => {
                   color: colors.textPrimary,
                   fontFamily: 'Inter',
                   cursor: formData.departmentId && !isLoadingResearchGroups ? 'pointer' : 'not-allowed',
-                  opacity: !formData.departmentId || isLoadingResearchGroups ? 0.6 : 1
+                  opacity: !formData.departmentId || isLoadingResearchGroups ? 0.6 : 1,
+                  appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='%23666' d='m2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                  backgroundSize: '12px'
                 }}
               >
                 <option value="">
