@@ -117,7 +117,7 @@ class UniversityService {
   static async getResearchGroupsByDepartment(universityDepartmentId) {
     try {
       console.log(`🔥 Loading research groups for university department ${universityDepartmentId}`);
-      const response = await ApiService.get(`/universities/research-groups/?university_department_id=${universityDepartmentId}&fields=minimal`);
+      const response = await ApiService.get(`/universities/research-groups/?university_department=${universityDepartmentId}&fields=minimal`);
       console.log('✅ Research groups loaded:', response);
       return response.results || response;
     } catch (error) {

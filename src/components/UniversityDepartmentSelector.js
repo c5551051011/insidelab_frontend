@@ -50,13 +50,13 @@ const UniversityDepartmentSelector = ({
     setLoadingDepartments(true);
     setDepartments([]);
     try {
-      const departmentsList = await UniversityService.getAllDepartments();
+      const departmentsList = await UniversityService.getDepartmentsByUniversity(universityId);
 
-      // Minimal API returns clean data, less processing needed
+      // Process departments from university-specific endpoint
       const processedDepartments = departmentsList.map((dept) => ({
         id: String(dept.id),
-        name: dept.name,
-        department_name: dept.name
+        name: dept.name || dept.department_name,
+        department_name: dept.name || dept.department_name
       }));
 
       setDepartments(processedDepartments);
