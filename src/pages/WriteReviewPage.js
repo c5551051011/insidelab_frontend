@@ -8,6 +8,7 @@ import StarRating from '../components/review/StarRating';
 import { ReviewService } from '../services/reviewService';
 import { UniversityService } from '../services/universityService';
 import { AuthService } from '../services/authService';
+import { DropdownField } from '../components/Dropdown';
 
 const WriteReviewPage = () => {
   const navigate = useNavigate();
@@ -495,67 +496,31 @@ const WriteReviewPage = () => {
             />
 
             {/* Research Group Selection */}
-            <div style={{ marginBottom: spacing[6] }}>
-              <label style={{
-                display: 'block',
-                fontSize: '16px',
-                fontWeight: '600',
-                color: colors.textPrimary,
-                marginBottom: spacing[2],
-                fontFamily: 'Inter'
-              }}>
-                Research Group
-              </label>
-
-              <select
-                value={formData.researchGroupId}
-                onChange={handleResearchGroupChange}
-                disabled={!formData.departmentId || isLoadingResearchGroups}
-                style={{
-                  width: '100%',
-                  height: '56px',
-                  padding: `0 ${spacing[4]}`,
-                  paddingRight: '40px',
-                  fontSize: '14px',
-                  border: `2px solid ${colors.border}`,
-                  borderRadius: '8px',
-                  outline: 'none',
-                  backgroundColor: colors.background,
-                  color: colors.textPrimary,
-                  fontFamily: 'Inter',
-                  cursor: formData.departmentId && !isLoadingResearchGroups ? 'pointer' : 'not-allowed',
-                  opacity: !formData.departmentId || isLoadingResearchGroups ? 0.6 : 1,
-                  appearance: 'none',
-                  backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='%23666' d='m2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                  backgroundSize: '12px'
-                }}
-              >
-                <option value="">
-                  {!formData.departmentId
-                    ? 'Select a department first'
-                    : isLoadingResearchGroups
-                    ? 'Loading research groups...'
-                    : 'Select a research group or add new (optional)'
-                  }
-                </option>
-                <option value="___NONE___">No Research Group</option>
-
-                {/* Show existing research groups */}
-                {researchGroups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
-                ))}
-
-                {formData.departmentId && !isLoadingResearchGroups && (
-                  <option value="___ADD_NEW___" style={{ fontStyle: 'italic', color: colors.primary }}>
-                    + Add New Research Group
-                  </option>
-                )}
-              </select>
-            </div>
+            <DropdownField
+              label="Research Group"
+              value={formData.researchGroupId}
+              onChange={handleResearchGroupChange}
+              options={[
+                { value: "___NONE___", label: "No Research Group" },
+                ...researchGroups.map((group) => ({
+                  value: group.id,
+                  label: group.name
+                })),
+                ...(formData.departmentId && !isLoadingResearchGroups ? [{
+                  value: "___ADD_NEW___",
+                  label: "+ Add New Research Group",
+                  style: { fontStyle: 'italic', color: colors.primary }
+                }] : [])
+              ]}
+              placeholder={
+                !formData.departmentId
+                  ? 'Select a department first'
+                  : 'Select a research group or add new (optional)'
+              }
+              disabled={!formData.departmentId}
+              loading={isLoadingResearchGroups}
+              style={{ marginBottom: spacing[6] }}
+            />
 
             {/* Lab/Professor Selection */}
             <div style={{ marginBottom: spacing[6] }}>

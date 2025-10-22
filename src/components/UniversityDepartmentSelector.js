@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { colors, spacing } from '../theme';
 import { UniversityService } from '../services/universityService';
 import { ReviewService } from '../services/reviewService';
+import { DropdownField } from './Dropdown';
 
 const UniversityDepartmentSelector = ({
   selectedUniversityId,
@@ -168,162 +169,51 @@ const UniversityDepartmentSelector = ({
   return (
     <div>
       {/* University Selection */}
-      <div style={{ marginBottom: spacing[5] }}>
-        <label style={{
-          display: 'block',
-          fontSize: '16px',
-          fontWeight: '600',
-          color: colors.textPrimary,
-          marginBottom: spacing[2],
-          fontFamily: 'Inter'
-        }}>
-          University {isRequired && <span style={{ color: colors.error }}>*</span>}
-        </label>
-        <div style={{ position: 'relative' }}>
-          <select
-            value={selectedUniversityId || ''}
-            onChange={handleUniversityChange}
-            style={{
-              width: '100%',
-              height: '56px',
-              padding: `0 ${spacing[4]}`,
-              paddingRight: '40px',
-              fontSize: '14px',
-              border: `2px solid ${colors.border}`,
-              borderRadius: '8px',
-              outline: 'none',
-              backgroundColor: colors.background,
-              color: colors.textPrimary,
-              fontFamily: 'Inter',
-              cursor: 'pointer',
-              appearance: 'none',
-              backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='%23666' d='m2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e")`,
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 12px center',
-              backgroundSize: '12px'
-            }}
-          >
-            <option value="">Select your university or add new</option>
-            {universities.map(university => (
-              <option key={university.id} value={university.id}>
-                {university.name} - {university.city || university.country || ''}
-              </option>
-            ))}
-            <option value="___ADD_NEW_UNIVERSITY___" style={{ fontStyle: 'italic', color: colors.primary }}>
-              + Add New University
-            </option>
-          </select>
-          {loadingUniversities && (
-            <div style={{
-              position: 'absolute',
-              right: '40px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: '20px',
-              height: '20px',
-              border: '2px solid transparent',
-              borderTop: `2px solid ${colors.primary}`,
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }} />
-          )}
-        </div>
-        <p style={{
-          fontSize: '12px',
-          color: colors.textSecondary,
-          margin: 0,
-          marginTop: spacing[1],
-          fontFamily: 'Inter'
-        }}>
-          Select your university or add new
-        </p>
-      </div>
+      <DropdownField
+        label="University"
+        value={selectedUniversityId}
+        onChange={handleUniversityChange}
+        options={[
+          ...universities.map(university => ({
+            value: university.id,
+            label: `${university.name} - ${university.city || university.country || ''}`
+          })),
+          {
+            value: "___ADD_NEW_UNIVERSITY___",
+            label: "+ Add New University",
+            style: { fontStyle: 'italic', color: colors.primary }
+          }
+        ]}
+        placeholder="Select your university or add new"
+        loading={loadingUniversities}
+        required={isRequired}
+      />
 
       {/* Department Selection */}
-      <div style={{ marginBottom: spacing[5] }}>
-        <label style={{
-          display: 'block',
-          fontSize: '16px',
-          fontWeight: '600',
-          color: colors.textPrimary,
-          marginBottom: spacing[2],
-          fontFamily: 'Inter'
-        }}>
-          Department {isRequired && <span style={{ color: colors.error }}>*</span>}
-        </label>
-        <div style={{ position: 'relative' }}>
-          <select
-            value={selectedUniversityDepartmentId || ''}
-            onChange={handleDepartmentChange}
-            disabled={!selectedUniversityId || loadingDepartments}
-            style={{
-              width: '100%',
-              height: '56px',
-              padding: `0 ${spacing[4]}`,
-              paddingRight: '40px',
-              fontSize: '14px',
-              border: `2px solid ${colors.border}`,
-              borderRadius: '8px',
-              outline: 'none',
-              backgroundColor: colors.background,
-              color: colors.textPrimary,
-              fontFamily: 'Inter',
-              cursor: selectedUniversityId ? 'pointer' : 'not-allowed',
-              appearance: 'none',
-              backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='%23666' d='m2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e")`,
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 12px center',
-              backgroundSize: '12px',
-              opacity: (!selectedUniversityId || loadingDepartments) ? 0.6 : 1
-            }}
-          >
-            <option value="">
-              {!selectedUniversityId
-                ? 'Select a university first'
-                : loadingDepartments
-                  ? 'Loading departments...'
-                  : 'Select your department or add new'
-              }
-            </option>
-            {departments.map(department => (
-              <option key={department.id} value={department.id}>
-                {department.department_name || department.name}
-              </option>
-            ))}
-            {selectedUniversityId && (
-              <option value="___ADD_NEW___" style={{ fontStyle: 'italic', color: colors.primary }}>
-                + Add New Department
-              </option>
-            )}
-          </select>
-          {loadingDepartments && (
-            <div style={{
-              position: 'absolute',
-              right: '40px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: '20px',
-              height: '20px',
-              border: '2px solid transparent',
-              borderTop: `2px solid ${colors.primary}`,
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }} />
-          )}
-        </div>
-        <p style={{
-          fontSize: '12px',
-          color: colors.textSecondary,
-          margin: 0,
-          marginTop: spacing[1],
-          fontFamily: 'Inter'
-        }}>
-          {selectedUniversityId
-            ? 'Select your department or add new'
-            : 'Select a university first'
-          }
-        </p>
-      </div>
+      <DropdownField
+        label="Department"
+        value={selectedUniversityDepartmentId}
+        onChange={handleDepartmentChange}
+        options={[
+          ...departments.map(department => ({
+            value: department.id,
+            label: department.department_name || department.name
+          })),
+          ...(selectedUniversityId ? [{
+            value: "___ADD_NEW___",
+            label: "+ Add New Department",
+            style: { fontStyle: 'italic', color: colors.primary }
+          }] : [])
+        ]}
+        placeholder={
+          !selectedUniversityId
+            ? 'Select a university first'
+            : 'Select your department or add new'
+        }
+        disabled={!selectedUniversityId}
+        loading={loadingDepartments}
+        required={isRequired}
+      />
 
       {/* Add University Modal */}
       {showAddUniversity && (
