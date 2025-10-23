@@ -87,7 +87,7 @@ const Header = () => {
           }}
         >
           <span style={{
-            fontSize: isMobile ? '18px' : '22px',
+            fontSize: '22px',
             fontWeight: '700',
             color: colors.primary,
             fontFamily: 'Inter'

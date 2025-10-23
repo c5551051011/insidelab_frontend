@@ -9,7 +9,7 @@ const TrustedMetricsSection = () => {
     {
       icon: School,
       number: '15,000+',
-      label: 'Graduate Programs Reviewed',
+      label: 'Lab Reviewed',
     },
     {
       icon: Trophy,

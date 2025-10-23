@@ -67,7 +67,7 @@ const HeroSection = () => {
           >
             <h1
               style={{
-                fontSize: isMobile ? '28px' : '56px',
+                fontSize: isMobile ? '40px' : '56px',
                 fontWeight: '800',
                 color: colors.heroText,
                 lineHeight: 1.1,
@@ -83,7 +83,7 @@ const HeroSection = () => {
 
             <p
               style={{
-                fontSize: isMobile ? '14px' : '20px',
+                fontSize: '20px',
                 color: colors.heroSubtext,
                 lineHeight: 1.5,
                 fontFamily: 'Inter',
@@ -140,7 +140,7 @@ const HeroSection = () => {
                   width: '100%',
                   height: '60px', // Fixed height
                   padding: `0 ${spacing[4]} 0 ${spacing[12]}`,
-                  fontSize: isMobile ? '14px' : '18px',
+                  fontSize: '18px',
                   border: 'none',
                   borderRadius: '12px',
                   outline: 'none',
@@ -161,8 +161,8 @@ const HeroSection = () => {
           <div
             style={{
               display: 'flex',
-              flexDirection: isMobile ? 'column' : 'row',
-              gap: isMobile ? spacing[4] : spacing[6],
+              flexDirection: 'row',
+              gap: spacing[6],
               alignItems: 'center',
               justifyContent: 'center',
               width: '100%',
@@ -175,7 +175,7 @@ const HeroSection = () => {
             <PrimaryButton
               to="/write-review"
               icon={FileText}
-              size="small"
+              size="compact"
               variant="outline"
             >
               Write Review
@@ -184,7 +184,7 @@ const HeroSection = () => {
             <SecondaryButton
               to="/services/mock-interview"
               icon={Video}
-              size="small"
+              size="compact"
               variant="outline"
             >
               Book Mock Interview

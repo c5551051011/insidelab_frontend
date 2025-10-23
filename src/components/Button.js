@@ -15,8 +15,13 @@ export const PrimaryButton = ({
   const sizes = {
     small: {
       padding: `${spacing[2]} ${spacing[4]}`,
-      fontSize: window.innerWidth < 768 ? '12px' : '14px',
-      iconSize: window.innerWidth < 768 ? 14 : 16,
+      fontSize: '14px',
+      iconSize: 16,
+    },
+    compact: {
+      padding: `${spacing[3]} ${spacing[6]}`,
+      fontSize: '15px',
+      iconSize: 18,
     },
     medium: {
       padding: `${spacing[4]} ${spacing[8]}`,
@@ -131,8 +136,13 @@ export const SecondaryButton = ({
   const sizes = {
     small: {
       padding: `${spacing[2]} ${spacing[4]}`,
-      fontSize: window.innerWidth < 768 ? '12px' : '14px',
-      iconSize: window.innerWidth < 768 ? 14 : 16,
+      fontSize: '14px',
+      iconSize: 16,
+    },
+    compact: {
+      padding: `${spacing[3]} ${spacing[6]}`,
+      fontSize: '15px',
+      iconSize: 18,
     },
     medium: {
       padding: `${spacing[4]} ${spacing[8]}`,
