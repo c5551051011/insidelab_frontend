@@ -4,7 +4,10 @@ import { CheckCircle, Search, X, Plus, Info, Shield } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import Header from '../components/Header';
 import UniversityDepartmentSelector from '../components/UniversityDepartmentSelector';
-import StarRating from '../components/review/StarRating';
+import StarRating from '../components/StarRating';
+import RatingSlider from '../components/RatingSlider';
+import AddLabModal from '../components/AddLabModal';
+import AddResearchGroupModal from '../components/AddResearchGroupModal';
 import { ReviewService } from '../services/reviewService';
 import { UniversityService } from '../services/universityService';
 import { AuthService } from '../services/authService';
@@ -41,6 +44,7 @@ const WriteReviewPage = () => {
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isFormPreFilled] = useState(false);
   const [showAddResearchGroupModal, setShowAddResearchGroupModal] = useState(false);
+  const [showAddLabModal, setShowAddLabModal] = useState(false);
 
   // Research groups state
   const [researchGroups, setResearchGroups] = useState([]);
@@ -301,6 +305,26 @@ const WriteReviewPage = () => {
       ...prev,
       [category]: rating
     }));
+  };
+
+  const handleResearchGroupAdded = (newGroup) => {
+    setResearchGroups(prev => [...prev, newGroup]);
+    setFormData(prev => ({
+      ...prev,
+      researchGroupId: newGroup.id,
+      researchGroupName: newGroup.name
+    }));
+    setShowAddResearchGroupModal(false);
+  };
+
+  const handleLabAdded = (newLab) => {
+    // Add to the lab options if we have a lab selector
+    setFormData(prev => ({
+      ...prev,
+      labId: newLab.id,
+      labName: newLab.name
+    }));
+    setShowAddLabModal(false);
   };
 
   const handleSubmitReview = async (e) => {
@@ -750,24 +774,8 @@ const WriteReviewPage = () => {
                     onChange={handleRatingChange}
                     size={36}
                     interactive={true}
+                    showNumber={true}
                   />
-
-                  <div style={{
-                    marginLeft: spacing[5],
-                    padding: `${spacing[2]} ${spacing[4]}`,
-                    backgroundColor: colors.primary + '1A',
-                    borderRadius: '20px',
-                    border: `1px solid ${colors.primary}33`
-                  }}>
-                    <span style={{
-                      fontSize: '20px',
-                      fontWeight: '700',
-                      color: colors.primary,
-                      fontFamily: 'Inter'
-                    }}>
-                      {formData.overallRating.toFixed(1)}
-                    </span>
-                  </div>
                 </div>
 
                 {/* Rating Slider */}
@@ -858,53 +866,55 @@ const WriteReviewPage = () => {
 
               {ratingCategories.map((category) => (
                 <div key={category} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  marginBottom: spacing[4],
-                  gap: spacing[4]
+                  marginBottom: spacing[5],
+                  padding: spacing[3],
+                  backgroundColor: colors.backgroundSecondary,
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.border}`
                 }}>
-                  {/* Category Label */}
+                  {/* Category Label and Star Rating Row */}
                   <div style={{
-                    flex: '0 0 200px',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: colors.textPrimary,
-                    fontFamily: 'Inter'
-                  }}>
-                    {category}
-                  </div>
-
-                  {/* Star Display */}
-                  <StarRating
-                    rating={categoryRatings[category] || 4.0}
-                    size={20}
-                    interactive={false}
-                  />
-
-                  {/* Rating Value */}
-                  <div style={{
-                    flex: '0 0 48px',
-                    textAlign: 'center'
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: spacing[3]
                   }}>
                     <div style={{
-                      padding: `${spacing[1]} ${spacing[3]}`,
-                      backgroundColor: colors.primary + '1A',
-                      borderRadius: '16px',
-                      border: `1px solid ${colors.primary}33`
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: colors.textPrimary,
+                      fontFamily: 'Inter'
                     }}>
+                      {category}
+                    </div>
+
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: spacing[2]
+                    }}>
+                      <StarRating
+                        rating={categoryRatings[category] || 4.0}
+                        size={18}
+                        interactive={false}
+                        showNumber={false}
+                      />
                       <span style={{
                         fontSize: '14px',
-                        fontWeight: '700',
-                        color: colors.primary,
-                        fontFamily: 'Inter'
+                        fontWeight: '600',
+                        color: colors.textPrimary,
+                        fontFamily: 'Inter',
+                        minWidth: '30px'
                       }}>
                         {(categoryRatings[category] || 4.0).toFixed(1)}
                       </span>
                     </div>
                   </div>
 
-                  {/* Rating Slider */}
-                  <div style={{ flex: '1', maxWidth: '300px' }}>
+                  {/* Rating Slider Row */}
+                  <div style={{
+                    width: '100%'
+                  }}>
                     <input
                       type="range"
                       min="0.5"
@@ -914,14 +924,29 @@ const WriteReviewPage = () => {
                       onChange={(e) => handleCategoryRatingChange(category, parseFloat(e.target.value))}
                       style={{
                         width: '100%',
-                        height: '4px',
-                        borderRadius: '2px',
+                        height: '6px',
+                        borderRadius: '3px',
                         background: `linear-gradient(to right, ${colors.primary} 0%, ${colors.primary} ${((categoryRatings[category] || 4.0) - 0.5) / 4.5 * 100}%, ${colors.border} ${((categoryRatings[category] || 4.0) - 0.5) / 4.5 * 100}%, ${colors.border} 100%)`,
                         outline: 'none',
                         cursor: 'pointer',
                         appearance: 'none'
                       }}
                     />
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      marginTop: spacing[1]
+                    }}>
+                      {['0.5', '1.0', '2.0', '3.0', '4.0', '5.0'].map(label => (
+                        <span key={label} style={{
+                          fontSize: '10px',
+                          color: colors.textTertiary,
+                          fontFamily: 'Inter'
+                        }}>
+                          {label}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1122,359 +1147,34 @@ const WriteReviewPage = () => {
       </div>
 
       {/* Add Research Group Modal */}
-      {showAddResearchGroupModal && (
-        <AddResearchGroupModal
-          universityName={formData.universityName}
-          departmentName={formData.departmentName}
-          onAdd={handleAddResearchGroup}
-          onCancel={() => setShowAddResearchGroupModal(false)}
-        />
-      )}
-    </div>
-  );
-};
+      <AddResearchGroupModal
+        isOpen={showAddResearchGroupModal}
+        onClose={() => setShowAddResearchGroupModal(false)}
+        selectedUniversity={{
+          id: formData.universityId,
+          name: formData.universityName
+        }}
+        selectedDepartment={{
+          id: formData.departmentId,
+          name: formData.departmentName
+        }}
+        onGroupAdded={handleResearchGroupAdded}
+      />
 
-// Add Research Group Modal Component
-const AddResearchGroupModal = ({ universityName, departmentName, onAdd, onCancel }) => {
-  const [researchGroupData, setResearchGroupData] = useState({
-    name: '',
-    description: '',
-    website: '',
-    researchAreas: []
-  });
-  const [newResearchArea, setNewResearchArea] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!researchGroupData.name.trim()) {
-      alert('Please enter a research group name');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      await onAdd(researchGroupData);
-    } catch (error) {
-      alert(`Failed to add research group: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addResearchArea = () => {
-    if (newResearchArea.trim() && !researchGroupData.researchAreas.includes(newResearchArea.trim())) {
-      setResearchGroupData(prev => ({
-        ...prev,
-        researchAreas: [...prev.researchAreas, newResearchArea.trim()]
-      }));
-      setNewResearchArea('');
-    }
-  };
-
-  const removeResearchArea = (area) => {
-    setResearchGroupData(prev => ({
-      ...prev,
-      researchAreas: prev.researchAreas.filter(a => a !== area)
-    }));
-  };
-
-  return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      padding: spacing[4]
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        padding: spacing[6],
-        maxWidth: '600px',
-        width: '100%',
-        maxHeight: '80vh',
-        overflowY: 'auto'
-      }}>
-        <h3 style={{
-          fontSize: '20px',
-          fontWeight: '700',
-          color: colors.textPrimary,
-          marginBottom: spacing[2],
-          fontFamily: 'Inter'
-        }}>
-          Add New Research Group
-        </h3>
-
-        <div style={{
-          fontSize: '14px',
-          color: colors.textSecondary,
-          marginBottom: spacing[4],
-          fontFamily: 'Inter'
-        }}>
-          <p style={{ margin: 0, marginBottom: spacing[1] }}>
-            University: {universityName}
-          </p>
-          <p style={{ margin: 0 }}>
-            Department: {departmentName}
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          {/* Research Group Name */}
-          <div style={{ marginBottom: spacing[4] }}>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: colors.textPrimary,
-              marginBottom: spacing[2],
-              fontFamily: 'Inter'
-            }}>
-              Research Group Name *
-            </label>
-            <input
-              type="text"
-              placeholder="e.g., Machine Learning Lab"
-              value={researchGroupData.name}
-              onChange={(e) => setResearchGroupData(prev => ({ ...prev, name: e.target.value }))}
-              required
-              style={{
-                width: '100%',
-                height: '48px',
-                padding: `0 ${spacing[3]}`,
-                fontSize: '14px',
-                border: `2px solid ${colors.border}`,
-                borderRadius: '8px',
-                outline: 'none',
-                backgroundColor: colors.background,
-                color: colors.textPrimary,
-                fontFamily: 'Inter'
-              }}
-            />
-          </div>
-
-          {/* Description */}
-          <div style={{ marginBottom: spacing[4] }}>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: colors.textPrimary,
-              marginBottom: spacing[2],
-              fontFamily: 'Inter'
-            }}>
-              Description
-            </label>
-            <textarea
-              placeholder="Brief description of research group"
-              value={researchGroupData.description}
-              onChange={(e) => setResearchGroupData(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
-              style={{
-                width: '100%',
-                padding: spacing[3],
-                fontSize: '14px',
-                border: `2px solid ${colors.border}`,
-                borderRadius: '8px',
-                outline: 'none',
-                backgroundColor: colors.background,
-                color: colors.textPrimary,
-                fontFamily: 'Inter',
-                resize: 'vertical'
-              }}
-            />
-          </div>
-
-          {/* Website */}
-          <div style={{ marginBottom: spacing[4] }}>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: colors.textPrimary,
-              marginBottom: spacing[2],
-              fontFamily: 'Inter'
-            }}>
-              Website (Optional)
-            </label>
-            <input
-              type="url"
-              placeholder="https://example.com/group"
-              value={researchGroupData.website}
-              onChange={(e) => setResearchGroupData(prev => ({ ...prev, website: e.target.value }))}
-              style={{
-                width: '100%',
-                height: '48px',
-                padding: `0 ${spacing[3]}`,
-                fontSize: '14px',
-                border: `2px solid ${colors.border}`,
-                borderRadius: '8px',
-                outline: 'none',
-                backgroundColor: colors.background,
-                color: colors.textPrimary,
-                fontFamily: 'Inter'
-              }}
-            />
-          </div>
-
-          {/* Research Areas */}
-          <div style={{ marginBottom: spacing[4] }}>
-            <label style={{
-              display: 'block',
-              fontSize: '16px',
-              fontWeight: '600',
-              color: colors.textPrimary,
-              marginBottom: spacing[2],
-              fontFamily: 'Inter'
-            }}>
-              Research Areas
-            </label>
-
-            <div style={{
-              display: 'flex',
-              gap: spacing[2],
-              marginBottom: spacing[2]
-            }}>
-              <input
-                type="text"
-                placeholder="Add research area"
-                value={newResearchArea}
-                onChange={(e) => setNewResearchArea(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addResearchArea();
-                  }
-                }}
-                style={{
-                  flex: 1,
-                  height: '40px',
-                  padding: `0 ${spacing[3]}`,
-                  fontSize: '14px',
-                  border: `2px solid ${colors.border}`,
-                  borderRadius: '8px',
-                  outline: 'none',
-                  backgroundColor: colors.background,
-                  color: colors.textPrimary,
-                  fontFamily: 'Inter'
-                }}
-              />
-              <button
-                type="button"
-                onClick={addResearchArea}
-                style={{
-                  padding: `${spacing[2]} ${spacing[3]}`,
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  fontFamily: 'Inter',
-                  border: 'none',
-                  borderRadius: '8px',
-                  backgroundColor: colors.primary,
-                  color: 'white',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: spacing[1]
-                }}
-              >
-                <Plus size={16} />
-                Add
-              </button>
-            </div>
-
-            {/* Research Areas Tags */}
-            {researchGroupData.researchAreas.length > 0 && (
-              <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: spacing[2]
-              }}>
-                {researchGroupData.researchAreas.map((area, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      padding: `${spacing[1]} ${spacing[2]}`,
-                      backgroundColor: colors.primary + '1A',
-                      borderRadius: '16px',
-                      border: `1px solid ${colors.primary}33`
-                    }}
-                  >
-                    <span style={{
-                      fontSize: '12px',
-                      color: colors.primary,
-                      fontFamily: 'Inter',
-                      marginRight: spacing[1]
-                    }}>
-                      {area}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => removeResearchArea(area)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        padding: 0,
-                        display: 'flex',
-                        alignItems: 'center'
-                      }}
-                    >
-                      <X size={14} color={colors.primary} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Buttons */}
-          <div style={{ display: 'flex', gap: spacing[3], justifyContent: 'flex-end' }}>
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={loading}
-              style={{
-                padding: `${spacing[2]} ${spacing[4]}`,
-                backgroundColor: 'transparent',
-                color: colors.textSecondary,
-                border: `1px solid ${colors.border}`,
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontFamily: 'Inter'
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                padding: `${spacing[2]} ${spacing[4]}`,
-                backgroundColor: loading ? colors.textTertiary : colors.primary,
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontFamily: 'Inter'
-              }}
-            >
-              {loading ? 'Adding...' : 'Add Research Group'}
-            </button>
-          </div>
-        </form>
-      </div>
+      {/* Add Lab Modal */}
+      <AddLabModal
+        isOpen={showAddLabModal}
+        onClose={() => setShowAddLabModal(false)}
+        selectedUniversity={{
+          id: formData.universityId,
+          name: formData.universityName
+        }}
+        selectedDepartment={{
+          id: formData.departmentId,
+          name: formData.departmentName
+        }}
+        onLabAdded={handleLabAdded}
+      />
     </div>
   );
 };

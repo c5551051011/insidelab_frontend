@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, School, HelpCircle } from 'lucide-react';
 import { colors, spacing, sectionSpacing } from '../theme';
 
 const Footer = () => {
@@ -22,45 +22,25 @@ const Footer = () => {
     } else if (isTablet) {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[8] }}>
-          <div style={{ display: 'flex', gap: spacing[10] }}>
-            <div style={{ flex: 2 }}>
-              <BrandSection />
-            </div>
-            <div style={{ flex: 1 }}>
-              <ProductLinks />
-            </div>
-            <div style={{ flex: 1 }}>
-              <CompanyLinks />
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: spacing[10] }}>
+            <BrandSection />
+            <ProductLinks />
+            <CompanyLinks />
           </div>
-          <div style={{ display: 'flex', gap: spacing[10] }}>
-            <div style={{ flex: 1 }}>
-              <ResourcesLinks />
-            </div>
-            <div style={{ flex: 1 }}>
-              <SupportLinks />
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing[10] }}>
+            <ResourcesLinks />
+            <SupportLinks />
           </div>
         </div>
       );
     } else {
       return (
-        <div style={{ display: 'flex', gap: spacing[16] }}>
-          <div style={{ flex: 2 }}>
-            <BrandSection />
-          </div>
-          <div style={{ flex: 1 }}>
-            <ProductLinks />
-          </div>
-          <div style={{ flex: 1 }}>
-            <CompanyLinks />
-          </div>
-          <div style={{ flex: 1 }}>
-            <ResourcesLinks />
-          </div>
-          <div style={{ flex: 1 }}>
-            <SupportLinks />
-          </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: spacing[10] }}>
+          <BrandSection />
+          <ProductLinks />
+          <CompanyLinks />
+          <ResourcesLinks />
+          <SupportLinks />
         </div>
       );
     }
@@ -69,8 +49,9 @@ const Footer = () => {
   return (
     <footer
       style={{
-        backgroundColor: colors.surface,
-        padding: `${isMobile ? spacing[12] : spacing[16]} ${sectionSpacing.horizontal[isMobile ? 'mobile' : 'desktop']}`,
+        backgroundColor: colors.surface || '#FFFFFF',
+        borderTop: `1px solid ${colors.border || '#E2E8F0'}`,
+        padding: `${isMobile ? '48px' : '64px'} ${sectionSpacing.horizontal[isMobile ? 'mobile' : 'desktop']}`,
       }}
     >
       <div
@@ -91,99 +72,92 @@ const Footer = () => {
 
 const BrandSection = () => {
   return (
-    <div>
+    <div style={{ maxWidth: '300px' }}>
       {/* Logo */}
       <Link
         to="/"
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing[3],
           textDecoration: 'none',
           marginBottom: spacing[4],
+          display: 'block',
         }}
       >
-        <div
-          style={{
-            width: '32px',
-            height: '32px',
-            background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontWeight: '700',
-            fontSize: '18px',
-          }}
-        >
-          IL
-        </div>
         <span
           style={{
-            fontSize: '20px',
-            fontWeight: '700',
-            color: colors.textPrimary,
+            fontSize: '24px',
+            fontWeight: '800',
+            color: colors.primary || '#2563EB',
             fontFamily: 'Inter',
           }}
         >
-          InsideLab
+          Insidelab
         </span>
       </Link>
 
       {/* Description */}
       <p
         style={{
-          fontSize: '16px',
-          color: colors.textSecondary,
-          lineHeight: 1.6,
+          fontSize: '14px',
+          color: colors.textSecondary || '#6B7280',
+          lineHeight: 1.5,
           marginBottom: spacing[6],
-          maxWidth: '300px',
+          margin: 0,
+          marginBottom: spacing[6],
         }}
       >
-        Your trusted platform for navigating graduate school applications with expert guidance
-        and real student insights.
+        Your trusted partner for graduate school success. Get insider reviews, professional feedback, and expert guidance from students who made it.
       </p>
 
-      {/* Contact Info */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
-          <Mail size={16} color={colors.textTertiary} />
-          <a
-            href="mailto:hello@insidelab.com"
-            style={{
-              fontSize: '14px',
-              color: colors.textSecondary,
-              textDecoration: 'none',
-            }}
-          >
-            hello@insidelab.com
-          </a>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
-          <Phone size={16} color={colors.textTertiary} />
-          <span
-            style={{
-              fontSize: '14px',
-              color: colors.textSecondary,
-            }}
-          >
-            +1 (555) 123-4567
-          </span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
-          <MapPin size={16} color={colors.textTertiary} />
-          <span
-            style={{
-              fontSize: '14px',
-              color: colors.textSecondary,
-            }}
-          >
-            San Francisco, CA
-          </span>
-        </div>
+      {/* Social Icons */}
+      <div style={{ display: 'flex', gap: spacing[3] }}>
+        <SocialIcon
+          icon={Mail}
+          href="/contact"
+          aria-label="Contact us"
+        />
+        <SocialIcon
+          icon={School}
+          href="/about"
+          aria-label="About us"
+        />
+        <SocialIcon
+          icon={HelpCircle}
+          href="/faq"
+          aria-label="FAQ"
+        />
       </div>
     </div>
+  );
+};
+
+const SocialIcon = ({ icon: Icon, href, 'aria-label': ariaLabel }) => {
+  return (
+    <Link
+      to={href}
+      aria-label={ariaLabel}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '36px',
+        height: '36px',
+        borderRadius: '8px',
+        backgroundColor: colors.backgroundSecondary || '#F9FAFB',
+        color: colors.textSecondary || '#6B7280',
+        textDecoration: 'none',
+        transition: 'all 0.2s ease',
+      }}
+      onMouseEnter={(e) => {
+        e.target.style.backgroundColor = colors.primary || '#2563EB';
+        e.target.style.color = 'white';
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.backgroundColor = colors.backgroundSecondary || '#F9FAFB';
+        e.target.style.color = colors.textSecondary || '#6B7280';
+      }}
+    >
+      <Icon size={18} />
+    </Link>
   );
 };
 
@@ -194,7 +168,7 @@ const FooterSection = ({ title, children }) => {
         style={{
           fontSize: '16px',
           fontWeight: '600',
-          color: colors.textPrimary,
+          color: colors.textPrimary || '#1F2937',
           marginBottom: spacing[4],
           fontFamily: 'Inter',
         }}
@@ -211,17 +185,19 @@ const FooterSection = ({ title, children }) => {
 const FooterLink = ({ to, children, external = false }) => {
   const linkStyle = {
     fontSize: '14px',
-    color: colors.textSecondary,
+    color: colors.textSecondary || '#6B7280',
     textDecoration: 'none',
     transition: 'color 0.2s ease',
+    display: 'block',
+    padding: `${spacing[1]} 0`,
   };
 
   const handleMouseEnter = (e) => {
-    e.target.style.color = colors.primary;
+    e.target.style.color = colors.primary || '#2563EB';
   };
 
   const handleMouseLeave = (e) => {
-    e.target.style.color = colors.textSecondary;
+    e.target.style.color = colors.textSecondary || '#6B7280';
   };
 
   if (external) {
@@ -254,11 +230,10 @@ const FooterLink = ({ to, children, external = false }) => {
 const ProductLinks = () => {
   return (
     <FooterSection title="Product">
-      <FooterLink to="/search">Lab Reviews</FooterLink>
+      <FooterLink to="/">Professor Reviews</FooterLink>
       <FooterLink to="/services/cv-review">CV Feedback</FooterLink>
       <FooterLink to="/services/mock-interview">Mock Interviews</FooterLink>
-      <FooterLink to="/pricing">Pricing</FooterLink>
-      <FooterLink to="/features">Features</FooterLink>
+      <FooterLink to="/services">Application Services</FooterLink>
     </FooterSection>
   );
 };
@@ -267,10 +242,9 @@ const CompanyLinks = () => {
   return (
     <FooterSection title="Company">
       <FooterLink to="/about">About Us</FooterLink>
+      <FooterLink to="/success-stories">Success Stories</FooterLink>
       <FooterLink to="/careers">Careers</FooterLink>
-      <FooterLink to="/blog">Blog</FooterLink>
-      <FooterLink to="/press">Press</FooterLink>
-      <FooterLink to="/investors">Investors</FooterLink>
+      <FooterLink to="/contact">Contact</FooterLink>
     </FooterSection>
   );
 };
@@ -278,11 +252,10 @@ const CompanyLinks = () => {
 const ResourcesLinks = () => {
   return (
     <FooterSection title="Resources">
-      <FooterLink to="/guides">Application Guides</FooterLink>
-      <FooterLink to="/university-profiles">University Profiles</FooterLink>
-      <FooterLink to="/success-stories">Success Stories</FooterLink>
-      <FooterLink to="/webinars">Webinars</FooterLink>
-      <FooterLink to="/newsletter">Newsletter</FooterLink>
+      <FooterLink to="/blog">Blog</FooterLink>
+      <FooterLink to="/guides">Guides</FooterLink>
+      <FooterLink to="/faq">FAQ</FooterLink>
+      <FooterLink to="/help">Help Center</FooterLink>
     </FooterSection>
   );
 };
@@ -290,11 +263,10 @@ const ResourcesLinks = () => {
 const SupportLinks = () => {
   return (
     <FooterSection title="Support">
-      <FooterLink to="/help">Help Center</FooterLink>
-      <FooterLink to="/contact">Contact Us</FooterLink>
-      <FooterLink to="/community">Community</FooterLink>
-      <FooterLink to="/api">API Documentation</FooterLink>
-      <FooterLink to="/status" external>Status Page</FooterLink>
+      <FooterLink to="/privacy">Privacy Policy</FooterLink>
+      <FooterLink to="/terms">Terms of Service</FooterLink>
+      <FooterLink to="/cookies">Cookie Policy</FooterLink>
+      <FooterLink to="/guidelines">Community Guidelines</FooterLink>
     </FooterSection>
   );
 };
@@ -303,7 +275,7 @@ const BottomBar = () => {
   return (
     <div
       style={{
-        borderTop: `1px solid ${colors.border}`,
+        borderTop: `1px solid ${colors.border || '#E2E8F0'}`,
         paddingTop: spacing[6],
         display: 'flex',
         flexDirection: window.innerWidth < 768 ? 'column' : 'row',
@@ -315,23 +287,10 @@ const BottomBar = () => {
       <div
         style={{
           fontSize: '14px',
-          color: colors.textTertiary,
+          color: colors.textTertiary || '#9CA3AF',
         }}
       >
-        © 2024 InsideLab. All rights reserved.
-      </div>
-
-      <div
-        style={{
-          display: 'flex',
-          gap: spacing[6],
-          flexWrap: 'wrap',
-        }}
-      >
-        <FooterLink to="/privacy">Privacy Policy</FooterLink>
-        <FooterLink to="/terms">Terms of Service</FooterLink>
-        <FooterLink to="/cookies">Cookie Policy</FooterLink>
-        <FooterLink to="/sitemap">Sitemap</FooterLink>
+        © 2024 Insidelab. All rights reserved.
       </div>
     </div>
   );

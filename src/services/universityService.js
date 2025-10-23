@@ -138,6 +138,43 @@ class UniversityService {
       throw new Error(`Failed to add research group: ${error.message}`);
     }
   }
+
+  // Add lab and professor
+  static async addLabAndProfessor(labData) {
+    try {
+      console.log('🔥 Adding lab and professor with data:', labData);
+
+      // First create the professor
+      const professorData = {
+        name: labData.professorName,
+        university: labData.universityId,
+        department: labData.departmentId
+      };
+
+      const professor = await ApiService.post('/professors/', professorData);
+      console.log('✅ Professor added successfully:', professor);
+
+      // Then create the lab
+      const newLabData = {
+        name: labData.labName,
+        website: labData.labWebsite,
+        university: labData.universityId,
+        department: labData.departmentId,
+        professor: professor.id
+      };
+
+      const lab = await ApiService.post('/labs/', newLabData);
+      console.log('✅ Lab added successfully:', lab);
+
+      return {
+        ...lab,
+        professor_name: professor.name
+      };
+    } catch (error) {
+      console.error('❌ Error adding lab and professor:', error);
+      throw new Error(`Failed to add lab and professor: ${error.message}`);
+    }
+  }
 }
 
 export { UniversityService };

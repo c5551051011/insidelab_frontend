@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Play } from 'lucide-react';
-import { colors, gradients, textStyles, spacing, sectionSpacing, borderRadius } from '../theme';
+import { colors, spacing, sectionSpacing } from '../theme';
 
 const CtaSection = () => {
   const isMobile = window.innerWidth < 768;
@@ -9,8 +8,8 @@ const CtaSection = () => {
   return (
     <section
       style={{
-        background: gradients.ctaGradient,
-        padding: `${isMobile ? spacing[20] : spacing[28]} ${sectionSpacing.horizontal[isMobile ? 'mobile' : 'desktop']}`,
+        background: 'linear-gradient(135deg, #7C3AED 0%, #2563EB 100%)',
+        padding: `${isMobile ? '80px' : '112px'} ${sectionSpacing.horizontal[isMobile ? 'mobile' : 'desktop']}`,
       }}
     >
       <div
@@ -25,11 +24,13 @@ const CtaSection = () => {
           <h2
             style={{
               fontSize: isMobile ? '32px' : '48px',
-              fontWeight: 800,
+              fontWeight: '800',
               color: 'white',
               lineHeight: 1.1,
               letterSpacing: '-0.02em',
               fontFamily: 'Inter',
+              marginBottom: isMobile ? spacing[4] : spacing[5],
+              margin: 0,
               marginBottom: isMobile ? spacing[4] : spacing[5],
             }}
           >
@@ -42,6 +43,7 @@ const CtaSection = () => {
                 color: 'rgba(255, 255, 255, 0.9)',
                 lineHeight: 1.5,
                 fontFamily: 'Inter',
+                margin: 0,
               }}
             >
               Join thousands of students who have successfully navigated their graduate school
@@ -64,59 +66,63 @@ const CtaSection = () => {
           <Link
             to="/signup"
             style={{
-              ...textStyles.buttonText,
               display: 'flex',
               alignItems: 'center',
-              gap: spacing[2],
-              padding: `${spacing[4]} ${spacing[8]}`,
+              justifyContent: 'center',
+              padding: '16px 32px',
               backgroundColor: 'white',
-              color: colors.primary,
+              color: colors.primary || '#2563EB',
               textDecoration: 'none',
-              borderRadius: borderRadius.base,
-              fontWeight: 600,
+              borderRadius: '12px',
+              fontWeight: '600',
+              fontSize: '16px',
+              fontFamily: 'Inter',
               transition: 'all 0.2s ease',
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+              minWidth: isMobile ? '100%' : 'auto',
             }}
             onMouseEnter={(e) => {
+              e.target.style.backgroundColor = '#F9F9F9';
               e.target.style.transform = 'translateY(-2px)';
               e.target.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.15)';
             }}
             onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'white';
               e.target.style.transform = 'translateY(0)';
               e.target.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.1)';
             }}
           >
             Get Started Free
-            <ArrowRight size={20} />
           </Link>
 
           <Link
-            to="/demo"
+            to="/reviews"
             style={{
-              ...textStyles.buttonText,
               display: 'flex',
               alignItems: 'center',
-              gap: spacing[2],
-              padding: `${spacing[4]} ${spacing[8]}`,
+              justifyContent: 'center',
+              padding: '16px 32px',
               backgroundColor: 'transparent',
               color: 'white',
               textDecoration: 'none',
-              borderRadius: borderRadius.base,
-              border: '2px solid rgba(255, 255, 255, 0.3)',
-              fontWeight: 600,
+              borderRadius: '12px',
+              border: '2px solid white',
+              fontWeight: '600',
+              fontSize: '16px',
+              fontFamily: 'Inter',
               transition: 'all 0.2s ease',
+              minWidth: isMobile ? '100%' : 'auto',
             }}
             onMouseEnter={(e) => {
               e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-              e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+              e.target.style.borderColor = 'white';
             }}
             onMouseLeave={(e) => {
               e.target.style.backgroundColor = 'transparent';
-              e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+              e.target.style.borderColor = 'white';
             }}
           >
-            <Play size={16} />
-            Watch Demo
+            Browse Reviews
           </Link>
         </div>
 
@@ -124,13 +130,11 @@ const CtaSection = () => {
         <div
           style={{
             fontSize: '14px',
-            color: 'rgba(255, 255, 255, 0.8)',
+            color: 'rgba(255, 255, 255, 0.7)',
             fontFamily: 'Inter',
           }}
         >
-          <span>✨ No credit card required • </span>
-          <span>🚀 Get started in under 2 minutes • </span>
-          <span>💝 Free tools available</span>
+          No credit card required · Join 15,000+ students worldwide
         </div>
       </div>
     </section>
