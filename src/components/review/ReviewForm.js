@@ -494,7 +494,7 @@ const ReviewForm = ({
         </div>
       )}
 
-      {/* Lab/Professor Selection */}
+      {/* Professor/Lab Selection */}
       {formData.department && (
         <div style={{ marginBottom: spacing[4] }}>
           <label style={{
@@ -505,7 +505,7 @@ const ReviewForm = ({
             marginBottom: spacing[2],
             fontFamily: 'Inter'
           }}>
-            Lab/Professor <span style={{ color: colors.error }}>*</span>
+            Professor/Lab <span style={{ color: colors.error }}>*</span>
           </label>
 
           <div style={{ position: 'relative' }}>

@@ -93,9 +93,8 @@ const AddResearchGroupModal = ({ isOpen, onClose, selectedUniversity, selectedDe
         name: formData.groupName.trim(),
         description: formData.description.trim(),
         website: formData.website.trim(),
-        researchAreas: formData.researchAreas,
-        universityId: selectedUniversity.id,
-        departmentId: selectedDepartment.id
+        research_areas: formData.researchAreas,
+        university_department: selectedDepartment.id
       });
 
       onGroupAdded(newGroup);

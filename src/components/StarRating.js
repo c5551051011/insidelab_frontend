@@ -150,16 +150,21 @@ const StarRating = ({
       {/* Rating Description */}
       {interactive && (
         <div style={{
-          display: 'inline-block',
-          padding: `${spacing[1]} ${spacing[3]}`,
-          backgroundColor: `${description.color}10`,
-          color: description.color,
-          borderRadius: '16px',
-          fontSize: '12px',
-          fontWeight: '500',
-          alignSelf: 'flex-start'
+          display: 'flex',
+          justifyContent: 'center',
+          width: '100%'
         }}>
-          {description.text}
+          <div style={{
+            display: 'inline-block',
+            padding: `${spacing[1]} ${spacing[3]}`,
+            backgroundColor: `${description.color}10`,
+            color: description.color,
+            borderRadius: '16px',
+            fontSize: '12px',
+            fontWeight: '500'
+          }}>
+            {description.text}
+          </div>
         </div>
       )}
     </div>

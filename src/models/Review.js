@@ -248,7 +248,7 @@ export class RatingCategory {
       }),
       new RatingCategory({
         id: 2,
-        name: 'Advisor Support',
+        name: 'Mentorship Quality',
         description: 'Mentorship and guidance from advisor',
         order: 2,
         isRequired: true
@@ -276,16 +276,9 @@ export class RatingCategory {
       }),
       new RatingCategory({
         id: 6,
-        name: 'Lab Culture',
+        name: 'Collaboration Culture',
         description: 'Overall lab environment and team dynamics',
         order: 6,
-        isRequired: true
-      }),
-      new RatingCategory({
-        id: 7,
-        name: 'Mentorship Quality',
-        description: 'Quality of mentorship and training received',
-        order: 7,
         isRequired: true
       })
     ];

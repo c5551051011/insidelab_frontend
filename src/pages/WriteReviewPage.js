@@ -11,6 +11,7 @@ import AddResearchGroupModal from '../components/AddResearchGroupModal';
 import { ReviewService } from '../services/reviewService';
 import { UniversityService } from '../services/universityService';
 import { AuthService } from '../services/authService';
+import { ApiService } from '../services/apiService';
 import { DropdownField } from '../components/Dropdown';
 
 const WriteReviewPage = () => {
@@ -24,6 +25,7 @@ const WriteReviewPage = () => {
     departmentName: '',
     researchGroupId: '',
     researchGroupName: '',
+    professorId: '',
     labId: '',
     labName: '',
     position: 'PhD Student',
@@ -49,6 +51,12 @@ const WriteReviewPage = () => {
   // Research groups state
   const [researchGroups, setResearchGroups] = useState([]);
   const [isLoadingResearchGroups, setIsLoadingResearchGroups] = useState(false);
+
+  // Professor/Lab state
+  const [professors, setProfessors] = useState([]);
+  const [filteredProfessors, setFilteredProfessors] = useState([]);
+  const [isLoadingProfessors, setIsLoadingProfessors] = useState(false);
+  const [showProfessorDropdown, setShowProfessorDropdown] = useState(false);
 
   const loadRatingCategories = useCallback(async () => {
     try {
@@ -77,13 +85,12 @@ const WriteReviewPage = () => {
 
       // Fallback categories
       const fallbackCategories = [
+        'Mentorship Quality',
         'Research Environment',
-        'Advisor Support',
         'Work-Life Balance',
         'Career Support',
         'Funding & Resources',
-        'Lab Culture',
-        'Mentorship Quality'
+        'Collaboration Culture'
       ];
 
       setRatingCategories(fallbackCategories);
@@ -131,6 +138,7 @@ const WriteReviewPage = () => {
       departmentName: '',
       researchGroupId: '',
       researchGroupName: '',
+      professorId: '',
       labId: '',
       labName: ''
     }));
@@ -145,6 +153,7 @@ const WriteReviewPage = () => {
       // Clear dependent fields
       researchGroupId: '',
       researchGroupName: '',
+      professorId: '',
       labId: '',
       labName: ''
     }));
@@ -162,10 +171,53 @@ const WriteReviewPage = () => {
       } finally {
         setIsLoadingResearchGroups(false);
       }
+
+      // Load professors for the selected department
+      if (formData.universityId) {
+        loadProfessors({
+          university: formData.universityId,
+          university_department: departmentId
+        });
+      }
     } else {
       setResearchGroups([]);
+      setProfessors([]);
+      setFilteredProfessors([]);
     }
   };
+
+  const loadProfessors = useCallback(async (filters = {}) => {
+    if (!filters.university && !formData.universityId) {
+      setProfessors([]);
+      setFilteredProfessors([]);
+      return;
+    }
+
+    setIsLoadingProfessors(true);
+    try {
+      const professorFilters = {
+        university: filters.university || formData.universityId,
+        ...(filters.university_department || formData.departmentId ? {
+          university_department: filters.university_department || formData.departmentId
+        } : {}),
+        ...(filters.research_group || formData.researchGroupId ? {
+          research_group: filters.research_group || formData.researchGroupId
+        } : {}),
+        ...(filters.search ? { search: filters.search } : {})
+      };
+
+      const professorData = await UniversityService.getProfessors(professorFilters);
+
+      setProfessors(professorData || []);
+      setFilteredProfessors(professorData || []);
+    } catch (error) {
+      console.error('❌ Error loading professors:', error);
+      setProfessors([]);
+      setFilteredProfessors([]);
+    } finally {
+      setIsLoadingProfessors(false);
+    }
+  }, [formData.universityId, formData.departmentId, formData.researchGroupId]);
 
   const handleResearchGroupChange = (e) => {
     const value = e.target.value;
@@ -181,6 +233,7 @@ const WriteReviewPage = () => {
         researchGroupId: '',
         researchGroupName: '',
         // Clear dependent fields
+        professorId: '',
         labId: '',
         labName: ''
       }));
@@ -192,9 +245,19 @@ const WriteReviewPage = () => {
         researchGroupId: value,
         researchGroupName: selectedGroup ? selectedGroup.name : '',
         // Clear dependent fields
+        professorId: '',
         labId: '',
         labName: ''
       }));
+    }
+
+    // Load professors when research group changes
+    if (formData.universityId) {
+      loadProfessors({
+        university: formData.universityId,
+        university_department: formData.departmentId,
+        research_group: value === '___NONE___' || value === '' ? undefined : value
+      });
     }
   };
 
@@ -264,6 +327,7 @@ const WriteReviewPage = () => {
         researchGroupId: newResearchGroup.id,
         researchGroupName: newResearchGroup.name,
         // Clear dependent fields
+        professorId: '',
         labId: '',
         labName: ''
       }));
@@ -291,6 +355,55 @@ const WriteReviewPage = () => {
       ...prev,
       [field]: e.target.value
     }));
+  };
+
+  const handleProfessorSearchChange = (e) => {
+    const searchTerm = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      labName: searchTerm,
+      professorId: '', // Clear professor ID when typing
+      labId: '' // Clear lab ID when typing
+    }));
+
+    // Filter professors based on search term
+    if (searchTerm) {
+      const filtered = professors.filter(professor =>
+        professor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (professor.lab && professor.lab.name && professor.lab.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      setFilteredProfessors(filtered);
+      setShowProfessorDropdown(filtered.length > 0);
+    } else {
+      setFilteredProfessors(professors);
+      setShowProfessorDropdown(false);
+    }
+  };
+
+  const handleProfessorSelect = (professor) => {
+    const displayName = professor.lab && professor.lab.name
+      ? `${professor.name} - ${professor.lab.name}`
+      : professor.name;
+
+    setFormData(prev => ({
+      ...prev,
+      professorId: professor.id,
+      labId: professor.lab ? professor.lab.id : '',
+      labName: displayName
+    }));
+    setShowProfessorDropdown(false);
+  };
+
+  const handleProfessorInputFocus = () => {
+    if (professors.length > 0) {
+      setShowProfessorDropdown(true);
+      setFilteredProfessors(professors);
+    }
+  };
+
+  const handleProfessorInputBlur = () => {
+    // Delay hiding dropdown to allow clicks
+    setTimeout(() => setShowProfessorDropdown(false), 200);
   };
 
   const handleRatingChange = (rating) => {
@@ -321,6 +434,7 @@ const WriteReviewPage = () => {
     // Add to the lab options if we have a lab selector
     setFormData(prev => ({
       ...prev,
+      professorId: newLab.professor_id || newLab.professor,
       labId: newLab.id,
       labName: newLab.name
     }));
@@ -331,7 +445,7 @@ const WriteReviewPage = () => {
     e.preventDefault();
 
     // Validation
-    if (!formData.universityId || !formData.departmentId || !formData.labId ||
+    if (!formData.universityId || !formData.departmentId || !formData.professorId ||
         !formData.reviewText.trim() || formData.overallRating === 0) {
       alert('Please fill in all required fields');
       return;
@@ -341,7 +455,8 @@ const WriteReviewPage = () => {
 
     try {
       const reviewData = {
-        lab: parseInt(formData.labId),
+        professor: parseInt(formData.professorId),
+        lab: formData.labId ? parseInt(formData.labId) : null,
         position: formData.position,
         duration: formData.duration,
         rating: formData.overallRating,
@@ -351,7 +466,8 @@ const WriteReviewPage = () => {
         cons: formData.cons.split('\n').filter(line => line.trim())
       };
 
-      await ReviewService.submitReview(reviewData);
+      // Submit directly to API instead of using Review model
+      const response = await ApiService.post('/reviews/', reviewData, true);
 
       // Show success and navigate
       alert('Review submitted successfully!');
@@ -546,7 +662,7 @@ const WriteReviewPage = () => {
               style={{ marginBottom: spacing[6] }}
             />
 
-            {/* Lab/Professor Selection */}
+            {/* Professor/Lab Selection */}
             <div style={{ marginBottom: spacing[6] }}>
               <label style={{
                 display: 'block',
@@ -556,16 +672,18 @@ const WriteReviewPage = () => {
                 marginBottom: spacing[2],
                 fontFamily: 'Inter'
               }}>
-                Lab/Professor <span style={{ color: colors.error }}>*</span>
+                Professor/Lab <span style={{ color: colors.error }}>*</span>
               </label>
 
               <div style={{ position: 'relative' }}>
                 <input
                   type="text"
                   value={formData.labName}
-                  onChange={handleInputChange('labName')}
+                  onChange={handleProfessorSearchChange}
+                  onFocus={handleProfessorInputFocus}
+                  onBlur={handleProfessorInputBlur}
                   placeholder={formData.universityId
-                    ? 'Search or type lab/professor name...'
+                    ? 'Search professor or lab name...'
                     : 'Please select a university first'
                   }
                   disabled={!formData.universityId}
@@ -593,20 +711,91 @@ const WriteReviewPage = () => {
                   transform: 'translateY(-50%)',
                   cursor: formData.labName ? 'pointer' : 'default'
                 }}>
-                  {formData.labName ? (
+                  {isLoadingProfessors ? (
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      border: `2px solid ${colors.border}`,
+                      borderTop: `2px solid ${colors.primary}`,
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }} />
+                  ) : formData.labName ? (
                     <X
                       size={20}
                       color={colors.textSecondary}
-                      onClick={() => setFormData(prev => ({ ...prev, labName: '', labId: '' }))}
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, labName: '', professorId: '', labId: '' }));
+                        setShowProfessorDropdown(false);
+                      }}
                     />
                   ) : (
                     <Search size={20} color={colors.textSecondary} />
                   )}
                 </div>
+
+                {/* Professor Dropdown */}
+                {showProfessorDropdown && filteredProfessors.length > 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'white',
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    zIndex: 1000,
+                    maxHeight: '200px',
+                    overflowY: 'auto'
+                  }}>
+                    {filteredProfessors.map((professor, index) => {
+                      const displayName = professor.lab && professor.lab.name
+                        ? `${professor.name} - ${professor.lab.name}`
+                        : professor.name;
+
+                      return (
+                        <div
+                          key={professor.id}
+                          onClick={() => handleProfessorSelect(professor)}
+                          style={{
+                            padding: spacing[3],
+                            cursor: 'pointer',
+                            borderBottom: index < filteredProfessors.length - 1 ? `1px solid ${colors.border}` : 'none',
+                            backgroundColor: 'white',
+                            fontSize: '14px',
+                            fontFamily: 'Inter',
+                            color: colors.textPrimary,
+                            transition: 'background-color 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = colors.background;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = 'white';
+                          }}
+                        >
+                          <div style={{ fontWeight: '500' }}>
+                            {displayName}
+                          </div>
+                          {professor.university_department_name && (
+                            <div style={{
+                              fontSize: '12px',
+                              color: colors.textSecondary,
+                              marginTop: spacing[1]
+                            }}>
+                              {professor.university_department_name}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Add New Lab Button */}
-              {formData.universityId && formData.labName && (
+              {formData.universityId && formData.labName && !formData.professorId && !showProfessorDropdown && (
                 <div style={{
                   marginTop: spacing[2],
                   padding: spacing[4],
@@ -622,11 +811,11 @@ const WriteReviewPage = () => {
                     marginBottom: spacing[2],
                     fontFamily: 'Inter'
                   }}>
-                    Lab/Professor not found
+                    Professor/Lab not found
                   </p>
                   <button
                     type="button"
-                    onClick={() => alert('Add new lab/professor functionality')}
+                    onClick={() => setShowAddLabModal(true)}
                     style={{
                       padding: `${spacing[2]} ${spacing[4]}`,
                       fontSize: '14px',
@@ -639,12 +828,12 @@ const WriteReviewPage = () => {
                       cursor: 'pointer'
                     }}
                   >
-                    Add New Lab/Professor
+                    Add New Professor/Lab
                   </button>
                 </div>
               )}
 
-              {(!formData.labId && formData.universityId) && (
+              {(!formData.professorId && formData.universityId) && (
                 <p style={{
                   fontSize: '12px',
                   color: colors.error,
@@ -652,7 +841,7 @@ const WriteReviewPage = () => {
                   marginTop: spacing[1],
                   fontFamily: 'Inter'
                 }}>
-                  Please select or add a lab/professor
+                  Please select or add a professor/lab
                 </p>
               )}
             </div>
@@ -823,24 +1012,6 @@ const WriteReviewPage = () => {
                   </div>
                 </div>
 
-                {/* Rating Description */}
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    padding: `${spacing[1]} ${spacing[3]}`,
-                    backgroundColor: getRatingColor(formData.overallRating) + '1A',
-                    borderRadius: '8px',
-                    display: 'inline-block'
-                  }}>
-                    <span style={{
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      color: getRatingColor(formData.overallRating),
-                      fontFamily: 'Inter'
-                    }}>
-                      {getRatingDescription(formData.overallRating)}
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -864,92 +1035,87 @@ const WriteReviewPage = () => {
                 Rate different aspects of your experience
               </p>
 
-              {ratingCategories.map((category) => (
-                <div key={category} style={{
-                  marginBottom: spacing[5],
-                  padding: spacing[3],
-                  backgroundColor: colors.backgroundSecondary,
-                  borderRadius: '12px',
-                  border: `1px solid ${colors.border}`
-                }}>
-                  {/* Category Label and Star Rating Row */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: spacing[3]
-                  }}>
-                    <div style={{
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: colors.textPrimary,
-                      fontFamily: 'Inter'
-                    }}>
-                      {category}
-                    </div>
+              {ratingCategories.map((category, index) => {
+                const isMobile = window.innerWidth < 640;
 
+                return (
+                  <div key={category} style={{
+                    display: 'flex',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'stretch' : 'center',
+                    marginBottom: spacing[4],
+                    paddingBottom: spacing[3],
+                    borderBottom: index < ratingCategories.length - 1 ? `1px solid ${colors.border}` : 'none',
+                    gap: isMobile ? spacing[2] : 0
+                  }}>
+                    {/* Category Label and Stars Row */}
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: spacing[2]
-                    }}>
-                      <StarRating
-                        rating={categoryRatings[category] || 4.0}
-                        size={18}
-                        interactive={false}
-                        showNumber={false}
-                      />
-                      <span style={{
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: colors.textPrimary,
-                        fontFamily: 'Inter',
-                        minWidth: '30px'
-                      }}>
-                        {(categoryRatings[category] || 4.0).toFixed(1)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Rating Slider Row */}
-                  <div style={{
-                    width: '100%'
-                  }}>
-                    <input
-                      type="range"
-                      min="0.5"
-                      max="5.0"
-                      step="0.5"
-                      value={categoryRatings[category] || 4.0}
-                      onChange={(e) => handleCategoryRatingChange(category, parseFloat(e.target.value))}
-                      style={{
-                        width: '100%',
-                        height: '6px',
-                        borderRadius: '3px',
-                        background: `linear-gradient(to right, ${colors.primary} 0%, ${colors.primary} ${((categoryRatings[category] || 4.0) - 0.5) / 4.5 * 100}%, ${colors.border} ${((categoryRatings[category] || 4.0) - 0.5) / 4.5 * 100}%, ${colors.border} 100%)`,
-                        outline: 'none',
-                        cursor: 'pointer',
-                        appearance: 'none'
-                      }}
-                    />
-                    <div style={{
-                      display: 'flex',
                       justifyContent: 'space-between',
-                      marginTop: spacing[1]
+                      flex: isMobile ? 'none' : '0 0 260px'
                     }}>
-                      {['0.5', '1.0', '2.0', '3.0', '4.0', '5.0'].map(label => (
-                        <span key={label} style={{
-                          fontSize: '10px',
-                          color: colors.textTertiary,
-                          fontFamily: 'Inter'
+                      <div style={{
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        color: colors.textPrimary,
+                        fontFamily: 'Inter'
+                      }}>
+                        {category}
+                      </div>
+
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: spacing[2]
+                      }}>
+                        <StarRating
+                          rating={categoryRatings[category] || 4.0}
+                          size={16}
+                          interactive={false}
+                          showNumber={false}
+                        />
+                        <span style={{
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          color: colors.primary,
+                          fontFamily: 'Inter',
+                          minWidth: '30px',
+                          textAlign: 'center'
                         }}>
-                          {label}
+                          {(categoryRatings[category] || 4.0).toFixed(1)}
                         </span>
-                      ))}
+                      </div>
+                    </div>
+
+                    {/* Rating Slider */}
+                    <div style={{
+                      flex: '1',
+                      display: 'flex',
+                      alignItems: 'center',
+                      marginLeft: isMobile ? 0 : spacing[3]
+                    }}>
+                      <input
+                        type="range"
+                        min="0.5"
+                        max="5.0"
+                        step="0.5"
+                        value={categoryRatings[category] || 4.0}
+                        onChange={(e) => handleCategoryRatingChange(category, parseFloat(e.target.value))}
+                        style={{
+                          width: '100%',
+                          height: '4px',
+                          borderRadius: '2px',
+                          background: `linear-gradient(to right, ${colors.primary} 0%, ${colors.primary} ${((categoryRatings[category] || 4.0) - 0.5) / 4.5 * 100}%, ${colors.border} ${((categoryRatings[category] || 4.0) - 0.5) / 4.5 * 100}%, ${colors.border} 100%)`,
+                          outline: 'none',
+                          cursor: 'pointer',
+                          appearance: 'none'
+                        }}
+                      />
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Review Text */}
@@ -1172,6 +1338,10 @@ const WriteReviewPage = () => {
         selectedDepartment={{
           id: formData.departmentId,
           name: formData.departmentName
+        }}
+        selectedResearchGroup={{
+          id: formData.researchGroupId,
+          name: formData.researchGroupName
         }}
         onLabAdded={handleLabAdded}
       />

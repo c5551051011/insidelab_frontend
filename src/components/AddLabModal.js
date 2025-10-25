@@ -3,12 +3,22 @@ import { X, Globe, AlertCircle, CheckCircle, Loader } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import { UniversityService } from '../services/universityService';
 
-const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, onLabAdded }) => {
+const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, selectedResearchGroup, onLabAdded }) => {
   const [formData, setFormData] = useState({
-    labName: '',
+    // Professor fields
     professorName: '',
+    professorEmail: '',
+    professorWebsite: '',
+    profileUrl: '',
+    googleScholarUrl: '',
+    researchInterests: [],
+    bio: '',
+    // Lab fields (optional)
+    createLab: false,
+    labName: '',
     labWebsite: ''
   });
+  const [newResearchInterest, setNewResearchInterest] = useState('');
   const [errors, setErrors] = useState({});
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState(null);
@@ -16,10 +26,18 @@ const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, 
 
   const resetForm = () => {
     setFormData({
-      labName: '',
       professorName: '',
+      professorEmail: '',
+      professorWebsite: '',
+      profileUrl: '',
+      googleScholarUrl: '',
+      researchInterests: [],
+      bio: '',
+      createLab: false,
+      labName: '',
       labWebsite: ''
     });
+    setNewResearchInterest('');
     setErrors({});
     setVerificationStatus(null);
     setIsVerifying(false);
@@ -30,6 +48,31 @@ const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, 
       resetForm();
     }
   }, [isOpen]);
+
+  const addResearchInterest = () => {
+    const interest = newResearchInterest.trim();
+    if (interest && !formData.researchInterests.includes(interest)) {
+      setFormData(prev => ({
+        ...prev,
+        researchInterests: [...prev.researchInterests, interest]
+      }));
+      setNewResearchInterest('');
+    }
+  };
+
+  const removeResearchInterest = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      researchInterests: prev.researchInterests.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addResearchInterest();
+    }
+  };
 
   const validateUrl = (url) => {
     if (!url) return false;
@@ -89,18 +132,26 @@ const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.labName.trim()) {
-      newErrors.labName = 'Lab name is required';
-    }
-
+    // Professor validation
     if (!formData.professorName.trim()) {
       newErrors.professorName = 'Professor name is required';
     }
 
-    if (!formData.labWebsite.trim()) {
-      newErrors.labWebsite = 'Lab website is required';
-    } else if (!validateUrl(formData.labWebsite)) {
-      newErrors.labWebsite = 'Please enter a valid URL (including https://)';
+    if (formData.professorEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.professorEmail)) {
+      newErrors.professorEmail = 'Please enter a valid email address';
+    }
+
+    // URL validations
+    const urlFields = ['professorWebsite', 'profileUrl', 'googleScholarUrl', 'labWebsite'];
+    urlFields.forEach(field => {
+      if (formData[field].trim() && !validateUrl(formData[field])) {
+        newErrors[field] = 'Please enter a valid URL (including https://)';
+      }
+    });
+
+    // Lab validation (if creating lab)
+    if (formData.createLab && !formData.labName.trim()) {
+      newErrors.labName = 'Lab name is required when creating a lab';
     }
 
     setErrors(newErrors);
@@ -111,27 +162,44 @@ const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, 
     e.preventDefault();
 
     if (!validateForm()) return;
-    if (verificationStatus === 'failed' || verificationStatus === 'invalid') {
+    if (formData.labWebsite.trim() && (verificationStatus === 'failed' || verificationStatus === 'invalid')) {
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Create the lab/professor
-      const newLab = await UniversityService.addLabAndProfessor({
-        labName: formData.labName.trim(),
+      const professorData = {
         professorName: formData.professorName.trim(),
-        labWebsite: formData.labWebsite.trim(),
+        professorEmail: formData.professorEmail.trim(),
+        professorWebsite: formData.professorWebsite.trim(),
+        profileUrl: formData.profileUrl.trim(),
+        googleScholarUrl: formData.googleScholarUrl.trim(),
+        researchInterests: formData.researchInterests,
+        bio: formData.bio.trim(),
         universityId: selectedUniversity.id,
-        departmentId: selectedDepartment.id
-      });
+        departmentId: selectedDepartment.id,
+        researchGroupId: selectedResearchGroup?.id || null
+      };
 
-      onLabAdded(newLab);
+      if (formData.createLab) {
+        // Create professor and lab
+        const newLab = await UniversityService.addLabAndProfessor({
+          ...professorData,
+          labName: formData.labName.trim(),
+          labWebsite: formData.labWebsite.trim()
+        });
+        onLabAdded(newLab);
+      } else {
+        // Create professor only
+        const newProfessor = await UniversityService.addProfessor(professorData);
+        onLabAdded(newProfessor); // Pass professor data to parent
+      }
+
       onClose();
     } catch (error) {
-      console.error('Error adding lab:', error);
-      setErrors({ submit: 'Failed to add lab. Please try again.' });
+      console.error('Error adding professor/lab:', error);
+      setErrors({ submit: 'Failed to add professor/lab. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -207,7 +275,7 @@ const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, 
               margin: 0,
               marginBottom: spacing[1]
             }}>
-              Add New Lab/Professor
+              Add New Professor/Lab
             </h2>
             <p style={{
               fontSize: '14px',
@@ -234,164 +302,360 @@ const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, 
 
         {/* Form */}
         <form onSubmit={handleSubmit} style={{ padding: spacing[6] }}>
-          {/* Lab Name */}
-          <div style={{ marginBottom: spacing[5] }}>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '500',
-              color: colors.textPrimary,
-              marginBottom: spacing[2]
-            }}>
-              Lab Name *
-            </label>
-            <input
-              type="text"
-              value={formData.labName}
-              onChange={(e) => setFormData(prev => ({ ...prev, labName: e.target.value }))}
-              placeholder="Enter lab name"
-              style={{
-                width: '100%',
-                padding: spacing[3],
-                border: `1px solid ${errors.labName ? colors.error : colors.border}`,
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontFamily: 'Inter',
-                outline: 'none'
-              }}
-            />
-            {errors.labName && (
-              <p style={{
-                fontSize: '12px',
-                color: colors.error,
-                margin: `${spacing[1]} 0 0 0`
-              }}>
-                {errors.labName}
-              </p>
-            )}
-          </div>
-
-          {/* Professor Name */}
-          <div style={{ marginBottom: spacing[5] }}>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '500',
-              color: colors.textPrimary,
-              marginBottom: spacing[2]
-            }}>
-              Professor Name *
-            </label>
-            <input
-              type="text"
-              value={formData.professorName}
-              onChange={(e) => setFormData(prev => ({ ...prev, professorName: e.target.value }))}
-              placeholder="Enter professor's full name"
-              style={{
-                width: '100%',
-                padding: spacing[3],
-                border: `1px solid ${errors.professorName ? colors.error : colors.border}`,
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontFamily: 'Inter',
-                outline: 'none'
-              }}
-            />
-            {errors.professorName && (
-              <p style={{
-                fontSize: '12px',
-                color: colors.error,
-                margin: `${spacing[1]} 0 0 0`
-              }}>
-                {errors.professorName}
-              </p>
-            )}
-          </div>
-
-          {/* Lab Website */}
+          {/* Professor Section */}
           <div style={{ marginBottom: spacing[6] }}>
-            <label style={{
-              display: 'block',
-              fontSize: '14px',
-              fontWeight: '500',
+            <h3 style={{
+              fontSize: '16px',
+              fontWeight: '600',
               color: colors.textPrimary,
-              marginBottom: spacing[2]
+              marginBottom: spacing[4],
+              fontFamily: 'Inter'
             }}>
-              Lab Website *
-            </label>
-            <div style={{ position: 'relative' }}>
+              Professor Information
+            </h3>
+
+            {/* Professor Name */}
+            <div style={{ marginBottom: spacing[4] }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: colors.textPrimary,
+                marginBottom: spacing[2]
+              }}>
+                Professor Name *
+              </label>
               <input
-                type="url"
-                value={formData.labWebsite}
-                onChange={handleWebsiteChange}
-                placeholder="https://lab.university.edu"
+                type="text"
+                value={formData.professorName}
+                onChange={(e) => setFormData(prev => ({ ...prev, professorName: e.target.value }))}
+                placeholder="Enter professor name"
                 style={{
                   width: '100%',
                   padding: spacing[3],
-                  paddingLeft: spacing[10],
-                  border: `1px solid ${errors.labWebsite ? colors.error : colors.border}`,
+                  border: `1px solid ${errors.professorName ? colors.error : colors.border}`,
                   borderRadius: '8px',
                   fontSize: '14px',
                   fontFamily: 'Inter',
                   outline: 'none'
                 }}
               />
-              <Globe
-                size={16}
-                color={colors.textTertiary}
+              {errors.professorName && (
+                <p style={{
+                  fontSize: '12px',
+                  color: colors.error,
+                  margin: `${spacing[1]} 0 0 0`
+                }}>
+                  {errors.professorName}
+                </p>
+              )}
+            </div>
+
+            {/* Professor Email */}
+            <div style={{ marginBottom: spacing[4] }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: colors.textPrimary,
+                marginBottom: spacing[2]
+              }}>
+                Email
+              </label>
+              <input
+                type="email"
+                value={formData.professorEmail}
+                onChange={(e) => setFormData(prev => ({ ...prev, professorEmail: e.target.value }))}
+                placeholder="professor@university.edu"
                 style={{
-                  position: 'absolute',
-                  left: spacing[3],
-                  top: '50%',
-                  transform: 'translateY(-50%)'
+                  width: '100%',
+                  padding: spacing[3],
+                  border: `1px solid ${errors.professorEmail ? colors.error : colors.border}`,
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontFamily: 'Inter',
+                  outline: 'none'
                 }}
               />
-              {isVerifying && (
-                <Loader
-                  size={16}
-                  color={colors.primary}
+              {errors.professorEmail && (
+                <p style={{
+                  fontSize: '12px',
+                  color: colors.error,
+                  margin: `${spacing[1]} 0 0 0`
+                }}>
+                  {errors.professorEmail}
+                </p>
+              )}
+            </div>
+
+            {/* Professor Website */}
+            <div style={{ marginBottom: spacing[4] }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: colors.textPrimary,
+                marginBottom: spacing[2]
+              }}>
+                Personal Website
+              </label>
+              <input
+                type="url"
+                value={formData.professorWebsite}
+                onChange={(e) => setFormData(prev => ({ ...prev, professorWebsite: e.target.value }))}
+                placeholder="https://professor.university.edu"
+                style={{
+                  width: '100%',
+                  padding: spacing[3],
+                  border: `1px solid ${errors.professorWebsite ? colors.error : colors.border}`,
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontFamily: 'Inter',
+                  outline: 'none'
+                }}
+              />
+              {errors.professorWebsite && (
+                <p style={{
+                  fontSize: '12px',
+                  color: colors.error,
+                  margin: `${spacing[1]} 0 0 0`
+                }}>
+                  {errors.professorWebsite}
+                </p>
+              )}
+            </div>
+
+            {/* Research Interests */}
+            <div style={{ marginBottom: spacing[4] }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: colors.textPrimary,
+                marginBottom: spacing[2]
+              }}>
+                Research Interests
+              </label>
+              <div style={{
+                display: 'flex',
+                gap: spacing[2],
+                marginBottom: spacing[2]
+              }}>
+                <input
+                  type="text"
+                  value={newResearchInterest}
+                  onChange={(e) => setNewResearchInterest(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Enter research interest and press Enter"
                   style={{
-                    position: 'absolute',
-                    right: spacing[3],
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    animation: 'spin 1s linear infinite'
+                    flex: 1,
+                    padding: spacing[3],
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontFamily: 'Inter',
+                    outline: 'none'
                   }}
                 />
-              )}
-              {!isVerifying && getVerificationIcon() && (
+                <button
+                  type="button"
+                  onClick={addResearchInterest}
+                  disabled={!newResearchInterest.trim()}
+                  style={{
+                    padding: spacing[3],
+                    border: 'none',
+                    borderRadius: '8px',
+                    backgroundColor: newResearchInterest.trim() ? colors.primary : colors.textTertiary,
+                    color: 'white',
+                    cursor: newResearchInterest.trim() ? 'pointer' : 'not-allowed'
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+              {formData.researchInterests.length > 0 && (
                 <div style={{
-                  position: 'absolute',
-                  right: spacing[3],
-                  top: '50%',
-                  transform: 'translateY(-50%)'
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: spacing[2]
                 }}>
-                  {getVerificationIcon()}
+                  {formData.researchInterests.map((interest, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: spacing[1],
+                        padding: `${spacing[1]} ${spacing[2]}`,
+                        backgroundColor: `${colors.primary}10`,
+                        color: colors.primary,
+                        borderRadius: '16px',
+                        fontSize: '12px',
+                        border: `1px solid ${colors.primary}30`
+                      }}
+                    >
+                      <span>{interest}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeResearchInterest(index)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: colors.primary,
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: 0
+                        }}
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
 
-            {errors.labWebsite && (
-              <p style={{
-                fontSize: '12px',
-                color: colors.error,
-                margin: `${spacing[1]} 0 0 0`
+            {/* Bio */}
+            <div style={{ marginBottom: spacing[5] }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                color: colors.textPrimary,
+                marginBottom: spacing[2]
               }}>
-                {errors.labWebsite}
-              </p>
-            )}
+                Biography
+              </label>
+              <textarea
+                value={formData.bio}
+                onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                placeholder="Brief biography of the professor"
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: spacing[3],
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontFamily: 'Inter',
+                  outline: 'none',
+                  resize: 'vertical',
+                  minHeight: '80px'
+                }}
+              />
+            </div>
+          </div>
 
-            {getVerificationMessage() && (
-              <p style={{
-                fontSize: '12px',
-                color: getVerificationMessage().color,
-                margin: `${spacing[1]} 0 0 0`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing[1]
-              }}>
-                {getVerificationMessage().text}
-              </p>
+          {/* Lab Section */}
+          <div style={{ marginBottom: spacing[6] }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing[2],
+              marginBottom: spacing[4]
+            }}>
+              <input
+                type="checkbox"
+                id="createLab"
+                checked={formData.createLab}
+                onChange={(e) => setFormData(prev => ({ ...prev, createLab: e.target.checked }))}
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  cursor: 'pointer'
+                }}
+              />
+              <label
+                htmlFor="createLab"
+                style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  fontFamily: 'Inter',
+                  cursor: 'pointer'
+                }}
+              >
+                Also create a lab for this professor
+              </label>
+            </div>
+
+            {formData.createLab && (
+              <>
+                {/* Lab Name */}
+                <div style={{ marginBottom: spacing[4] }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: colors.textPrimary,
+                    marginBottom: spacing[2]
+                  }}>
+                    Lab Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.labName}
+                    onChange={(e) => setFormData(prev => ({ ...prev, labName: e.target.value }))}
+                    placeholder="Enter lab name"
+                    style={{
+                      width: '100%',
+                      padding: spacing[3],
+                      border: `1px solid ${errors.labName ? colors.error : colors.border}`,
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontFamily: 'Inter',
+                      outline: 'none'
+                    }}
+                  />
+                  {errors.labName && (
+                    <p style={{
+                      fontSize: '12px',
+                      color: colors.error,
+                      margin: `${spacing[1]} 0 0 0`
+                    }}>
+                      {errors.labName}
+                    </p>
+                  )}
+                </div>
+
+                {/* Lab Website */}
+                <div style={{ marginBottom: spacing[4] }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: colors.textPrimary,
+                    marginBottom: spacing[2]
+                  }}>
+                    Lab Website
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.labWebsite}
+                    onChange={(e) => setFormData(prev => ({ ...prev, labWebsite: e.target.value }))}
+                    placeholder="https://lab.university.edu"
+                    style={{
+                      width: '100%',
+                      padding: spacing[3],
+                      border: `1px solid ${errors.labWebsite ? colors.error : colors.border}`,
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontFamily: 'Inter',
+                      outline: 'none'
+                    }}
+                  />
+                  {errors.labWebsite && (
+                    <p style={{
+                      fontSize: '12px',
+                      color: colors.error,
+                      margin: `${spacing[1]} 0 0 0`
+                    }}>
+                      {errors.labWebsite}
+                    </p>
+                  )}
+                </div>
+              </>
             )}
           </div>
 
@@ -438,23 +702,26 @@ const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, 
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || isVerifying || verificationStatus === 'failed' || verificationStatus === 'invalid'}
+              disabled={isSubmitting}
               style={{
                 padding: `${spacing[3]} ${spacing[5]}`,
                 border: 'none',
                 borderRadius: '8px',
-                backgroundColor: isSubmitting || isVerifying ? colors.textTertiary : colors.primary,
+                backgroundColor: isSubmitting ? colors.textTertiary : colors.primary,
                 color: 'white',
                 fontSize: '14px',
                 fontWeight: '500',
-                cursor: isSubmitting || isVerifying ? 'not-allowed' : 'pointer',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: spacing[2]
               }}
             >
               {isSubmitting && <Loader size={14} style={{ animation: 'spin 1s linear infinite' }} />}
-              {isSubmitting ? 'Adding...' : 'Add Lab'}
+              {isSubmitting
+                ? (formData.createLab ? 'Adding Professor & Lab...' : 'Adding Professor...')
+                : (formData.createLab ? 'Add Professor & Lab' : 'Add Professor')
+              }
             </button>
           </div>
         </form>

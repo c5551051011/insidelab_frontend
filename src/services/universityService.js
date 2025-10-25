@@ -139,29 +139,107 @@ class UniversityService {
     }
   }
 
+  // Get professors with lab information
+  static async getProfessors(filters = {}) {
+    try {
+      let endpoint = '/professors/?fields=minimal';
+
+      // Add filters
+      const params = new URLSearchParams();
+      if (filters.university) {
+        params.append('university', filters.university);
+      }
+      if (filters.university_department) {
+        params.append('university_department', filters.university_department);
+      }
+      if (filters.research_group) {
+        params.append('research_group', filters.research_group);
+      }
+      if (filters.search) {
+        params.append('search', filters.search);
+      }
+
+      if (params.toString()) {
+        endpoint += '&' + params.toString();
+      }
+
+      console.log('🔥 API Call:', `https://insidelab.up.railway.app/api/v1${endpoint}`);
+      const response = await ApiService.get(endpoint);
+      console.log('✅ Professors response:', response);
+      return response.results || response;
+    } catch (error) {
+      console.error('❌ Error fetching professors:', error);
+      return [];
+    }
+  }
+
+  // Add professor only
+  static async addProfessor(professorData) {
+    try {
+      console.log('🔥 Adding professor with data:', professorData);
+
+      const newProfessorData = {
+        name: professorData.professorName,
+        university_department: professorData.departmentId,
+        university: professorData.universityId
+      };
+
+      // Add optional fields
+      if (professorData.professorEmail && professorData.professorEmail.trim()) {
+        newProfessorData.email = professorData.professorEmail.trim();
+      }
+      if (professorData.professorWebsite && professorData.professorWebsite.trim()) {
+        newProfessorData.personal_website = professorData.professorWebsite.trim();
+      }
+      if (professorData.profileUrl && professorData.profileUrl.trim()) {
+        newProfessorData.profile_url = professorData.profileUrl.trim();
+      }
+      if (professorData.googleScholarUrl && professorData.googleScholarUrl.trim()) {
+        newProfessorData.google_scholar_url = professorData.googleScholarUrl.trim();
+      }
+      if (professorData.bio && professorData.bio.trim()) {
+        newProfessorData.bio = professorData.bio.trim();
+      }
+      if (professorData.researchInterests && professorData.researchInterests.length > 0) {
+        newProfessorData.research_interests = professorData.researchInterests;
+      }
+      if (professorData.researchGroupId) {
+        newProfessorData.research_group = professorData.researchGroupId;
+      }
+
+      const professor = await ApiService.post('/professors/', newProfessorData);
+      console.log('✅ Professor added successfully:', professor);
+      return professor;
+    } catch (error) {
+      console.error('❌ Error adding professor:', error);
+      throw new Error(`Failed to add professor: ${error.message}`);
+    }
+  }
+
   // Add lab and professor
   static async addLabAndProfessor(labData) {
     try {
       console.log('🔥 Adding lab and professor with data:', labData);
 
-      // First create the professor
-      const professorData = {
-        name: labData.professorName,
-        university: labData.universityId,
-        department: labData.departmentId
-      };
-
-      const professor = await ApiService.post('/professors/', professorData);
-      console.log('✅ Professor added successfully:', professor);
+      // First create the professor using the addProfessor method
+      const professor = await this.addProfessor(labData);
 
       // Then create the lab
       const newLabData = {
         name: labData.labName,
-        website: labData.labWebsite,
-        university: labData.universityId,
-        department: labData.departmentId,
-        professor: professor.id
+        professor: professor.id,
+        university_department: labData.departmentId
       };
+
+      // Add website if provided
+      if (labData.labWebsite && labData.labWebsite.trim()) {
+        newLabData.website = labData.labWebsite.trim();
+      }
+
+      // Add research group if selected
+      if (labData.researchGroupId) {
+        newLabData.research_group = labData.researchGroupId;
+      }
 
       const lab = await ApiService.post('/labs/', newLabData);
       console.log('✅ Lab added successfully:', lab);
