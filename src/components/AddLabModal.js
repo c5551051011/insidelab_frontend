@@ -113,17 +113,6 @@ const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, 
       }
   };
 
-  const handleWebsiteChange = async (e) => {
-    const url = e.target.value;
-    setFormData(prev => ({ ...prev, labWebsite: url }));
-    setErrors(prev => ({ ...prev, labWebsite: '' }));
-
-    if (url) {
-      await verifyWebsite(url);
-    } else {
-      setVerificationStatus(null);
-    }
-  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -201,34 +190,6 @@ const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, 
     }
   };
 
-  const getVerificationIcon = () => {
-    switch (verificationStatus) {
-      case 'verified':
-        return <CheckCircle size={16} color={colors.success} />;
-      case 'warning':
-        return <AlertCircle size={16} color={colors.warning} />;
-      case 'failed':
-      case 'invalid':
-        return <AlertCircle size={16} color={colors.error} />;
-      default:
-        return null;
-    }
-  };
-
-  const getVerificationMessage = () => {
-    switch (verificationStatus) {
-      case 'verified':
-        return { text: 'Academic website verified', color: colors.success };
-      case 'warning':
-        return { text: 'Website accessible but not academic domain', color: colors.warning };
-      case 'failed':
-        return { text: 'Website not accessible', color: colors.error };
-      case 'invalid':
-        return { text: 'Invalid URL format', color: colors.error };
-      default:
-        return null;
-    }
-  };
 
   if (!isOpen) return null;
 
