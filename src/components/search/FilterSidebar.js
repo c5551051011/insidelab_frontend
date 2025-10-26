@@ -18,21 +18,17 @@ const FilterSidebar = ({
     tags: [],
     sortOptions: []
   });
-  const [loading, setLoading] = useState(true);
 
   // Load filter options
   useEffect(() => {
     const loadFilterOptions = async () => {
       try {
-        setLoading(true);
         const options = await SearchService.getFilterOptions();
         setFilterOptions(options);
       } catch (error) {
         console.error('Error loading filter options:', error);
         // Use fallback options
         setFilterOptions(SearchService.getFallbackFilterOptions());
-      } finally {
-        setLoading(false);
       }
     };
 

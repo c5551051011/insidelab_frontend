@@ -3,20 +3,20 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Star,
   ExternalLink,
-  MapPin,
   Users,
-  Calendar,
   Building2,
   GraduationCap,
   Globe,
-  Mail,
   ArrowLeft,
   Bookmark,
   Info,
   CheckCircle,
   XCircle,
   BookOpen,
-  Quote
+  Quote,
+  MessageCircle,
+  ThumbsUp,
+  Clock
 } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -53,8 +53,36 @@ const LabDetailPage = () => {
           labData = await SearchService.getLabByName(name);
         }
 
-        // Data is already transformed by SearchService.getLabById
-        setLab(labData);
+        // Check if we have complete data with IDs for write review functionality
+        if (labData && (!labData.professorId || !labData.universityId || !labData.departmentId)) {
+          console.log('Lab data missing IDs, attempting to fetch complete professor data...');
+
+          // Try to get professor ID from the current lab data or search by name
+          let professorData = null;
+          if (labData.professorName) {
+            try {
+              // Search for professor by name to get ID first
+              const searchResults = await SearchService.searchLabs(labData.professorName, {}, 1, 5);
+              const matchingLab = searchResults.results.find(result =>
+                result.professorName.toLowerCase() === labData.professorName.toLowerCase()
+              );
+
+              if (matchingLab && matchingLab.professorId) {
+                console.log('Found matching professor ID:', matchingLab.professorId);
+                professorData = await SearchService.getProfessorById(matchingLab.professorId);
+                console.log('Fetched complete professor data:', professorData);
+              }
+            } catch (error) {
+              console.warn('Could not fetch complete professor data:', error);
+            }
+          }
+
+          // Use complete professor data if available, otherwise use original lab data
+          setLab(professorData || labData);
+        } else {
+          // Data is already complete
+          setLab(labData);
+        }
       } catch (err) {
         console.error('Error loading lab details:', err);
         setError(err.message || 'Failed to load lab details');
@@ -70,7 +98,8 @@ const LabDetailPage = () => {
 
   const handleBookmarkToggle = () => {
     setIsBookmarked(!isBookmarked);
-    // TODO: Implement actual bookmark functionality
+    // TODO: Add actual bookmark API call here
+    console.log(`Lab ${isBookmarked ? 'unbookmarked' : 'bookmarked'}:`, lab?.id);
   };
 
   const handleWebsiteClick = (url) => {
@@ -191,6 +220,11 @@ const LabDetailPage = () => {
             <PublicationsSection publications={lab.publications} />
           </div>
         )}
+
+        {/* Reviews Section */}
+        <div style={{ marginTop: spacing[8] }}>
+          <ReviewsSection lab={lab} />
+        </div>
       </div>
 
       <Footer />
@@ -207,8 +241,9 @@ const LabHeader = ({ lab, isBookmarked, onBookmarkToggle, onBack }) => {
   return (
     <div style={{
       height: '200px',
-      background: `linear-gradient(135deg, ${colors.primary}, ${colors.primary}DD)`,
-      position: 'relative'
+      background: `linear-gradient(135deg, #2563eb 0%, #1e40af 100%)`,
+      position: 'relative',
+      overflow: 'hidden'
     }}>
       <div style={{
         padding: spacing[6],
@@ -225,7 +260,7 @@ const LabHeader = ({ lab, isBookmarked, onBookmarkToggle, onBack }) => {
             position: 'absolute',
             top: spacing[4],
             left: spacing[4],
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: 'transparent',
             border: 'none',
             borderRadius: '50%',
             width: '40px',
@@ -247,7 +282,7 @@ const LabHeader = ({ lab, isBookmarked, onBookmarkToggle, onBack }) => {
             position: 'absolute',
             top: spacing[4],
             right: spacing[4],
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            backgroundColor: 'transparent',
             border: 'none',
             borderRadius: '50%',
             width: '40px',
@@ -256,11 +291,17 @@ const LabHeader = ({ lab, isBookmarked, onBookmarkToggle, onBack }) => {
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            color: 'white'
+            color: 'white',
+            transition: 'all 0.2s ease'
           }}
+          title={isBookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
         >
-          {isBookmarked ? <CheckCircle size={20} /> : <Bookmark size={20} />}
+          <Bookmark
+            size={20}
+            fill={isBookmarked ? 'currentColor' : 'none'}
+          />
         </button>
+
 
         {/* Lab Info */}
         <div style={{ display: 'flex', alignItems: 'center', gap: spacing[4] }}>
@@ -575,8 +616,13 @@ const InfoRow = ({ icon, label, value, isLink = false, onClick }) => {
 
 // Rating Breakdown Component
 const RatingBreakdown = ({ lab }) => {
-  // Mock rating breakdown data based on overall rating
+  // Use actual rating breakdown from API, or fallback to mock data
   const getRatingBreakdown = () => {
+    if (lab.ratingBreakdown) {
+      return lab.ratingBreakdown;
+    }
+
+    // Fallback to mock data if API doesn't provide rating breakdown
     const baseRating = lab.overallRating;
     return {
       'Mentorship Quality': Math.min(5, Math.max(1, baseRating + 0.2)),
@@ -975,6 +1021,360 @@ const PublicationsSection = ({ publications }) => {
           </p>
         </div>
       )}
+    </div>
+  );
+};
+
+// Reviews Section Component
+const ReviewsSection = ({ lab }) => {
+  const navigate = useNavigate();
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+
+  useEffect(() => {
+    const loadReviews = async () => {
+      setLoading(true);
+      try {
+        // Mock reviews data - replace with actual API call
+        // const response = await fetch(`${API_BASE_URL}/labs/${labId}/reviews/`);
+        // const data = await response.json();
+        // setReviews(data.results || []);
+
+        // For now, set empty array to show empty state
+        setReviews([]);
+      } catch (error) {
+        console.error('Error loading reviews:', error);
+        setReviews([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadReviews();
+  }, [lab?.id]);
+
+  const displayedReviews = showAll ? reviews : reviews.slice(0, 3);
+
+  const handleWriteReview = () => {
+    console.log('DEBUG: Lab data for write review:', lab);
+
+    // Navigate to write review page with lab data in state
+    navigate('/write-review', {
+      state: {
+        labData: {
+          labId: lab.id,
+          labName: lab.labName,
+          professorId: lab.professorId,
+          professorName: lab.professorName,
+          universityId: lab.universityId,
+          universityName: lab.universityName,
+          departmentId: lab.departmentId,
+          departmentName: lab.department,
+          researchGroupId: lab.researchGroupId,
+          researchGroupName: lab.researchGroup
+        }
+      }
+    });
+  };
+
+  return (
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: spacing[6],
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+      border: `1px solid ${colors.border}`
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: spacing[5]
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: spacing[2]
+        }}>
+          <MessageCircle size={24} color={colors.primary} />
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: '700',
+            color: colors.textPrimary,
+            margin: 0
+          }}>
+            Recent Reviews
+          </h3>
+        </div>
+        <span style={{
+          backgroundColor: `${colors.primary}15`,
+          color: colors.primary,
+          padding: `${spacing[1]} ${spacing[3]}`,
+          borderRadius: '16px',
+          fontSize: '14px',
+          fontWeight: '600'
+        }}>
+          {reviews.length} reviews
+        </span>
+      </div>
+
+      {loading ? (
+        // Loading state
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: spacing[6],
+          color: colors.textTertiary
+        }}>
+          <div style={{
+            width: '20px',
+            height: '20px',
+            border: `2px solid ${colors.textTertiary}`,
+            borderTop: `2px solid ${colors.primary}`,
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            marginRight: spacing[2]
+          }} />
+          Loading reviews...
+        </div>
+      ) : reviews.length > 0 ? (
+        // Reviews list
+        <div>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: spacing[4]
+          }}>
+            {displayedReviews.map((review, index) => (
+              <ReviewCard key={index} review={review} />
+            ))}
+          </div>
+
+          {/* Show More/Less Button */}
+          {reviews.length > 3 && (
+            <div style={{
+              textAlign: 'center',
+              marginTop: spacing[4]
+            }}>
+              <button
+                onClick={() => setShowAll(!showAll)}
+                style={{
+                  background: 'none',
+                  border: `2px solid ${colors.primary}`,
+                  color: colors.primary,
+                  padding: `${spacing[2]} ${spacing[4]}`,
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {showAll ? 'Show Less' : `Show All ${reviews.length} Reviews`}
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        // Empty state
+        <div style={{
+          textAlign: 'center',
+          padding: spacing[8],
+          color: colors.textTertiary
+        }}>
+          <MessageCircle
+            size={64}
+            color={colors.textTertiary}
+            style={{
+              marginBottom: spacing[4],
+              opacity: 0.5
+            }}
+          />
+          <h4 style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            color: colors.textSecondary,
+            margin: 0,
+            marginBottom: spacing[2]
+          }}>
+            No reviews yet
+          </h4>
+          <p style={{
+            fontSize: '14px',
+            color: colors.textTertiary,
+            margin: 0,
+            marginBottom: spacing[4],
+            lineHeight: 1.5
+          }}>
+            Be the first to share your experience working in this lab. Your review will help future students and researchers.
+          </p>
+          <button
+            onClick={handleWriteReview}
+            style={{
+              backgroundColor: colors.primary,
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: `${spacing[3]} ${spacing[5]}`,
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: spacing[2]
+            }}
+          >
+            <MessageCircle size={16} />
+            Write First Review
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Review Card Component
+const ReviewCard = ({ review }) => {
+  return (
+    <div style={{
+      padding: spacing[4],
+      backgroundColor: colors.background,
+      borderRadius: '8px',
+      border: `1px solid ${colors.border}`
+    }}>
+      {/* Review Header */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: spacing[3]
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: spacing[2]
+        }}>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            backgroundColor: colors.primary,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontSize: '14px',
+            fontWeight: '600'
+          }}>
+            {review.author?.charAt(0)?.toUpperCase() || 'A'}
+          </div>
+          <div>
+            <div style={{
+              fontSize: '14px',
+              fontWeight: '600',
+              color: colors.textPrimary
+            }}>
+              {review.author || 'Anonymous'}
+            </div>
+            <div style={{
+              fontSize: '12px',
+              color: colors.textTertiary,
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing[1]
+            }}>
+              <Clock size={12} />
+              {review.date || 'Recent'}
+            </div>
+          </div>
+        </div>
+
+        {/* Rating */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: spacing[1]
+        }}>
+          {[1, 2, 3, 4, 5].map((star) => (
+            <Star
+              key={star}
+              size={14}
+              fill={star <= (review.rating || 0) ? 'gold' : 'none'}
+              color={star <= (review.rating || 0) ? 'gold' : colors.textTertiary}
+            />
+          ))}
+          <span style={{
+            fontSize: '14px',
+            fontWeight: '600',
+            color: colors.textPrimary,
+            marginLeft: spacing[1]
+          }}>
+            {review.rating || 0}/5
+          </span>
+        </div>
+      </div>
+
+      {/* Review Content */}
+      <p style={{
+        fontSize: '14px',
+        color: colors.textSecondary,
+        lineHeight: 1.5,
+        margin: 0,
+        marginBottom: spacing[3]
+      }}>
+        {review.content || 'No review content available.'}
+      </p>
+
+      {/* Review Tags */}
+      {review.tags && review.tags.length > 0 && (
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: spacing[1],
+          marginBottom: spacing[2]
+        }}>
+          {review.tags.map((tag, index) => (
+            <span
+              key={index}
+              style={{
+                backgroundColor: `${colors.primary}15`,
+                color: colors.primary,
+                padding: `2px ${spacing[2]}`,
+                borderRadius: '12px',
+                fontSize: '12px',
+                fontWeight: '500'
+              }}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Review Actions */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: spacing[3],
+        marginTop: spacing[2]
+      }}>
+        <button style={{
+          background: 'none',
+          border: 'none',
+          color: colors.textTertiary,
+          fontSize: '12px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: spacing[1]
+        }}>
+          <ThumbsUp size={12} />
+          Helpful ({review.helpfulCount || 0})
+        </button>
+      </div>
     </div>
   );
 };

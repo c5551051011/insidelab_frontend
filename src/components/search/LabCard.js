@@ -1,5 +1,5 @@
-import React from 'react';
-import { Star, ExternalLink, MapPin, Users } from 'lucide-react';
+import React, { useState } from 'react';
+import { Star, ExternalLink, MapPin, Users, Bookmark } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { Lab } from '../../models/Lab';
 
@@ -10,6 +10,8 @@ const LabCard = ({
   className = '',
   style = {}
 }) => {
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
   // Ensure lab is a Lab instance
   const labInstance = lab instanceof Lab ? lab : new Lab(lab);
 
@@ -50,6 +52,14 @@ const LabCard = ({
     }
   };
 
+  // Handle bookmark toggle
+  const handleBookmarkToggle = (e) => {
+    e.stopPropagation();
+    setIsBookmarked(!isBookmarked);
+    // TODO: Add actual bookmark API call here
+    console.log(`Lab ${isBookmarked ? 'unbookmarked' : 'bookmarked'}:`, labInstance.id);
+  };
+
   return (
     <div
       className={className}
@@ -79,6 +89,42 @@ const LabCard = ({
         }
       }}
     >
+      {/* Bookmark Button - Top Right */}
+      <button
+        onClick={handleBookmarkToggle}
+        style={{
+          position: 'absolute',
+          top: spacing[3],
+          right: spacing[3],
+          background: 'transparent',
+          border: 'none',
+          borderRadius: '50%',
+          width: '36px',
+          height: '36px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          color: isBookmarked ? colors.primary : colors.textSecondary,
+          transition: 'all 0.2s ease',
+          zIndex: 2
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.backgroundColor = colors.background;
+          e.target.style.transform = 'scale(1.1)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.backgroundColor = 'transparent';
+          e.target.style.transform = 'scale(1)';
+        }}
+        title={isBookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
+      >
+        <Bookmark
+          size={18}
+          fill={isBookmarked ? 'currentColor' : 'none'}
+        />
+      </button>
+
       <div style={{ display: 'flex', gap: spacing[4] }}>
         {/* Lab Avatar */}
         <div
