@@ -100,7 +100,6 @@ const BrandSection = () => {
           fontSize: '14px',
           color: colors.textSecondary || '#6B7280',
           lineHeight: 1.5,
-          marginBottom: spacing[6],
           margin: 0,
           marginBottom: spacing[6],
         }}

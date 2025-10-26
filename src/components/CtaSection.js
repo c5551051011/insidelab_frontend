@@ -29,7 +29,6 @@ const CtaSection = () => {
               lineHeight: 1.1,
               letterSpacing: '-0.02em',
               fontFamily: 'Inter',
-              marginBottom: isMobile ? spacing[4] : spacing[5],
               margin: 0,
               marginBottom: isMobile ? spacing[4] : spacing[5],
             }}

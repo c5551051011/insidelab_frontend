@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { colors, spacing, textStyles, gradients } from '../theme';
+import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 
 const MyProfilePage = () => {

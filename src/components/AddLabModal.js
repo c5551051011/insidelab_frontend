@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Globe, AlertCircle, CheckCircle, Loader } from 'lucide-react';
+import { X, AlertCircle, CheckCircle, Loader } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import { UniversityService } from '../services/universityService';
 
@@ -20,7 +20,6 @@ const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, 
   });
   const [newResearchInterest, setNewResearchInterest] = useState('');
   const [errors, setErrors] = useState({});
-  const [isVerifying, setIsVerifying] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -40,7 +39,6 @@ const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, 
     setNewResearchInterest('');
     setErrors({});
     setVerificationStatus(null);
-    setIsVerifying(false);
   };
 
   useEffect(() => {
@@ -90,7 +88,6 @@ const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, 
       return false;
     }
 
-    setIsVerifying(true);
     try {
       // Simulate website verification
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -113,8 +110,7 @@ const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, 
       setVerificationStatus('failed');
       return false;
     } finally {
-      setIsVerifying(false);
-    }
+      }
   };
 
   const handleWebsiteChange = async (e) => {

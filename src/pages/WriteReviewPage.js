@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Search, X, Plus, Info, Shield } from 'lucide-react';
+import { CheckCircle, Search, X, Info, Shield } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import Header from '../components/Header';
 import UniversityDepartmentSelector from '../components/UniversityDepartmentSelector';
 import StarRating from '../components/StarRating';
-import RatingSlider from '../components/RatingSlider';
 import AddLabModal from '../components/AddLabModal';
 import AddResearchGroupModal from '../components/AddResearchGroupModal';
 import { ReviewService } from '../services/reviewService';
@@ -261,94 +260,6 @@ const WriteReviewPage = () => {
     }
   };
 
-  const handleAddResearchGroup = async (researchGroupData) => {
-    try {
-      console.log('🚀 Starting research group creation process...');
-      console.log('📋 University ID:', formData.universityId);
-      console.log('📋 Department ID:', formData.departmentId);
-      console.log('📋 Department Name:', formData.departmentName);
-
-      // First, ensure department is saved to the university
-      let universityDepartmentId = null;
-
-      try {
-        // Check if department already exists in university
-        console.log('🔍 Checking existing departments for university...');
-        const existingDepartments = await UniversityService.getDepartmentsByUniversity(formData.universityId);
-        console.log('📋 Existing departments:', existingDepartments);
-
-        const universityDepartment = existingDepartments.find(dept =>
-          dept.department_name === formData.departmentName ||
-          dept.name === formData.departmentName ||
-          String(dept.department) === String(formData.departmentId)
-        );
-
-        if (universityDepartment) {
-          console.log('✅ Department found in university:', universityDepartment);
-          universityDepartmentId = universityDepartment.id;
-        } else {
-          console.log('📝 Department not found in university, checking if we need to create university-department link...');
-
-          // For now, we'll use the departmentId from form data
-          // In a real scenario, you might need to create the university-department relationship
-          if (formData.departmentId) {
-            console.log('📝 Using existing department ID from form:', formData.departmentId);
-            universityDepartmentId = parseInt(formData.departmentId);
-          } else {
-            throw new Error('No valid university department ID available');
-          }
-        }
-      } catch (error) {
-        console.error('❌ Error checking department:', error);
-        // Use fallback department ID
-        universityDepartmentId = parseInt(formData.departmentId);
-      }
-
-      console.log('📍 Final university_department ID to use:', universityDepartmentId);
-
-      // Prepare research group data for API
-      const apiData = {
-        name: researchGroupData.name,
-        university_department: universityDepartmentId,
-        description: researchGroupData.description || '',
-        website: researchGroupData.website || '',
-        research_areas: researchGroupData.researchAreas || []
-      };
-
-      console.log('📤 Sending research group data:', apiData);
-
-      // Create research group via API
-      const newResearchGroup = await UniversityService.addResearchGroup(apiData);
-      console.log('🎉 Research group created successfully:', newResearchGroup);
-
-      // Set the new research group as selected
-      setFormData(prev => ({
-        ...prev,
-        researchGroupId: newResearchGroup.id,
-        researchGroupName: newResearchGroup.name,
-        // Clear dependent fields
-        professorId: '',
-        labId: '',
-        labName: ''
-      }));
-
-      // Close the modal
-      setShowAddResearchGroupModal(false);
-
-      alert(`Research Group "${researchGroupData.name}" created and saved successfully!`);
-
-    } catch (error) {
-      console.error('❌ Error creating research group:', error);
-
-      // Show detailed error information
-      if (error.response?.data) {
-        console.error('❌ API Error Response:', error.response.data);
-        throw new Error(`Failed to create research group: ${JSON.stringify(error.response.data)}`);
-      } else {
-        throw new Error(`Failed to create research group: ${error.message}`);
-      }
-    }
-  };
 
   const handleInputChange = (field) => (e) => {
     setFormData(prev => ({
@@ -467,7 +378,7 @@ const WriteReviewPage = () => {
       };
 
       // Submit directly to API instead of using Review model
-      const response = await ApiService.post('/reviews/', reviewData, true);
+      await ApiService.post('/reviews/', reviewData, true);
 
       // Show success and navigate
       alert('Review submitted successfully!');
@@ -481,20 +392,6 @@ const WriteReviewPage = () => {
     }
   };
 
-  const getRatingColor = (rating) => {
-    if (rating >= 4.5) return colors.success || '#10B981';
-    if (rating >= 3.5) return colors.primary;
-    if (rating >= 2.5) return '#F59E0B';
-    return colors.error || '#EF4444';
-  };
-
-  const getRatingDescription = (rating) => {
-    if (rating >= 4.5) return 'Excellent Experience';
-    if (rating >= 3.5) return 'Good Experience';
-    if (rating >= 2.5) return 'Average Experience';
-    if (rating >= 1.5) return 'Below Average';
-    return 'Poor Experience';
-  };
 
   // Loading state
   if (isCheckingAuth || isLoadingCategories) {
