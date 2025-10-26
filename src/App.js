@@ -7,6 +7,7 @@ import SignupPage from './pages/SignupPage';
 import SearchPage from './pages/SearchPage';
 import WriteReviewPage from './pages/WriteReviewPage';
 import MyProfilePage from './pages/MyProfilePage';
+import LabDetailPage from './pages/LabDetailPage';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/search" element={<SearchPage />} />
           <Route path="/write-review" element={<WriteReviewPage />} />
           <Route path="/profile" element={<MyProfilePage />} />
+          <Route path="/lab/:name" element={<LabDetailPage />} />
         </Routes>
       </div>
     </Router>

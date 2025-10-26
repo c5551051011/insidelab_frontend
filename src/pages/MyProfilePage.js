@@ -16,7 +16,6 @@ import {
   BookOpen,
   Settings,
   Shield,
-  Eye,
   Star,
   Globe
 } from 'lucide-react';

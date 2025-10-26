@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Filter, ChevronDown } from 'lucide-react';
 import Header from '../components/Header';
 import EnhancedSearchBar from '../components/search/EnhancedSearchBar';
@@ -9,6 +10,8 @@ import { SearchService } from '../services/searchService';
 import { SearchFilter } from '../models/Lab';
 
 const SearchPage = () => {
+  const navigate = useNavigate();
+
   // State management
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState(new SearchFilter());
@@ -96,10 +99,9 @@ const SearchPage = () => {
 
   // Handle lab card click
   const handleLabClick = (lab) => {
-    // TODO: Navigate to lab detail page
-    console.log('Lab clicked:', lab);
-    // For now, just log the lab. Later this should navigate to lab detail page
-    // navigate(`/lab/${lab.id}`);
+    // Convert lab name to URL-friendly format but pass lab ID as state
+    const labNameUrl = lab.labName.toLowerCase().replace(/\s+/g, '-');
+    navigate(`/lab/${labNameUrl}`, { state: { labId: lab.id } });
   };
 
   // Load initial popular labs on mount

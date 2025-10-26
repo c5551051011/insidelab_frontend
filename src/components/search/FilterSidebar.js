@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, X } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { SearchService } from '../../services/searchService';
@@ -10,7 +10,34 @@ const FilterSidebar = ({
   className = '',
   style = {}
 }) => {
-  const filterOptions = SearchService.getFilterOptions();
+  const [filterOptions, setFilterOptions] = useState({
+    universities: [],
+    departments: [],
+    researchGroups: [],
+    researchAreas: [],
+    tags: [],
+    sortOptions: []
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Load filter options
+  useEffect(() => {
+    const loadFilterOptions = async () => {
+      try {
+        setLoading(true);
+        const options = await SearchService.getFilterOptions();
+        setFilterOptions(options);
+      } catch (error) {
+        console.error('Error loading filter options:', error);
+        // Use fallback options
+        setFilterOptions(SearchService.getFallbackFilterOptions());
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadFilterOptions();
+  }, []);
 
   // Handle rating change
   const handleRatingChange = (rating) => {

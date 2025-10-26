@@ -1,5 +1,7 @@
 // Search Service - Handles all search-related API calls and logic
 
+const API_BASE_URL = 'https://insidelab.up.railway.app/api/v1';
+
 export class SearchService {
   static searchCache = new Map();
   static suggestionCache = new Map();
@@ -99,19 +101,95 @@ export class SearchService {
     }
 
     try {
-      // For now, return mock data - replace with actual API call
-      const mockResults = await this.getMockSearchResults(query, filters, page, pageSize);
+      // Build query parameters
+      const params = new URLSearchParams();
+
+      if (query.trim()) {
+        params.append('search', query.trim());
+      }
+
+      // Add pagination
+      params.append('page', page.toString());
+      params.append('page_size', pageSize.toString());
+
+      // Add filters if they exist
+      if (filters.universities?.length > 0) {
+        filters.universities.forEach(uni => params.append('university', uni));
+      }
+
+      if (filters.researchAreas?.length > 0) {
+        filters.researchAreas.forEach(area => params.append('research_area', area));
+      }
+
+      if (filters.rating > 0) {
+        params.append('min_rating', filters.rating.toString());
+      }
+
+      const url = `${API_BASE_URL}/labs/?${params.toString()}`;
+      console.log('Fetching labs from:', url);
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Transform API data to match our expected format
+      const transformedResults = this.transformApiResults(data, page, pageSize);
 
       this.searchCache.set(cacheKey, {
-        data: mockResults,
+        data: transformedResults,
         timestamp: Date.now()
       });
 
-      return mockResults;
+      return transformedResults;
     } catch (error) {
       console.error('Error searching labs:', error);
       throw new Error('Failed to search labs. Please try again.');
     }
+  }
+
+  // Transform API results to match our expected format
+  static transformApiResults(apiData, page, pageSize) {
+    if (!apiData || !apiData.results) {
+      return { results: [], total: 0, page, hasMore: false };
+    }
+
+    const transformedLabs = apiData.results.map(lab => ({
+      id: lab.id.toString(),
+      labName: lab.name,
+      professorName: lab.head_professor_name ||
+                   (lab.professor_names && lab.professor_names.length > 0 ? lab.professor_names[0] : 'Unknown'),
+      universityName: lab.university_name,
+      department: lab.department,
+      researchGroup: lab.research_group_name,
+      overallRating: parseFloat(lab.overall_rating) || 0,
+      reviewCount: lab.review_count || 0,
+      researchAreas: lab.research_areas || [],
+      tags: lab.tags || [],
+      recruitmentStatus: lab.recruitment_status || { phd: false, postdoc: false, intern: false },
+      description: lab.description || '',
+      website: lab.website || '',
+      labSize: lab.lab_size || null,
+      // Additional fields from API
+      professorNames: lab.professor_names || []
+    }));
+
+    // Calculate total from API response
+    const total = apiData.count || apiData.total || apiData.results.length;
+
+    // Check if there are more pages based on next/previous pagination
+    const hasMore = Boolean(apiData.next) || (page * pageSize) < total;
+
+    return {
+      results: transformedLabs,
+      total,
+      page,
+      pageSize,
+      hasMore
+    };
   }
 
   // Get popular labs (for initial load)
@@ -309,43 +387,210 @@ export class SearchService {
     this.suggestionCache.clear();
   }
 
-  // Get available filter options
-  static getFilterOptions() {
+  // Get lab by name
+  static async getLabByName(labName) {
+    try {
+      // Convert URL name back to search term (replace dashes with spaces)
+      const searchTerm = labName.replace(/-/g, ' ');
+      const searchUrl = `${API_BASE_URL}/labs/?search=${encodeURIComponent(searchTerm)}`;
+      console.log('Searching for lab with term:', searchTerm, 'URL:', searchUrl);
+
+      const searchResponse = await fetch(searchUrl);
+      if (!searchResponse.ok) {
+        throw new Error(`Search request failed: ${searchResponse.status}`);
+      }
+
+      const searchData = await searchResponse.json();
+      console.log('Search results:', searchData.results?.map(lab => ({ name: lab.name, urlName: lab.name.toLowerCase().replace(/\s+/g, '-') })));
+
+      // Find exact match by name (convert to URL format for comparison)
+      const exactMatch = searchData.results?.find(lab => {
+        const labUrlName = lab.name.toLowerCase().replace(/\s+/g, '-');
+        console.log('Comparing:', labUrlName, 'with', labName.toLowerCase());
+        return labUrlName === labName.toLowerCase();
+      });
+
+      if (!exactMatch) {
+        console.error('No exact match found for:', labName);
+        console.error('Available labs:', searchData.results?.map(lab => lab.name));
+        throw new Error('Lab not found');
+      }
+
+      console.log('Found exact match:', exactMatch.name);
+
+      // Now get the detailed lab data
+      const detailUrl = `${API_BASE_URL}/labs/${exactMatch.id}/`;
+      console.log('Fetching lab details from:', detailUrl);
+
+      const response = await fetch(detailUrl);
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Transform single lab data to match our expected format
+      return {
+        id: data.id.toString(),
+        labName: data.name,
+        professorName: data.head_professor?.name || 'Unknown',
+        universityName: data.university_name,
+        department: data.department_name || data.department,
+        researchGroup: data.head_professor?.research_group_name || '',
+        overallRating: parseFloat(data.overall_rating) || 0,
+        reviewCount: data.review_count || 0,
+        researchAreas: data.research_areas || [],
+        tags: data.tags || [],
+        recruitmentStatus: data.recruitment_status || { phd: false, postdoc: false, intern: false },
+        description: data.description || '',
+        website: data.website || '',
+        labSize: data.lab_size || null,
+        professorNames: [data.head_professor?.name].filter(Boolean) || [],
+        // Additional fields from the API response
+        establishedYear: data.established_year || null,
+        location: data.location || '',
+        facilities: data.facilities || [],
+        publications: data.recent_publications || [],
+        collaborations: data.collaborations || [],
+        fundingSources: data.funding_sources || [],
+        hierarchyLine: data.hierarchy_line || '',
+        researchTopics: data.research_topics || [],
+        professorEmail: data.head_professor?.email || '',
+        professorWebsite: data.head_professor?.personal_website || '',
+        professorScholarUrl: data.head_professor?.google_scholar_url || ''
+      };
+    } catch (error) {
+      console.error('Error fetching lab by name:', error);
+      throw new Error('Failed to fetch lab details. Please try again.');
+    }
+  }
+
+  // Get lab by ID (keeping for backward compatibility)
+  static async getLabById(labId) {
+    try {
+      const url = `${API_BASE_URL}/labs/${labId}/`;
+      console.log('Fetching lab from:', url);
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Transform single lab data to match our expected format
+      return {
+        id: data.id.toString(),
+        labName: data.name,
+        professorName: data.head_professor?.name || 'Unknown',
+        universityName: data.university_name,
+        department: data.department_name || data.department,
+        researchGroup: data.head_professor?.research_group_name || '',
+        overallRating: parseFloat(data.overall_rating) || 0,
+        reviewCount: data.review_count || 0,
+        researchAreas: data.research_areas || [],
+        tags: data.tags || [],
+        recruitmentStatus: data.recruitment_status || { phd: false, postdoc: false, intern: false },
+        description: data.description || '',
+        website: data.website || '',
+        labSize: data.lab_size || null,
+        professorNames: [data.head_professor?.name].filter(Boolean) || [],
+        // Additional fields from the API response
+        establishedYear: data.established_year || null,
+        location: data.location || '',
+        facilities: data.facilities || [],
+        publications: data.recent_publications || [],
+        collaborations: data.collaborations || [],
+        fundingSources: data.funding_sources || [],
+        hierarchyLine: data.hierarchy_line || '',
+        researchTopics: data.research_topics || [],
+        professorEmail: data.head_professor?.email || '',
+        professorWebsite: data.head_professor?.personal_website || '',
+        professorScholarUrl: data.head_professor?.google_scholar_url || ''
+      };
+    } catch (error) {
+      console.error('Error fetching lab by ID:', error);
+      throw new Error('Failed to fetch lab details. Please try again.');
+    }
+  }
+
+  // Get available filter options (optimized with dedicated APIs)
+  static async getFilterOptions() {
+    try {
+      // Fetch filter options from multiple APIs in parallel for better performance
+      const [universitiesResponse, labsResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/universities/?fields=minimal`),
+        fetch(`${API_BASE_URL}/labs/?page_size=1000`)
+      ]);
+
+      if (!universitiesResponse.ok || !labsResponse.ok) {
+        throw new Error('Failed to fetch filter options');
+      }
+
+      const [universitiesData, labsData] = await Promise.all([
+        universitiesResponse.json(),
+        labsResponse.json()
+      ]);
+
+      // Extract universities from dedicated API (faster and more reliable)
+      const universities = universitiesData.results?.map(uni => uni.name).filter(Boolean).sort() || [];
+
+      // Extract other filter options from labs data
+      const labs = labsData.results || [];
+      const departments = [...new Set(labs.map(lab => lab.department).filter(Boolean))].sort();
+      const researchGroups = [...new Set(labs.map(lab => lab.research_group_name).filter(Boolean))].sort();
+
+      // Extract research areas (flattened from all labs)
+      const allResearchAreas = labs.flatMap(lab => lab.research_areas || []);
+      const researchAreas = [...new Set(allResearchAreas)].filter(Boolean).sort();
+
+      // Extract tags (flattened from all labs)
+      const allTags = labs.flatMap(lab => lab.tags || []);
+      const tags = [...new Set(allTags)].filter(Boolean).sort();
+
+      return {
+        universities: universities.length > 0 ? universities : this.getFallbackFilterOptions().universities,
+        departments,
+        researchGroups,
+        researchAreas: researchAreas.length > 0 ? researchAreas : this.getFallbackResearchAreas(),
+        tags: tags.length > 0 ? tags : this.getFallbackTags(),
+        sortOptions: [
+          { value: 'rating', label: 'Highest Rating' },
+          { value: 'reviews', label: 'Most Reviews' },
+          { value: 'labName', label: 'Lab Name (A-Z)' },
+          { value: 'professor', label: 'Professor Name (A-Z)' },
+          { value: 'university', label: 'University Name (A-Z)' }
+        ]
+      };
+    } catch (error) {
+      console.error('Error fetching filter options:', error);
+      return this.getFallbackFilterOptions();
+    }
+  }
+
+  // Fallback filter options when API fails
+  static getFallbackFilterOptions() {
     return {
       universities: [
+        'Purdue University',
         'Stanford University',
         'MIT',
         'Carnegie Mellon University',
-        'UC Berkeley',
-        'Harvard University',
-        'University of Washington',
-        'Georgia Tech',
-        'Caltech'
+        'UC Berkeley'
       ],
-      researchAreas: [
-        'Machine Learning',
-        'Computer Vision',
-        'Natural Language Processing',
-        'Robotics',
-        'Human-Computer Interaction',
-        'Bioinformatics',
-        'Computer Graphics',
-        'Cybersecurity',
-        'Database Systems',
-        'Distributed Systems'
+      departments: [
+        'Computer Science',
+        'Electrical Engineering',
+        'Data Science'
       ],
-      tags: [
-        'Well Funded',
-        'International Friendly',
-        'Good Work-Life Balance',
-        'Cutting-edge Research',
-        'Collaborative',
-        'Industry Connections',
-        'Publication Focused',
-        'Startup Friendly',
-        'Remote Friendly',
-        'Diverse Team'
+      researchGroups: [
+        'AI Research Group',
+        'Machine Learning Lab',
+        'Computer Vision Lab'
       ],
+      researchAreas: this.getFallbackResearchAreas(),
+      tags: this.getFallbackTags(),
       sortOptions: [
         { value: 'rating', label: 'Highest Rating' },
         { value: 'reviews', label: 'Most Reviews' },
@@ -354,5 +599,35 @@ export class SearchService {
         { value: 'university', label: 'University Name (A-Z)' }
       ]
     };
+  }
+
+  static getFallbackResearchAreas() {
+    return [
+      'Machine Learning',
+      'Computer Vision',
+      'Natural Language Processing',
+      'Robotics',
+      'Human-Computer Interaction',
+      'Bioinformatics',
+      'Computer Graphics',
+      'Cybersecurity',
+      'Database Systems',
+      'Distributed Systems'
+    ];
+  }
+
+  static getFallbackTags() {
+    return [
+      'Well Funded',
+      'International Friendly',
+      'Good Work-Life Balance',
+      'Cutting-edge Research',
+      'Collaborative',
+      'Industry Connections',
+      'Publication Focused',
+      'Startup Friendly',
+      'Remote Friendly',
+      'Diverse Team'
+    ];
   }
 }
