@@ -22,16 +22,30 @@ const Header = () => {
       setIsAuthenticated(authenticated);
 
       if (authenticated) {
+        // First, try to get cached user data immediately
+        const cachedUser = AuthService.getUserData();
+        if (cachedUser) {
+          setUser(cachedUser);
+          console.log('DEBUG: Loaded cached user data immediately');
+        }
+
         try {
-          const currentUser = await AuthService.getCurrentUser();
-          setUser(currentUser);
+          // Then fetch fresh user data (with cache preference)
+          const currentUser = await AuthService.getCurrentUser(true);
+          if (currentUser) {
+            setUser(currentUser);
+          }
         } catch (error) {
           console.error('Failed to fetch user data:', error);
-          // If API call fails, fall back to local data or clear auth
-          AuthService.logout();
-          setIsAuthenticated(false);
-          setUser(null);
+          // If API call fails but we have cached data, keep using it
+          if (!cachedUser) {
+            AuthService.logout();
+            setIsAuthenticated(false);
+            setUser(null);
+          }
         }
+      } else {
+        setUser(null);
       }
     };
 
@@ -210,7 +224,7 @@ const Header = () => {
               position: 'absolute',
               top: 0,
               right: 0,
-              width: '320px',
+              width: '100%',
               height: '100%',
               backgroundColor: colors.background,
               display: 'flex',
@@ -219,9 +233,10 @@ const Header = () => {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Mobile Menu Header */}
+            {/* Mobile Menu Header - Same height as main header */}
             <div style={{
-              padding: '20px 24px',
+              height: '72px',
+              padding: '0 24px',
               borderBottom: `1px solid ${colors.border}`,
               display: 'flex',
               alignItems: 'center',
@@ -229,7 +244,7 @@ const Header = () => {
               backgroundColor: colors.background
             }}>
               <span style={{
-                fontSize: '20px',
+                fontSize: '22px',
                 fontWeight: '700',
                 color: colors.primary,
                 fontFamily: 'Inter'
