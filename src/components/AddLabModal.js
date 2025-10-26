@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, AlertCircle, CheckCircle, Loader } from 'lucide-react';
+import { X, Loader } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import { UniversityService } from '../services/universityService';
 
@@ -81,38 +81,6 @@ const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, 
       return false;
     }
   };
-
-  const verifyWebsite = async (url) => {
-    if (!url || !validateUrl(url)) {
-      setVerificationStatus('invalid');
-      return false;
-    }
-
-    try {
-      // Simulate website verification
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Simple validation - check if it looks like an academic website
-      const domain = new URL(url).hostname.toLowerCase();
-      const isAcademic = domain.includes('.edu') ||
-                        domain.includes('university') ||
-                        domain.includes('research') ||
-                        domain.includes('.ac.');
-
-      if (isAcademic) {
-        setVerificationStatus('verified');
-        return true;
-      } else {
-        setVerificationStatus('warning');
-        return true; // Allow but warn
-      }
-    } catch (error) {
-      setVerificationStatus('failed');
-      return false;
-    } finally {
-      }
-  };
-
 
   const validateForm = () => {
     const newErrors = {};
