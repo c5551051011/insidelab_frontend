@@ -17,13 +17,21 @@ const Header = () => {
 
   // Check authentication status
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       const authenticated = AuthService.isAuthenticated();
       setIsAuthenticated(authenticated);
 
       if (authenticated) {
-        const currentUser = AuthService.getCurrentUser();
-        setUser(currentUser);
+        try {
+          const currentUser = await AuthService.getCurrentUser();
+          setUser(currentUser);
+        } catch (error) {
+          console.error('Failed to fetch user data:', error);
+          // If API call fails, fall back to local data or clear auth
+          AuthService.logout();
+          setIsAuthenticated(false);
+          setUser(null);
+        }
       }
     };
 
@@ -275,7 +283,7 @@ const Header = () => {
                     fontSize: '16px',
                     fontWeight: '600'
                   }}>
-                    {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
+                    {user?.name ? user.name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : 'U')}
                   </div>
                   <div>
                     <div style={{
@@ -284,7 +292,7 @@ const Header = () => {
                       color: colors.textPrimary,
                       fontFamily: 'Inter'
                     }}>
-                      {user?.email || 'User'}
+                      {user?.name || user?.email || 'User'}
                     </div>
                     <div style={{
                       fontSize: '14px',
@@ -496,11 +504,17 @@ const MobileMenuItem = ({ icon, text, onClick, style = {} }) => {
 
 const UserMenu = ({ user, isOpen, onToggle, onLogout, userMenuRef }) => {
   const getUserInitial = () => {
-    return user?.email ? user.email.charAt(0).toUpperCase() : 'U';
+    if (user?.name) {
+      return user.name.charAt(0).toUpperCase();
+    }
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return 'U';
   };
 
   const getUserDisplayName = () => {
-    return user?.email || 'User';
+    return user?.name || user?.email || 'User';
   };
 
   return (

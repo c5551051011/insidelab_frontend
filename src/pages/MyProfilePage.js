@@ -16,17 +16,13 @@ import {
   BookOpen,
   Settings,
   Shield,
-  Bell,
   Eye,
   Star,
-  MapPin,
-  Phone,
-  Globe,
-  Linkedin,
-  Github
+  Globe
 } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import EditProfileModal from '../components/EditProfileModal';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 
@@ -36,6 +32,7 @@ const MyProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -44,15 +41,24 @@ const MyProfilePage = () => {
   }, []);
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       if (!AuthService.isAuthenticated()) {
         navigate('/login');
         return;
       }
 
-      const currentUser = AuthService.getCurrentUser();
-      setUser(currentUser);
-      setLoading(false);
+      try {
+        // Fetch current user data from API
+        const currentUser = await AuthService.getCurrentUser();
+        setUser(currentUser);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        // If API call fails, redirect to login
+        AuthService.logout();
+        navigate('/login');
+      } finally {
+        setLoading(false);
+      }
     };
 
     checkAuth();
@@ -62,6 +68,22 @@ const MyProfilePage = () => {
     if (window.confirm('Are you sure you want to sign out?')) {
       AuthService.logout();
       navigate('/');
+    }
+  };
+
+  const handleEditProfile = () => {
+    setIsEditModalOpen(true);
+  };
+
+  const handleUserUpdate = async (updatedUser) => {
+    try {
+      // Fetch the latest user data from API to ensure we have all fields
+      const latestUser = await AuthService.getCurrentUser();
+      setUser(latestUser);
+    } catch (error) {
+      console.error('Error fetching updated user data:', error);
+      // Fallback to using the updated user data from the modal
+      setUser(updatedUser);
     }
   };
 
@@ -119,7 +141,11 @@ const MyProfilePage = () => {
           minHeight: 'calc(100vh - 200px)'
         }}>
           {/* Mobile Profile Header */}
-          <MobileProfileCard user={user} onSignOut={handleSignOut} />
+          <MobileProfileCard
+            user={user}
+            onSignOut={handleSignOut}
+            onEditProfile={handleEditProfile}
+          />
 
           {/* Mobile Tab Navigation */}
           <MobileTabNavigation
@@ -135,6 +161,14 @@ const MyProfilePage = () => {
         </div>
 
         <Footer />
+
+        {/* Edit Profile Modal */}
+        <EditProfileModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          user={user}
+          onUserUpdate={handleUserUpdate}
+        />
       </div>
     );
   }
@@ -158,22 +192,32 @@ const MyProfilePage = () => {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onSignOut={handleSignOut}
+          onEditProfile={handleEditProfile}
         />
 
         {/* Main Content */}
         <ProfileContent
           user={user}
           activeTab={activeTab}
+          onEditProfile={handleEditProfile}
         />
       </div>
 
       <Footer />
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        user={user}
+        onUserUpdate={handleUserUpdate}
+      />
     </div>
   );
 };
 
 // New Mobile Profile Card Component
-const MobileProfileCard = ({ user, onSignOut }) => {
+const MobileProfileCard = ({ user, onSignOut, onEditProfile }) => {
   const getInitials = (name) => {
     return name ? name.charAt(0).toUpperCase() : 'U';
   };
@@ -270,21 +314,24 @@ const MobileProfileCard = ({ user, onSignOut }) => {
         marginTop: spacing[4],
         justifyContent: 'center'
       }}>
-        <button style={{
-          flex: 1,
-          backgroundColor: colors.primary,
-          color: 'white',
-          border: 'none',
-          borderRadius: '8px',
-          padding: `${spacing[2]} ${spacing[3]}`,
-          fontSize: '14px',
-          fontWeight: '600',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: spacing[2]
-        }}>
+        <button
+          onClick={onEditProfile}
+          style={{
+            flex: 1,
+            backgroundColor: colors.primary,
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            padding: `${spacing[2]} ${spacing[3]}`,
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: spacing[2]
+          }}
+        >
           <Edit3 size={16} />
           Edit Profile
         </button>
@@ -411,15 +458,15 @@ const MobileOverviewTab = ({ user }) => {
         marginBottom: spacing[6]
       }}>
         <MobileStatCard
-          icon={Star}
-          label="Rating"
-          value={user.averageRating || "4.2"}
-          color={colors.warning}
+          icon={CheckCircle}
+          label="Status"
+          value={user.is_verified ? "Verified" : "Unverified"}
+          color={user.is_verified ? colors.success : colors.warning}
         />
         <MobileStatCard
-          icon={Eye}
-          label="Views"
-          value={user.profileViews || 127}
+          icon={Calendar}
+          label="Member"
+          value={user.joined_date ? new Date(user.joined_date).getFullYear() : "2024"}
           color={colors.info}
         />
       </div>
@@ -447,10 +494,10 @@ const MobileOverviewTab = ({ user }) => {
           flexDirection: 'column',
           gap: spacing[3]
         }}>
-          <MobileInfoRow label="University" value={user.university || 'Not specified'} />
-          <MobileInfoRow label="Department" value={user.department || 'Not specified'} />
+          <MobileInfoRow label="University" value={user.university_name || user.university || 'Not specified'} />
+          <MobileInfoRow label="Department" value={user.department_name || user.department || 'Not specified'} />
           <MobileInfoRow label="Position" value={user.position || 'Not specified'} />
-          <MobileInfoRow label="Research Area" value={user.researchArea || 'Not specified'} />
+          <MobileInfoRow label="Lab Name" value={user.lab_name || 'Not specified'} />
         </div>
       </div>
 
@@ -545,173 +592,9 @@ const MobileSettingsTab = ({ user }) => {
   );
 };
 
-// Old Mobile Profile Header Component (kept for compatibility)
-const MobileProfileHeader = ({ user, onSignOut }) => {
-  const getInitials = (name) => {
-    return name ? name.charAt(0).toUpperCase() : 'U';
-  };
-
-  const getVerificationStatus = () => {
-    const status = user.verificationStatus || 'unverified';
-    switch (status) {
-      case 'verified':
-        return {
-          text: 'Verified Student',
-          icon: CheckCircle,
-          color: colors.success
-        };
-      case 'pending':
-        return {
-          text: 'Pending Verification',
-          icon: Clock,
-          color: colors.warning
-        };
-      default:
-        return {
-          text: 'Unverified',
-          icon: Clock,
-          color: colors.textTertiary
-        };
-    }
-  };
-
-  const verification = getVerificationStatus();
-  const VerificationIcon = verification.icon;
-
-  return (
-    <div style={{
-      background: `linear-gradient(135deg, ${colors.primary}, ${colors.primary}CC)`,
-      borderRadius: '16px',
-      padding: spacing[8],
-      marginBottom: spacing[8],
-      color: 'white',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        width: '200px',
-        height: '200px',
-        background: 'rgba(255, 255, 255, 0.1)',
-        borderRadius: '50%',
-        transform: 'translate(50%, -50%)'
-      }} />
-
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: spacing[6],
-        position: 'relative',
-        zIndex: 1
-      }}>
-        <div style={{
-          width: '80px',
-          height: '80px',
-          borderRadius: '50%',
-          backgroundColor: 'rgba(255, 255, 255, 0.2)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '32px',
-          fontWeight: '700',
-          border: '3px solid rgba(255, 255, 255, 0.3)'
-        }}>
-          {getInitials(user.name)}
-        </div>
-
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{
-            fontSize: '24px',
-            fontWeight: '700',
-            margin: 0,
-            marginBottom: spacing[2]
-          }}>
-            {user.name || 'User'}
-          </h1>
-
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing[2],
-            marginBottom: spacing[3],
-            justifyContent: 'center'
-          }}>
-            <VerificationIcon size={16} color={verification.color} />
-            <span style={{
-              fontSize: '14px',
-              opacity: 0.9
-            }}>
-              {verification.text}
-            </span>
-          </div>
-
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing[2],
-            opacity: 0.8,
-            justifyContent: 'center'
-          }}>
-            <Calendar size={14} />
-            <span style={{ fontSize: '14px' }}>
-              Member since {user.joinedDate ? new Date(user.joinedDate).toLocaleDateString() : 'Unknown'}
-            </span>
-          </div>
-        </div>
-
-        <div style={{
-          display: 'flex',
-          gap: spacing[3]
-        }}>
-          <button style={{
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
-            padding: `${spacing[2]} ${spacing[4]}`,
-            color: 'white',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing[2],
-            transition: 'all 0.2s ease'
-          }}>
-            <Edit3 size={16} />
-            Edit Profile
-          </button>
-
-          <button
-            onClick={onSignOut}
-            style={{
-              backgroundColor: 'rgba(239, 68, 68, 0.2)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
-              borderRadius: '8px',
-              padding: `${spacing[2]} ${spacing[4]}`,
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing[2],
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <LogOut size={16} />
-            Sign Out
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Desktop Profile Sidebar Component
-const ProfileSidebar = ({ user, activeTab, onTabChange, onSignOut }) => {
+const ProfileSidebar = ({ user, activeTab, onTabChange, onSignOut, onEditProfile }) => {
   const getInitials = (name) => {
     return name ? name.charAt(0).toUpperCase() : 'U';
   };
@@ -859,23 +742,26 @@ const ProfileSidebar = ({ user, activeTab, onTabChange, onSignOut }) => {
         </div>
 
         {/* Primary Action */}
-        <button style={{
-          width: '100%',
-          backgroundColor: colors.primary,
-          color: 'white',
-          border: 'none',
-          borderRadius: '8px',
-          padding: `${spacing[3]} ${spacing[4]}`,
-          fontSize: '14px',
-          fontWeight: '600',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: spacing[2],
-          transition: 'all 0.2s ease',
-          marginBottom: spacing[3]
-        }}>
+        <button
+          onClick={onEditProfile}
+          style={{
+            width: '100%',
+            backgroundColor: colors.primary,
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            padding: `${spacing[3]} ${spacing[4]}`,
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: spacing[2],
+            transition: 'all 0.2s ease',
+            marginBottom: spacing[3]
+          }}
+        >
           <Edit3 size={16} />
           Edit Profile
         </button>
@@ -949,11 +835,11 @@ const ProfileSidebar = ({ user, activeTab, onTabChange, onSignOut }) => {
 };
 
 // Desktop Profile Content Component
-const ProfileContent = ({ user, activeTab }) => {
+const ProfileContent = ({ user, activeTab, onEditProfile }) => {
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
-        return <OverviewTab user={user} />;
+        return <OverviewTab user={user} onEditProfile={onEditProfile} />;
       case 'academic':
         return <AcademicTab user={user} />;
       case 'research':
@@ -983,7 +869,7 @@ const ProfileContent = ({ user, activeTab }) => {
 };
 
 // Overview Tab
-const OverviewTab = ({ user }) => {
+const OverviewTab = ({ user, onEditProfile }) => {
   return (
     <div style={{ padding: spacing[8] }}>
       <div style={{
@@ -1012,19 +898,22 @@ const OverviewTab = ({ user }) => {
             Manage your academic profile and research information
           </p>
         </div>
-        <button style={{
-          backgroundColor: colors.primary,
-          color: 'white',
-          border: 'none',
-          borderRadius: '8px',
-          padding: `${spacing[3]} ${spacing[6]}`,
-          fontSize: '14px',
-          fontWeight: '600',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing[2]
-        }}>
+        <button
+          onClick={onEditProfile}
+          style={{
+            backgroundColor: colors.primary,
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            padding: `${spacing[3]} ${spacing[6]}`,
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing[2]
+          }}
+        >
           <Edit3 size={16} />
           Edit Profile
         </button>
@@ -1040,29 +929,29 @@ const OverviewTab = ({ user }) => {
         <OverviewStatCard
           icon={FileText}
           label="Reviews Written"
-          value={user.reviewCount || 0}
+          value={user.review_count || 0}
           trend="+2 this month"
           color={colors.primary}
         />
         <OverviewStatCard
           icon={Heart}
           label="Helpful Votes"
-          value={user.helpfulVotes || 0}
+          value={user.helpful_votes || 0}
           trend="+15 this month"
           color={colors.success}
         />
         <OverviewStatCard
-          icon={Star}
-          label="Average Rating"
-          value={user.averageRating || "4.2"}
-          trend="Given by others"
-          color={colors.warning}
+          icon={CheckCircle}
+          label="Verification"
+          value={user.is_verified ? "Verified" : "Unverified"}
+          trend={user.verification_status || "Status"}
+          color={user.is_verified ? colors.success : colors.warning}
         />
         <OverviewStatCard
-          icon={Eye}
-          label="Profile Views"
-          value={user.profileViews || 127}
-          trend="+8 this week"
+          icon={Calendar}
+          label="Member Since"
+          value={user.joined_date ? new Date(user.joined_date).getFullYear() : "2024"}
+          trend="Years active"
           color={colors.info}
         />
       </div>
@@ -1284,94 +1173,15 @@ const PrivacyTab = ({ user }) => {
   );
 };
 
-// Profile Stats Component
-const ProfileStats = ({ user, isMobile }) => {
-  const stats = [
-    {
-      icon: FileText,
-      label: 'Reviews Written',
-      value: user.reviewCount || 0,
-      color: colors.primary
-    },
-    {
-      icon: Heart,
-      label: 'Helpful Votes',
-      value: user.helpfulVotes || 0,
-      color: colors.success
-    }
-  ];
-
-  return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-      gap: spacing[4],
-      marginBottom: spacing[8]
-    }}>
-      {stats.map((stat, index) => (
-        <StatCard key={index} stat={stat} />
-      ))}
-    </div>
-  );
-};
-
-const StatCard = ({ stat }) => {
-  const Icon = stat.icon;
-
-  return (
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: spacing[6],
-      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-      border: '1px solid rgba(0, 0, 0, 0.05)'
-    }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: spacing[4]
-      }}>
-        <div style={{
-          width: '48px',
-          height: '48px',
-          borderRadius: '12px',
-          backgroundColor: `${stat.color}20`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <Icon size={24} color={stat.color} />
-        </div>
-
-        <div>
-          <div style={{
-            fontSize: '24px',
-            fontWeight: '700',
-            color: colors.textPrimary,
-            marginBottom: spacing[1]
-          }}>
-            {stat.value}
-          </div>
-          <div style={{
-            fontSize: '14px',
-            color: colors.textSecondary
-          }}>
-            {stat.label}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Academic Profile Component
 const AcademicProfile = ({ user, isMobile }) => {
   const academicInfo = [
-    { label: 'University', value: user.university, icon: Building2 },
-    { label: 'Department', value: user.department, icon: GraduationCap },
+    { label: 'University', value: user.university_name || user.university, icon: Building2 },
+    { label: 'Department', value: user.department_name || user.department, icon: GraduationCap },
     { label: 'Position', value: user.position, icon: Award },
-    { label: 'Lab Name', value: user.labName, icon: BookOpen },
-    { label: 'Advisor', value: user.advisorName, icon: User }
+    { label: 'Lab Name', value: user.lab_name, icon: BookOpen },
+    { label: 'Language', value: user.language === 'ko' ? '한국어' : user.language === 'en' ? 'English' : user.language, icon: Globe }
   ];
 
   return (
@@ -1692,59 +1502,64 @@ const AccountInformation = ({ user, isMobile }) => {
         gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
         gap: spacing[4]
       }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing[3],
-          padding: spacing[3],
-          backgroundColor: colors.backgroundSecondary,
-          borderRadius: '8px'
-        }}>
-          <Mail size={16} color={colors.textTertiary} />
-          <div>
-            <div style={{
-              fontSize: '12px',
-              color: colors.textTertiary,
-              marginBottom: spacing[1]
-            }}>
-              Email
-            </div>
-            <div style={{
-              fontSize: '14px',
-              color: colors.textPrimary,
-              fontWeight: '500'
-            }}>
-              {user.email}
-            </div>
-          </div>
-        </div>
+        <AccountInfoCard
+          icon={Mail}
+          label="Email"
+          value={user.email}
+        />
 
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing[3],
-          padding: spacing[3],
-          backgroundColor: colors.backgroundSecondary,
-          borderRadius: '8px'
-        }}>
-          <User size={16} color={colors.textTertiary} />
-          <div>
-            <div style={{
-              fontSize: '12px',
-              color: colors.textTertiary,
-              marginBottom: spacing[1]
-            }}>
-              Username
-            </div>
-            <div style={{
-              fontSize: '14px',
-              color: colors.textPrimary,
-              fontWeight: '500'
-            }}>
-              {user.name || 'Not set'}
-            </div>
-          </div>
-        </div>
+        <AccountInfoCard
+          icon={User}
+          label="Username"
+          value={user.username || 'Not set'}
+        />
+
+        <AccountInfoCard
+          icon={CheckCircle}
+          label="Verification Status"
+          value={user.is_verified ? 'Verified' : 'Unverified'}
+          valueColor={user.is_verified ? colors.success : colors.textTertiary}
+        />
+
+        <AccountInfoCard
+          icon={Calendar}
+          label="Member Since"
+          value={user.joined_date ? new Date(user.joined_date).toLocaleDateString() : 'Unknown'}
+        />
+
+        {user.review_count !== undefined && (
+          <AccountInfoCard
+            icon={FileText}
+            label="Reviews Written"
+            value={user.review_count || 0}
+          />
+        )}
+
+        {user.helpful_votes !== undefined && (
+          <AccountInfoCard
+            icon={Heart}
+            label="Helpful Votes"
+            value={user.helpful_votes || 0}
+          />
+        )}
+
+        {user.is_lab_member !== undefined && (
+          <AccountInfoCard
+            icon={Building2}
+            label="Lab Member"
+            value={user.is_lab_member ? 'Yes' : 'No'}
+            valueColor={user.is_lab_member ? colors.success : colors.textSecondary}
+          />
+        )}
+
+        {user.can_provide_services !== undefined && (
+          <AccountInfoCard
+            icon={Award}
+            label="Service Provider"
+            value={user.can_provide_services ? 'Yes' : 'No'}
+            valueColor={user.can_provide_services ? colors.success : colors.textSecondary}
+          />
+        )}
       </div>
     </div>
   );
@@ -1843,7 +1658,7 @@ const AcademicOverview = ({ user }) => {
             color: colors.textPrimary,
             fontWeight: '600'
           }}>
-            {user.university || 'Not specified'}
+            {user.university_name || user.university || 'Not specified'}
           </div>
         </div>
 
@@ -1860,7 +1675,7 @@ const AcademicOverview = ({ user }) => {
             color: colors.textPrimary,
             fontWeight: '600'
           }}>
-            {user.department || 'Not specified'}
+            {user.department_name || user.department || 'Not specified'}
           </div>
         </div>
 
@@ -1887,14 +1702,14 @@ const AcademicOverview = ({ user }) => {
             color: colors.textTertiary,
             marginBottom: spacing[1]
           }}>
-            Research Area
+            Lab Name
           </div>
           <div style={{
             fontSize: '14px',
             color: colors.textPrimary,
             fontWeight: '600'
           }}>
-            {user.researchArea || 'Not specified'}
+            {user.lab_name || 'Not specified'}
           </div>
         </div>
       </div>
@@ -2518,6 +2333,38 @@ const MobileReviewCard = ({ review }) => {
           }}>
             {review.status}
           </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Account Info Card Component
+const AccountInfoCard = ({ icon: Icon, label, value, valueColor }) => {
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: spacing[3],
+      padding: spacing[3],
+      backgroundColor: colors.backgroundSecondary,
+      borderRadius: '8px'
+    }}>
+      <Icon size={16} color={colors.textTertiary} />
+      <div>
+        <div style={{
+          fontSize: '12px',
+          color: colors.textTertiary,
+          marginBottom: spacing[1]
+        }}>
+          {label}
+        </div>
+        <div style={{
+          fontSize: '14px',
+          color: valueColor || colors.textPrimary,
+          fontWeight: '500'
+        }}>
+          {value}
         </div>
       </div>
     </div>

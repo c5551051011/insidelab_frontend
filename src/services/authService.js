@@ -81,6 +81,15 @@ class AuthService {
   }
 
 
+  // Update user profile
+  static async updateProfile(profileData) {
+    console.log('DEBUG: Updating user profile:', profileData);
+
+    const response = await ApiService.put('/auth/profile/', profileData, true);
+    console.log('DEBUG: Profile updated successfully:', response);
+    return response;
+  }
+
   // Google Sign In
   static async signInWithGoogle(idToken, email, displayName) {
     console.log('DEBUG: Google Sign-In with backend sync');
