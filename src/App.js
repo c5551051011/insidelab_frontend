@@ -9,6 +9,7 @@ import WriteReviewPage from './pages/WriteReviewPage';
 import MyProfilePage from './pages/MyProfilePage';
 import LabDetailPage from './pages/LabDetailPage';
 import MockInterviewBookingPage from './pages/MockInterviewBookingPage';
+import MySessionsPage from './pages/MySessionsPage';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="/profile" element={<MyProfilePage />} />
           <Route path="/lab/:name" element={<LabDetailPage />} />
           <Route path="/services/mock-interview" element={<MockInterviewBookingPage />} />
+          <Route path="/my-sessions" element={<MySessionsPage />} />
         </Routes>
       </div>
     </Router>
