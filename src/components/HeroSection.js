@@ -40,7 +40,8 @@ const HeroSection = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: isMobile ? 'center' : 'flex-start',
+          paddingTop: isMobile ? '0' : '120px',
           padding: `0 ${sectionSpacing.horizontal[isMobile ? 'mobile' : 'desktop']}`,
           position: 'relative',
         }}
