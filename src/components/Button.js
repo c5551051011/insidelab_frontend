@@ -10,6 +10,7 @@ export const PrimaryButton = ({
   size = 'medium',
   variant = 'solid',
   disabled = false,
+  style,
   ...props
 }) => {
   const sizes = {
@@ -54,7 +55,7 @@ export const PrimaryButton = ({
     boxShadow: disabled ? 'none' : (variant === 'outline' ? '0 4px 12px rgba(0, 0, 0, 0.2)' : '0 1px 2px rgba(0, 0, 0, 0.05)'),
     backdropFilter: variant === 'outline' ? 'blur(10px)' : 'none',
     whiteSpace: 'nowrap',
-    ...props.style
+    ...style
   };
 
   const handleMouseEnter = (e) => {
@@ -97,11 +98,11 @@ export const PrimaryButton = ({
   if (to) {
     return (
       <a
+        {...props}
         href={to}
         style={buttonStyle}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        {...props}
       >
         {content}
       </a>
@@ -110,12 +111,12 @@ export const PrimaryButton = ({
 
   return (
     <button
+      {...props}
       style={buttonStyle}
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       disabled={disabled}
-      {...props}
     >
       {content}
     </button>
@@ -131,6 +132,7 @@ export const SecondaryButton = ({
   size = 'medium',
   variant = 'outline', // 'outline' or 'ghost'
   disabled = false,
+  style,
   ...props
 }) => {
   const sizes = {
@@ -175,7 +177,7 @@ export const SecondaryButton = ({
     color: colors.heroText,
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
     whiteSpace: 'nowrap',
-    ...props.style
+    ...style
   };
 
   const handleMouseEnter = (e) => {
