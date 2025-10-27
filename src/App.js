@@ -8,6 +8,7 @@ import SearchPage from './pages/SearchPage';
 import WriteReviewPage from './pages/WriteReviewPage';
 import MyProfilePage from './pages/MyProfilePage';
 import LabDetailPage from './pages/LabDetailPage';
+import MockInterviewBookingPage from './pages/MockInterviewBookingPage';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/write-review" element={<WriteReviewPage />} />
           <Route path="/profile" element={<MyProfilePage />} />
           <Route path="/lab/:name" element={<LabDetailPage />} />
+          <Route path="/services/mock-interview" element={<MockInterviewBookingPage />} />
         </Routes>
       </div>
     </Router>
