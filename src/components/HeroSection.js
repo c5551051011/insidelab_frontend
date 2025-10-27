@@ -40,8 +40,8 @@ const HeroSection = () => {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: isMobile ? 'center' : 'flex-start',
-          paddingTop: isMobile ? '0' : '120px',
+          justifyContent: 'flex-start',
+          paddingTop: isMobile ? '80px' : '120px',
           padding: `0 ${sectionSpacing.horizontal[isMobile ? 'mobile' : 'desktop']}`,
           position: 'relative',
         }}
@@ -180,7 +180,6 @@ const HeroSection = () => {
               icon={FileText}
               size={isMobile ? 'small' : 'compact'}
               variant="outline"
-              style={isMobile ? { width: '100%', fontSize: '14px' } : {}}
             >
               Write Review
             </PrimaryButton>
@@ -190,7 +189,6 @@ const HeroSection = () => {
               icon={Video}
               size={isMobile ? 'small' : 'compact'}
               variant="outline"
-              style={isMobile ? { width: '100%', fontSize: '14px' } : {}}
             >
               Book Mock Interview
             </SecondaryButton>
