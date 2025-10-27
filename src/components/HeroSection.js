@@ -61,21 +61,22 @@ const HeroSection = () => {
           {/* Hero Title - Fixed space */}
           <div
             style={{
-              marginBottom: isMobile ? spacing[8] : spacing[10],
+              marginBottom: isMobile ? spacing[6] : spacing[10],
               width: '100%',
             }}
           >
             <h1
               style={{
-                fontSize: isMobile ? '40px' : '56px',
+                fontSize: isMobile ? '32px' : '56px',
                 fontWeight: '800',
                 color: colors.heroText,
-                lineHeight: 1.1,
+                lineHeight: 1.2,
                 letterSpacing: '-0.02em',
                 fontFamily: 'Inter',
-                marginBottom: isMobile ? spacing[4] : spacing[6],
+                marginBottom: isMobile ? spacing[3] : spacing[6],
                 textAlign: 'center',
                 overflow: 'visible',
+                padding: isMobile ? '0 16px' : '0',
               }}
             >
               Your Gateway to Graduate School Success
@@ -83,12 +84,13 @@ const HeroSection = () => {
 
             <p
               style={{
-                fontSize: '20px',
+                fontSize: isMobile ? '16px' : '20px',
                 color: colors.heroSubtext,
                 lineHeight: 1.5,
                 fontFamily: 'Inter',
-                maxWidth: '760px',
+                maxWidth: isMobile ? '100%' : '760px',
                 margin: '0 auto',
+                padding: isMobile ? '0 16px' : '0',
               }}
             >
               Search labs with detailed ratings, read honest reviews from current grad students,
@@ -100,13 +102,13 @@ const HeroSection = () => {
           <div
             style={{
               width: '100%',
-              maxWidth: '600px',
-              height: '60px', // Reduced height since help text is removed
+              maxWidth: isMobile ? '90%' : '600px',
+              height: isMobile ? '48px' : '60px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'flex-start',
-              marginBottom: isMobile ? spacing[8] : spacing[10],
+              marginBottom: isMobile ? spacing[6] : spacing[10],
             }}
           >
             {/* Search Form */}
@@ -119,10 +121,10 @@ const HeroSection = () => {
               }}
             >
               <Search
-                size={20}
+                size={isMobile ? 18 : 20}
                 style={{
                   position: 'absolute',
-                  left: spacing[4],
+                  left: isMobile ? spacing[3] : spacing[4],
                   top: '50%',
                   transform: 'translateY(-50%)',
                   color: colors.textTertiary,
@@ -135,14 +137,14 @@ const HeroSection = () => {
                 onChange={(e) => setSearchValue(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
-                placeholder="Search by university, professor, lab name, or research area"
+                placeholder={isMobile ? "Search labs, professors..." : "Search by university, professor, lab name, or research area"}
                 style={{
                   width: '100%',
-                  height: '60px', // Fixed height
-                  padding: `0 ${spacing[4]} 0 ${spacing[12]}`,
-                  fontSize: '18px',
+                  height: isMobile ? '48px' : '60px',
+                  padding: isMobile ? `0 ${spacing[3]} 0 ${spacing[10]}` : `0 ${spacing[4]} 0 ${spacing[12]}`,
+                  fontSize: isMobile ? '15px' : '18px',
                   border: 'none',
-                  borderRadius: '12px',
+                  borderRadius: isMobile ? '10px' : '12px',
                   outline: 'none',
                   background: 'rgba(255, 255, 255, 0.95)',
                   backdropFilter: 'blur(10px)',
@@ -161,12 +163,12 @@ const HeroSection = () => {
           <div
             style={{
               display: 'flex',
-              flexDirection: 'row',
-              gap: spacing[6],
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? spacing[3] : spacing[6],
               alignItems: 'center',
               justifyContent: 'center',
               width: '100%',
-              maxWidth: '500px',
+              maxWidth: isMobile ? '90%' : '500px',
               position: 'relative',
               opacity: 1,
               transition: 'none',
@@ -175,8 +177,9 @@ const HeroSection = () => {
             <PrimaryButton
               to="/write-review"
               icon={FileText}
-              size="compact"
+              size={isMobile ? 'small' : 'compact'}
               variant="outline"
+              style={isMobile ? { width: '100%', fontSize: '14px' } : {}}
             >
               Write Review
             </PrimaryButton>
@@ -184,8 +187,9 @@ const HeroSection = () => {
             <SecondaryButton
               to="/services/mock-interview"
               icon={Video}
-              size="compact"
+              size={isMobile ? 'small' : 'compact'}
               variant="outline"
+              style={isMobile ? { width: '100%', fontSize: '14px' } : {}}
             >
               Book Mock Interview
             </SecondaryButton>
