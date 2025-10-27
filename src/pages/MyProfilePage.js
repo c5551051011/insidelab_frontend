@@ -22,6 +22,7 @@ import {
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import EditProfileModal from '../components/EditProfileModal';
+import ResearchInterestsModal from '../components/ResearchInterestsModal';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 
@@ -32,6 +33,7 @@ const MyProfilePage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isResearchModalOpen, setIsResearchModalOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -156,6 +158,7 @@ const MyProfilePage = () => {
           <MobileContent
             user={user}
             activeTab={activeTab}
+            onEditResearch={() => setIsResearchModalOpen(true)}
           />
         </div>
 
@@ -165,6 +168,14 @@ const MyProfilePage = () => {
         <EditProfileModal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
+          user={user}
+          onUserUpdate={handleUserUpdate}
+        />
+
+        {/* Research Interests Modal */}
+        <ResearchInterestsModal
+          isOpen={isResearchModalOpen}
+          onClose={() => setIsResearchModalOpen(false)}
           user={user}
           onUserUpdate={handleUserUpdate}
         />
@@ -199,6 +210,7 @@ const MyProfilePage = () => {
           user={user}
           activeTab={activeTab}
           onEditProfile={handleEditProfile}
+          onEditResearch={() => setIsResearchModalOpen(true)}
         />
       </div>
 
@@ -208,6 +220,14 @@ const MyProfilePage = () => {
       <EditProfileModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
+        user={user}
+        onUserUpdate={handleUserUpdate}
+      />
+
+      {/* Research Interests Modal */}
+      <ResearchInterestsModal
+        isOpen={isResearchModalOpen}
+        onClose={() => setIsResearchModalOpen(false)}
         user={user}
         onUserUpdate={handleUserUpdate}
       />
@@ -420,7 +440,7 @@ const MobileTabNavigation = ({ activeTab, onTabChange }) => {
 };
 
 // Mobile Content Component
-const MobileContent = ({ user, activeTab }) => {
+const MobileContent = ({ user, activeTab, onEditResearch }) => {
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
@@ -428,7 +448,7 @@ const MobileContent = ({ user, activeTab }) => {
       case 'academic':
         return <MobileAcademicTab user={user} />;
       case 'research':
-        return <MobileResearchTab user={user} />;
+        return <MobileResearchTab user={user} onEditResearch={onEditResearch} />;
       case 'reviews':
         return <MobileReviewsTab user={user} />;
       case 'settings':
@@ -514,10 +534,10 @@ const MobileAcademicTab = ({ user }) => {
   );
 };
 
-const MobileResearchTab = ({ user }) => {
+const MobileResearchTab = ({ user, onEditResearch }) => {
   return (
     <div>
-      <ResearchInterests user={user} isMobile={true} />
+      <ResearchInterests user={user} isMobile={true} onEdit={onEditResearch} />
     </div>
   );
 };
@@ -834,7 +854,7 @@ const ProfileSidebar = ({ user, activeTab, onTabChange, onSignOut, onEditProfile
 };
 
 // Desktop Profile Content Component
-const ProfileContent = ({ user, activeTab, onEditProfile }) => {
+const ProfileContent = ({ user, activeTab, onEditProfile, onEditResearch }) => {
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
@@ -842,7 +862,7 @@ const ProfileContent = ({ user, activeTab, onEditProfile }) => {
       case 'academic':
         return <AcademicTab user={user} />;
       case 'research':
-        return <ResearchTab user={user} />;
+        return <ResearchTab user={user} onEditResearch={onEditResearch} />;
       case 'reviews':
         return <ReviewsTab user={user} />;
       case 'settings':
@@ -1001,7 +1021,7 @@ const AcademicTab = ({ user }) => {
 };
 
 // Research Tab
-const ResearchTab = ({ user }) => {
+const ResearchTab = ({ user, onEditResearch }) => {
   return (
     <div style={{ padding: spacing[8] }}>
       <div style={{
@@ -1027,7 +1047,7 @@ const ResearchTab = ({ user }) => {
         </p>
       </div>
 
-      <ResearchInterests user={user} isMobile={false} />
+      <ResearchInterests user={user} isMobile={false} onEdit={onEditResearch} />
     </div>
   );
 };
@@ -1292,7 +1312,7 @@ const InfoRow = ({ info }) => {
 };
 
 // Research Interests Component
-const ResearchInterests = ({ user, isMobile }) => {
+const ResearchInterests = ({ user, isMobile, onEdit }) => {
   return (
     <div style={{
       backgroundColor: 'white',
@@ -1316,19 +1336,22 @@ const ResearchInterests = ({ user, isMobile }) => {
         }}>
           Research Interests
         </h2>
-        <button style={{
-          backgroundColor: 'transparent',
-          border: `1px solid ${colors.primary}`,
-          borderRadius: '6px',
-          padding: `${spacing[2]} ${spacing[3]}`,
-          color: colors.primary,
-          fontSize: '14px',
-          fontWeight: '600',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing[2]
-        }}>
+        <button
+          onClick={onEdit}
+          style={{
+            backgroundColor: 'transparent',
+            border: `1px solid ${colors.primary}`,
+            borderRadius: '6px',
+            padding: `${spacing[2]} ${spacing[3]}`,
+            color: colors.primary,
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing[2]
+          }}
+        >
           <Edit3 size={14} />
           Edit
         </button>
@@ -1459,16 +1482,19 @@ const ResearchInterests = ({ user, isMobile }) => {
           }}>
             Add your research area, specialties, and publications to help others find you.
           </p>
-          <button style={{
-            backgroundColor: colors.primary,
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            padding: `${spacing[3]} ${spacing[6]}`,
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer'
-          }}>
+          <button
+            onClick={onEdit}
+            style={{
+              backgroundColor: colors.primary,
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              padding: `${spacing[3]} ${spacing[6]}`,
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
             Add Research Interests
           </button>
         </div>
