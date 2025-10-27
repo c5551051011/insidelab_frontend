@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, User, LogOut, FileText } from 'lucide-react';
+import { Menu, X, ChevronDown, User, LogOut, FileText, Video } from 'lucide-react';
 import { PrimaryButton } from './Button';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
@@ -367,6 +367,15 @@ const Header = () => {
                     }}
                   />
 
+                  <MobileMenuItem
+                    icon={<Video size={20} color={colors.textSecondary} />}
+                    text="My Sessions"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      window.location.href = '/my-sessions';
+                    }}
+                  />
+
                   <div style={{
                     height: '1px',
                     backgroundColor: colors.border,
@@ -620,6 +629,11 @@ const UserMenu = ({ user, isOpen, onToggle, onLogout, userMenuRef }) => {
             icon={<FileText size={16} />}
             text="My Reviews"
             onClick={() => window.location.href = '/my-reviews'}
+          />
+          <UserMenuItem
+            icon={<Video size={16} />}
+            text="My Sessions"
+            onClick={() => window.location.href = '/my-sessions'}
           />
           <div style={{
             height: '1px',

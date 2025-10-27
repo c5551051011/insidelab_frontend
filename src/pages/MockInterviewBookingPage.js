@@ -28,8 +28,11 @@ const MockInterviewBookingPage = () => {
   const [selectedLabs, setSelectedLabs] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [focusAreas, setFocusAreas] = useState('');
-  const [preferredDate, setPreferredDate] = useState('');
-  const [preferredTime, setPreferredTime] = useState('');
+  const [preferredSlots, setPreferredSlots] = useState([
+    { date: '', time: '' },
+    { date: '', time: '' },
+    { date: '', time: '' }
+  ]);
   const [additionalNotes, setAdditionalNotes] = useState('');
 
   // Available labs (mock data - will be replaced with API call)
@@ -104,8 +107,7 @@ const MockInterviewBookingPage = () => {
       sessionType,
       selectedLabs,
       focusAreas,
-      preferredDate,
-      preferredTime,
+      preferredSlots: preferredSlots.map((slot, idx) => ({ ...slot, priority: idx + 1 })),
       additionalNotes,
       totalPrice: calculatePrice()
     });
@@ -123,7 +125,10 @@ const MockInterviewBookingPage = () => {
   const canProceed = () => {
     if (currentStep === 1) return sessionType;
     if (currentStep === 2) return selectedLabs.length > 0;
-    if (currentStep === 3) return preferredDate && preferredTime;
+    if (currentStep === 3) {
+      // At least one complete time slot required
+      return preferredSlots.some(slot => slot.date && slot.time);
+    }
     return true;
   };
 
@@ -192,10 +197,8 @@ const MockInterviewBookingPage = () => {
           {/* Step 3: Schedule */}
           {currentStep === 3 && (
             <ScheduleStep
-              preferredDate={preferredDate}
-              setPreferredDate={setPreferredDate}
-              preferredTime={preferredTime}
-              setPreferredTime={setPreferredTime}
+              preferredSlots={preferredSlots}
+              setPreferredSlots={setPreferredSlots}
               additionalNotes={additionalNotes}
               setAdditionalNotes={setAdditionalNotes}
               isMobile={isMobile}
@@ -209,8 +212,7 @@ const MockInterviewBookingPage = () => {
               sessionTypes={sessionTypes}
               selectedLabs={selectedLabs}
               focusAreas={focusAreas}
-              preferredDate={preferredDate}
-              preferredTime={preferredTime}
+              preferredSlots={preferredSlots}
               additionalNotes={additionalNotes}
               calculatePrice={calculatePrice}
               isMobile={isMobile}
@@ -756,15 +758,32 @@ const LabSelectionStep = ({
 
 // Schedule Step Component
 const ScheduleStep = ({
-  preferredDate,
-  setPreferredDate,
-  preferredTime,
-  setPreferredTime,
+  preferredSlots,
+  setPreferredSlots,
   additionalNotes,
   setAdditionalNotes,
   isMobile
 }) => {
   const today = new Date().toISOString().split('T')[0];
+
+  const handleSlotChange = (index, field, value) => {
+    const newSlots = [...preferredSlots];
+    newSlots[index][field] = value;
+    setPreferredSlots(newSlots);
+  };
+
+  const timeOptions = [
+    '09:00', '10:00', '11:00', '12:00', '13:00', '14:00',
+    '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
+  ];
+
+  const formatTimeOption = (time) => {
+    const [hours] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour > 12 ? hour - 12 : hour;
+    return `${displayHour}:00 ${ampm}`;
+  };
 
   return (
     <div style={{
@@ -786,86 +805,114 @@ const ScheduleStep = ({
         color: colors.textSecondary,
         marginBottom: spacing[6]
       }}>
-        Choose your preferred date and time. We'll confirm availability with matched interviewers.
+        Provide 3 preferred time slots in order of priority. We'll match you with an available interviewer.
       </p>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-        gap: spacing[4],
-        marginBottom: spacing[6]
-      }}>
-        {/* Date */}
-        <div>
-          <label style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: colors.textPrimary,
-            marginBottom: spacing[2]
+      {/* Time Slots */}
+      {preferredSlots.map((slot, index) => (
+        <div key={index} style={{
+          marginBottom: spacing[5],
+          padding: spacing[4],
+          backgroundColor: colors.backgroundSecondary,
+          borderRadius: '12px'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing[2],
+            marginBottom: spacing[3]
           }}>
-            <Calendar size={16} style={{ display: 'inline', marginRight: spacing[1] }} />
-            Preferred Date
-          </label>
-          <input
-            type="date"
-            value={preferredDate}
-            onChange={(e) => setPreferredDate(e.target.value)}
-            min={today}
-            required
-            style={{
-              width: '100%',
-              padding: spacing[3],
+            <div style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              backgroundColor: colors.primary,
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               fontSize: '14px',
-              border: `1px solid ${colors.border}`,
-              borderRadius: '8px',
-              outline: 'none'
-            }}
-          />
-        </div>
+              fontWeight: '700'
+            }}>
+              {index + 1}
+            </div>
+            <span style={{
+              fontSize: '14px',
+              fontWeight: '600',
+              color: colors.textPrimary
+            }}>
+              {index === 0 ? 'First Choice' : index === 1 ? 'Second Choice' : 'Third Choice'}
+            </span>
+          </div>
 
-        {/* Time */}
-        <div>
-          <label style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: colors.textPrimary,
-            marginBottom: spacing[2]
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            gap: spacing[3]
           }}>
-            <Clock size={16} style={{ display: 'inline', marginRight: spacing[1] }} />
-            Preferred Time
-          </label>
-          <select
-            value={preferredTime}
-            onChange={(e) => setPreferredTime(e.target.value)}
-            required
-            style={{
-              width: '100%',
-              padding: spacing[3],
-              fontSize: '14px',
-              border: `1px solid ${colors.border}`,
-              borderRadius: '8px',
-              outline: 'none',
-              backgroundColor: 'white'
-            }}
-          >
-            <option value="">Select time...</option>
-            <option value="09:00">9:00 AM</option>
-            <option value="10:00">10:00 AM</option>
-            <option value="11:00">11:00 AM</option>
-            <option value="12:00">12:00 PM</option>
-            <option value="13:00">1:00 PM</option>
-            <option value="14:00">2:00 PM</option>
-            <option value="15:00">3:00 PM</option>
-            <option value="16:00">4:00 PM</option>
-            <option value="17:00">5:00 PM</option>
-            <option value="18:00">6:00 PM</option>
-            <option value="19:00">7:00 PM</option>
-            <option value="20:00">8:00 PM</option>
-          </select>
+            {/* Date */}
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: spacing[2]
+              }}>
+                <Calendar size={14} style={{ display: 'inline', marginRight: spacing[1] }} />
+                Date
+              </label>
+              <input
+                type="date"
+                value={slot.date}
+                onChange={(e) => handleSlotChange(index, 'date', e.target.value)}
+                min={today}
+                style={{
+                  width: '100%',
+                  padding: spacing[3],
+                  fontSize: '14px',
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '8px',
+                  outline: 'none',
+                  backgroundColor: 'white'
+                }}
+              />
+            </div>
+
+            {/* Time */}
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: spacing[2]
+              }}>
+                <Clock size={14} style={{ display: 'inline', marginRight: spacing[1] }} />
+                Time
+              </label>
+              <select
+                value={slot.time}
+                onChange={(e) => handleSlotChange(index, 'time', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: spacing[3],
+                  fontSize: '14px',
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '8px',
+                  outline: 'none',
+                  backgroundColor: 'white'
+                }}
+              >
+                <option value="">Select time...</option>
+                {timeOptions.map(time => (
+                  <option key={time} value={time}>{formatTimeOption(time)}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
-      </div>
+      ))}
 
       {/* Info Box */}
       <div style={{
@@ -878,7 +925,7 @@ const ScheduleStep = ({
       }}>
         <AlertCircle size={20} color={colors.info} style={{ flexShrink: 0, marginTop: '2px' }} />
         <div style={{ fontSize: '13px', color: colors.textSecondary }}>
-          <strong>Note:</strong> Your booking will be confirmed once we match you with an available interviewer.
+          <strong>Note:</strong> Providing multiple time slots increases your chances of finding an available interviewer.
           You'll receive confirmation within 24 hours.
         </div>
       </div>
@@ -921,8 +968,7 @@ const ReviewStep = ({
   sessionTypes,
   selectedLabs,
   focusAreas,
-  preferredDate,
-  preferredTime,
+  preferredSlots,
   additionalNotes,
   calculatePrice,
   isMobile
@@ -931,6 +977,7 @@ const ReviewStep = ({
   const Icon = session.icon;
 
   const formatDate = (dateStr) => {
+    if (!dateStr) return '';
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -941,6 +988,7 @@ const ReviewStep = ({
   };
 
   const formatTime = (timeStr) => {
+    if (!timeStr) return '';
     const [hours] = timeStr.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -1102,21 +1150,65 @@ const ReviewStep = ({
           gap: spacing[2]
         }}>
           <Calendar size={16} />
-          Schedule
+          Preferred Time Slots
         </div>
-        <div style={{
-          fontSize: '14px',
-          color: colors.textSecondary,
-          marginBottom: spacing[2]
-        }}>
-          <strong>Date:</strong> {formatDate(preferredDate)}
-        </div>
-        <div style={{
-          fontSize: '14px',
-          color: colors.textSecondary
-        }}>
-          <strong>Time:</strong> {formatTime(preferredTime)}
-        </div>
+        {preferredSlots
+          .filter(slot => slot.date && slot.time)
+          .map((slot, index) => (
+            <div
+              key={index}
+              style={{
+                padding: spacing[3],
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                marginBottom: spacing[2],
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[3]
+              }}
+            >
+              <div style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                backgroundColor: colors.primary,
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '12px',
+                fontWeight: '700',
+                flexShrink: 0
+              }}>
+                {index + 1}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  marginBottom: spacing[1]
+                }}>
+                  {formatDate(slot.date)}
+                </div>
+                <div style={{
+                  fontSize: '13px',
+                  color: colors.textSecondary
+                }}>
+                  {formatTime(slot.time)}
+                </div>
+              </div>
+            </div>
+          ))}
+        {preferredSlots.filter(slot => slot.date && slot.time).length === 0 && (
+          <div style={{
+            fontSize: '14px',
+            color: colors.textTertiary,
+            fontStyle: 'italic'
+          }}>
+            No time slots selected
+          </div>
+        )}
       </div>
 
       {/* Additional Notes */}
