@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, FileText, Video } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from './Button';
 import { colors, gradients, spacing, sectionSpacing } from '../theme';
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
 
@@ -11,8 +13,10 @@ const HeroSection = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // TODO: Implement search functionality
-    console.log('Search:', searchValue);
+    if (searchValue.trim()) {
+      // Navigate to search page with query parameter
+      navigate(`/search?q=${encodeURIComponent(searchValue.trim())}`);
+    }
   };
 
   return (

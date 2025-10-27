@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Filter, ChevronDown } from 'lucide-react';
 import Header from '../components/Header';
 import EnhancedSearchBar from '../components/search/EnhancedSearchBar';
@@ -11,6 +11,7 @@ import { SearchFilter } from '../models/Lab';
 
 const SearchPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // State management
   const [query, setQuery] = useState('');
@@ -104,20 +105,31 @@ const SearchPage = () => {
     navigate(`/lab/${labNameUrl}`, { state: { labId: lab.id } });
   };
 
-  // Load initial popular labs on mount
+  // Load initial data on mount - either from URL query or popular labs
   useEffect(() => {
-    const loadInitialLabs = async () => {
+    const loadInitialData = async () => {
       try {
         setLoading(true);
-        const popularLabs = await SearchService.getPopularLabs();
-        setSearchResults({
-          results: popularLabs.results,
-          total: popularLabs.total,
-          page: popularLabs.page,
-          hasMore: popularLabs.hasMore
-        });
+
+        // Check if there's a query parameter in the URL
+        const urlQuery = searchParams.get('q');
+
+        if (urlQuery) {
+          // If there's a query in URL, set it and search
+          setQuery(urlQuery);
+          await performSearch(urlQuery, filters, 1, false);
+        } else {
+          // Otherwise, load popular labs
+          const popularLabs = await SearchService.getPopularLabs();
+          setSearchResults({
+            results: popularLabs.results,
+            total: popularLabs.total,
+            page: popularLabs.page,
+            hasMore: popularLabs.hasMore
+          });
+        }
       } catch (err) {
-        console.error('Error loading initial labs:', err);
+        console.error('Error loading initial data:', err);
         setError('Failed to load labs');
       } finally {
         setLoading(false);
@@ -125,8 +137,8 @@ const SearchPage = () => {
       }
     };
 
-    loadInitialLabs();
-  }, []);
+    loadInitialData();
+  }, [searchParams, filters, performSearch]);
 
   // Auto-search when filters change (debounced)
   useEffect(() => {
