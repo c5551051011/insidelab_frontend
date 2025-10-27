@@ -41,7 +41,7 @@ const HeroSection = () => {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'flex-start',
-          paddingTop: isMobile ? '80px' : '120px',
+          paddingTop: isMobile ? '110px' : '150px',
           padding: `0 ${sectionSpacing.horizontal[isMobile ? 'mobile' : 'desktop']}`,
           position: 'relative',
         }}
@@ -168,7 +168,7 @@ const HeroSection = () => {
               gap: isMobile ? spacing[3] : spacing[6],
               alignItems: 'center',
               justifyContent: 'center',
-              width: '100%',
+              width: isMobile ? '100%' : '100%',
               maxWidth: isMobile ? '90%' : '500px',
               position: 'relative',
               opacity: 1,
@@ -180,6 +180,7 @@ const HeroSection = () => {
               icon={FileText}
               size={isMobile ? 'small' : 'compact'}
               variant="outline"
+              style={isMobile ? { width: '100%' } : {}}
             >
               Write Review
             </PrimaryButton>
@@ -189,6 +190,7 @@ const HeroSection = () => {
               icon={Video}
               size={isMobile ? 'small' : 'compact'}
               variant="outline"
+              style={isMobile ? { width: '100%' } : {}}
             >
               Book Mock Interview
             </SecondaryButton>
