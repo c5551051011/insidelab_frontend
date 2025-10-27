@@ -236,12 +236,14 @@ const Header = () => {
             {/* Mobile Menu Header - Same height as main header */}
             <div style={{
               height: '72px',
+              minHeight: '72px',
               padding: '0 24px',
               borderBottom: `1px solid ${colors.border}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              backgroundColor: colors.background
+              backgroundColor: colors.background,
+              flexShrink: 0
             }}>
               <span style={{
                 fontSize: '22px',
