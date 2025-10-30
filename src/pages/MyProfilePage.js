@@ -1313,6 +1313,8 @@ const InfoRow = ({ info }) => {
 
 // Research Interests Component
 const ResearchInterests = ({ user, isMobile, onEdit }) => {
+  const researchProfile = user?.research_profile;
+
   return (
     <div style={{
       backgroundColor: 'white',
@@ -1358,7 +1360,7 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
       </div>
 
       {/* Primary Research Area */}
-      {user.researchArea && (
+      {researchProfile?.primary_research_area && (
         <div style={{ marginBottom: spacing[6] }}>
           <h3 style={{
             fontSize: '16px',
@@ -1377,13 +1379,13 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
             fontSize: '14px',
             fontWeight: '500'
           }}>
-            {user.researchArea}
+            {researchProfile.primary_research_area}
           </div>
         </div>
       )}
 
-      {/* Specialties */}
-      {user.specialties && user.specialties.length > 0 && (
+      {/* Specialties & Interests */}
+      {researchProfile?.specialties_interests && researchProfile.specialties_interests.length > 0 && (
         <div style={{ marginBottom: spacing[6] }}>
           <h3 style={{
             fontSize: '16px',
@@ -1398,7 +1400,7 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
             flexWrap: 'wrap',
             gap: spacing[2]
           }}>
-            {user.specialties.map((specialty, index) => (
+            {researchProfile.specialties_interests.map((specialty, index) => (
               <div
                 key={index}
                 style={{
@@ -1417,53 +1419,91 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
         </div>
       )}
 
-      {/* Publications */}
-      {user.publications && user.publications.length > 0 && (
-        <div>
+      {/* Research Keywords */}
+      {researchProfile?.research_keywords && researchProfile.research_keywords.length > 0 && (
+        <div style={{ marginBottom: spacing[6] }}>
           <h3 style={{
             fontSize: '16px',
             fontWeight: '600',
             color: colors.textPrimary,
             marginBottom: spacing[3]
           }}>
-            Publications
+            Research Keywords
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
-            {user.publications.slice(0, 3).map((publication, index) => (
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: spacing[2]
+          }}>
+            {researchProfile.research_keywords.map((keyword, index) => (
               <div
                 key={index}
                 style={{
-                  padding: spacing[4],
-                  backgroundColor: colors.backgroundSecondary,
-                  borderRadius: '8px',
+                  backgroundColor: `${colors.info}20`,
+                  color: colors.info,
+                  padding: `${spacing[1]} ${spacing[3]}`,
+                  borderRadius: '16px',
                   fontSize: '14px',
-                  lineHeight: 1.5,
-                  color: colors.textPrimary
+                  border: `1px solid ${colors.info}30`
                 }}
               >
-                {publication}
+                {keyword}
               </div>
             ))}
-            {user.publications.length > 3 && (
-              <button style={{
-                backgroundColor: 'transparent',
-                border: 'none',
-                color: colors.primary,
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                textAlign: 'left',
-                padding: 0
-              }}>
-                View all {user.publications.length} publications
-              </button>
-            )}
+          </div>
+        </div>
+      )}
+
+      {/* Academic Background */}
+      {researchProfile?.academic_background && (
+        <div style={{ marginBottom: spacing[6] }}>
+          <h3 style={{
+            fontSize: '16px',
+            fontWeight: '600',
+            color: colors.textPrimary,
+            marginBottom: spacing[3]
+          }}>
+            Academic Background
+          </h3>
+          <div style={{
+            padding: spacing[4],
+            backgroundColor: colors.backgroundSecondary,
+            borderRadius: '8px',
+            fontSize: '14px',
+            lineHeight: 1.5,
+            color: colors.textPrimary
+          }}>
+            {researchProfile.academic_background}
+          </div>
+        </div>
+      )}
+
+      {/* Research Goals */}
+      {researchProfile?.research_goals && (
+        <div style={{ marginBottom: spacing[6] }}>
+          <h3 style={{
+            fontSize: '16px',
+            fontWeight: '600',
+            color: colors.textPrimary,
+            marginBottom: spacing[3]
+          }}>
+            Research Goals
+          </h3>
+          <div style={{
+            padding: spacing[4],
+            backgroundColor: colors.backgroundSecondary,
+            borderRadius: '8px',
+            fontSize: '14px',
+            lineHeight: 1.5,
+            color: colors.textPrimary
+          }}>
+            {researchProfile.research_goals}
           </div>
         </div>
       )}
 
       {/* Empty State */}
-      {(!user.researchArea && (!user.specialties || user.specialties.length === 0) && (!user.publications || user.publications.length === 0)) && (
+      {!researchProfile && (
         <div style={{
           textAlign: 'center',
           padding: spacing[8],
@@ -1474,13 +1514,13 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
             fontSize: '16px',
             marginBottom: spacing[2]
           }}>
-            No research interests added yet
+            No research profile created yet
           </p>
           <p style={{
             fontSize: '14px',
             marginBottom: spacing[4]
           }}>
-            Add your research area, specialties, and publications to help others find you.
+            Create your research profile to showcase your interests, background, and goals.
           </p>
           <button
             onClick={onEdit}
@@ -1495,7 +1535,7 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
               cursor: 'pointer'
             }}
           >
-            Add Research Interests
+            Create Research Profile
           </button>
         </div>
       )}

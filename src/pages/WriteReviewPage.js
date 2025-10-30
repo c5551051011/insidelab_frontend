@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, Search, X, Info, Shield } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import Header from '../components/Header';
@@ -15,6 +15,7 @@ import { DropdownField } from '../components/Dropdown';
 
 const WriteReviewPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -43,7 +44,8 @@ const WriteReviewPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-  const [isFormPreFilled] = useState(false);
+  const [isFormPreFilled, setIsFormPreFilled] = useState(false);
+  const [isPrefillingForm, setIsPrefillingForm] = useState(false);
   const [showAddResearchGroupModal, setShowAddResearchGroupModal] = useState(false);
   const [showAddLabModal, setShowAddLabModal] = useState(false);
 
@@ -121,10 +123,60 @@ const WriteReviewPage = () => {
     }
   }, [navigate, loadRatingCategories]);
 
-  // Check authentication on mount
+  // Pre-fill form from navigation state
+  const prefillFormFromState = useCallback(async () => {
+    const labData = location.state?.labData;
+    console.log('DEBUG: location.state:', location.state);
+    console.log('DEBUG: labData received:', labData);
+
+    if (labData) {
+      console.log('DEBUG: Prefilling form with lab data from navigation state:', labData);
+      setIsPrefillingForm(true);
+      setIsFormPreFilled(true);
+
+      try {
+        const newFormData = {
+          universityId: labData.universityId || '',
+          universityName: labData.universityName || '',
+          departmentId: labData.departmentId || '',
+          departmentName: labData.departmentName || '',
+          researchGroupId: labData.researchGroupId || '',
+          researchGroupName: labData.researchGroupName || '',
+          professorId: labData.professorId || '',
+          labId: labData.labId || '',
+          labName: labData.labName || `${labData.professorName}'s Research`
+        };
+
+        console.log('DEBUG: New form data to set:', newFormData);
+
+        // Use the lab data passed from the previous page
+        setFormData(prev => ({
+          ...prev,
+          ...newFormData
+        }));
+
+        console.log('DEBUG: Form prefilled successfully with lab data');
+      } catch (error) {
+        console.error('Error prefilling form:', error);
+      } finally {
+        setIsPrefillingForm(false);
+      }
+    } else {
+      console.log('DEBUG: No lab data found in navigation state');
+    }
+  }, [location.state]);
+
+  // Check authentication on mount and prefill form
   useEffect(() => {
     checkAuthenticationStatus();
   }, [checkAuthenticationStatus]);
+
+  // Prefill form after authentication is checked
+  useEffect(() => {
+    if (!isCheckingAuth && !isLoadingCategories) {
+      prefillFormFromState();
+    }
+  }, [isCheckingAuth, isLoadingCategories, prefillFormFromState]);
 
   const handleUniversitySelected = (universityId, universityName) => {
     console.log('University selected:', universityId, universityName);
@@ -394,7 +446,7 @@ const WriteReviewPage = () => {
 
 
   // Loading state
-  if (isCheckingAuth || isLoadingCategories) {
+  if (isCheckingAuth || isLoadingCategories || isPrefillingForm) {
     return (
       <div style={{
         minHeight: '100vh',
@@ -423,7 +475,7 @@ const WriteReviewPage = () => {
             fontSize: '16px',
             fontFamily: 'Inter'
           }}>
-            {isCheckingAuth ? 'Checking authentication...' : 'Loading rating categories...'}
+            {isCheckingAuth ? 'Checking authentication...' : isLoadingCategories ? 'Loading rating categories...' : 'Pre-filling form data...'}
           </p>
         </div>
       </div>
@@ -527,6 +579,7 @@ const WriteReviewPage = () => {
               selectedUniversityId={formData.universityId}
               selectedUniversityName={formData.universityName}
               selectedUniversityDepartmentId={formData.departmentId}
+              selectedUniversityDepartmentName={formData.departmentName}
               onUniversitySelected={handleUniversitySelected}
               onDepartmentSelected={handleDepartmentSelected}
               isRequired={true}

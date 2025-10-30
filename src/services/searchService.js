@@ -91,7 +91,7 @@ export class SearchService {
     }
   }
 
-  // Perform search with filters
+  // Perform search with filters (now using professors API)
   static async searchLabs(query, filters = {}, page = 1, pageSize = 20) {
     const cacheKey = `search_${JSON.stringify({ query, filters, page, pageSize })}`;
     const cached = this.searchCache.get(cacheKey);
@@ -125,8 +125,8 @@ export class SearchService {
         params.append('min_rating', filters.rating.toString());
       }
 
-      const url = `${API_BASE_URL}/labs/?${params.toString()}`;
-      console.log('Fetching labs from:', url);
+      const url = `${API_BASE_URL}/professors/?fields=minimal&${params.toString()}`;
+      console.log('Fetching professors from:', url);
 
       const response = await fetch(url);
 
@@ -137,7 +137,7 @@ export class SearchService {
       const data = await response.json();
 
       // Transform API data to match our expected format
-      const transformedResults = this.transformApiResults(data, page, pageSize);
+      const transformedResults = this.transformProfessorsApiResults(data, page, pageSize);
 
       this.searchCache.set(cacheKey, {
         data: transformedResults,
@@ -146,12 +146,64 @@ export class SearchService {
 
       return transformedResults;
     } catch (error) {
-      console.error('Error searching labs:', error);
-      throw new Error('Failed to search labs. Please try again.');
+      console.error('Error searching professors:', error);
+      throw new Error('Failed to search professors. Please try again.');
     }
   }
 
-  // Transform API results to match our expected format
+  // Transform Professors API results to match our expected format
+  static transformProfessorsApiResults(apiData, page, pageSize) {
+    if (!apiData || !apiData.results) {
+      return { results: [], total: 0, page, hasMore: false };
+    }
+
+    const transformedLabs = apiData.results.map(professor => ({
+      id: professor.lab?.id?.toString() || professor.id.toString(),
+      labName: professor.lab?.name || `${professor.name}'s Research`,
+      professorName: professor.name,
+      universityName: professor.university_name || 'Unknown University',
+      department: professor.department_name || 'Unknown Department',
+      researchGroup: professor.research_group_name || '',
+      overallRating: parseFloat(professor.overall_rating) || 0,
+      reviewCount: professor.review_count || 0,
+      researchAreas: professor.research_areas || [],
+      tags: professor.tags || [],
+      recruitmentStatus: professor.recruitment_status || { phd: false, postdoc: false, intern: false },
+      description: professor.bio || '',
+      website: professor.lab?.website || professor.personal_website || '',
+      labSize: null,
+      professorNames: [professor.name],
+      professorEmail: professor.email || '',
+      // Add ID fields for write review functionality
+      professorId: professor.id?.toString() || '',
+      universityId: professor.university_id?.toString() || '',
+      departmentId: professor.department_id?.toString() || '',
+      researchGroupId: professor.research_group_id?.toString() || '',
+      labId: professor.lab?.id?.toString() || '',
+      // Map recruitment status to expected format
+      isRecruiting: {
+        phd: professor.recruitment_status?.is_recruiting_phd || false,
+        postdoc: professor.recruitment_status?.is_recruiting_postdoc || false,
+        intern: professor.recruitment_status?.is_recruiting_intern || false
+      }
+    }));
+
+    // Calculate total from API response
+    const total = apiData.count || apiData.total || apiData.results.length;
+
+    // Check if there are more pages based on next/previous pagination
+    const hasMore = Boolean(apiData.next) || (page * pageSize) < total;
+
+    return {
+      results: transformedLabs,
+      total,
+      page,
+      pageSize,
+      hasMore
+    };
+  }
+
+  // Transform API results to match our expected format (keeping for backward compatibility)
   static transformApiResults(apiData, page, pageSize) {
     if (!apiData || !apiData.results) {
       return { results: [], total: 0, page, hasMore: false };
@@ -192,12 +244,12 @@ export class SearchService {
     };
   }
 
-  // Get popular labs (for initial load)
+  // Get popular labs (for initial load - now using professors)
   static async getPopularLabs() {
     try {
       return await this.searchLabs('', {}, 1, 10);
     } catch (error) {
-      console.error('Error fetching popular labs:', error);
+      console.error('Error fetching popular professors:', error);
       return { results: [], total: 0, page: 1, hasMore: false };
     }
   }
@@ -387,13 +439,13 @@ export class SearchService {
     this.suggestionCache.clear();
   }
 
-  // Get lab by name
+  // Get lab by name (now using professors API)
   static async getLabByName(labName) {
     try {
       // Convert URL name back to search term (replace dashes with spaces)
       const searchTerm = labName.replace(/-/g, ' ');
-      const searchUrl = `${API_BASE_URL}/labs/?search=${encodeURIComponent(searchTerm)}`;
-      console.log('Searching for lab with term:', searchTerm, 'URL:', searchUrl);
+      const searchUrl = `${API_BASE_URL}/professors/?fields=minimal&search=${encodeURIComponent(searchTerm)}`;
+      console.log('Searching for professor/lab with term:', searchTerm, 'URL:', searchUrl);
 
       const searchResponse = await fetch(searchUrl);
       if (!searchResponse.ok) {
@@ -401,64 +453,105 @@ export class SearchService {
       }
 
       const searchData = await searchResponse.json();
-      console.log('Search results:', searchData.results?.map(lab => ({ name: lab.name, urlName: lab.name.toLowerCase().replace(/\s+/g, '-') })));
+      console.log('Search results:', searchData.results?.map(prof => ({
+        name: prof.name,
+        lab: prof.lab?.name,
+        urlName: (prof.lab?.name || `${prof.name}'s Research`).toLowerCase().replace(/\s+/g, '-')
+      })));
 
-      // Find exact match by name (convert to URL format for comparison)
-      const exactMatch = searchData.results?.find(lab => {
-        const labUrlName = lab.name.toLowerCase().replace(/\s+/g, '-');
+      // Find exact match by lab name (convert to URL format for comparison)
+      const exactMatch = searchData.results?.find(professor => {
+        const labUrlName = (professor.lab?.name || `${professor.name}'s Research`).toLowerCase().replace(/\s+/g, '-');
         console.log('Comparing:', labUrlName, 'with', labName.toLowerCase());
         return labUrlName === labName.toLowerCase();
       });
 
       if (!exactMatch) {
         console.error('No exact match found for:', labName);
-        console.error('Available labs:', searchData.results?.map(lab => lab.name));
+        console.error('Available professors/labs:', searchData.results?.map(prof => ({
+          professor: prof.name,
+          lab: prof.lab?.name
+        })));
         throw new Error('Lab not found');
       }
 
-      console.log('Found exact match:', exactMatch.name);
+      console.log('Found exact match:', exactMatch.name, 'Lab:', exactMatch.lab?.name);
 
-      // Now get the detailed lab data
-      const detailUrl = `${API_BASE_URL}/labs/${exactMatch.id}/`;
-      console.log('Fetching lab details from:', detailUrl);
+      // If there's a lab, get detailed lab data, otherwise use professor data
+      if (exactMatch.lab?.id) {
+        const detailUrl = `${API_BASE_URL}/labs/${exactMatch.lab.id}/`;
+        console.log('Fetching lab details from:', detailUrl);
 
-      const response = await fetch(detailUrl);
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
+        const response = await fetch(detailUrl);
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Transform lab data to match our expected format
+        return {
+          id: data.id.toString(),
+          labName: data.name,
+          professorName: data.head_professor?.name || exactMatch.name,
+          universityName: data.university_name || exactMatch.university_name,
+          department: data.department_name || data.department || exactMatch.department_name,
+          researchGroup: data.research_group_name || exactMatch.research_group_name || '',
+          overallRating: parseFloat(data.overall_rating) || parseFloat(exactMatch.overall_rating) || 0,
+          reviewCount: data.review_count || exactMatch.review_count || 0,
+          researchAreas: data.research_areas || exactMatch.research_areas || [],
+          tags: data.tags || exactMatch.tags || [],
+          recruitmentStatus: data.recruitment_status || exactMatch.recruitment_status || { phd: false, postdoc: false, intern: false },
+          description: data.description || exactMatch.bio || '',
+          website: data.website || exactMatch.lab?.website || '',
+          labSize: data.lab_size || null,
+          professorNames: [data.head_professor?.name || exactMatch.name].filter(Boolean),
+          // Additional fields from the API response
+          establishedYear: data.established_year || null,
+          location: data.location || '',
+          facilities: data.facilities || [],
+          publications: data.recent_publications || [],
+          collaborations: data.collaborations || [],
+          fundingSources: data.funding_sources || [],
+          hierarchyLine: data.hierarchy_line || '',
+          researchTopics: data.research_topics || exactMatch.research_topics || [],
+          professorEmail: data.head_professor?.email || exactMatch.email || '',
+          professorWebsite: data.head_professor?.personal_website || '',
+          professorScholarUrl: data.head_professor?.google_scholar_url || '',
+          ratingBreakdown: data.rating_breakdown || null
+        };
+      } else {
+        // No lab associated, create virtual lab from professor data
+        return {
+          id: exactMatch.id.toString(),
+          labName: `${exactMatch.name}'s Research`,
+          professorName: exactMatch.name,
+          universityName: exactMatch.university_name || 'Unknown University',
+          department: exactMatch.department_name || 'Unknown Department',
+          researchGroup: exactMatch.research_group_name || '',
+          overallRating: parseFloat(exactMatch.overall_rating) || 0,
+          reviewCount: exactMatch.review_count || 0,
+          researchAreas: exactMatch.research_areas || [],
+          tags: exactMatch.tags || [],
+          recruitmentStatus: exactMatch.recruitment_status || { phd: false, postdoc: false, intern: false },
+          description: exactMatch.bio || '',
+          website: exactMatch.personal_website || '',
+          labSize: null,
+          professorNames: [exactMatch.name],
+          establishedYear: null,
+          location: '',
+          facilities: [],
+          publications: [],
+          collaborations: [],
+          fundingSources: [],
+          hierarchyLine: '',
+          researchTopics: exactMatch.research_topics || [],
+          professorEmail: exactMatch.email || '',
+          professorWebsite: exactMatch.personal_website || '',
+          professorScholarUrl: exactMatch.google_scholar_url || '',
+          ratingBreakdown: null
+        };
       }
-
-      const data = await response.json();
-
-      // Transform single lab data to match our expected format
-      return {
-        id: data.id.toString(),
-        labName: data.name,
-        professorName: data.head_professor?.name || 'Unknown',
-        universityName: data.university_name,
-        department: data.department_name || data.department,
-        researchGroup: data.head_professor?.research_group_name || '',
-        overallRating: parseFloat(data.overall_rating) || 0,
-        reviewCount: data.review_count || 0,
-        researchAreas: data.research_areas || [],
-        tags: data.tags || [],
-        recruitmentStatus: data.recruitment_status || { phd: false, postdoc: false, intern: false },
-        description: data.description || '',
-        website: data.website || '',
-        labSize: data.lab_size || null,
-        professorNames: [data.head_professor?.name].filter(Boolean) || [],
-        // Additional fields from the API response
-        establishedYear: data.established_year || null,
-        location: data.location || '',
-        facilities: data.facilities || [],
-        publications: data.recent_publications || [],
-        collaborations: data.collaborations || [],
-        fundingSources: data.funding_sources || [],
-        hierarchyLine: data.hierarchy_line || '',
-        researchTopics: data.research_topics || [],
-        professorEmail: data.head_professor?.email || '',
-        professorWebsite: data.head_professor?.personal_website || '',
-        professorScholarUrl: data.head_professor?.google_scholar_url || ''
-      };
     } catch (error) {
       console.error('Error fetching lab by name:', error);
       throw new Error('Failed to fetch lab details. Please try again.');
@@ -486,7 +579,7 @@ export class SearchService {
         professorName: data.head_professor?.name || 'Unknown',
         universityName: data.university_name,
         department: data.department_name || data.department,
-        researchGroup: data.head_professor?.research_group_name || '',
+        researchGroup: data.research_group_name || '',
         overallRating: parseFloat(data.overall_rating) || 0,
         reviewCount: data.review_count || 0,
         researchAreas: data.research_areas || [],
@@ -507,7 +600,14 @@ export class SearchService {
         researchTopics: data.research_topics || [],
         professorEmail: data.head_professor?.email || '',
         professorWebsite: data.head_professor?.personal_website || '',
-        professorScholarUrl: data.head_professor?.google_scholar_url || ''
+        professorScholarUrl: data.head_professor?.google_scholar_url || '',
+        ratingBreakdown: data.rating_breakdown || null,
+        // Add ID fields for write review functionality
+        professorId: data.head_professor?.id?.toString() || '',
+        universityId: data.university_id?.toString() || '',
+        departmentId: data.department_id?.toString() || '',
+        researchGroupId: data.research_group_id?.toString() || '',
+        labId: data.id?.toString() || ''
       };
     } catch (error) {
       console.error('Error fetching lab by ID:', error);
@@ -515,38 +615,88 @@ export class SearchService {
     }
   }
 
+  // Get professor by ID with complete data including all IDs
+  static async getProfessorById(professorId) {
+    try {
+      const url = `${API_BASE_URL}/professors/${professorId}/`;
+      console.log('Fetching professor from:', url);
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Transform professor data to match our expected lab format
+      return {
+        id: data.lab?.id?.toString() || data.id.toString(),
+        labName: data.lab?.name || `${data.name}'s Research`,
+        professorName: data.name,
+        universityName: data.university_name || 'Unknown University',
+        department: data.department_name || 'Unknown Department',
+        researchGroup: data.research_group_name || '',
+        overallRating: parseFloat(data.overall_rating) || 0,
+        reviewCount: data.review_count || 0,
+        researchAreas: data.research_areas || [],
+        tags: data.tags || [],
+        recruitmentStatus: data.recruitment_status || { phd: false, postdoc: false, intern: false },
+        description: data.bio || '',
+        website: data.lab?.website || data.personal_website || '',
+        labSize: null,
+        professorNames: [data.name],
+        professorEmail: data.email || '',
+        // Complete ID fields for write review functionality
+        professorId: data.id?.toString() || '',
+        universityId: data.university_id?.toString() || '',
+        departmentId: data.department_id?.toString() || '',
+        researchGroupId: data.research_group_id?.toString() || '',
+        labId: data.lab?.id?.toString() || '',
+        // Additional professor-specific fields
+        professorWebsite: data.personal_website || '',
+        professorScholarUrl: data.google_scholar_url || '',
+        publications: data.recent_publications || [],
+        ratingBreakdown: data.rating_breakdown || null
+      };
+    } catch (error) {
+      console.error('Error fetching professor by ID:', error);
+      throw new Error('Failed to fetch professor details. Please try again.');
+    }
+  }
+
   // Get available filter options (optimized with dedicated APIs)
   static async getFilterOptions() {
     try {
       // Fetch filter options from multiple APIs in parallel for better performance
-      const [universitiesResponse, labsResponse] = await Promise.all([
+      const [universitiesResponse, professorsResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/universities/?fields=minimal`),
-        fetch(`${API_BASE_URL}/labs/?page_size=1000`)
+        fetch(`${API_BASE_URL}/professors/?fields=minimal&page_size=1000`)
       ]);
 
-      if (!universitiesResponse.ok || !labsResponse.ok) {
+      if (!universitiesResponse.ok || !professorsResponse.ok) {
         throw new Error('Failed to fetch filter options');
       }
 
-      const [universitiesData, labsData] = await Promise.all([
+      const [universitiesData, professorsData] = await Promise.all([
         universitiesResponse.json(),
-        labsResponse.json()
+        professorsResponse.json()
       ]);
 
       // Extract universities from dedicated API (faster and more reliable)
       const universities = universitiesData.results?.map(uni => uni.name).filter(Boolean).sort() || [];
 
-      // Extract other filter options from labs data
-      const labs = labsData.results || [];
-      const departments = [...new Set(labs.map(lab => lab.department).filter(Boolean))].sort();
-      const researchGroups = [...new Set(labs.map(lab => lab.research_group_name).filter(Boolean))].sort();
+      // Extract other filter options from professors data
+      const professors = professorsData.results || [];
+      const departments = [...new Set(professors.map(prof => prof.department_name).filter(Boolean))].sort();
+      const researchGroups = [...new Set(professors.map(prof => prof.research_group_name).filter(Boolean))].sort();
 
-      // Extract research areas (flattened from all labs)
-      const allResearchAreas = labs.flatMap(lab => lab.research_areas || []);
+      // Extract research areas (flattened from all professors)
+      const allResearchAreas = professors.flatMap(prof => prof.research_areas || []);
       const researchAreas = [...new Set(allResearchAreas)].filter(Boolean).sort();
 
-      // Extract tags (flattened from all labs)
-      const allTags = labs.flatMap(lab => lab.tags || []);
+      // Extract tags (flattened from all professors)
+      const allTags = professors.flatMap(prof => prof.tags || []);
       const tags = [...new Set(allTags)].filter(Boolean).sort();
 
       return {

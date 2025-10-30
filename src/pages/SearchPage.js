@@ -52,9 +52,18 @@ const SearchPage = () => {
 
     } catch (err) {
       console.error('Search error:', err);
-      setError(err.message || 'Failed to search labs');
 
-      if (!append) {
+      if (append) {
+        // For load more errors (when no more data available), keep existing data but hide load more button
+        setSearchResults(prev => ({
+          ...prev,
+          hasMore: false
+        }));
+        console.log('No more data available on page', page, '- hiding load more button');
+        // Don't set error state for load more failures to avoid disrupting user experience
+      } else {
+        // For initial search errors, clear results and show error
+        setError(err.message || 'Failed to search labs');
         setSearchResults({
           results: [],
           total: 0,

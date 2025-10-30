@@ -17,6 +17,9 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
+import { InterviewService } from '../services/interviewService';
+import { SearchService } from '../services/searchService';
+import { BookmarkService } from '../services/bookmarkService';
 
 const MockInterviewBookingPage = () => {
   const navigate = useNavigate();
@@ -24,7 +27,9 @@ const MockInterviewBookingPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
 
   // Form state
-  const [sessionType, setSessionType] = useState('mock-interview'); // 'mock-interview' or 'qa-session'
+  const [sessionType, setSessionType] = useState('mock_interview'); // 'mock_interview' or 'qa_session'
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [selectedLabs, setSelectedLabs] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [focusAreas, setFocusAreas] = useState('');
@@ -35,14 +40,11 @@ const MockInterviewBookingPage = () => {
   ]);
   const [additionalNotes, setAdditionalNotes] = useState('');
 
-  // Available labs (mock data - will be replaced with API call)
-  const availableLabs = [
-    { id: 1, name: 'AI Research Lab', university: 'Stanford', professor: 'Dr. Sarah Johnson', field: 'Machine Learning' },
-    { id: 2, name: 'Robotics Lab', university: 'MIT', professor: 'Dr. Michael Chen', field: 'Robotics' },
-    { id: 3, name: 'NLP Lab', university: 'Berkeley', professor: 'Dr. Emily Wang', field: 'Natural Language Processing' },
-    { id: 4, name: 'Computer Vision Lab', university: 'CMU', professor: 'Dr. David Kim', field: 'Computer Vision' },
-    { id: 5, name: 'Systems Lab', university: 'Stanford', professor: 'Dr. Lisa Brown', field: 'Distributed Systems' }
-  ];
+  // Lab data from API
+  const [availableLabs, setAvailableLabs] = useState([]);
+  const [interestedLabs, setInterestedLabs] = useState([]);
+  const [labsLoading, setLabsLoading] = useState(true);
+  const [userBookmarks, setUserBookmarks] = useState([]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -57,8 +59,69 @@ const MockInterviewBookingPage = () => {
     }
   }, [navigate]);
 
+  // Load lab data and user interests
+  useEffect(() => {
+    const loadLabData = async () => {
+      if (!AuthService.isAuthenticated()) return;
+
+      setLabsLoading(true);
+      try {
+        // Load popular labs (sorted by popularity/bookmark count)
+        console.log('Loading popular labs...');
+        const popularLabs = await SearchService.searchLabs('', {}, 1, 50);
+
+        // Load user's bookmarked labs
+        console.log('Loading user bookmarks...');
+        const bookmarks = await BookmarkService.getUserBookmarks();
+        setUserBookmarks(bookmarks);
+
+        // Transform lab data to include required fields
+        const transformedLabs = popularLabs.results.map(lab => ({
+          id: lab.id,
+          name: lab.labName,
+          university: lab.universityName,
+          professor: lab.professorName,
+          field: lab.researchAreas?.[0] || 'Research',
+          department: lab.department,
+          rating: lab.overallRating,
+          reviewCount: lab.reviewCount,
+          isBookmarked: bookmarks.some(bookmark => bookmark.labId === lab.id)
+        }));
+
+        // Separate interested labs (bookmarked) and other labs
+        const bookmarkedLabs = transformedLabs.filter(lab => lab.isBookmarked);
+        const otherLabs = transformedLabs.filter(lab => !lab.isBookmarked);
+
+        // Sort other labs by rating and review count (popularity)
+        otherLabs.sort((a, b) => {
+          // Primary sort: rating * review count (popularity score)
+          const scoreA = (a.rating || 0) * (a.reviewCount || 0);
+          const scoreB = (b.rating || 0) * (b.reviewCount || 0);
+          if (scoreB !== scoreA) return scoreB - scoreA;
+
+          // Secondary sort: review count
+          return (b.reviewCount || 0) - (a.reviewCount || 0);
+        });
+
+        setInterestedLabs(bookmarkedLabs);
+        setAvailableLabs([...bookmarkedLabs, ...otherLabs]);
+
+        console.log(`Loaded ${bookmarkedLabs.length} interested labs and ${otherLabs.length} other labs`);
+      } catch (error) {
+        console.error('Error loading lab data:', error);
+        // Fallback to empty arrays on error
+        setInterestedLabs([]);
+        setAvailableLabs([]);
+      } finally {
+        setLabsLoading(false);
+      }
+    };
+
+    loadLabData();
+  }, []);
+
   const sessionTypes = {
-    'mock-interview': {
+    'mock_interview': {
       name: 'Mock Interview',
       duration: '60 min',
       basePrice: 100,
@@ -71,7 +134,7 @@ const MockInterviewBookingPage = () => {
         'Follow-up resources'
       ]
     },
-    'qa-session': {
+    'qa_session': {
       name: 'Q&A Session',
       duration: '30 min',
       basePrice: 50,
@@ -100,19 +163,46 @@ const MockInterviewBookingPage = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Submit booking request to API
-    console.log({
-      sessionType,
-      selectedLabs,
-      focusAreas,
-      preferredSlots: preferredSlots.map((slot, idx) => ({ ...slot, priority: idx + 1 })),
-      additionalNotes,
-      totalPrice: calculatePrice()
-    });
-    // Navigate to confirmation or payment
-    alert('Booking request submitted! You will be matched with an interviewer soon.');
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    try {
+      // Get the first valid time slot
+      const validSlots = preferredSlots.filter(slot => slot.date && slot.time);
+      if (validSlots.length === 0) {
+        throw new Error('Please select at least one time slot');
+      }
+
+      // Prepare session data for API
+      const sessionData = {
+        session_type: sessionType,
+        preferred_date: validSlots[0].date,
+        preferred_time: validSlots[0].time + ':00', // Add seconds
+        duration_minutes: sessionType === 'mock_interview' ? 60 : 30,
+        research_area: focusAreas || (selectedLabs.length > 0 ? selectedLabs[0].field : 'General'),
+        notes: `${additionalNotes}${selectedLabs.length > 0 ? `\n\nTarget Labs: ${selectedLabs.map(lab => `${lab.name} (${lab.university})`).join(', ')}` : ''}`
+      };
+
+      console.log('Submitting interview session:', sessionData);
+
+      const result = await InterviewService.createInterviewSession(sessionData);
+
+      console.log('Interview session created:', result);
+
+      // Navigate to confirmation or show success message
+      alert(`Interview session created successfully! Session ID: ${result.id}\nStatus: ${result.status}\nYou will be matched with an interviewer soon.`);
+
+      // Reset form or navigate to management page
+      navigate('/services/mock-interview/sessions');
+
+    } catch (error) {
+      console.error('Error submitting interview booking:', error);
+      setSubmitError(error.message || 'Failed to create interview session. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const filteredLabs = availableLabs.filter(lab =>
@@ -168,6 +258,28 @@ const MockInterviewBookingPage = () => {
         {/* Progress Steps */}
         <ProgressSteps currentStep={currentStep} isMobile={isMobile} />
 
+        {/* Error Message */}
+        {submitError && (
+          <div style={{
+            backgroundColor: '#fee2e2',
+            border: '1px solid #fecaca',
+            borderRadius: '8px',
+            padding: spacing[4],
+            marginBottom: spacing[6],
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing[3]
+          }}>
+            <AlertCircle size={20} color="#dc2626" />
+            <div style={{
+              fontSize: '14px',
+              color: '#dc2626'
+            }}>
+              {submitError}
+            </div>
+          </div>
+        )}
+
         {/* Main Form */}
         <form onSubmit={handleSubmit}>
           {/* Step 1: Session Type */}
@@ -190,6 +302,8 @@ const MockInterviewBookingPage = () => {
               handleLabSelect={handleLabSelect}
               focusAreas={focusAreas}
               setFocusAreas={setFocusAreas}
+              interestedLabs={interestedLabs}
+              labsLoading={labsLoading}
               isMobile={isMobile}
             />
           )}
@@ -273,24 +387,42 @@ const MockInterviewBookingPage = () => {
             ) : (
               <button
                 type="submit"
+                disabled={isSubmitting}
                 style={{
                   flex: 1,
                   padding: `${spacing[4]} ${spacing[6]}`,
-                  backgroundColor: colors.primary,
-                  color: 'white',
+                  backgroundColor: isSubmitting ? colors.backgroundSecondary : colors.primary,
+                  color: isSubmitting ? colors.textTertiary : 'white',
                   border: 'none',
                   borderRadius: '8px',
                   fontSize: '16px',
                   fontWeight: '600',
-                  cursor: 'pointer',
+                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: spacing[2]
+                  gap: spacing[2],
+                  opacity: isSubmitting ? 0.7 : 1
                 }}
               >
-                <CheckCircle size={20} />
-                Confirm Booking
+                {isSubmitting ? (
+                  <>
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      border: '2px solid transparent',
+                      borderTop: '2px solid currentColor',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }} />
+                    Creating Session...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle size={20} />
+                    Confirm Booking
+                  </>
+                )}
               </button>
             )}
           </div>
@@ -525,6 +657,8 @@ const LabSelectionStep = ({
   handleLabSelect,
   focusAreas,
   setFocusAreas,
+  interestedLabs,
+  labsLoading,
   isMobile
 }) => {
   return (
@@ -653,67 +787,106 @@ const LabSelectionStep = ({
 
         {/* Lab List */}
         <div style={{
-          maxHeight: '300px',
+          maxHeight: '400px',
           overflowY: 'auto',
           border: `1px solid ${colors.border}`,
           borderRadius: '8px'
         }}>
-          {filteredLabs.map(lab => {
-            const isSelected = selectedLabs.find(l => l.id === lab.id);
-            const canSelect = selectedLabs.length < 2 || isSelected;
-
-            return (
-              <div
-                key={lab.id}
-                onClick={() => canSelect && handleLabSelect(lab)}
-                style={{
-                  padding: spacing[4],
-                  borderBottom: `1px solid ${colors.border}`,
-                  cursor: canSelect ? 'pointer' : 'not-allowed',
-                  backgroundColor: isSelected ? `${colors.primary}08` : 'white',
-                  opacity: canSelect ? 1 : 0.5,
-                  transition: 'background-color 0.2s ease'
-                }}
-              >
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  justifyContent: 'space-between'
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: colors.textPrimary,
-                      marginBottom: spacing[1]
-                    }}>
-                      {lab.name}
-                    </div>
-                    <div style={{
-                      fontSize: '12px',
-                      color: colors.textSecondary,
-                      marginBottom: spacing[1]
-                    }}>
-                      {lab.university} • {lab.professor}
-                    </div>
-                    <div style={{
-                      fontSize: '12px',
-                      color: colors.primary,
-                      backgroundColor: `${colors.primary}20`,
-                      padding: `${spacing[1]} ${spacing[2]}`,
-                      borderRadius: '4px',
-                      display: 'inline-block'
-                    }}>
-                      {lab.field}
-                    </div>
+          {labsLoading ? (
+            // Loading state
+            <div style={{
+              padding: spacing[8],
+              textAlign: 'center',
+              color: colors.textSecondary
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                border: '3px solid transparent',
+                borderTop: '3px solid currentColor',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto',
+                marginBottom: spacing[3]
+              }} />
+              Loading labs...
+            </div>
+          ) : filteredLabs.length === 0 ? (
+            // No results state
+            <div style={{
+              padding: spacing[8],
+              textAlign: 'center',
+              color: colors.textSecondary
+            }}>
+              <Users size={48} style={{ opacity: 0.5, marginBottom: spacing[3] }} />
+              <div>No labs found matching your search</div>
+            </div>
+          ) : (
+            // Lab list with interested labs first
+            <>
+              {/* Interested Labs Section */}
+              {interestedLabs.length > 0 && !searchQuery && (
+                <>
+                  <div style={{
+                    padding: spacing[3],
+                    backgroundColor: `${colors.success}20`,
+                    borderBottom: `1px solid ${colors.border}`,
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: colors.success,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: spacing[2]
+                  }}>
+                    <CheckCircle size={16} />
+                    Your Interested Labs ({interestedLabs.length})
                   </div>
-                  {isSelected && (
-                    <CheckCircle size={20} color={colors.primary} />
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                  {interestedLabs.map(lab => (
+                    <LabListItem
+                      key={`interested-${lab.id}`}
+                      lab={lab}
+                      selectedLabs={selectedLabs}
+                      handleLabSelect={handleLabSelect}
+                      isInterested={true}
+                    />
+                  ))}
+
+                  {/* Separator */}
+                  <div style={{
+                    padding: spacing[3],
+                    backgroundColor: colors.backgroundSecondary,
+                    borderBottom: `1px solid ${colors.border}`,
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: colors.textSecondary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: spacing[2]
+                  }}>
+                    Popular Labs
+                  </div>
+                </>
+              )}
+
+              {/* All Labs */}
+              {filteredLabs.map(lab => {
+                // Skip if this lab is already shown in interested section
+                if (interestedLabs.some(intLab => intLab.id === lab.id) && !searchQuery) {
+                  return null;
+                }
+
+                return (
+                  <LabListItem
+                    key={lab.id}
+                    lab={lab}
+                    selectedLabs={selectedLabs}
+                    handleLabSelect={handleLabSelect}
+                    isInterested={false}
+                  />
+                );
+              })}
+            </>
+          )}
         </div>
       </div>
 
@@ -751,6 +924,109 @@ const LabSelectionStep = ({
             resize: 'vertical'
           }}
         />
+      </div>
+    </div>
+  );
+};
+
+// Lab List Item Component
+const LabListItem = ({ lab, selectedLabs, handleLabSelect, isInterested }) => {
+  const isSelected = selectedLabs.find(l => l.id === lab.id);
+  const canSelect = selectedLabs.length < 2 || isSelected;
+
+  return (
+    <div
+      onClick={() => canSelect && handleLabSelect(lab)}
+      style={{
+        padding: spacing[4],
+        borderBottom: `1px solid ${colors.border}`,
+        cursor: canSelect ? 'pointer' : 'not-allowed',
+        backgroundColor: isSelected ? `${colors.primary}08` : 'white',
+        opacity: canSelect ? 1 : 0.5,
+        transition: 'background-color 0.2s ease',
+        position: 'relative'
+      }}
+    >
+      {/* Bookmark indicator */}
+      {isInterested && (
+        <div style={{
+          position: 'absolute',
+          top: spacing[2],
+          right: spacing[2],
+          width: '8px',
+          height: '8px',
+          borderRadius: '50%',
+          backgroundColor: colors.success
+        }} />
+      )}
+
+      <div style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between'
+      }}>
+        <div style={{ flex: 1 }}>
+          <div style={{
+            fontSize: '14px',
+            fontWeight: '600',
+            color: colors.textPrimary,
+            marginBottom: spacing[1],
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing[2]
+          }}>
+            {lab.name}
+            {isInterested && (
+              <span style={{
+                fontSize: '10px',
+                backgroundColor: colors.success,
+                color: 'white',
+                padding: '2px 6px',
+                borderRadius: '10px',
+                fontWeight: '500'
+              }}>
+                ★ Interested
+              </span>
+            )}
+          </div>
+          <div style={{
+            fontSize: '12px',
+            color: colors.textSecondary,
+            marginBottom: spacing[1]
+          }}>
+            {lab.university} • {lab.professor}
+          </div>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing[2],
+            marginBottom: spacing[1]
+          }}>
+            <div style={{
+              fontSize: '12px',
+              color: colors.primary,
+              backgroundColor: `${colors.primary}20`,
+              padding: `${spacing[1]} ${spacing[2]}`,
+              borderRadius: '4px'
+            }}>
+              {lab.field}
+            </div>
+            {lab.rating && lab.reviewCount > 0 && (
+              <div style={{
+                fontSize: '11px',
+                color: colors.textTertiary,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                ⭐ {lab.rating.toFixed(1)} ({lab.reviewCount} reviews)
+              </div>
+            )}
+          </div>
+        </div>
+        {isSelected && (
+          <CheckCircle size={20} color={colors.primary} />
+        )}
       </div>
     </div>
   );

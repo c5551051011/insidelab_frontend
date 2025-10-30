@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, BookOpen } from 'lucide-react';
 import { colors, spacing } from '../theme';
+import { ResearchProfileService } from '../services/researchProfileService';
 
 const ResearchInterestsModal = ({ isOpen, onClose, user, onUserUpdate }) => {
   const [researchArea, setResearchArea] = useState('');
   const [specialties, setSpecialties] = useState([]);
+  const [keywords, setKeywords] = useState([]);
+  const [academicBackground, setAcademicBackground] = useState('');
+  const [researchGoals, setResearchGoals] = useState('');
   const [newSpecialty, setNewSpecialty] = useState('');
+  const [newKeyword, setNewKeyword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -18,8 +23,21 @@ const ResearchInterestsModal = ({ isOpen, onClose, user, onUserUpdate }) => {
 
   useEffect(() => {
     if (isOpen && user) {
-      setResearchArea(user.researchArea || '');
-      setSpecialties(user.specialties || []);
+      const researchProfile = user.research_profile;
+      if (researchProfile) {
+        setResearchArea(researchProfile.primary_research_area || '');
+        setSpecialties(researchProfile.specialties_interests || []);
+        setKeywords(researchProfile.research_keywords || []);
+        setAcademicBackground(researchProfile.academic_background || '');
+        setResearchGoals(researchProfile.research_goals || '');
+      } else {
+        // Reset form if no research profile
+        setResearchArea('');
+        setSpecialties([]);
+        setKeywords([]);
+        setAcademicBackground('');
+        setResearchGoals('');
+      }
       setError('');
     }
   }, [isOpen, user]);
@@ -32,8 +50,20 @@ const ResearchInterestsModal = ({ isOpen, onClose, user, onUserUpdate }) => {
     }
   };
 
+  const handleAddKeyword = () => {
+    if (newKeyword.trim() && !keywords.includes(newKeyword.trim())) {
+      setKeywords([...keywords, newKeyword.trim()]);
+      setNewKeyword('');
+      setError('');
+    }
+  };
+
   const handleRemoveSpecialty = (index) => {
     setSpecialties(specialties.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveKeyword = (index) => {
+    setKeywords(keywords.filter((_, i) => i !== index));
   };
 
   const handleSave = async () => {
@@ -41,26 +71,31 @@ const ResearchInterestsModal = ({ isOpen, onClose, user, onUserUpdate }) => {
     setError('');
 
     try {
-      // TODO: Replace with actual API call
-      // await AuthService.updateResearchInterests({
-      //   researchArea,
-      //   specialties
-      // });
+      // Prepare data for API
+      const profileData = {
+        researchArea,
+        specialties,
+        keywords,
+        academicBackground,
+        researchGoals
+      };
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Transform to API format
+      const apiData = ResearchProfileService.transformToApiFormat(profileData);
 
-      // Update user object
+      // Save research profile
+      const savedProfile = await ResearchProfileService.saveResearchProfile(apiData);
+
+      // Update user object with the new research profile
       const updatedUser = {
         ...user,
-        researchArea,
-        specialties
+        research_profile: savedProfile
       };
 
       onUserUpdate(updatedUser);
       onClose();
     } catch (err) {
-      setError('Failed to update research interests. Please try again.');
+      setError(err.message || 'Failed to update research interests. Please try again.');
       console.error('Error updating research interests:', err);
     } finally {
       setLoading(false);
@@ -345,6 +380,224 @@ const ResearchInterestsModal = ({ isOpen, onClose, user, onUserUpdate }) => {
                 marginTop: spacing[2]
               }}>
                 Add multiple specialties to help others find you
+              </p>
+            </div>
+
+            {/* Research Keywords */}
+            <div style={{ marginBottom: spacing[6] }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: spacing[2]
+              }}>
+                Research Keywords
+              </label>
+
+              {/* Add New Keyword */}
+              <div style={{
+                display: 'flex',
+                gap: spacing[2],
+                marginBottom: spacing[4]
+              }}>
+                <input
+                  type="text"
+                  value={newKeyword}
+                  onChange={(e) => setNewKeyword(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddKeyword();
+                    }
+                  }}
+                  placeholder="Add keyword (e.g., neural networks, transformers)"
+                  style={{
+                    flex: 1,
+                    padding: spacing[3],
+                    fontSize: '14px',
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: '8px',
+                    outline: 'none',
+                    fontFamily: 'Inter'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = colors.primary}
+                  onBlur={(e) => e.target.style.borderColor = colors.border}
+                />
+                <button
+                  onClick={handleAddKeyword}
+                  disabled={!newKeyword.trim()}
+                  style={{
+                    padding: `${spacing[3]} ${spacing[4]}`,
+                    backgroundColor: newKeyword.trim() ? colors.primary : colors.backgroundSecondary,
+                    color: newKeyword.trim() ? 'white' : colors.textTertiary,
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: newKeyword.trim() ? 'pointer' : 'not-allowed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: spacing[2],
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <Plus size={16} />
+                  Add
+                </button>
+              </div>
+
+              {/* Keywords List */}
+              {keywords.length > 0 ? (
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: spacing[2]
+                }}>
+                  {keywords.map((keyword, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: spacing[2],
+                        backgroundColor: `${colors.info}20`,
+                        color: colors.info,
+                        padding: `${spacing[2]} ${spacing[3]}`,
+                        borderRadius: '20px',
+                        fontSize: '14px',
+                        border: `1px solid ${colors.info}30`
+                      }}
+                    >
+                      <span>{keyword}</span>
+                      <button
+                        onClick={() => handleRemoveKeyword(index)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: colors.info,
+                          transition: 'color 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => e.target.style.color = colors.danger}
+                        onMouseLeave={(e) => e.target.style.color = colors.info}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{
+                  padding: spacing[6],
+                  textAlign: 'center',
+                  backgroundColor: colors.backgroundSecondary,
+                  borderRadius: '8px',
+                  border: `1px dashed ${colors.border}`
+                }}>
+                  <p style={{
+                    fontSize: '14px',
+                    color: colors.textTertiary,
+                    margin: 0
+                  }}>
+                    No keywords added yet. Add research keywords above.
+                  </p>
+                </div>
+              )}
+
+              <p style={{
+                fontSize: '12px',
+                color: colors.textTertiary,
+                margin: 0,
+                marginTop: spacing[2]
+              }}>
+                Add keywords related to your research for better discoverability
+              </p>
+            </div>
+
+            {/* Academic Background */}
+            <div style={{ marginBottom: spacing[6] }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: spacing[2]
+              }}>
+                Academic Background
+              </label>
+              <textarea
+                value={academicBackground}
+                onChange={(e) => setAcademicBackground(e.target.value)}
+                placeholder="e.g., BS in Computer Science from MIT, currently pursuing MS at Stanford"
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: spacing[3],
+                  fontSize: '14px',
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '8px',
+                  outline: 'none',
+                  fontFamily: 'Inter',
+                  resize: 'vertical',
+                  minHeight: '80px',
+                  transition: 'border-color 0.2s ease'
+                }}
+                onFocus={(e) => e.target.style.borderColor = colors.primary}
+                onBlur={(e) => e.target.style.borderColor = colors.border}
+              />
+              <p style={{
+                fontSize: '12px',
+                color: colors.textTertiary,
+                margin: 0,
+                marginTop: spacing[2]
+              }}>
+                Describe your educational background and current academic status
+              </p>
+            </div>
+
+            {/* Research Goals */}
+            <div style={{ marginBottom: spacing[6] }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: spacing[2]
+              }}>
+                Research Goals
+              </label>
+              <textarea
+                value={researchGoals}
+                onChange={(e) => setResearchGoals(e.target.value)}
+                placeholder="e.g., Pursuing PhD in AI/ML with focus on computer vision and autonomous systems"
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: spacing[3],
+                  fontSize: '14px',
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '8px',
+                  outline: 'none',
+                  fontFamily: 'Inter',
+                  resize: 'vertical',
+                  minHeight: '80px',
+                  transition: 'border-color 0.2s ease'
+                }}
+                onFocus={(e) => e.target.style.borderColor = colors.primary}
+                onBlur={(e) => e.target.style.borderColor = colors.border}
+              />
+              <p style={{
+                fontSize: '12px',
+                color: colors.textTertiary,
+                margin: 0,
+                marginTop: spacing[2]
+              }}>
+                Share your research aspirations and career goals
               </p>
             </div>
           </div>
