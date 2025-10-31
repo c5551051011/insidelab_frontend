@@ -31,7 +31,7 @@ const MockInterviewBookingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [selectedLabs, setSelectedLabs] = useState([]);
-  const [selectedResearchArea, setSelectedResearchArea] = useState(null);
+  const [selectedResearchAreas, setSelectedResearchAreas] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [focusAreas, setFocusAreas] = useState('');
   const [preferredSlots, setPreferredSlots] = useState([
@@ -50,6 +50,12 @@ const MockInterviewBookingPage = () => {
   const [researchAreas, setResearchAreas] = useState([]);
   const [researchAreasLoading, setResearchAreasLoading] = useState(true);
 
+  // University and department selection
+  const [selectedUniversity, setSelectedUniversity] = useState(null);
+  const [selectedDepartment, setSelectedDepartment] = useState(null);
+  const [availableUniversities, setAvailableUniversities] = useState([]);
+  const [availableDepartments, setAvailableDepartments] = useState([]);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
@@ -63,85 +69,146 @@ const MockInterviewBookingPage = () => {
     }
   }, [navigate]);
 
-  // Load lab data and user interests
+  // Load universities on component mount
   useEffect(() => {
-    const loadLabData = async () => {
-      if (!AuthService.isAuthenticated()) return;
-
-      setLabsLoading(true);
+    const loadUniversities = async () => {
       try {
-        // Load popular labs (sorted by popularity/bookmark count)
-        console.log('Loading popular labs...');
-        const popularLabs = await SearchService.searchLabs('', {}, 1, 50);
-
-        // Load user's bookmarked labs
-        console.log('Loading user bookmarks...');
-        const bookmarks = await BookmarkService.getUserBookmarks();
-
-        // Transform lab data to include required fields
-        const transformedLabs = popularLabs.results.map(lab => ({
-          id: lab.id,
-          name: lab.labName,
-          university: lab.universityName,
-          professor: lab.professorName,
-          field: lab.researchAreas?.[0] || 'Research',
-          department: lab.department,
-          rating: lab.overallRating,
-          reviewCount: lab.reviewCount,
-          isBookmarked: bookmarks.some(bookmark => bookmark.labId === lab.id)
-        }));
-
-        // Separate interested labs (bookmarked) and other labs
-        const bookmarkedLabs = transformedLabs.filter(lab => lab.isBookmarked);
-        const otherLabs = transformedLabs.filter(lab => !lab.isBookmarked);
-
-        // Sort other labs by rating and review count (popularity)
-        otherLabs.sort((a, b) => {
-          // Primary sort: rating * review count (popularity score)
-          const scoreA = (a.rating || 0) * (a.reviewCount || 0);
-          const scoreB = (b.rating || 0) * (b.reviewCount || 0);
-          if (scoreB !== scoreA) return scoreB - scoreA;
-
-          // Secondary sort: review count
-          return (b.reviewCount || 0) - (a.reviewCount || 0);
-        });
-
-        setInterestedLabs(bookmarkedLabs);
-        setAvailableLabs([...bookmarkedLabs, ...otherLabs]);
-
-        console.log(`Loaded ${bookmarkedLabs.length} interested labs and ${otherLabs.length} other labs`);
+        console.log('Loading universities...');
+        const universities = await SearchService.getUniversities();
+        setAvailableUniversities(universities);
+        console.log(`Loaded ${universities.length} universities`);
       } catch (error) {
-        console.error('Error loading lab data:', error);
-        // Fallback to empty arrays on error
-        setInterestedLabs([]);
-        setAvailableLabs([]);
-      } finally {
-        setLabsLoading(false);
+        console.error('Error loading universities:', error);
       }
     };
 
-    loadLabData();
+    loadUniversities();
   }, []);
 
-  // Load research areas
+  // Load departments when university is selected
   useEffect(() => {
-    const loadResearchAreas = async () => {
-      setResearchAreasLoading(true);
-      try {
-        console.log('Loading research areas...');
-        const areas = await InterviewService.getResearchAreas();
-        setResearchAreas(areas || []);
-        console.log(`Loaded ${areas?.length || 0} research areas`);
-      } catch (error) {
-        console.error('Error loading research areas:', error);
-        setResearchAreas([]);
-      } finally {
-        setResearchAreasLoading(false);
-      }
-    };
+    if (selectedUniversity) {
+      const loadDepartments = async () => {
+        try {
+          console.log('Loading departments for university ID:', selectedUniversity.id);
+          const departments = await SearchService.getDepartments(selectedUniversity.id);
+          setAvailableDepartments(departments);
+          setSelectedDepartment(null); // Reset department selection
+          console.log(`Loaded ${departments.length} departments`);
+        } catch (error) {
+          console.error('Error loading departments:', error);
+        }
+      };
 
-    loadResearchAreas();
-  }, []);
+      loadDepartments();
+    } else {
+      setAvailableDepartments([]);
+      setSelectedDepartment(null);
+    }
+  }, [selectedUniversity]);
+
+  // Load lab data when both university and department are selected
+  useEffect(() => {
+    if (selectedUniversity && selectedDepartment) {
+      const loadLabData = async () => {
+        if (!AuthService.isAuthenticated()) return;
+
+        setLabsLoading(true);
+        try {
+          // Load labs filtered by university and department
+          console.log(`Loading labs for ${selectedUniversity.name} - ${selectedDepartment.name}...`);
+          const filteredLabs = await SearchService.getLabsByUniversityAndDepartment(selectedUniversity.name, selectedDepartment.name, 1, 50);
+
+          // Load user's bookmarked labs
+          console.log('Loading user bookmarks...');
+          const bookmarks = await BookmarkService.getLabInterests();
+
+          // Transform lab data to include required fields
+          const transformedLabs = filteredLabs.results.map(lab => ({
+            id: lab.id,
+            name: lab.labName,
+            university: lab.universityName,
+            professor: lab.professorName,
+            field: lab.researchAreas?.[0] || 'Research',
+            department: lab.department,
+            rating: lab.overallRating,
+            reviewCount: lab.reviewCount,
+            isBookmarked: bookmarks.some(bookmark => bookmark.labId === lab.id.toString())
+          }));
+
+          // Separate interested labs (bookmarked) and other labs
+          const bookmarkedLabs = transformedLabs.filter(lab => lab.isBookmarked);
+          const otherLabs = transformedLabs.filter(lab => !lab.isBookmarked);
+
+          // Sort other labs by rating and review count (popularity)
+          otherLabs.sort((a, b) => {
+            // Primary sort: rating * review count (popularity score)
+            const scoreA = (a.rating || 0) * (a.reviewCount || 0);
+            const scoreB = (b.rating || 0) * (b.reviewCount || 0);
+            if (scoreB !== scoreA) return scoreB - scoreA;
+
+            // Secondary sort: review count
+            return (b.reviewCount || 0) - (a.reviewCount || 0);
+          });
+
+          setInterestedLabs(bookmarkedLabs);
+          setAvailableLabs([...bookmarkedLabs, ...otherLabs]);
+
+          console.log(`Loaded ${bookmarkedLabs.length} interested labs and ${otherLabs.length} other labs for ${selectedUniversity.name} - ${selectedDepartment.name}`);
+        } catch (error) {
+          console.error('Error loading lab data:', error);
+          // Fallback to empty arrays on error
+          setInterestedLabs([]);
+          setAvailableLabs([]);
+        } finally {
+          setLabsLoading(false);
+        }
+      };
+
+      loadLabData();
+    } else {
+      // Clear lab data when university or department is not selected
+      setAvailableLabs([]);
+      setInterestedLabs([]);
+      setSelectedLabs([]);
+    }
+  }, [selectedUniversity, selectedDepartment]);
+
+  // Load research areas when department is selected
+  useEffect(() => {
+    if (selectedDepartment) {
+      const loadResearchAreas = async () => {
+        setResearchAreasLoading(true);
+        try {
+          // Use department_id (selectedDepartment.department) instead of university_department_id (selectedDepartment.id)
+          const departmentId = selectedDepartment.department;
+          console.log('Loading research areas for department_id:', departmentId, '(university_department_id:', selectedDepartment.id, ')');
+          const areas = await SearchService.getResearchAreasByDepartment(departmentId);
+
+          // Ensure we always set an array
+          if (Array.isArray(areas)) {
+            setResearchAreas(areas);
+            console.log(`Loaded ${areas.length} research areas for department ${selectedDepartment.name}`);
+          } else {
+            console.warn('Research areas response is not an array:', areas);
+            setResearchAreas([]);
+          }
+        } catch (error) {
+          console.error('Error loading research areas:', error);
+          setResearchAreas([]);
+        } finally {
+          setResearchAreasLoading(false);
+        }
+      };
+
+      loadResearchAreas();
+    } else {
+      // Clear research areas when no department is selected
+      setResearchAreas([]);
+      setSelectedResearchAreas([]);
+      setResearchAreasLoading(false);
+    }
+  }, [selectedDepartment]);
 
   const sessionTypes = {
     'mock_interview': {
@@ -196,7 +263,7 @@ const MockInterviewBookingPage = () => {
       const bookingData = {
         sessionType,
         selectedLabs: selectedLabs.map(lab => lab.id),
-        researchAreaId: selectedResearchArea?.id || null,
+        researchAreaIds: selectedResearchAreas.map(area => area.id),
         focusAreas,
         preferredSlots,
         additionalNotes,
@@ -229,16 +296,18 @@ const MockInterviewBookingPage = () => {
   };
 
   const filteredLabs = availableLabs.filter(lab =>
-    lab.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lab.university.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lab.professor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    lab.field.toLowerCase().includes(searchQuery.toLowerCase())
+    (lab.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (lab.university || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (lab.professor || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (lab.field || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const canProceed = () => {
-    if (currentStep === 1) return sessionType;
-    if (currentStep === 2) return selectedLabs.length > 0;
-    if (currentStep === 3) {
+    if (currentStep === 1) return selectedUniversity && selectedDepartment;
+    if (currentStep === 2) return sessionType;
+    if (currentStep === 3) return selectedResearchAreas.length > 0;
+    if (currentStep === 4) return selectedLabs.length > 0;
+    if (currentStep === 5) {
       // At least one complete time slot required
       return preferredSlots.some(slot => slot.date && slot.time);
     }
@@ -305,8 +374,21 @@ const MockInterviewBookingPage = () => {
 
         {/* Main Form */}
         <form onSubmit={handleSubmit}>
-          {/* Step 1: Session Type */}
+          {/* Step 1: University & Department Selection */}
           {currentStep === 1 && (
+            <UniversityDepartmentStep
+              selectedUniversity={selectedUniversity}
+              setSelectedUniversity={setSelectedUniversity}
+              selectedDepartment={selectedDepartment}
+              setSelectedDepartment={setSelectedDepartment}
+              availableUniversities={availableUniversities}
+              availableDepartments={availableDepartments}
+              isMobile={isMobile}
+            />
+          )}
+
+          {/* Step 2: Session Type */}
+          {currentStep === 2 && (
             <SessionTypeStep
               sessionTypes={sessionTypes}
               sessionType={sessionType}
@@ -315,16 +397,29 @@ const MockInterviewBookingPage = () => {
             />
           )}
 
-          {/* Step 2: Lab Selection */}
-          {currentStep === 2 && (
+          {/* Step 3: Research Area */}
+          {currentStep === 3 && (
+            <ResearchAreaStep
+              selectedResearchAreas={selectedResearchAreas}
+              setSelectedResearchAreas={setSelectedResearchAreas}
+              researchAreas={researchAreas}
+              researchAreasLoading={researchAreasLoading}
+              focusAreas={focusAreas}
+              setFocusAreas={setFocusAreas}
+              isMobile={isMobile}
+            />
+          )}
+
+          {/* Step 4: Lab Selection */}
+          {currentStep === 4 && (
             <LabSelectionStep
               selectedLabs={selectedLabs}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               filteredLabs={filteredLabs}
               handleLabSelect={handleLabSelect}
-              selectedResearchArea={selectedResearchArea}
-              setSelectedResearchArea={setSelectedResearchArea}
+              selectedResearchAreas={selectedResearchAreas}
+              setSelectedResearchArea={setSelectedResearchAreas}
               researchAreas={researchAreas}
               researchAreasLoading={researchAreasLoading}
               focusAreas={focusAreas}
@@ -335,8 +430,8 @@ const MockInterviewBookingPage = () => {
             />
           )}
 
-          {/* Step 3: Schedule */}
-          {currentStep === 3 && (
+          {/* Step 5: Schedule */}
+          {currentStep === 5 && (
             <ScheduleStep
               preferredSlots={preferredSlots}
               setPreferredSlots={setPreferredSlots}
@@ -346,13 +441,13 @@ const MockInterviewBookingPage = () => {
             />
           )}
 
-          {/* Step 4: Review */}
-          {currentStep === 4 && (
+          {/* Step 6: Review */}
+          {currentStep === 6 && (
             <ReviewStep
               sessionType={sessionType}
               sessionTypes={sessionTypes}
               selectedLabs={selectedLabs}
-              selectedResearchArea={selectedResearchArea}
+              selectedResearchAreas={selectedResearchAreas}
               focusAreas={focusAreas}
               preferredSlots={preferredSlots}
               additionalNotes={additionalNotes}
@@ -388,7 +483,7 @@ const MockInterviewBookingPage = () => {
               </button>
             )}
 
-            {currentStep < 4 ? (
+            {currentStep < 6 ? (
               <button
                 type="button"
                 onClick={() => setCurrentStep(currentStep + 1)}
@@ -465,10 +560,12 @@ const MockInterviewBookingPage = () => {
 // Progress Steps Component
 const ProgressSteps = ({ currentStep, isMobile }) => {
   const steps = [
-    { number: 1, label: 'Type' },
-    { number: 2, label: 'Labs' },
-    { number: 3, label: 'Schedule' },
-    { number: 4, label: 'Review' }
+    { number: 1, label: 'University' },
+    { number: 2, label: 'Type' },
+    { number: 3, label: 'Research' },
+    { number: 4, label: 'Labs' },
+    { number: 5, label: 'Schedule' },
+    { number: 6, label: 'Review' }
   ];
 
   return (
@@ -683,7 +780,7 @@ const LabSelectionStep = ({
   setSearchQuery,
   filteredLabs,
   handleLabSelect,
-  selectedResearchArea,
+  selectedResearchAreas,
   setSelectedResearchArea,
   researchAreas,
   researchAreasLoading,
@@ -973,7 +1070,7 @@ const LabSelectionStep = ({
             borderRadius: '8px',
             backgroundColor: colors.backgroundSecondary
           }}>
-            {researchAreas.length === 0 ? (
+            {!Array.isArray(researchAreas) || researchAreas.length === 0 ? (
               <div style={{
                 gridColumn: '1 / -1',
                 padding: spacing[4],
@@ -985,7 +1082,7 @@ const LabSelectionStep = ({
               </div>
             ) : (
               researchAreas.map(area => {
-                const isSelected = selectedResearchArea?.id === area.id;
+                const isSelected = selectedResearchAreas.some(selected => selected.id === area.id);
                 return (
                   <div
                     key={area.id}
@@ -1032,7 +1129,7 @@ const LabSelectionStep = ({
           </div>
         )}
 
-        {selectedResearchArea && (
+        {selectedResearchAreas.length > 0 && (
           <div style={{
             marginTop: spacing[3],
             padding: spacing[3],
@@ -1045,7 +1142,7 @@ const LabSelectionStep = ({
             color: colors.success
           }}>
             <CheckCircle size={16} />
-            Selected: {selectedResearchArea.name}
+            Selected: {selectedResearchAreas.map(area => area.name).join(', ')}
           </div>
         )}
       </div>
@@ -1403,7 +1500,7 @@ const ReviewStep = ({
   sessionType,
   sessionTypes,
   selectedLabs,
-  selectedResearchArea,
+  selectedResearchAreas,
   focusAreas,
   preferredSlots,
   additionalNotes,
@@ -1545,7 +1642,7 @@ const ReviewStep = ({
       )}
 
       {/* Research Area */}
-      {selectedResearchArea && (
+      {selectedResearchAreas.length > 0 && (
         <div style={{
           padding: spacing[5],
           backgroundColor: colors.backgroundSecondary,
@@ -1569,17 +1666,17 @@ const ReviewStep = ({
             <div style={{
               fontWeight: '600',
               color: colors.textPrimary,
-              marginBottom: selectedResearchArea.description ? spacing[1] : 0
+              marginBottom: spacing[1]
             }}>
-              {selectedResearchArea.name}
+              {selectedResearchAreas.map(area => area.name).join(', ')}
             </div>
-            {selectedResearchArea.description && (
+            {selectedResearchAreas.length === 1 && selectedResearchAreas[0].description && (
               <div style={{
                 fontSize: '12px',
                 color: colors.textSecondary,
                 lineHeight: 1.4
               }}>
-                {selectedResearchArea.description}
+                {selectedResearchAreas[0].description}
               </div>
             )}
           </div>
@@ -1751,6 +1848,721 @@ const ReviewStep = ({
             ${calculatePrice()}
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// University & Department Selection Step
+const UniversityDepartmentStep = ({
+  selectedUniversity,
+  setSelectedUniversity,
+  selectedDepartment,
+  setSelectedDepartment,
+  availableUniversities,
+  availableDepartments,
+  isMobile
+}) => {
+  return (
+    <div style={{ marginBottom: spacing[8] }}>
+      <h2 style={{
+        fontSize: isMobile ? '20px' : '24px',
+        fontWeight: '700',
+        color: colors.textPrimary,
+        marginBottom: spacing[2],
+        fontFamily: 'Inter'
+      }}>
+        Choose University & Department
+      </h2>
+      <p style={{
+        fontSize: isMobile ? '14px' : '16px',
+        color: colors.textSecondary,
+        marginBottom: spacing[6],
+        fontFamily: 'Inter'
+      }}>
+        Select the university and department you're interested in for your mock interview
+      </p>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+        gap: spacing[4],
+        marginBottom: spacing[6]
+      }}>
+        {/* University Selection */}
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: colors.textPrimary,
+            marginBottom: spacing[2],
+            fontFamily: 'Inter'
+          }}>
+            University *
+          </label>
+          <select
+            value={selectedUniversity?.id || ''}
+            onChange={(e) => {
+              const universityId = e.target.value;
+              const university = availableUniversities.find(uni => uni.id.toString() === universityId);
+              setSelectedUniversity(university || null);
+            }}
+            style={{
+              width: '100%',
+              padding: spacing[3],
+              border: `1px solid ${colors.border}`,
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontFamily: 'Inter',
+              backgroundColor: 'white',
+              color: colors.textPrimary
+            }}
+          >
+            <option value="">Select University</option>
+            {availableUniversities.map(university => (
+              <option key={university.id} value={university.id}>
+                {university.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Department Selection */}
+        <div>
+          <label style={{
+            display: 'block',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: colors.textPrimary,
+            marginBottom: spacing[2],
+            fontFamily: 'Inter'
+          }}>
+            Department *
+          </label>
+          <select
+            value={selectedDepartment?.id || ''}
+            onChange={(e) => {
+              const departmentId = e.target.value;
+              const department = availableDepartments.find(dept => dept.id.toString() === departmentId);
+              setSelectedDepartment(department || null);
+            }}
+            disabled={!selectedUniversity}
+            style={{
+              width: '100%',
+              padding: spacing[3],
+              border: `1px solid ${colors.border}`,
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontFamily: 'Inter',
+              backgroundColor: selectedUniversity ? 'white' : colors.backgroundSecondary,
+              color: selectedUniversity ? colors.textPrimary : colors.textTertiary,
+              cursor: selectedUniversity ? 'pointer' : 'not-allowed'
+            }}
+          >
+            <option value="">Select Department</option>
+            {availableDepartments.map(department => (
+              <option key={department.id} value={department.id}>
+                {department.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Research Area Selection Step (extracted from original LabSelectionStep)
+const ResearchAreaStep = ({
+  selectedResearchAreas,
+  setSelectedResearchAreas,
+  researchAreas,
+  researchAreasLoading,
+  focusAreas,
+  setFocusAreas,
+  isMobile
+}) => {
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customAreaName, setCustomAreaName] = useState('');
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleCustomAreaSearch = async (query) => {
+    setCustomAreaName(query);
+
+    if (query.trim().length > 2) {
+      setIsSearching(true);
+      try {
+        const suggestions = await SearchService.searchResearchAreas(query);
+        setSearchSuggestions(suggestions);
+      } catch (error) {
+        console.error('Error searching research areas:', error);
+        setSearchSuggestions([]);
+      } finally {
+        setIsSearching(false);
+      }
+    } else {
+      setSearchSuggestions([]);
+    }
+  };
+
+  const handleAreaToggle = (area) => {
+    const isSelected = selectedResearchAreas.some(selected => selected.id === area.id);
+
+    if (isSelected) {
+      // Remove from selection
+      setSelectedResearchAreas(prev => prev.filter(selected => selected.id !== area.id));
+    } else {
+      // Add to selection (max 3)
+      if (selectedResearchAreas.length < 3) {
+        setSelectedResearchAreas(prev => [...prev, area]);
+      }
+    }
+  };
+
+  const handleCustomAreaAdd = () => {
+    console.log('DEBUG: handleCustomAreaAdd called with customAreaName:', customAreaName);
+    if (customAreaName.trim() && selectedResearchAreas.length < 3) {
+      const customArea = {
+        id: `custom_${Date.now()}`,
+        name: customAreaName.trim(),
+        description: 'Custom research area'
+      };
+      console.log('DEBUG: Creating custom area:', customArea);
+      setSelectedResearchAreas(prev => [...prev, customArea]);
+      setCustomAreaName('');
+      setShowCustomInput(false);
+      setSearchSuggestions([]);
+      console.log('DEBUG: Custom area added successfully');
+    } else {
+      console.log('DEBUG: customAreaName is empty or max limit reached');
+    }
+  };
+
+  const handleSuggestionSelect = (suggestion) => {
+    if (selectedResearchAreas.length < 3) {
+      setSelectedResearchAreas(prev => [...prev, suggestion]);
+    }
+    setCustomAreaName('');
+    setShowCustomInput(false);
+    setSearchSuggestions([]);
+  };
+
+  return (
+    <div style={{ marginBottom: spacing[8] }}>
+      <h2 style={{
+        fontSize: isMobile ? '20px' : '24px',
+        fontWeight: '700',
+        color: colors.textPrimary,
+        marginBottom: spacing[2],
+        fontFamily: 'Inter'
+      }}>
+        Select Research Areas
+      </h2>
+      <p style={{
+        fontSize: isMobile ? '14px' : '16px',
+        color: colors.textSecondary,
+        marginBottom: spacing[6],
+        fontFamily: 'Inter'
+      }}>
+        Choose 1-3 research areas of interest. Selected: {selectedResearchAreas.length}/3
+      </p>
+
+      {/* Selected Research Areas Display */}
+      {selectedResearchAreas.length > 0 && (
+        <div style={{ marginBottom: spacing[6] }}>
+          <div style={{
+            fontSize: '14px',
+            fontWeight: '600',
+            color: colors.textPrimary,
+            marginBottom: spacing[3],
+            fontFamily: 'Inter'
+          }}>
+            Selected Research Areas ({selectedResearchAreas.length}/3)
+          </div>
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: spacing[2]
+          }}>
+            {selectedResearchAreas.map(area => (
+              <div key={`selected-${area.id}`} style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: `${spacing[2]} ${spacing[3]}`,
+                backgroundColor: colors.primary,
+                color: 'white',
+                borderRadius: '20px',
+                fontSize: '12px',
+                fontWeight: '500',
+                fontFamily: 'Inter',
+                gap: spacing[2]
+              }}>
+                {area.name}
+                <button
+                  onClick={() => handleAreaToggle(area)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'white',
+                    cursor: 'pointer',
+                    padding: '2px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '14px',
+                    lineHeight: 1
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Research Area Selection */}
+      <div style={{ marginBottom: spacing[6] }}>
+        <label style={{
+          display: 'block',
+          fontSize: '14px',
+          fontWeight: '600',
+          color: colors.textPrimary,
+          marginBottom: spacing[3],
+          fontFamily: 'Inter'
+        }}>
+          Research Area *
+        </label>
+
+        {researchAreasLoading ? (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: spacing[6],
+            color: colors.textSecondary
+          }}>
+            <div style={{
+              width: '20px',
+              height: '20px',
+              border: `2px solid ${colors.border}`,
+              borderTop: `2px solid ${colors.primary}`,
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto',
+              marginBottom: spacing[2]
+            }} />
+            Loading research areas...
+          </div>
+        ) : (
+          <div>
+            {/* Popular Research Areas */}
+            {Array.isArray(researchAreas) && researchAreas.length >= 3 && (
+              <div style={{ marginBottom: spacing[4] }}>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  marginBottom: spacing[3],
+                  fontFamily: 'Inter'
+                }}>
+                  Popular Research Areas
+                </div>
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: spacing[2]
+                }}>
+                  {researchAreas.slice(0, Math.min(6, researchAreas.length)).map(area => {
+                    const isSelected = selectedResearchAreas.some(selected => selected.id === area.id);
+                    const canSelect = !isSelected && selectedResearchAreas.length < 3;
+                    return (
+                      <button
+                        key={`popular-${area.id}`}
+                        onClick={() => handleAreaToggle(area)}
+                        disabled={!isSelected && selectedResearchAreas.length >= 3}
+                        style={{
+                          padding: `${spacing[2]} ${spacing[3]}`,
+                          backgroundColor: isSelected ? colors.primary : 'white',
+                          color: isSelected ? 'white' : colors.textPrimary,
+                          border: `1px solid ${isSelected ? colors.primary : colors.border}`,
+                          borderRadius: '20px',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          cursor: (isSelected || canSelect) ? 'pointer' : 'not-allowed',
+                          transition: 'all 0.2s ease',
+                          fontFamily: 'Inter',
+                          position: 'relative',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: spacing[1],
+                          opacity: (!isSelected && selectedResearchAreas.length >= 3) ? 0.5 : 1
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isSelected && canSelect) {
+                            e.target.style.backgroundColor = colors.primary;
+                            e.target.style.color = 'white';
+                            e.target.style.borderColor = colors.primary;
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isSelected && canSelect) {
+                            e.target.style.backgroundColor = 'white';
+                            e.target.style.color = colors.textPrimary;
+                            e.target.style.borderColor = colors.border;
+                          }
+                        }}
+                      >
+                        {area.name}
+                        {isSelected && (
+                          <span style={{ fontSize: '14px', lineHeight: 1 }}>×</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* All Research Areas */}
+            {Array.isArray(researchAreas) && researchAreas.length > 6 && (
+              <div style={{ marginBottom: spacing[4] }}>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  marginBottom: spacing[3],
+                  fontFamily: 'Inter'
+                }}>
+                  All Research Areas ({researchAreas.length})
+                </div>
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: spacing[2],
+                  maxHeight: '200px',
+                  overflowY: 'auto',
+                  padding: spacing[2],
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '8px',
+                  backgroundColor: colors.backgroundLight
+                }}>
+                  {researchAreas.map(area => {
+                    const isSelected = selectedResearchAreas.some(selected => selected.id === area.id);
+                    const canSelect = !isSelected && selectedResearchAreas.length < 3;
+                    return (
+                      <button
+                        key={area.id}
+                        onClick={() => handleAreaToggle(area)}
+                        disabled={!isSelected && selectedResearchAreas.length >= 3}
+                        style={{
+                          padding: `${spacing[2]} ${spacing[3]}`,
+                          backgroundColor: isSelected ? colors.primary : 'white',
+                          color: isSelected ? 'white' : colors.textPrimary,
+                          border: `1px solid ${isSelected ? colors.primary : colors.border}`,
+                          borderRadius: '20px',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          cursor: (isSelected || canSelect) ? 'pointer' : 'not-allowed',
+                          transition: 'all 0.2s ease',
+                          fontFamily: 'Inter',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: spacing[1],
+                          opacity: (!isSelected && selectedResearchAreas.length >= 3) ? 0.5 : 1
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isSelected && canSelect) {
+                            e.target.style.backgroundColor = colors.primary;
+                            e.target.style.color = 'white';
+                            e.target.style.borderColor = colors.primary;
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isSelected && canSelect) {
+                            e.target.style.backgroundColor = 'white';
+                            e.target.style.color = colors.textPrimary;
+                            e.target.style.borderColor = colors.border;
+                          }
+                        }}
+                      >
+                        {area.name}
+                        {isSelected && (
+                          <span style={{ fontSize: '14px', lineHeight: 1 }}>×</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Add Custom Research Area Button */}
+            <div>
+              <button
+                onClick={() => setShowCustomInput(!showCustomInput)}
+                disabled={selectedResearchAreas.length >= 3}
+                style={{
+                  padding: `${spacing[2]} ${spacing[3]}`,
+                  backgroundColor: selectedResearchAreas.length >= 3 ? colors.backgroundSecondary : colors.backgroundLight,
+                  border: `2px dashed ${colors.border}`,
+                  borderRadius: '20px',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  color: selectedResearchAreas.length >= 3 ? colors.textTertiary : colors.primary,
+                  cursor: selectedResearchAreas.length >= 3 ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontFamily: 'Inter',
+                  opacity: selectedResearchAreas.length >= 3 ? 0.5 : 1
+                }}
+              >
+                + Add Custom Research Area {selectedResearchAreas.length >= 3 && '(Limit reached)'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+
+      {/* Custom Research Area Input */}
+      {showCustomInput && (
+        <div style={{
+          marginBottom: spacing[6],
+          padding: spacing[4],
+          backgroundColor: colors.backgroundLight,
+          border: `1px solid ${colors.border}`,
+          borderRadius: '8px'
+        }}>
+          <label style={{
+            display: 'block',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: colors.textPrimary,
+            marginBottom: spacing[2],
+            fontFamily: 'Inter'
+          }}>
+            Enter Custom Research Area
+          </label>
+          <div style={{
+            display: 'flex',
+            gap: spacing[2]
+          }}>
+            <div style={{ flex: 1, position: 'relative' }}>
+              <input
+                type="text"
+                value={customAreaName}
+                onChange={(e) => handleCustomAreaSearch(e.target.value)}
+                placeholder="e.g., Quantum Machine Learning, Computational Biology..."
+                style={{
+                  width: '100%',
+                  padding: spacing[3],
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontFamily: 'Inter',
+                  backgroundColor: 'white'
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleCustomAreaAdd();
+                  }
+                }}
+              />
+
+              {/* Search Suggestions */}
+              {(isSearching || searchSuggestions.length > 0) && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  backgroundColor: 'white',
+                  border: `1px solid ${colors.border}`,
+                  borderTop: 'none',
+                  borderRadius: '0 0 8px 8px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  zIndex: 1000,
+                  maxHeight: '200px',
+                  overflowY: 'auto'
+                }}>
+                  {isSearching && (
+                    <div style={{
+                      padding: spacing[3],
+                      color: colors.textSecondary,
+                      fontSize: '14px',
+                      textAlign: 'center'
+                    }}>
+                      Searching...
+                    </div>
+                  )}
+
+                  {searchSuggestions.map(suggestion => (
+                    <div
+                      key={suggestion.id}
+                      onClick={() => handleSuggestionSelect(suggestion)}
+                      style={{
+                        padding: spacing[3],
+                        borderBottom: `1px solid ${colors.border}`,
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontFamily: 'Inter',
+                        transition: 'background-color 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = colors.backgroundLight;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'white';
+                      }}
+                    >
+                      <div style={{ fontWeight: '600', color: colors.textPrimary }}>
+                        {suggestion.name}
+                      </div>
+                      <div style={{ fontSize: '12px', color: colors.textSecondary }}>
+                        Click to select existing research area
+                      </div>
+                    </div>
+                  ))}
+
+                  {!isSearching && searchSuggestions.length === 0 && customAreaName.trim().length > 2 && (
+                    <div style={{
+                      padding: spacing[3],
+                      color: colors.textSecondary,
+                      fontSize: '14px',
+                      textAlign: 'center'
+                    }}>
+                      No existing research areas found. Click "Add" to create new one.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={handleCustomAreaAdd}
+              disabled={!customAreaName.trim()}
+              style={{
+                padding: `${spacing[3]} ${spacing[4]}`,
+                backgroundColor: customAreaName.trim() ? colors.primary : colors.backgroundSecondary,
+                color: customAreaName.trim() ? 'white' : colors.textTertiary,
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: customAreaName.trim() ? 'pointer' : 'not-allowed',
+                fontFamily: 'Inter',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Add
+            </button>
+            <button
+              onClick={() => {
+                setShowCustomInput(false);
+                setCustomAreaName('');
+                setSearchSuggestions([]);
+              }}
+              style={{
+                padding: `${spacing[3]} ${spacing[4]}`,
+                backgroundColor: 'white',
+                color: colors.textSecondary,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                fontFamily: 'Inter',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* This section is no longer needed as custom areas are shown as pills */}
+      {false && (
+        <div style={{
+          marginBottom: spacing[6],
+          padding: spacing[3],
+          backgroundColor: `${colors.success}20`,
+          border: `2px solid ${colors.success}`,
+          borderRadius: '8px'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: colors.success,
+                marginBottom: spacing[1],
+                fontFamily: 'Inter'
+              }}>
+                Custom Research Area Selected
+              </div>
+              <div style={{
+                fontSize: '16px',
+                fontWeight: '700',
+                color: colors.textPrimary,
+                fontFamily: 'Inter'
+              }}>
+                {/* This is no longer used */}
+              </div>
+            </div>
+            <button
+              onClick={() => {/* This is no longer used */}}
+              style={{
+                padding: spacing[2],
+                backgroundColor: 'white',
+                color: colors.textSecondary,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '6px',
+                fontSize: '12px',
+                cursor: 'pointer',
+                fontFamily: 'Inter'
+              }}
+            >
+              Remove
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Focus Areas Text Input */}
+      <div>
+        <label style={{
+          display: 'block',
+          fontSize: '14px',
+          fontWeight: '600',
+          color: colors.textPrimary,
+          marginBottom: spacing[2],
+          fontFamily: 'Inter'
+        }}>
+          Specific Focus Areas (Optional)
+        </label>
+        <textarea
+          value={focusAreas}
+          onChange={(e) => setFocusAreas(e.target.value)}
+          placeholder="e.g., Natural Language Processing, Computer Vision, Reinforcement Learning..."
+          style={{
+            width: '100%',
+            minHeight: '80px',
+            padding: spacing[3],
+            border: `1px solid ${colors.border}`,
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontFamily: 'Inter',
+            resize: 'vertical',
+            backgroundColor: 'white'
+          }}
+        />
       </div>
     </div>
   );

@@ -780,4 +780,139 @@ export class SearchService {
       'Diverse Team'
     ];
   }
+
+  // Get available universities with IDs and names
+  static async getUniversities() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/universities/?fields=minimal`);
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Universities API response:', data);
+
+      // Extract universities from paginated response
+      const universities = data.results || [];
+      console.log(`Loaded ${universities.length} universities:`, universities);
+
+      // Return universities with both id and name
+      return universities.map(uni => ({
+        id: uni.id,
+        name: uni.name
+      })).sort((a, b) => a.name.localeCompare(b.name));
+    } catch (error) {
+      console.error('Error fetching universities:', error);
+      return [];
+    }
+  }
+
+  // Get departments for a specific university using university ID
+  static async getDepartments(universityId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/universities/${universityId}/departments/?fields=minimal`);
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const departments = await response.json();
+      console.log('Departments API response for university', universityId, ':', departments);
+
+      console.log(`Loaded ${departments.length} departments for university ${universityId}:`, departments);
+
+      // Return departments with id (university_department_id), department (department_id), and name
+      return departments.map(dept => ({
+        id: dept.id,
+        department: dept.department,
+        name: dept.name
+      })).sort((a, b) => a.name.localeCompare(b.name));
+    } catch (error) {
+      console.error('Error fetching departments for university', universityId, ':', error);
+      return [];
+    }
+  }
+
+  // Get labs filtered by university and department
+  static async getLabsByUniversityAndDepartment(universityName, departmentName, page = 1, pageSize = 50) {
+    try {
+      const params = new URLSearchParams({
+        fields: 'minimal',
+        page: page.toString(),
+        page_size: pageSize.toString()
+      });
+
+      if (universityName) {
+        params.append('university', universityName);
+      }
+      if (departmentName) {
+        params.append('department', departmentName);
+      }
+
+      const response = await fetch(`${API_BASE_URL}/labs/?${params}`);
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return {
+        results: data.results.map(lab => ({
+          id: lab.id,
+          labName: lab.lab_name,
+          professorName: lab.professor_name,
+          universityName: lab.university_name,
+          department: lab.department,
+          researchAreas: lab.research_areas || [],
+          overallRating: lab.overall_rating,
+          reviewCount: lab.review_count
+        })),
+        total: data.count,
+        page: data.page || page,
+        hasMore: !!data.next
+      };
+    } catch (error) {
+      console.error('Error fetching labs by university and department:', error);
+      return { results: [], total: 0, page: 1, hasMore: false };
+    }
+  }
+
+  // Get research areas filtered by department
+  static async getResearchAreasByDepartment(departmentId) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/research-areas/?department=${departmentId}&fields=minimal`);
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Research areas API response for department', departmentId, ':', data);
+
+      // Extract research areas from paginated response
+      const researchAreas = data.results || [];
+      console.log(`Loaded ${researchAreas.length} research areas for department ${departmentId}:`, researchAreas);
+
+      return researchAreas;
+    } catch (error) {
+      console.error('Error fetching research areas for department', departmentId, ':', error);
+      return [];
+    }
+  }
+
+  // Search research areas by name for suggestion
+  static async searchResearchAreas(query) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/research-areas/?search=${encodeURIComponent(query)}&fields=minimal`);
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const researchAreas = data.results || [];
+      console.log(`Found ${researchAreas.length} research areas matching "${query}":`, researchAreas);
+
+      return researchAreas;
+    } catch (error) {
+      console.error('Error searching research areas:', error);
+      return [];
+    }
+  }
 }
