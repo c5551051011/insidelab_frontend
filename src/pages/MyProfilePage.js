@@ -68,7 +68,7 @@ const MyProfilePage = () => {
   const handleSignOut = () => {
     if (window.confirm('Are you sure you want to sign out?')) {
       AuthService.logout();
-      navigate('/');
+      // No need to navigate - logout will handle redirect and refresh
     }
   };
 

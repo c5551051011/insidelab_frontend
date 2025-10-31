@@ -75,6 +75,9 @@ class AuthService {
   static async logout() {
     ApiService.clearAuthToken();
     this.clearUserData();
+
+    // Redirect to home and refresh the page
+    window.location.href = '/';
   }
 
   static async getCurrentUser(useCache = true) {

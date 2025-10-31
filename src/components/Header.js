@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Menu, X, ChevronDown, User, LogOut, FileText, Video } from 'lucide-react';
 import { PrimaryButton } from './Button';
 import { colors, spacing } from '../theme';
@@ -13,7 +13,6 @@ const Header = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const userMenuRef = useRef(null);
-  const navigate = useNavigate();
 
   // Check authentication status
   useEffect(() => {
@@ -74,12 +73,7 @@ const Header = () => {
 
   const handleLogout = () => {
     AuthService.logout();
-    setIsAuthenticated(false);
-    setUser(null);
-    setUserMenuOpen(false);
-    navigate('/');
-    // Dispatch auth change event
-    window.dispatchEvent(new Event('authChange'));
+    // No need for manual state updates or navigation - logout handles everything
   };
 
   return (
