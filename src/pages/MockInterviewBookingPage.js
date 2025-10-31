@@ -418,12 +418,6 @@ const MockInterviewBookingPage = () => {
               setSearchQuery={setSearchQuery}
               filteredLabs={filteredLabs}
               handleLabSelect={handleLabSelect}
-              selectedResearchAreas={selectedResearchAreas}
-              setSelectedResearchArea={setSelectedResearchAreas}
-              researchAreas={researchAreas}
-              researchAreasLoading={researchAreasLoading}
-              focusAreas={focusAreas}
-              setFocusAreas={setFocusAreas}
               interestedLabs={interestedLabs}
               labsLoading={labsLoading}
               isMobile={isMobile}
@@ -780,12 +774,6 @@ const LabSelectionStep = ({
   setSearchQuery,
   filteredLabs,
   handleLabSelect,
-  selectedResearchAreas,
-  setSelectedResearchArea,
-  researchAreas,
-  researchAreasLoading,
-  focusAreas,
-  setFocusAreas,
   interestedLabs,
   labsLoading,
   isMobile
@@ -1019,133 +1007,6 @@ const LabSelectionStep = ({
         </div>
       </div>
 
-      {/* Research Areas Selection */}
-      <div style={{ marginTop: spacing[6] }}>
-        <label style={{
-          display: 'block',
-          fontSize: '14px',
-          fontWeight: '600',
-          color: colors.textPrimary,
-          marginBottom: spacing[2]
-        }}>
-          Research Area (Optional)
-        </label>
-        <p style={{
-          fontSize: '12px',
-          color: colors.textSecondary,
-          marginBottom: spacing[3]
-        }}>
-          Select your primary research area to help us match you with an interviewer in your field
-        </p>
-
-        {researchAreasLoading ? (
-          <div style={{
-            padding: spacing[6],
-            textAlign: 'center',
-            color: colors.textSecondary,
-            border: `1px solid ${colors.border}`,
-            borderRadius: '8px'
-          }}>
-            <div style={{
-              width: '30px',
-              height: '30px',
-              border: '3px solid transparent',
-              borderTop: '3px solid currentColor',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto',
-              marginBottom: spacing[2]
-            }} />
-            Loading research areas...
-          </div>
-        ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: spacing[3],
-            maxHeight: '300px',
-            overflowY: 'auto',
-            padding: spacing[3],
-            border: `1px solid ${colors.border}`,
-            borderRadius: '8px',
-            backgroundColor: colors.backgroundSecondary
-          }}>
-            {!Array.isArray(researchAreas) || researchAreas.length === 0 ? (
-              <div style={{
-                gridColumn: '1 / -1',
-                padding: spacing[4],
-                textAlign: 'center',
-                color: colors.textSecondary,
-                fontSize: '14px'
-              }}>
-                No research areas available
-              </div>
-            ) : (
-              researchAreas.map(area => {
-                const isSelected = selectedResearchAreas.some(selected => selected.id === area.id);
-                return (
-                  <div
-                    key={area.id}
-                    onClick={() => setSelectedResearchArea(isSelected ? null : area)}
-                    style={{
-                      padding: spacing[3],
-                      border: `2px solid ${isSelected ? colors.primary : colors.border}`,
-                      borderRadius: '8px',
-                      backgroundColor: isSelected ? `${colors.primary}08` : 'white',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: spacing[2]
-                    }}
-                  >
-                    <div style={{ flex: 1 }}>
-                      <div style={{
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: colors.textPrimary,
-                        marginBottom: area.description ? spacing[1] : 0
-                      }}>
-                        {area.name}
-                      </div>
-                      {area.description && (
-                        <div style={{
-                          fontSize: '12px',
-                          color: colors.textSecondary,
-                          lineHeight: 1.4
-                        }}>
-                          {area.description}
-                        </div>
-                      )}
-                    </div>
-                    {isSelected && (
-                      <CheckCircle size={20} color={colors.primary} style={{ flexShrink: 0 }} />
-                    )}
-                  </div>
-                );
-              })
-            )}
-          </div>
-        )}
-
-        {selectedResearchAreas.length > 0 && (
-          <div style={{
-            marginTop: spacing[3],
-            padding: spacing[3],
-            backgroundColor: `${colors.success}20`,
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing[2],
-            fontSize: '13px',
-            color: colors.success
-          }}>
-            <CheckCircle size={16} />
-            Selected: {selectedResearchAreas.map(area => area.name).join(', ')}
-          </div>
-        )}
-      </div>
 
       {/* Focus Areas */}
       <div style={{ marginTop: spacing[6] }}>

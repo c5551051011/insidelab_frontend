@@ -836,7 +836,6 @@ export class SearchService {
   static async getLabsByUniversityAndDepartment(universityName, departmentName, page = 1, pageSize = 50) {
     try {
       const params = new URLSearchParams({
-        fields: 'minimal',
         page: page.toString(),
         page_size: pageSize.toString()
       });
