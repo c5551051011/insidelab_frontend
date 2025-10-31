@@ -33,11 +33,19 @@ class AuthService {
                      response.jwt ||
                      response.auth_token;
 
+    let refreshToken = response.refresh || response.refresh_token;
+
     let userData = response.user || response.data || response;
 
     if (accessToken) {
       ApiService.setAuthToken(accessToken);
-      console.log('DEBUG: Token saved successfully');
+      console.log('DEBUG: Access token saved successfully');
+
+      // Save refresh token if available
+      if (refreshToken) {
+        ApiService.setRefreshToken(refreshToken);
+        console.log('DEBUG: Refresh token saved successfully');
+      }
 
       // Save user data to localStorage
       if (userData) {
@@ -51,6 +59,7 @@ class AuthService {
 
     return {
       access: accessToken,
+      refresh: refreshToken,
       user: userData,
     };
   }
@@ -159,9 +168,13 @@ class AuthService {
       name: displayName,
     });
 
-    // Save backend auth token
+    // Save backend auth tokens
     if (response.access) {
       ApiService.setAuthToken(response.access);
+    }
+
+    if (response.refresh) {
+      ApiService.setRefreshToken(response.refresh);
     }
 
     // Save user data to localStorage

@@ -2,6 +2,9 @@
 class ApiService {
   static baseUrl = 'https://insidelab.up.railway.app/api/v1';
   static authToken = null;
+  static refreshToken = null;
+  static isRefreshing = false;
+  static refreshSubscribers = [];
 
   // Token management
   static setAuthToken(token) {
@@ -15,9 +18,22 @@ class ApiService {
     return this.authToken;
   }
 
+  static setRefreshToken(token) {
+    this.refreshToken = token;
+    localStorage.setItem('refresh_token', token);
+  }
+
+  static getRefreshToken() {
+    if (this.refreshToken) return this.refreshToken;
+    this.refreshToken = localStorage.getItem('refresh_token');
+    return this.refreshToken;
+  }
+
   static clearAuthToken() {
     this.authToken = null;
+    this.refreshToken = null;
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
   }
 
   // HTTP headers
@@ -37,12 +53,106 @@ class ApiService {
     return headers;
   }
 
+  // Refresh access token using refresh token
+  static async refreshAccessToken() {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    try {
+      const response = await fetch(`${this.baseUrl}/auth/token/refresh/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh: refreshToken }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Token refresh failed');
+      }
+
+      const data = await response.json();
+      if (data.access) {
+        this.setAuthToken(data.access);
+        return data.access;
+      }
+
+      throw new Error('No access token in refresh response');
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      this.clearAuthToken();
+      throw error;
+    }
+  }
+
+  // Handle token refresh with queue
+  static async handleTokenRefresh() {
+    if (!this.isRefreshing) {
+      this.isRefreshing = true;
+
+      try {
+        const newToken = await this.refreshAccessToken();
+        this.refreshSubscribers.forEach(callback => callback(newToken));
+        this.refreshSubscribers = [];
+        return newToken;
+      } catch (error) {
+        this.refreshSubscribers.forEach(callback => callback(null));
+        this.refreshSubscribers = [];
+        throw error;
+      } finally {
+        this.isRefreshing = false;
+      }
+    }
+
+    // If already refreshing, wait for the result
+    return new Promise((resolve) => {
+      this.refreshSubscribers.push((token) => {
+        resolve(token);
+      });
+    });
+  }
+
+  // Generic fetch with token refresh retry
+  static async fetchWithAuth(url, options, requireAuth = false) {
+    try {
+      const response = await fetch(url, options);
+
+      // If 401 and we have a refresh token, try to refresh
+      if (response.status === 401 && requireAuth && this.getRefreshToken()) {
+        console.log('Token expired, attempting refresh...');
+
+        try {
+          const newToken = await this.handleTokenRefresh();
+
+          if (newToken) {
+            // Retry the original request with new token
+            options.headers['Authorization'] = `Bearer ${newToken}`;
+            const retryResponse = await fetch(url, options);
+            return retryResponse;
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+          // Let the original 401 response be handled
+        }
+      }
+
+      return response;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // Generic HTTP methods
   static async get(endpoint, requireAuth = false) {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    const url = `${this.baseUrl}${endpoint}`;
+    const options = {
       method: 'GET',
       headers: this.getHeaders(requireAuth),
-    });
+    };
+
+    const response = await this.fetchWithAuth(url, options, requireAuth);
 
     if (!response.ok) {
       const errorData = await response.text();
@@ -53,11 +163,14 @@ class ApiService {
   }
 
   static async post(endpoint, data, requireAuth = false) {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    const url = `${this.baseUrl}${endpoint}`;
+    const options = {
       method: 'POST',
       headers: this.getHeaders(requireAuth),
       body: JSON.stringify(data),
-    });
+    };
+
+    const response = await this.fetchWithAuth(url, options, requireAuth);
 
     if (!response.ok) {
       const errorData = await response.text();
@@ -68,11 +181,14 @@ class ApiService {
   }
 
   static async put(endpoint, data, requireAuth = false) {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+    const url = `${this.baseUrl}${endpoint}`;
+    const options = {
       method: 'PUT',
       headers: this.getHeaders(requireAuth),
       body: JSON.stringify(data),
-    });
+    };
+
+    const response = await this.fetchWithAuth(url, options, requireAuth);
 
     if (!response.ok) {
       const errorData = await response.text();
@@ -80,6 +196,43 @@ class ApiService {
     }
 
     return response.json();
+  }
+
+  static async patch(endpoint, data, requireAuth = false) {
+    const url = `${this.baseUrl}${endpoint}`;
+    const options = {
+      method: 'PATCH',
+      headers: this.getHeaders(requireAuth),
+      body: JSON.stringify(data),
+    };
+
+    const response = await this.fetchWithAuth(url, options, requireAuth);
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      throw new ApiException(response.status, errorData);
+    }
+
+    return response.json();
+  }
+
+  static async delete(endpoint, requireAuth = false) {
+    const url = `${this.baseUrl}${endpoint}`;
+    const options = {
+      method: 'DELETE',
+      headers: this.getHeaders(requireAuth),
+    };
+
+    const response = await this.fetchWithAuth(url, options, requireAuth);
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      throw new ApiException(response.status, errorData);
+    }
+
+    // DELETE may return empty response
+    const text = await response.text();
+    return text ? JSON.parse(text) : {};
   }
 }
 
