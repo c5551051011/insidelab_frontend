@@ -41,7 +41,7 @@ export class InterviewService {
       if (params.status) queryParams.append('status', params.status);
       if (params.ordering) queryParams.append('ordering', params.ordering);
 
-      const url = `${API_BASE_URL}/sessions/${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      const url = `${API_BASE_URL}/interviews/${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
 
       const response = await fetch(url, {
         method: 'GET',
@@ -72,7 +72,7 @@ export class InterviewService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/sessions/upcoming/`, {
+      const response = await fetch(`${API_BASE_URL}/interviews/upcoming/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -101,7 +101,7 @@ export class InterviewService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/sessions/past/`, {
+      const response = await fetch(`${API_BASE_URL}/interviews/past/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -130,7 +130,7 @@ export class InterviewService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/sessions/`, {
+      const response = await fetch(`${API_BASE_URL}/interviews/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -161,7 +161,7 @@ export class InterviewService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/`, {
+      const response = await fetch(`${API_BASE_URL}/interviews/${sessionId}/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -190,7 +190,7 @@ export class InterviewService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/cancel/`, {
+      const response = await fetch(`${API_BASE_URL}/interviews/${sessionId}/cancel/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
