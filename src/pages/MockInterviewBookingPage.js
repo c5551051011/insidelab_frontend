@@ -418,6 +418,8 @@ const MockInterviewBookingPage = () => {
               setSearchQuery={setSearchQuery}
               filteredLabs={filteredLabs}
               handleLabSelect={handleLabSelect}
+              focusAreas={focusAreas}
+              setFocusAreas={setFocusAreas}
               interestedLabs={interestedLabs}
               labsLoading={labsLoading}
               isMobile={isMobile}
@@ -774,6 +776,8 @@ const LabSelectionStep = ({
   setSearchQuery,
   filteredLabs,
   handleLabSelect,
+  focusAreas,
+  setFocusAreas,
   interestedLabs,
   labsLoading,
   isMobile
