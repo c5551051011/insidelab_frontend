@@ -44,7 +44,7 @@ const MyProfilePage = () => {
   useEffect(() => {
     const checkAuth = async () => {
       if (!AuthService.isAuthenticated()) {
-        navigate('/login');
+        navigate('/sign-in');
         return;
       }
 
@@ -56,7 +56,7 @@ const MyProfilePage = () => {
         console.error('Error fetching user data:', error);
         // If API call fails, redirect to login
         AuthService.logout();
-        navigate('/login');
+        navigate('/sign-in');
       } finally {
         setLoading(false);
       }

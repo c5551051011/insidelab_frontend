@@ -31,6 +31,7 @@ const MockInterviewBookingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [selectedLabs, setSelectedLabs] = useState([]);
+  const [selectedResearchArea, setSelectedResearchArea] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [focusAreas, setFocusAreas] = useState('');
   const [preferredSlots, setPreferredSlots] = useState([
@@ -44,7 +45,10 @@ const MockInterviewBookingPage = () => {
   const [availableLabs, setAvailableLabs] = useState([]);
   const [interestedLabs, setInterestedLabs] = useState([]);
   const [labsLoading, setLabsLoading] = useState(true);
-  const [userBookmarks, setUserBookmarks] = useState([]);
+
+  // Research areas data from API
+  const [researchAreas, setResearchAreas] = useState([]);
+  const [researchAreasLoading, setResearchAreasLoading] = useState(true);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -55,7 +59,7 @@ const MockInterviewBookingPage = () => {
   // Check authentication
   useEffect(() => {
     if (!AuthService.isAuthenticated()) {
-      navigate('/login', { state: { from: '/services/mock-interview' } });
+      navigate('/sign-in', { state: { from: '/services/mock-interview' } });
     }
   }, [navigate]);
 
@@ -73,7 +77,6 @@ const MockInterviewBookingPage = () => {
         // Load user's bookmarked labs
         console.log('Loading user bookmarks...');
         const bookmarks = await BookmarkService.getUserBookmarks();
-        setUserBookmarks(bookmarks);
 
         // Transform lab data to include required fields
         const transformedLabs = popularLabs.results.map(lab => ({
@@ -118,6 +121,26 @@ const MockInterviewBookingPage = () => {
     };
 
     loadLabData();
+  }, []);
+
+  // Load research areas
+  useEffect(() => {
+    const loadResearchAreas = async () => {
+      setResearchAreasLoading(true);
+      try {
+        console.log('Loading research areas...');
+        const areas = await InterviewService.getResearchAreas();
+        setResearchAreas(areas || []);
+        console.log(`Loaded ${areas?.length || 0} research areas`);
+      } catch (error) {
+        console.error('Error loading research areas:', error);
+        setResearchAreas([]);
+      } finally {
+        setResearchAreasLoading(false);
+      }
+    };
+
+    loadResearchAreas();
   }, []);
 
   const sessionTypes = {
@@ -169,33 +192,33 @@ const MockInterviewBookingPage = () => {
     setSubmitError('');
 
     try {
-      // Get the first valid time slot
-      const validSlots = preferredSlots.filter(slot => slot.date && slot.time);
-      if (validSlots.length === 0) {
-        throw new Error('Please select at least one time slot');
-      }
-
-      // Prepare session data for API
-      const sessionData = {
-        session_type: sessionType,
-        preferred_date: validSlots[0].date,
-        preferred_time: validSlots[0].time + ':00', // Add seconds
-        duration_minutes: sessionType === 'mock_interview' ? 60 : 30,
-        research_area: focusAreas || (selectedLabs.length > 0 ? selectedLabs[0].field : 'General'),
-        notes: `${additionalNotes}${selectedLabs.length > 0 ? `\n\nTarget Labs: ${selectedLabs.map(lab => `${lab.name} (${lab.university})`).join(', ')}` : ''}`
+      // Validate and prepare booking data
+      const bookingData = {
+        sessionType,
+        selectedLabs: selectedLabs.map(lab => lab.id),
+        researchAreaId: selectedResearchArea?.id || null,
+        focusAreas,
+        preferredSlots,
+        additionalNotes,
+        totalPrice: calculatePrice()
       };
 
-      console.log('Submitting interview session:', sessionData);
+      // Transform to API format
+      const apiData = InterviewService.transformBookingToApiFormat(bookingData);
 
-      const result = await InterviewService.createInterviewSession(sessionData);
+      console.log('Submitting interview session:', apiData);
+
+      const result = await InterviewService.createInterviewSession(apiData);
 
       console.log('Interview session created:', result);
 
-      // Navigate to confirmation or show success message
-      alert(`Interview session created successfully! Session ID: ${result.id}\nStatus: ${result.status}\nYou will be matched with an interviewer soon.`);
-
-      // Reset form or navigate to management page
-      navigate('/services/mock-interview/sessions');
+      // Navigate to My Sessions page with success message
+      navigate('/my-sessions', {
+        state: {
+          message: `Interview session created successfully! Session ID: ${result.id}`,
+          type: 'success'
+        }
+      });
 
     } catch (error) {
       console.error('Error submitting interview booking:', error);
@@ -300,6 +323,10 @@ const MockInterviewBookingPage = () => {
               setSearchQuery={setSearchQuery}
               filteredLabs={filteredLabs}
               handleLabSelect={handleLabSelect}
+              selectedResearchArea={selectedResearchArea}
+              setSelectedResearchArea={setSelectedResearchArea}
+              researchAreas={researchAreas}
+              researchAreasLoading={researchAreasLoading}
               focusAreas={focusAreas}
               setFocusAreas={setFocusAreas}
               interestedLabs={interestedLabs}
@@ -325,6 +352,7 @@ const MockInterviewBookingPage = () => {
               sessionType={sessionType}
               sessionTypes={sessionTypes}
               selectedLabs={selectedLabs}
+              selectedResearchArea={selectedResearchArea}
               focusAreas={focusAreas}
               preferredSlots={preferredSlots}
               additionalNotes={additionalNotes}
@@ -655,6 +683,10 @@ const LabSelectionStep = ({
   setSearchQuery,
   filteredLabs,
   handleLabSelect,
+  selectedResearchArea,
+  setSelectedResearchArea,
+  researchAreas,
+  researchAreasLoading,
   focusAreas,
   setFocusAreas,
   interestedLabs,
@@ -888,6 +920,134 @@ const LabSelectionStep = ({
             </>
           )}
         </div>
+      </div>
+
+      {/* Research Areas Selection */}
+      <div style={{ marginTop: spacing[6] }}>
+        <label style={{
+          display: 'block',
+          fontSize: '14px',
+          fontWeight: '600',
+          color: colors.textPrimary,
+          marginBottom: spacing[2]
+        }}>
+          Research Area (Optional)
+        </label>
+        <p style={{
+          fontSize: '12px',
+          color: colors.textSecondary,
+          marginBottom: spacing[3]
+        }}>
+          Select your primary research area to help us match you with an interviewer in your field
+        </p>
+
+        {researchAreasLoading ? (
+          <div style={{
+            padding: spacing[6],
+            textAlign: 'center',
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            borderRadius: '8px'
+          }}>
+            <div style={{
+              width: '30px',
+              height: '30px',
+              border: '3px solid transparent',
+              borderTop: '3px solid currentColor',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto',
+              marginBottom: spacing[2]
+            }} />
+            Loading research areas...
+          </div>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            gap: spacing[3],
+            maxHeight: '300px',
+            overflowY: 'auto',
+            padding: spacing[3],
+            border: `1px solid ${colors.border}`,
+            borderRadius: '8px',
+            backgroundColor: colors.backgroundSecondary
+          }}>
+            {researchAreas.length === 0 ? (
+              <div style={{
+                gridColumn: '1 / -1',
+                padding: spacing[4],
+                textAlign: 'center',
+                color: colors.textSecondary,
+                fontSize: '14px'
+              }}>
+                No research areas available
+              </div>
+            ) : (
+              researchAreas.map(area => {
+                const isSelected = selectedResearchArea?.id === area.id;
+                return (
+                  <div
+                    key={area.id}
+                    onClick={() => setSelectedResearchArea(isSelected ? null : area)}
+                    style={{
+                      padding: spacing[3],
+                      border: `2px solid ${isSelected ? colors.primary : colors.border}`,
+                      borderRadius: '8px',
+                      backgroundColor: isSelected ? `${colors.primary}08` : 'white',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: spacing[2]
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: colors.textPrimary,
+                        marginBottom: area.description ? spacing[1] : 0
+                      }}>
+                        {area.name}
+                      </div>
+                      {area.description && (
+                        <div style={{
+                          fontSize: '12px',
+                          color: colors.textSecondary,
+                          lineHeight: 1.4
+                        }}>
+                          {area.description}
+                        </div>
+                      )}
+                    </div>
+                    {isSelected && (
+                      <CheckCircle size={20} color={colors.primary} style={{ flexShrink: 0 }} />
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {selectedResearchArea && (
+          <div style={{
+            marginTop: spacing[3],
+            padding: spacing[3],
+            backgroundColor: `${colors.success}20`,
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing[2],
+            fontSize: '13px',
+            color: colors.success
+          }}>
+            <CheckCircle size={16} />
+            Selected: {selectedResearchArea.name}
+          </div>
+        )}
       </div>
 
       {/* Focus Areas */}
@@ -1243,6 +1403,7 @@ const ReviewStep = ({
   sessionType,
   sessionTypes,
   selectedLabs,
+  selectedResearchArea,
   focusAreas,
   preferredSlots,
   additionalNotes,
@@ -1380,6 +1541,48 @@ const ReviewStep = ({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Research Area */}
+      {selectedResearchArea && (
+        <div style={{
+          padding: spacing[5],
+          backgroundColor: colors.backgroundSecondary,
+          borderRadius: '12px',
+          marginBottom: spacing[4]
+        }}>
+          <div style={{
+            fontSize: '14px',
+            fontWeight: '600',
+            color: colors.textPrimary,
+            marginBottom: spacing[3]
+          }}>
+            Research Area
+          </div>
+          <div style={{
+            padding: spacing[3],
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            fontSize: '14px'
+          }}>
+            <div style={{
+              fontWeight: '600',
+              color: colors.textPrimary,
+              marginBottom: selectedResearchArea.description ? spacing[1] : 0
+            }}>
+              {selectedResearchArea.name}
+            </div>
+            {selectedResearchArea.description && (
+              <div style={{
+                fontSize: '12px',
+                color: colors.textSecondary,
+                lineHeight: 1.4
+              }}>
+                {selectedResearchArea.description}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

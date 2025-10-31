@@ -5,16 +5,45 @@ const API_BASE_URL = 'https://insidelab.up.railway.app/api/v1';
 
 export class InterviewService {
   /**
+   * Get all research areas
+   */
+  static async getResearchAreas() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/interviews/research-areas/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching research areas:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get all interview sessions for current user
    */
-  static async getInterviewSessions() {
+  static async getInterviewSessions(params = {}) {
     try {
       const token = ApiService.getAuthToken();
       if (!token) {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/interviews/`, {
+      const queryParams = new URLSearchParams();
+      if (params.status) queryParams.append('status', params.status);
+      if (params.ordering) queryParams.append('ordering', params.ordering);
+
+      const url = `${API_BASE_URL}/sessions/${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -34,6 +63,64 @@ export class InterviewService {
   }
 
   /**
+   * Get upcoming sessions
+   */
+  static async getUpcomingSessions() {
+    try {
+      const token = ApiService.getAuthToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/sessions/upcoming/`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching upcoming sessions:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get past sessions
+   */
+  static async getPastSessions() {
+    try {
+      const token = ApiService.getAuthToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/sessions/past/`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching past sessions:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Create a new interview session
    */
   static async createInterviewSession(sessionData) {
@@ -43,7 +130,7 @@ export class InterviewService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/interviews/`, {
+      const response = await fetch(`${API_BASE_URL}/sessions/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -54,7 +141,7 @@ export class InterviewService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `API request failed: ${response.status}`);
+        throw new Error(errorData.detail || JSON.stringify(errorData) || `API request failed: ${response.status}`);
       }
 
       return await response.json();
@@ -74,7 +161,7 @@ export class InterviewService {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/interviews/${sessionId}/`, {
+      const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -94,32 +181,31 @@ export class InterviewService {
   }
 
   /**
-   * Update interview session status
+   * Cancel an interview session
    */
-  static async updateInterviewSession(sessionId, updateData) {
+  static async cancelInterviewSession(sessionId) {
     try {
       const token = ApiService.getAuthToken();
       if (!token) {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${API_BASE_URL}/interviews/${sessionId}/`, {
-        method: 'PATCH',
+      const response = await fetch(`${API_BASE_URL}/sessions/${sessionId}/cancel/`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(updateData)
+        }
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `API request failed: ${response.status}`);
+        throw new Error(errorData.error || `API request failed: ${response.status}`);
       }
 
       return await response.json();
     } catch (error) {
-      console.error('Error updating interview session:', error);
+      console.error('Error cancelling interview session:', error);
       throw error;
     }
   }
@@ -128,22 +214,35 @@ export class InterviewService {
    * Transform frontend booking data to API format
    */
   static transformBookingToApiFormat(bookingData) {
-    const { sessionType, preferredSlots, focusAreas, additionalNotes } = bookingData;
+    const { sessionType, selectedLabs, researchAreaId, focusAreas, preferredSlots, additionalNotes, totalPrice } = bookingData;
 
-    // Get the first available slot
-    const firstSlot = preferredSlots.find(slot => slot.date && slot.time);
+    // Transform slots to API format
+    const apiSlots = preferredSlots
+      .filter(slot => slot.date && slot.time)
+      .map((slot, index) => ({
+        date: slot.date,
+        time: slot.time,
+        priority: index + 1
+      }));
 
-    if (!firstSlot) {
+    if (apiSlots.length === 0) {
       throw new Error('At least one time slot is required');
     }
 
-    return {
-      session_type: sessionType === 'mock-interview' ? 'mock_interview' : 'qa_session',
-      preferred_date: firstSlot.date,
-      preferred_time: firstSlot.time + ':00', // Add seconds
-      duration_minutes: sessionType === 'mock-interview' ? 60 : 30,
-      research_area: focusAreas || 'General',
-      notes: additionalNotes || ''
+    const apiData = {
+      session_type: sessionType,
+      selected_labs: selectedLabs || [],
+      focus_areas: focusAreas || '',
+      preferred_slots: apiSlots,
+      additional_notes: additionalNotes || '',
+      total_price: totalPrice || 0
     };
+
+    // Add research_area if provided
+    if (researchAreaId) {
+      apiData.research_area = researchAreaId;
+    }
+
+    return apiData;
   }
 }

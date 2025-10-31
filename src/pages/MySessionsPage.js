@@ -8,83 +8,85 @@ import {
   User,
   Video,
   MessageSquare,
-  Mail
+  Mail,
+  Loader
 } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
+import { InterviewService } from '../services/interviewService';
 
 const MySessionsPage = () => {
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming', 'past', 'all'
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock data - will be replaced with API call
-  const mockSessions = [
-    {
-      id: 1,
-      type: 'mock-interview',
-      status: 'confirmed', // 'pending', 'matching', 'confirmed', 'completed', 'cancelled'
-      createdAt: '2024-01-15',
-      targetLabs: [
-        { name: 'AI Research Lab', university: 'Stanford', field: 'Machine Learning' },
-        { name: 'NLP Lab', university: 'Berkeley', field: 'Natural Language Processing' }
-      ],
-      focusAreas: 'Research methodology, lab culture, publication expectations',
-      preferredSlots: [
-        { date: '2024-02-01', time: '14:00', priority: 1 },
-        { date: '2024-02-02', time: '15:00', priority: 2 },
-        { date: '2024-02-03', time: '10:00', priority: 3 }
-      ],
-      matchedInterviewer: {
-        name: 'Dr. Sarah Johnson',
-        position: 'PhD Candidate',
-        university: 'Stanford',
-        department: 'Computer Science',
-        lab: 'AI Research Lab',
-        email: 'sarah.j@stanford.edu',
-        matchType: 'exact-lab' // 'exact-lab', 'same-department', 'same-field'
-      },
-      confirmedSlot: { date: '2024-02-01', time: '14:00' },
-      meetingLink: 'https://zoom.us/j/123456789',
-      price: 120
-    },
-    {
-      id: 2,
-      type: 'qa-session',
-      status: 'matching',
-      createdAt: '2024-01-20',
-      targetLabs: [
-        { name: 'Robotics Lab', university: 'MIT', field: 'Robotics' }
-      ],
-      focusAreas: 'Application process, funding sources',
-      preferredSlots: [
-        { date: '2024-02-05', time: '10:00', priority: 1 },
-        { date: '2024-02-06', time: '11:00', priority: 2 },
-        { date: '2024-02-07', time: '14:00', priority: 3 }
-      ],
-      price: 60
-    },
-    {
-      id: 3,
-      type: 'mock-interview',
-      status: 'pending',
-      createdAt: '2024-01-22',
-      targetLabs: [
-        { name: 'Systems Lab', university: 'CMU', field: 'Distributed Systems' }
-      ],
-      focusAreas: 'Technical interview preparation',
-      preferredSlots: [
-        { date: '2024-02-10', time: '15:00', priority: 1 },
-        { date: '2024-02-11', time: '16:00', priority: 2 },
-        { date: '2024-02-12', time: '13:00', priority: 3 }
-      ],
-      price: 110
+  // Fetch sessions from API
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch based on active tab
+        let data;
+        if (activeTab === 'upcoming') {
+          data = await InterviewService.getUpcomingSessions();
+        } else if (activeTab === 'past') {
+          data = await InterviewService.getPastSessions();
+        } else {
+          data = await InterviewService.getInterviewSessions();
+        }
+
+        // Transform API data to frontend format
+        const transformedSessions = (data || []).map(session => ({
+          id: session.id,
+          type: session.session_type,
+          status: session.status,
+          createdAt: session.created_at,
+          targetLabs: (session.target_labs || []).map(lab => ({
+            name: lab.lab_name,
+            university: lab.university_name,
+            field: lab.field_name
+          })),
+          focusAreas: session.focus_areas,
+          preferredSlots: (session.preferred_slots || []).map(slot => ({
+            date: slot.date,
+            time: slot.time,
+            priority: slot.priority
+          })),
+          matchedInterviewer: session.interviewer ? {
+            name: `${session.interviewer.first_name || ''} ${session.interviewer.last_name || ''}`.trim() || session.interviewer.email,
+            position: session.interviewer.position,
+            university: session.interviewer.university,
+            department: session.interviewer.department,
+            email: session.interviewer.email,
+            matchType: session.match_type
+          } : null,
+          confirmedSlot: session.confirmed_date && session.confirmed_time ? {
+            date: session.confirmed_date,
+            time: session.confirmed_time
+          } : null,
+          price: parseFloat(session.total_price || 0)
+        }));
+
+        setSessions(transformedSessions);
+      } catch (err) {
+        console.error('Error fetching sessions:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (AuthService.isAuthenticated()) {
+      fetchSessions();
     }
-  ];
-
-  const [sessions] = useState(mockSessions);
+  }, [activeTab]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -94,7 +96,7 @@ const MySessionsPage = () => {
 
   useEffect(() => {
     if (!AuthService.isAuthenticated()) {
-      navigate('/login', { state: { from: '/my-sessions' } });
+      navigate('/sign-in', { state: { from: '/my-sessions' } });
     }
   }, [navigate]);
 
@@ -170,14 +172,8 @@ const MySessionsPage = () => {
     }
   };
 
-  const filteredSessions = sessions.filter(session => {
-    if (activeTab === 'upcoming') {
-      return ['pending', 'matching', 'confirmed'].includes(session.status);
-    } else if (activeTab === 'past') {
-      return ['completed', 'cancelled'].includes(session.status);
-    }
-    return true;
-  });
+  // No filtering needed - API already returns filtered results based on tab
+  const filteredSessions = sessions;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.background }}>
@@ -208,6 +204,19 @@ const MySessionsPage = () => {
             Track your mock interview and Q&A session bookings
           </p>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div style={{
+            backgroundColor: '#fee',
+            padding: spacing[4],
+            borderRadius: '8px',
+            marginBottom: spacing[4],
+            color: colors.danger
+          }}>
+            Error loading sessions: {error}
+          </div>
+        )}
 
         {/* Tabs */}
         <div style={{
@@ -243,8 +252,24 @@ const MySessionsPage = () => {
           ))}
         </div>
 
-        {/* Sessions List */}
-        {filteredSessions.length === 0 ? (
+        {/* Loading State */}
+        {loading ? (
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            padding: spacing[10],
+            textAlign: 'center',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
+          }}>
+            <Loader size={48} color={colors.primary} style={{ marginBottom: spacing[4], animation: 'spin 1s linear infinite' }} />
+            <p style={{
+              fontSize: '14px',
+              color: colors.textSecondary
+            }}>
+              Loading your sessions...
+            </p>
+          </div>
+        ) : filteredSessions.length === 0 ? (
           <div style={{
             backgroundColor: 'white',
             borderRadius: '16px',
