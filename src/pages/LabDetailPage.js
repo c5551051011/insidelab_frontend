@@ -1034,15 +1034,40 @@ const ReviewsSection = ({ lab }) => {
 
   useEffect(() => {
     const loadReviews = async () => {
+      if (!lab?.id) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
-        // Mock reviews data - replace with actual API call
-        // const response = await fetch(`${API_BASE_URL}/labs/${labId}/reviews/`);
-        // const data = await response.json();
-        // setReviews(data.results || []);
+        const API_BASE_URL = 'https://insidelab.up.railway.app/api/v1';
+        const response = await fetch(`${API_BASE_URL}/reviews/?lab=${lab.id}`);
 
-        // For now, set empty array to show empty state
-        setReviews([]);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch reviews: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Loaded reviews for lab:', lab.id, data);
+
+        // Transform API data to frontend format
+        const transformedReviews = (data.results || data || []).map(review => ({
+          id: review.id,
+          author: review.user?.email?.split('@')[0] || 'Anonymous',
+          date: new Date(review.created_at).toLocaleDateString(),
+          rating: parseFloat(review.rating) || 0,
+          content: review.review_text || 'No content',
+          tags: review.pros && review.cons ? [
+            ...(Array.isArray(review.pros) ? review.pros : []),
+            ...(Array.isArray(review.cons) ? review.cons : [])
+          ] : [],
+          helpfulCount: review.helpful_count || 0,
+          position: review.position,
+          duration: review.duration
+        }));
+
+        setReviews(transformedReviews);
       } catch (error) {
         console.error('Error loading reviews:', error);
         setReviews([]);
