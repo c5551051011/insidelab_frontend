@@ -43,7 +43,7 @@ const MySessionsPage = () => {
         }
 
         // Transform API data to frontend format
-        const transformedSessions = (data || []).map(session => ({
+        const transformedSessions = (data?.results || []).map(session => ({
           id: session.id,
           type: session.session_type,
           status: session.status,
