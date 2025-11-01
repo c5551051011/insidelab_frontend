@@ -131,7 +131,7 @@ const MockInterviewBookingPage = () => {
             professor: lab.professorName,
             field: lab.researchAreas?.[0] || 'Research',
             department: lab.department,
-            rating: lab.overallRating,
+            rating: parseFloat(lab.overallRating) || 0,
             reviewCount: lab.reviewCount,
             isBookmarked: bookmarks.some(bookmark => bookmark.labId === lab.id.toString())
           }));
@@ -1141,7 +1141,7 @@ const LabListItem = ({ lab, selectedLabs, handleLabSelect, isInterested }) => {
                 alignItems: 'center',
                 gap: '4px'
               }}>
-                ⭐ {lab.rating.toFixed(1)} ({lab.reviewCount} reviews)
+                ⭐ {(parseFloat(lab.rating) || 0).toFixed(1)} ({lab.reviewCount || 0} reviews)
               </div>
             )}
           </div>

@@ -861,8 +861,8 @@ export class SearchService {
           universityName: lab.university_name,
           department: lab.department,
           researchAreas: lab.research_areas || [],
-          overallRating: lab.overall_rating,
-          reviewCount: lab.review_count
+          overallRating: parseFloat(lab.overall_rating) || 0,
+          reviewCount: parseInt(lab.review_count) || 0
         })),
         total: data.count,
         page: data.page || page,
