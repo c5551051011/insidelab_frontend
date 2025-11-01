@@ -837,7 +837,8 @@ export class SearchService {
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        page_size: pageSize.toString()
+        page_size: pageSize.toString(),
+        fields: 'compact'
       });
 
       if (universityName) {
@@ -853,16 +854,17 @@ export class SearchService {
       }
 
       const data = await response.json();
+
       return {
         results: data.results.map(lab => ({
           id: lab.id,
-          labName: lab.lab_name,
-          professorName: lab.professor_name,
-          universityName: lab.university_name,
+          labName: lab.name,
+          professorName: lab.professor || '',  // professor 정보가 API에 없으면 빈 문자열
+          universityName: lab.university,
           department: lab.department,
-          researchAreas: lab.research_areas || [],
-          overallRating: parseFloat(lab.overall_rating) || 0,
-          reviewCount: parseInt(lab.review_count) || 0
+          researchAreas: lab.researchAreas || (lab.field ? [lab.field] : []),  // field를 researchAreas로 변환
+          overallRating: parseFloat(lab.rating) || 0,
+          reviewCount: parseInt(lab.reviewCount) || 0
         })),
         total: data.count,
         page: data.page || page,

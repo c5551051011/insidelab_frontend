@@ -218,10 +218,11 @@ export class InterviewService {
 
     // Transform slots to API format
     const apiSlots = preferredSlots
-      .filter(slot => slot.date && slot.time)
+      .filter(slot => slot.date && slot.startTime && slot.endTime)
       .map((slot, index) => ({
         date: slot.date,
-        time: slot.time,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
         priority: index + 1
       }));
 

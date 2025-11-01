@@ -35,9 +35,9 @@ const MockInterviewBookingPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [focusAreas, setFocusAreas] = useState('');
   const [preferredSlots, setPreferredSlots] = useState([
-    { date: '', time: '' },
-    { date: '', time: '' },
-    { date: '', time: '' }
+    { date: '', startTime: '', endTime: '' },
+    { date: '', startTime: '', endTime: '' },
+    { date: '', startTime: '', endTime: '' }
   ]);
   const [additionalNotes, setAdditionalNotes] = useState('');
 
@@ -309,7 +309,7 @@ const MockInterviewBookingPage = () => {
     if (currentStep === 4) return selectedLabs.length > 0;
     if (currentStep === 5) {
       // At least one complete time slot required
-      return preferredSlots.some(slot => slot.date && slot.time);
+      return preferredSlots.some(slot => slot.date && slot.startTime && slot.endTime);
     }
     return true;
   };
@@ -852,13 +852,13 @@ const LabSelectionStep = ({
                     color: colors.textPrimary,
                     marginBottom: spacing[1]
                   }}>
-                    {lab.name}
+                    {lab.professor || 'Professor Information Unavailable'}
                   </div>
                   <div style={{
                     fontSize: '12px',
                     color: colors.textSecondary
                   }}>
-                    {lab.university} • {lab.professor}
+                    {lab.university} • {lab.department} • {lab.name}
                   </div>
                 </div>
                 <button
@@ -1103,7 +1103,7 @@ const LabListItem = ({ lab, selectedLabs, handleLabSelect, isInterested }) => {
             alignItems: 'center',
             gap: spacing[2]
           }}>
-            {lab.name}
+            {lab.professor || 'Professor Information Unavailable'}
             {isInterested && (
               <span style={{
                 fontSize: '10px',
@@ -1122,35 +1122,19 @@ const LabListItem = ({ lab, selectedLabs, handleLabSelect, isInterested }) => {
             color: colors.textSecondary,
             marginBottom: spacing[1]
           }}>
-            {lab.university} • {lab.professor}
+            {lab.university} • {lab.department} • {lab.name}
           </div>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing[2],
-            marginBottom: spacing[1]
-          }}>
+          {lab.rating && lab.reviewCount > 0 && (
             <div style={{
-              fontSize: '12px',
-              color: colors.primary,
-              backgroundColor: `${colors.primary}20`,
-              padding: `${spacing[1]} ${spacing[2]}`,
-              borderRadius: '4px'
+              fontSize: '11px',
+              color: colors.textTertiary,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
             }}>
-              {lab.field}
+              ⭐ {(parseFloat(lab.rating) || 0).toFixed(1)} ({lab.reviewCount || 0} reviews)
             </div>
-            {lab.rating && lab.reviewCount > 0 && (
-              <div style={{
-                fontSize: '11px',
-                color: colors.textTertiary,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}>
-                ⭐ {(parseFloat(lab.rating) || 0).toFixed(1)} ({lab.reviewCount || 0} reviews)
-              </div>
-            )}
-          </div>
+          )}
         </div>
         {isSelected && (
           <CheckCircle size={20} color={colors.primary} />
@@ -1251,7 +1235,7 @@ const ScheduleStep = ({
 
           <div style={{
             display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr 1fr',
             gap: spacing[3]
           }}>
             {/* Date */}
@@ -1283,7 +1267,7 @@ const ScheduleStep = ({
               />
             </div>
 
-            {/* Time */}
+            {/* Start Time */}
             <div>
               <label style={{
                 display: 'block',
@@ -1293,11 +1277,11 @@ const ScheduleStep = ({
                 marginBottom: spacing[2]
               }}>
                 <Clock size={14} style={{ display: 'inline', marginRight: spacing[1] }} />
-                Time
+                Start Time
               </label>
               <select
-                value={slot.time}
-                onChange={(e) => handleSlotChange(index, 'time', e.target.value)}
+                value={slot.startTime}
+                onChange={(e) => handleSlotChange(index, 'startTime', e.target.value)}
                 style={{
                   width: '100%',
                   padding: spacing[3],
@@ -1308,7 +1292,39 @@ const ScheduleStep = ({
                   backgroundColor: 'white'
                 }}
               >
-                <option value="">Select time...</option>
+                <option value="">Start time...</option>
+                {timeOptions.map(time => (
+                  <option key={time} value={time}>{formatTimeOption(time)}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* End Time */}
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '13px',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: spacing[2]
+              }}>
+                <Clock size={14} style={{ display: 'inline', marginRight: spacing[1] }} />
+                End Time
+              </label>
+              <select
+                value={slot.endTime}
+                onChange={(e) => handleSlotChange(index, 'endTime', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: spacing[3],
+                  fontSize: '14px',
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '8px',
+                  outline: 'none',
+                  backgroundColor: 'white'
+                }}
+              >
+                <option value="">End time...</option>
                 {timeOptions.map(time => (
                   <option key={time} value={time}>{formatTimeOption(time)}</option>
                 ))}
@@ -1499,13 +1515,13 @@ const ReviewStep = ({
                 color: colors.textPrimary,
                 marginBottom: spacing[1]
               }}>
-                {lab.name}
+                {lab.professor || 'Professor Information Unavailable'}
               </div>
               <div style={{
                 fontSize: '12px',
                 color: colors.textSecondary
               }}>
-                {lab.university} • {lab.professor} • {lab.field}
+                {lab.university} • {lab.department} • {lab.name}
               </div>
             </div>
           ))}
@@ -1600,7 +1616,7 @@ const ReviewStep = ({
           Preferred Time Slots
         </div>
         {preferredSlots
-          .filter(slot => slot.date && slot.time)
+          .filter(slot => slot.date && slot.startTime && slot.endTime)
           .map((slot, index) => (
             <div
               key={index}
@@ -1642,12 +1658,12 @@ const ReviewStep = ({
                   fontSize: '13px',
                   color: colors.textSecondary
                 }}>
-                  {formatTime(slot.time)}
+                  {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
                 </div>
               </div>
             </div>
           ))}
-        {preferredSlots.filter(slot => slot.date && slot.time).length === 0 && (
+        {preferredSlots.filter(slot => slot.date && slot.startTime && slot.endTime).length === 0 && (
           <div style={{
             fontSize: '14px',
             color: colors.textTertiary,
@@ -2168,6 +2184,7 @@ const ResearchAreaStep = ({
             {/* Add Custom Research Area Button */}
             <div>
               <button
+                type="button"
                 onClick={() => setShowCustomInput(!showCustomInput)}
                 disabled={selectedResearchAreas.length >= 3}
                 style={{
@@ -2306,6 +2323,7 @@ const ResearchAreaStep = ({
               )}
             </div>
             <button
+              type="button"
               onClick={handleCustomAreaAdd}
               disabled={!customAreaName.trim()}
               style={{
