@@ -308,8 +308,9 @@ const MockInterviewBookingPage = () => {
     if (currentStep === 3) return selectedResearchAreas.length > 0;
     if (currentStep === 4) return selectedLabs.length > 0;
     if (currentStep === 5) {
-      // At least one complete time slot required
-      return preferredSlots.some(slot => slot.date && slot.startTime && slot.endTime);
+      // First time slot (index 0) is required, others are optional
+      const firstSlot = preferredSlots[0];
+      return firstSlot && firstSlot.date && firstSlot.startTime && firstSlot.endTime;
     }
     return true;
   };
@@ -1193,7 +1194,7 @@ const ScheduleStep = ({
         color: colors.textSecondary,
         marginBottom: spacing[6]
       }}>
-        Provide 3 preferred time slots in order of priority. We'll match you with an available interviewer.
+        Provide at least 1 preferred time slot (up to 3). The first slot is required, others are optional. We'll match you with an available interviewer.
       </p>
 
       {/* Time Slots */}
@@ -1201,7 +1202,8 @@ const ScheduleStep = ({
         <div key={index} style={{
           marginBottom: spacing[5],
           padding: spacing[4],
-          backgroundColor: colors.backgroundSecondary,
+          backgroundColor: index === 0 ? `${colors.primary}08` : colors.backgroundSecondary,
+          border: index === 0 ? `1px solid ${colors.primary}20` : 'none',
           borderRadius: '12px'
         }}>
           <div style={{
@@ -1229,7 +1231,7 @@ const ScheduleStep = ({
               fontWeight: '600',
               color: colors.textPrimary
             }}>
-              {index === 0 ? 'First Choice' : index === 1 ? 'Second Choice' : 'Third Choice'}
+              {index === 0 ? 'First Choice (Required)' : index === 1 ? 'Second Choice (Optional)' : 'Third Choice (Optional)'}
             </span>
           </div>
 

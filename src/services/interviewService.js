@@ -221,8 +221,7 @@ export class InterviewService {
       .filter(slot => slot.date && slot.startTime && slot.endTime)
       .map((slot, index) => ({
         date: slot.date,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
+        time: `${slot.startTime}:00`,  // HH:MM:SS 형식으로 변환 (시작 시간 사용)
         priority: index + 1
       }));
 
