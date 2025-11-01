@@ -462,7 +462,10 @@ const MockInterviewBookingPage = () => {
             {currentStep > 1 && (
               <button
                 type="button"
-                onClick={() => setCurrentStep(currentStep - 1)}
+                onClick={() => {
+                  setCurrentStep(currentStep - 1);
+                  setSubmitError(''); // Clear any error messages when navigating
+                }}
                 style={{
                   flex: 1,
                   padding: `${spacing[4]} ${spacing[6]}`,
@@ -482,7 +485,10 @@ const MockInterviewBookingPage = () => {
             {currentStep < 6 ? (
               <button
                 type="button"
-                onClick={() => setCurrentStep(currentStep + 1)}
+                onClick={() => {
+                  setCurrentStep(currentStep + 1);
+                  setSubmitError(''); // Clear any error messages when navigating
+                }}
                 disabled={!canProceed()}
                 style={{
                   flex: 1,
@@ -2047,30 +2053,30 @@ const ResearchAreaStep = ({
                     return (
                       <button
                         key={`popular-${area.id}`}
-                        onClick={() => handleAreaToggle(area)}
-                        disabled={!isSelected && selectedResearchAreas.length >= 3}
+                        onClick={() => !isSelected && handleAreaToggle(area)}
+                        disabled={isSelected || selectedResearchAreas.length >= 3}
                         style={{
                           padding: `${spacing[2]} ${spacing[3]}`,
-                          backgroundColor: isSelected ? colors.primary : 'white',
-                          color: isSelected ? 'white' : colors.textPrimary,
-                          border: `1px solid ${isSelected ? colors.primary : colors.border}`,
+                          backgroundColor: isSelected ? colors.backgroundSecondary : 'white',
+                          color: isSelected ? colors.textTertiary : colors.textPrimary,
+                          border: `1px solid ${colors.border}`,
                           borderRadius: '20px',
                           fontSize: '12px',
                           fontWeight: '500',
-                          cursor: (isSelected || canSelect) ? 'pointer' : 'not-allowed',
+                          cursor: isSelected ? 'not-allowed' : (canSelect ? 'pointer' : 'not-allowed'),
                           transition: 'all 0.2s ease',
                           fontFamily: 'Inter',
                           position: 'relative',
                           display: 'flex',
                           alignItems: 'center',
                           gap: spacing[1],
-                          opacity: (!isSelected && selectedResearchAreas.length >= 3) ? 0.5 : 1
+                          opacity: isSelected ? 0.6 : ((!isSelected && selectedResearchAreas.length >= 3) ? 0.5 : 1)
                         }}
                         onMouseEnter={(e) => {
                           if (!isSelected && canSelect) {
                             e.target.style.backgroundColor = colors.primary;
                             e.target.style.color = 'white';
-                            e.target.style.borderColor = colors.primary;
+                            e.target.style.borderColor = colors.border;
                           }
                         }}
                         onMouseLeave={(e) => {
@@ -2082,9 +2088,6 @@ const ResearchAreaStep = ({
                         }}
                       >
                         {area.name}
-                        {isSelected && (
-                          <span style={{ fontSize: '14px', lineHeight: 1 }}>×</span>
-                        )}
                       </button>
                     );
                   })}
@@ -2121,29 +2124,29 @@ const ResearchAreaStep = ({
                     return (
                       <button
                         key={area.id}
-                        onClick={() => handleAreaToggle(area)}
-                        disabled={!isSelected && selectedResearchAreas.length >= 3}
+                        onClick={() => !isSelected && handleAreaToggle(area)}
+                        disabled={isSelected || selectedResearchAreas.length >= 3}
                         style={{
                           padding: `${spacing[2]} ${spacing[3]}`,
-                          backgroundColor: isSelected ? colors.primary : 'white',
-                          color: isSelected ? 'white' : colors.textPrimary,
-                          border: `1px solid ${isSelected ? colors.primary : colors.border}`,
+                          backgroundColor: isSelected ? colors.backgroundSecondary : 'white',
+                          color: isSelected ? colors.textTertiary : colors.textPrimary,
+                          border: `1px solid ${colors.border}`,
                           borderRadius: '20px',
                           fontSize: '12px',
                           fontWeight: '500',
-                          cursor: (isSelected || canSelect) ? 'pointer' : 'not-allowed',
+                          cursor: isSelected ? 'not-allowed' : (canSelect ? 'pointer' : 'not-allowed'),
                           transition: 'all 0.2s ease',
                           fontFamily: 'Inter',
                           display: 'flex',
                           alignItems: 'center',
                           gap: spacing[1],
-                          opacity: (!isSelected && selectedResearchAreas.length >= 3) ? 0.5 : 1
+                          opacity: isSelected ? 0.6 : ((!isSelected && selectedResearchAreas.length >= 3) ? 0.5 : 1)
                         }}
                         onMouseEnter={(e) => {
                           if (!isSelected && canSelect) {
                             e.target.style.backgroundColor = colors.primary;
                             e.target.style.color = 'white';
-                            e.target.style.borderColor = colors.primary;
+                            e.target.style.borderColor = colors.border;
                           }
                         }}
                         onMouseLeave={(e) => {
@@ -2155,9 +2158,6 @@ const ResearchAreaStep = ({
                         }}
                       >
                         {area.name}
-                        {isSelected && (
-                          <span style={{ fontSize: '14px', lineHeight: 1 }}>×</span>
-                        )}
                       </button>
                     );
                   })}
