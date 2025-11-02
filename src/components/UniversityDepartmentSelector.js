@@ -62,8 +62,10 @@ const UniversityDepartmentSelector = ({
       const departmentsList = await UniversityService.getDepartmentsByUniversity(universityId);
 
       // Process departments from university-specific endpoint
+      // Keep both university_department_id (id) and actual department_id (department)
       const processedDepartments = departmentsList.map((dept) => ({
-        id: String(dept.id),
+        id: String(dept.id), // This is university_department_id
+        department: dept.department, // This is the actual department_id for API calls
         name: dept.name || dept.department_name,
         department_name: dept.name || dept.department_name
       }));
@@ -110,7 +112,8 @@ const UniversityDepartmentSelector = ({
     if (value) {
       const department = departments.find(d => d.id === value);
       if (department) {
-        onDepartmentSelected(value, department.department_name || department.name);
+        // Pass the department object along with id and name for proper department_id handling
+        onDepartmentSelected(value, department.department_name || department.name, department);
       }
     }
   };

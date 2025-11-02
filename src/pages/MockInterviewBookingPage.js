@@ -56,6 +56,7 @@ const MockInterviewBookingPage = () => {
   const [selectedUniversityName, setSelectedUniversityName] = useState('');
   const [selectedUniversityDepartmentId, setSelectedUniversityDepartmentId] = useState('');
   const [selectedDepartmentName, setSelectedDepartmentName] = useState('');
+  const [selectedDepartmentObject, setSelectedDepartmentObject] = useState(null);
 
   // Legacy state for backward compatibility
   const [selectedUniversity, setSelectedUniversity] = useState(null);
@@ -83,10 +84,11 @@ const MockInterviewBookingPage = () => {
     setSelectedDepartment(null);
   };
 
-  const handleDepartmentSelected = (departmentId, departmentName) => {
-    console.log('Department selected:', departmentId, departmentName);
+  const handleDepartmentSelected = (departmentId, departmentName, departmentObject = null) => {
+    console.log('Department selected:', departmentId, departmentName, departmentObject);
     setSelectedUniversityDepartmentId(departmentId);
     setSelectedDepartmentName(departmentName);
+    setSelectedDepartmentObject(departmentObject);
 
     // Update legacy state for compatibility
     const department = { id: departmentId, name: departmentName, department: departmentId };
@@ -171,13 +173,26 @@ const MockInterviewBookingPage = () => {
 
   // Load research areas when department is selected
   useEffect(() => {
-    if (selectedUniversityDepartmentId) {
+    if (selectedUniversityDepartmentId && selectedDepartmentObject) {
       const loadResearchAreas = async () => {
         setResearchAreasLoading(true);
         try {
-          // Use selectedUniversityDepartmentId as department_id directly
-          const departmentId = selectedUniversityDepartmentId;
+          // Use the actual department_id from the department object, not university_department_id
+          // Based on the SearchService.getDepartments method, the department object has:
+          // - id: university_department_id (e.g., 8 for Purdue CS)
+          // - department: actual department_id (e.g., 2 for Purdue CS)
+          // The research areas API needs the actual department_id
+          const departmentId = selectedDepartmentObject.department || selectedDepartmentObject.department_id || selectedDepartmentObject.id || selectedUniversityDepartmentId;
           console.log('Loading research areas for department_id:', departmentId);
+          console.log('Department object:', selectedDepartmentObject);
+          console.log('Using department_id vs university_department_id:', {
+            'department (actual department_id)': selectedDepartmentObject.department,
+            'department_id': selectedDepartmentObject.department_id,
+            'id (university_department_id)': selectedDepartmentObject.id,
+            'selectedUniversityDepartmentId (fallback)': selectedUniversityDepartmentId,
+            'using_for_api': departmentId
+          });
+
           const areas = await SearchService.getResearchAreasByDepartment(departmentId);
 
           // Ensure we always set an array
@@ -203,7 +218,7 @@ const MockInterviewBookingPage = () => {
       setSelectedResearchAreas([]);
       setResearchAreasLoading(false);
     }
-  }, [selectedUniversityDepartmentId, selectedDepartmentName]);
+  }, [selectedUniversityDepartmentId, selectedDepartmentName, selectedDepartmentObject]);
 
   const sessionTypes = {
     'mock_interview': {
