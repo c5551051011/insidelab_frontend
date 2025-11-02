@@ -25,6 +25,19 @@ const MySessionsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Add spin animation
+  React.useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+
   // Fetch sessions from API
   useEffect(() => {
     const fetchSessions = async () => {
@@ -48,17 +61,33 @@ const MySessionsPage = () => {
           type: session.session_type,
           status: session.status,
           createdAt: session.created_at,
-          targetLabs: (session.target_labs || []).map(lab => ({
-            name: lab.lab_name,
-            university: lab.university_name,
-            field: lab.field_name
+
+          // Use new detailed API fields with fallback to legacy fields
+          targetLabs: session.target_lab_names || (session.target_labs || []).map(lab => ({
+            name: lab.lab_name || lab.name,
+            university: lab.university_name || lab.university,
+            field: lab.field_name || lab.field,
+            priority: lab.priority
           })),
+
+          // Use new research area names with fallback
+          researchAreas: session.research_area_names || [],
           focusAreas: session.focus_areas,
-          preferredSlots: (session.preferred_slots || []).map(slot => ({
+
+          // Use new preferred slot summary with fallback
+          preferredSlots: session.preferred_slot_summary || (session.preferred_slots || []).map(slot => ({
             date: slot.date,
             time: slot.time,
             priority: slot.priority
           })),
+
+          // Summary information
+          researchAreaCount: session.research_area_count || 0,
+          targetLabCount: session.target_lab_count || 0,
+          preferredSlotCount: session.preferred_slot_count || 0,
+          primaryResearchArea: session.primary_research_area || '',
+          primaryLab: session.primary_lab || '',
+
           matchedInterviewer: session.interviewer ? {
             name: `${session.interviewer.first_name || ''} ${session.interviewer.last_name || ''}`.trim() || session.interviewer.email,
             position: session.interviewer.position,
@@ -261,7 +290,15 @@ const MySessionsPage = () => {
             textAlign: 'center',
             boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)'
           }}>
-            <Loader size={48} color={colors.primary} style={{ marginBottom: spacing[4], animation: 'spin 1s linear infinite' }} />
+            <div style={{
+              width: '40px',
+              height: '40px',
+              border: `4px solid ${colors.border}`,
+              borderTop: `4px solid ${colors.primary}`,
+              borderRadius: '50%',
+              margin: `0 auto ${spacing[4]}px auto`,
+              animation: 'spin 1s linear infinite'
+            }} />
             <p style={{
               fontSize: '14px',
               color: colors.textSecondary
@@ -421,31 +458,119 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile }) => 
         </div>
       </div>
 
-      {/* Target Labs */}
-      <div style={{
-        marginBottom: spacing[4],
-        padding: spacing[4],
-        backgroundColor: colors.backgroundSecondary,
-        borderRadius: '8px'
-      }}>
+      {/* Research Areas */}
+      {session.researchAreas && session.researchAreas.length > 0 && (
         <div style={{
-          fontSize: '13px',
-          fontWeight: '600',
-          color: colors.textPrimary,
-          marginBottom: spacing[2]
+          marginBottom: spacing[3],
+          padding: spacing[4],
+          backgroundColor: colors.backgroundSecondary,
+          borderRadius: '8px'
         }}>
-          Target Labs
-        </div>
-        {session.targetLabs.map((lab, idx) => (
-          <div key={idx} style={{
+          <div style={{
             fontSize: '13px',
-            color: colors.textSecondary,
-            marginBottom: spacing[1]
+            fontWeight: '600',
+            color: colors.textPrimary,
+            marginBottom: spacing[3]
           }}>
-            • {lab.name} - {lab.university} ({lab.field})
+            Research Areas
           </div>
-        ))}
-      </div>
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: spacing[2]
+          }}>
+            {Array.isArray(session.researchAreas) ? (
+              session.researchAreas.map((area, idx) => {
+                const areaText = typeof area === 'string' ? area : area.name || 'Research Area';
+                const isPrimary = session.primaryResearchArea && areaText === session.primaryResearchArea;
+
+                return (
+                  <div key={idx} style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: spacing[1],
+                    padding: `${spacing[1]} ${spacing[3]}`,
+                    backgroundColor: isPrimary ? colors.primary + '20' : colors.background,
+                    border: `1px solid ${isPrimary ? colors.primary + '40' : colors.border}`,
+                    borderRadius: '16px',
+                    fontSize: '12px',
+                    fontWeight: isPrimary ? '600' : '500',
+                    color: isPrimary ? colors.primary : colors.textSecondary
+                  }}>
+                    {isPrimary && (
+                      <div style={{
+                        width: '6px',
+                        height: '6px',
+                        borderRadius: '50%',
+                        backgroundColor: colors.primary
+                      }} />
+                    )}
+                    {areaText}
+                  </div>
+                );
+              })
+            ) : typeof session.researchAreas === 'string' ? (
+              <div style={{
+                padding: `${spacing[1]} ${spacing[3]}`,
+                backgroundColor: colors.background,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '16px',
+                fontSize: '12px',
+                fontWeight: '500',
+                color: colors.textSecondary
+              }}>
+                {session.researchAreas}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
+
+      {/* Target Labs */}
+      {session.targetLabs && session.targetLabs.length > 0 && (
+        <div style={{
+          marginBottom: spacing[3],
+          padding: spacing[4],
+          backgroundColor: colors.backgroundSecondary,
+          borderRadius: '8px'
+        }}>
+          <div style={{
+            fontSize: '13px',
+            fontWeight: '600',
+            color: colors.textPrimary,
+            marginBottom: spacing[2]
+          }}>
+            Target Labs {session.primaryLab && (
+              <span style={{
+                fontSize: '11px',
+                fontWeight: '500',
+                color: colors.textSecondary,
+                marginLeft: spacing[2]
+              }}>
+                (Primary: {session.primaryLab})
+              </span>
+            )}
+          </div>
+          {Array.isArray(session.targetLabs) ? (
+            session.targetLabs.map((lab, idx) => (
+              <div key={idx} style={{
+                fontSize: '13px',
+                color: colors.textSecondary,
+                marginBottom: spacing[1]
+              }}>
+                • {typeof lab === 'string' ? lab : `${lab.name || 'Unknown Lab'} - ${lab.university || 'Unknown University'}`}
+              </div>
+            ))
+          ) : typeof session.targetLabs === 'string' ? (
+            <div style={{
+              fontSize: '13px',
+              color: colors.textSecondary
+            }}>
+              {session.targetLabs}
+            </div>
+          ) : null}
+        </div>
+      )}
 
       {/* Matched Interviewer (if confirmed) */}
       {session.status === 'confirmed' && session.matchedInterviewer && (
@@ -582,7 +707,7 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile }) => 
       {/* Preferred Slots (if not confirmed) */}
       {session.status !== 'confirmed' && session.preferredSlots && (
         <div style={{
-          marginBottom: spacing[4],
+          marginBottom: spacing[3],
           padding: spacing[4],
           backgroundColor: colors.backgroundSecondary,
           borderRadius: '8px'
@@ -594,36 +719,56 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile }) => 
             marginBottom: spacing[2]
           }}>
             Your Preferred Time Slots
-          </div>
-          {session.preferredSlots.map((slot, idx) => (
-            <div key={idx} style={{
-              fontSize: '13px',
-              color: colors.textSecondary,
-              marginBottom: spacing[1],
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing[2]
-            }}>
+            {session.preferredSlotCount && (
               <span style={{
                 fontSize: '11px',
-                fontWeight: '600',
-                padding: `2px ${spacing[2]}`,
-                backgroundColor: `${colors.primary}20`,
-                color: colors.primary,
-                borderRadius: '4px'
+                fontWeight: '500',
+                color: colors.textSecondary,
+                marginLeft: spacing[2]
               }}>
-                #{slot.priority}
+                ({session.preferredSlotCount} slots)
               </span>
-              {formatDate(slot.date)} at {formatTime(slot.time)}
+            )}
+          </div>
+          {typeof session.preferredSlots === 'string' ? (
+            <div style={{
+              fontSize: '13px',
+              color: colors.textSecondary,
+              lineHeight: 1.5
+            }}>
+              {session.preferredSlots}
             </div>
-          ))}
+          ) : Array.isArray(session.preferredSlots) ? (
+            session.preferredSlots.map((slot, idx) => (
+              <div key={idx} style={{
+                fontSize: '13px',
+                color: colors.textSecondary,
+                marginBottom: spacing[1],
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[2]
+              }}>
+                <span style={{
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  padding: `2px ${spacing[2]}`,
+                  backgroundColor: `${colors.primary}20`,
+                  color: colors.primary,
+                  borderRadius: '4px'
+                }}>
+                  #{slot.priority || idx + 1}
+                </span>
+                {typeof slot === 'string' ? slot : slot.date && slot.time ? `${formatDate(slot.date)} at ${formatTime(slot.time)}` : 'Time slot details'}
+              </div>
+            ))
+          ) : null}
         </div>
       )}
 
       {/* Focus Areas */}
       {session.focusAreas && (
         <div style={{
-          marginBottom: spacing[4],
+          marginBottom: spacing[3],
           padding: spacing[4],
           backgroundColor: colors.backgroundSecondary,
           borderRadius: '8px'

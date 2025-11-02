@@ -41,16 +41,39 @@ const LabDetailPage = () => {
         setLoading(true);
         setError(null);
 
-        // Try to get lab ID from navigation state first, otherwise fallback to name-based lookup
-        const labId = location.state?.labId;
+        // Try to get lab ID from multiple sources:
+        // 1. Navigation state (direct navigation)
+        // 2. SessionStorage (refresh case)
+        // 3. Fallback to name-based lookup
+        let labId = location.state?.labId;
+
+        if (!labId) {
+          // Check sessionStorage for labId using the lab name as key
+          const storageKey = `labId_${name}`;
+          labId = sessionStorage.getItem(storageKey);
+          console.log('Retrieved lab ID from sessionStorage:', labId);
+        }
 
         let labData;
         if (labId) {
-          console.log('Using lab ID from navigation state:', labId);
+          console.log('Using lab ID:', labId);
           labData = await SearchService.getLabById(labId);
+
+          // Store labId in sessionStorage for future refreshes
+          const storageKey = `labId_${name}`;
+          sessionStorage.setItem(storageKey, labId);
+          sessionStorage.setItem(`${storageKey}_timestamp`, Date.now().toString());
         } else {
-          console.log('No lab ID in state, falling back to name-based search:', name);
+          console.log('No lab ID available, falling back to name-based search:', name);
           labData = await SearchService.getLabByName(name);
+
+          // If we successfully get lab data, store the labId for future use
+          if (labData?.id) {
+            const storageKey = `labId_${name}`;
+            sessionStorage.setItem(storageKey, labData.id);
+            sessionStorage.setItem(`${storageKey}_timestamp`, Date.now().toString());
+            console.log('Stored lab ID in sessionStorage:', labData.id);
+          }
         }
 
         // Check if we have complete data with IDs for write review functionality
@@ -96,6 +119,31 @@ const LabDetailPage = () => {
     }
   }, [name, location.state]);
 
+  // Cleanup old sessionStorage entries on component unmount
+  useEffect(() => {
+    return () => {
+      // Clean up sessionStorage entries older than 1 hour to prevent accumulation
+      const currentTime = Date.now();
+      const oneHour = 60 * 60 * 1000;
+
+      for (let i = sessionStorage.length - 1; i >= 0; i--) {
+        const key = sessionStorage.key(i);
+        if (key && key.startsWith('labId_')) {
+          try {
+            const timestamp = sessionStorage.getItem(`${key}_timestamp`);
+            if (timestamp && currentTime - parseInt(timestamp) > oneHour) {
+              sessionStorage.removeItem(key);
+              sessionStorage.removeItem(`${key}_timestamp`);
+            }
+          } catch (error) {
+            // If there's any error, just remove the key
+            sessionStorage.removeItem(key);
+          }
+        }
+      }
+    };
+  }, []);
+
   const handleBookmarkToggle = () => {
     setIsBookmarked(!isBookmarked);
     // TODO: Add actual bookmark API call here
@@ -110,6 +158,28 @@ const LabDetailPage = () => {
       }
       window.open(formattedUrl, '_blank', 'noopener,noreferrer');
     }
+  };
+
+  const handleWriteReview = () => {
+    console.log('DEBUG: Lab data for write review:', lab);
+
+    // Navigate to write review page with lab data in state
+    navigate('/write-review', {
+      state: {
+        labData: {
+          labId: lab.id || lab.labId,
+          labName: lab.labName || lab.name,
+          professorId: lab.professorId,
+          professorName: lab.professorName,
+          universityId: lab.universityId,
+          universityName: lab.universityName,
+          departmentId: lab.departmentId,
+          departmentName: lab.department,
+          researchGroupId: lab.researchGroupId,
+          researchGroupName: lab.researchGroup
+        }
+      }
+    });
   };
 
   if (loading) {
@@ -200,6 +270,7 @@ const LabDetailPage = () => {
         isBookmarked={isBookmarked}
         onBookmarkToggle={handleBookmarkToggle}
         onBack={() => navigate(-1)}
+        onWriteReview={handleWriteReview}
       />
 
       {/* Main Content */}
@@ -223,7 +294,7 @@ const LabDetailPage = () => {
 
         {/* Reviews Section */}
         <div style={{ marginTop: spacing[8] }}>
-          <ReviewsSection lab={lab} />
+          <ReviewsSection lab={lab} onWriteReview={handleWriteReview} />
         </div>
       </div>
 
@@ -233,7 +304,7 @@ const LabDetailPage = () => {
 };
 
 // Lab Header Component
-const LabHeader = ({ lab, isBookmarked, onBookmarkToggle, onBack }) => {
+const LabHeader = ({ lab, isBookmarked, onBookmarkToggle, onBack, onWriteReview }) => {
   const getInitials = (name) => {
     return name.split(' ').map(n => n.charAt(0)).slice(0, 2).join('').toUpperCase();
   };
@@ -706,20 +777,28 @@ const RatingBreakdown = ({ lab }) => {
 
 // Recruitment Status Component
 const RecruitmentStatus = ({ lab }) => {
+  // Get recruitment data from API response
+  const recruitmentStatus = lab.recruitment_status || lab.recruitmentStatus;
+
   const recruitmentData = [
     {
       position: 'PhD Students',
-      isRecruiting: lab.recruitmentStatus?.phd || false
+      isRecruiting: recruitmentStatus?.is_recruiting_phd || recruitmentStatus?.phd || false
     },
     {
       position: 'Postdocs',
-      isRecruiting: lab.recruitmentStatus?.postdoc || false
+      isRecruiting: recruitmentStatus?.is_recruiting_postdoc || recruitmentStatus?.postdoc || false
     },
     {
       position: 'Undergraduate Interns',
-      isRecruiting: lab.recruitmentStatus?.intern || false
+      isRecruiting: recruitmentStatus?.is_recruiting_intern || recruitmentStatus?.intern || false
     }
   ];
+
+  // Check if we have any recruitment data or if all positions are closed
+  const hasRecruitmentData = recruitmentStatus && Object.keys(recruitmentStatus).length > 0;
+  const hasOpenPositions = recruitmentData.some(item => item.isRecruiting);
+  const recruitmentNotes = recruitmentStatus?.notes;
 
   return (
     <div style={{
@@ -739,71 +818,117 @@ const RecruitmentStatus = ({ lab }) => {
         Recruitment Status
       </h3>
 
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: spacing[3]
-      }}>
-        {recruitmentData.map((item, index) => (
-          <div key={index} style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing[3]
-          }}>
-            {item.isRecruiting ? (
-              <CheckCircle size={20} color={colors.success} />
-            ) : (
-              <XCircle size={20} color={colors.textTertiary} />
-            )}
-
-            <span style={{
-              flex: 1,
-              fontSize: '16px',
-              color: colors.textPrimary
-            }}>
-              {item.position}
-            </span>
-
-            <span style={{
-              padding: `${spacing[1]} ${spacing[2]}`,
-              borderRadius: '12px',
-              fontSize: '12px',
-              fontWeight: '600',
-              backgroundColor: item.isRecruiting
-                ? `${colors.success}20`
-                : `${colors.textTertiary}20`,
-              color: item.isRecruiting ? colors.success : colors.textTertiary
-            }}>
-              {item.isRecruiting ? 'Open' : 'Closed'}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Note about recruitment status */}
-      <div style={{
-        marginTop: spacing[4],
-        padding: spacing[3],
-        backgroundColor: `${colors.warning}10`,
-        borderRadius: '8px',
-        border: `1px solid ${colors.warning}30`
-      }}>
+      {hasRecruitmentData && hasOpenPositions ? (
+        // Show recruitment positions when we have data and open positions
         <div style={{
           display: 'flex',
-          alignItems: 'flex-start',
-          gap: spacing[2]
+          flexDirection: 'column',
+          gap: spacing[3]
         }}>
-          <Info size={16} color={colors.warning} style={{ marginTop: '2px' }} />
+          {recruitmentData.map((item, index) => (
+            <div key={index} style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing[3]
+            }}>
+              {item.isRecruiting ? (
+                <CheckCircle size={20} color={colors.success} />
+              ) : (
+                <XCircle size={20} color={colors.textTertiary} />
+              )}
+
+              <span style={{
+                flex: 1,
+                fontSize: '16px',
+                color: colors.textPrimary
+              }}>
+                {item.position}
+              </span>
+
+              <span style={{
+                padding: `${spacing[1]} ${spacing[2]}`,
+                borderRadius: '12px',
+                fontSize: '12px',
+                fontWeight: '600',
+                backgroundColor: item.isRecruiting
+                  ? `${colors.success}20`
+                  : `${colors.textTertiary}20`,
+                color: item.isRecruiting ? colors.success : colors.textTertiary
+              }}>
+                {item.isRecruiting ? 'Open' : 'Closed'}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        // Show message when no data or all positions closed
+        <div style={{
+          textAlign: 'center',
+          padding: spacing[4],
+          color: colors.textTertiary
+        }}>
           <p style={{
             fontSize: '14px',
-            color: colors.textSecondary,
             margin: 0,
             lineHeight: 1.4
           }}>
             Recruitment status may not be current. Please check the lab's official website or contact them directly for the most up-to-date information.
           </p>
         </div>
-      </div>
+      )}
+
+      {/* Show recruitment notes or default message */}
+      {recruitmentNotes ? (
+        <div style={{
+          marginTop: spacing[4],
+          padding: spacing[3],
+          backgroundColor: `${colors.primary}10`,
+          borderRadius: '8px',
+          border: `1px solid ${colors.primary}30`
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: spacing[2]
+          }}>
+            <Info size={16} color={colors.primary} style={{ marginTop: '2px' }} />
+            <p style={{
+              fontSize: '14px',
+              color: colors.textSecondary,
+              margin: 0,
+              lineHeight: 1.4
+            }}>
+              {recruitmentNotes}
+            </p>
+          </div>
+        </div>
+      ) : (
+        hasRecruitmentData && hasOpenPositions && (
+          <div style={{
+            marginTop: spacing[4],
+            padding: spacing[3],
+            backgroundColor: `${colors.warning}10`,
+            borderRadius: '8px',
+            border: `1px solid ${colors.warning}30`
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: spacing[2]
+            }}>
+              <Info size={16} color={colors.warning} style={{ marginTop: '2px' }} />
+              <p style={{
+                fontSize: '14px',
+                color: colors.textSecondary,
+                margin: 0,
+                lineHeight: 1.4
+              }}>
+                Recruitment status may not be current. Please check the lab's official website or contact them directly for the most up-to-date information.
+              </p>
+            </div>
+          </div>
+        )
+      )}
     </div>
   );
 };
@@ -1026,7 +1151,7 @@ const PublicationsSection = ({ publications }) => {
 };
 
 // Reviews Section Component
-const ReviewsSection = ({ lab }) => {
+const ReviewsSection = ({ lab, onWriteReview }) => {
   const navigate = useNavigate();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1081,28 +1206,6 @@ const ReviewsSection = ({ lab }) => {
 
   const displayedReviews = showAll ? reviews : reviews.slice(0, 3);
 
-  const handleWriteReview = () => {
-    console.log('DEBUG: Lab data for write review:', lab);
-
-    // Navigate to write review page with lab data in state
-    navigate('/write-review', {
-      state: {
-        labData: {
-          labId: lab.id,
-          labName: lab.labName,
-          professorId: lab.professorId,
-          professorName: lab.professorName,
-          universityId: lab.universityId,
-          universityName: lab.universityName,
-          departmentId: lab.departmentId,
-          departmentName: lab.department,
-          researchGroupId: lab.researchGroupId,
-          researchGroupName: lab.researchGroup
-        }
-      }
-    });
-  };
-
   return (
     <div style={{
       backgroundColor: 'white',
@@ -1132,16 +1235,38 @@ const ReviewsSection = ({ lab }) => {
             Recent Reviews
           </h3>
         </div>
-        <span style={{
-          backgroundColor: `${colors.primary}15`,
-          color: colors.primary,
-          padding: `${spacing[1]} ${spacing[3]}`,
-          borderRadius: '16px',
-          fontSize: '14px',
-          fontWeight: '600'
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: spacing[3]
         }}>
-          {reviews.length} reviews
-        </span>
+          <span style={{
+            backgroundColor: `${colors.primary}15`,
+            color: colors.primary,
+            padding: `${spacing[1]} ${spacing[3]}`,
+            borderRadius: '16px',
+            fontSize: '14px',
+            fontWeight: '600'
+          }}>
+            {reviews.length} reviews
+          </span>
+          <button
+            onClick={onWriteReview}
+            style={{
+              backgroundColor: colors.primary,
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: `${spacing[2]} ${spacing[4]}`,
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Write Review
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -1236,7 +1361,7 @@ const ReviewsSection = ({ lab }) => {
             Be the first to share your experience working in this lab. Your review will help future students and researchers.
           </p>
           <button
-            onClick={handleWriteReview}
+            onClick={onWriteReview}
             style={{
               backgroundColor: colors.primary,
               color: 'white',
@@ -1246,13 +1371,9 @@ const ReviewsSection = ({ lab }) => {
               fontSize: '14px',
               fontWeight: '600',
               cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: spacing[2]
+              transition: 'all 0.2s ease'
             }}
           >
-            <MessageCircle size={16} />
             Write First Review
           </button>
         </div>

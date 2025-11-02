@@ -148,12 +148,34 @@ const WriteReviewPage = () => {
         };
 
         console.log('DEBUG: New form data to set:', newFormData);
+        console.log('DEBUG: Individual fields:');
+        console.log('  - universityId:', labData.universityId);
+        console.log('  - universityName:', labData.universityName);
+        console.log('  - departmentId:', labData.departmentId);
+        console.log('  - departmentName:', labData.departmentName);
+        console.log('  - researchGroupId:', labData.researchGroupId);
+        console.log('  - researchGroupName:', labData.researchGroupName);
+        console.log('  - professorId:', labData.professorId);
+        console.log('  - professorName:', labData.professorName);
+        console.log('  - labId:', labData.labId);
+        console.log('  - labName:', labData.labName);
 
         // Use the lab data passed from the previous page
         setFormData(prev => ({
           ...prev,
           ...newFormData
         }));
+
+        // If we have names but missing IDs, try to fetch them
+        if (labData.universityName && !labData.universityId) {
+          console.log('DEBUG: Missing universityId, will be populated when university is selected');
+        }
+        if (labData.departmentName && !labData.departmentId) {
+          console.log('DEBUG: Missing departmentId, will be populated when department is selected');
+        }
+        if (labData.researchGroupName && !labData.researchGroupId) {
+          console.log('DEBUG: Missing researchGroupId, will be populated when research group is selected');
+        }
 
         console.log('DEBUG: Form prefilled successfully with lab data');
       } catch (error) {
@@ -450,33 +472,38 @@ const WriteReviewPage = () => {
     return (
       <div style={{
         minHeight: '100vh',
-        backgroundColor: colors.background,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+        backgroundColor: colors.background
       }}>
         <Header />
         <div style={{
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
-          gap: spacing[4]
+          justifyContent: 'center',
+          minHeight: 'calc(100vh - 72px)', // Subtract header height
+          padding: spacing[6]
         }}>
           <div style={{
-            width: '40px',
-            height: '40px',
-            border: `4px solid ${colors.border}`,
-            borderTop: `4px solid ${colors.primary}`,
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }} />
-          <p style={{
-            color: colors.textSecondary,
-            fontSize: '16px',
-            fontFamily: 'Inter'
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: spacing[4]
           }}>
-            {isCheckingAuth ? 'Checking authentication...' : isLoadingCategories ? 'Loading rating categories...' : 'Pre-filling form data...'}
-          </p>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              border: `4px solid ${colors.border}`,
+              borderTop: `4px solid ${colors.primary}`,
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }} />
+            <p style={{
+              color: colors.textSecondary,
+              fontSize: '16px',
+              fontFamily: 'Inter'
+            }}>
+              {isCheckingAuth ? 'Checking authentication...' : isLoadingCategories ? 'Loading rating categories...' : 'Pre-filling form data...'}
+            </p>
+          </div>
         </div>
       </div>
     );

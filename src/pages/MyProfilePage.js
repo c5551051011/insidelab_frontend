@@ -17,7 +17,17 @@ import {
   Settings,
   Shield,
   Star,
-  Globe
+  Globe,
+  Briefcase,
+  DollarSign,
+  TrendingUp,
+  MessageSquare,
+  Video,
+  FileCheck,
+  Users,
+  BarChart3,
+  Clock3,
+  ChevronRight
 } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -385,6 +395,7 @@ const MobileTabNavigation = ({ activeTab, onTabChange }) => {
     { id: 'academic', label: 'Academic', icon: GraduationCap },
     { id: 'research', label: 'Research', icon: BookOpen },
     { id: 'reviews', label: 'Reviews', icon: FileText },
+    { id: 'services', label: 'Services', icon: Briefcase },
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
@@ -451,6 +462,8 @@ const MobileContent = ({ user, activeTab, onEditResearch }) => {
         return <MobileResearchTab user={user} onEditResearch={onEditResearch} />;
       case 'reviews':
         return <MobileReviewsTab user={user} />;
+      case 'services':
+        return <ServiceProviderTab user={user} isMobile={true} />;
       case 'settings':
         return <MobileSettingsTab user={user} />;
       default:
@@ -650,6 +663,7 @@ const ProfileSidebar = ({ user, activeTab, onTabChange, onSignOut, onEditProfile
     { id: 'academic', label: 'Academic Profile', icon: GraduationCap },
     { id: 'research', label: 'Research Interests', icon: BookOpen },
     { id: 'reviews', label: 'My Reviews', icon: FileText },
+    { id: 'services', label: 'Service Provider', icon: Briefcase },
     { id: 'settings', label: 'Account Settings', icon: Settings },
     { id: 'privacy', label: 'Privacy & Security', icon: Shield }
   ];
@@ -865,6 +879,8 @@ const ProfileContent = ({ user, activeTab, onEditProfile, onEditResearch }) => {
         return <ResearchTab user={user} onEditResearch={onEditResearch} />;
       case 'reviews':
         return <ReviewsTab user={user} />;
+      case 'services':
+        return <ServiceProviderTab user={user} isMobile={false} />;
       case 'settings':
         return <SettingsTab user={user} />;
       case 'privacy':
@@ -2431,6 +2447,644 @@ const AccountInfoCard = ({ icon: Icon, label, value, valueColor }) => {
         }}>
           {value}
         </div>
+      </div>
+    </div>
+  );
+};
+
+// Service Provider Tab Component
+const ServiceProviderTab = ({ user, isMobile }) => {
+  const [isServiceProvider, setIsServiceProvider] = useState(user?.can_provide_services || false);
+  const [serviceStats, setServiceStats] = useState({
+    monthlyBookings: 12,
+    averageRating: 4.8,
+    totalEarnings: 2400,
+    completedServices: 45,
+    totalReviews: 23
+  });
+
+  const [upcomingBookings] = useState([
+    {
+      id: 1,
+      date: '2025-11-05',
+      time: '14:00',
+      student: 'Anonymous Student',
+      service: 'Mock Interview',
+      status: 'confirmed'
+    },
+    {
+      id: 2,
+      date: '2025-11-07',
+      time: '16:30',
+      student: 'Jane S.',
+      service: 'CV Review',
+      status: 'confirmed'
+    }
+  ]);
+
+  const [pendingRequests] = useState([
+    {
+      id: 1,
+      student: 'Student A',
+      service: 'Mock Interview',
+      requestedDate: '2025-11-10',
+      background: 'Computer Science PhD candidate',
+      message: 'Looking for mock interview preparation for industry positions'
+    }
+  ]);
+
+  const [recentReviews] = useState([
+    {
+      id: 1,
+      student: 'Anonymous',
+      rating: 5,
+      service: 'Mock Interview',
+      comment: 'Excellent feedback and very helpful session',
+      date: '2025-11-01'
+    },
+    {
+      id: 2,
+      student: 'John D.',
+      rating: 5,
+      service: 'CV Review',
+      comment: 'Great insights and detailed feedback',
+      date: '2025-10-28'
+    }
+  ]);
+
+  if (!isServiceProvider) {
+    return <ServiceProviderSetup onEnable={() => setIsServiceProvider(true)} isMobile={isMobile} />;
+  }
+
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: spacing[6]
+    }}>
+      {/* Statistics Overview */}
+      <ServiceStats stats={serviceStats} isMobile={isMobile} />
+
+      {/* Quick Actions */}
+      <QuickActions isMobile={isMobile} />
+
+      {/* Upcoming Bookings */}
+      <UpcomingBookings bookings={upcomingBookings} isMobile={isMobile} />
+
+      {/* Pending Requests */}
+      {pendingRequests.length > 0 && (
+        <PendingRequests requests={pendingRequests} isMobile={isMobile} />
+      )}
+
+      {/* Recent Reviews */}
+      <RecentReviews reviews={recentReviews} isMobile={isMobile} />
+    </div>
+  );
+};
+
+// Service Provider Setup Component
+const ServiceProviderSetup = ({ onEnable, isMobile }) => {
+  return (
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      padding: spacing[6],
+      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+      border: '1px solid rgba(0, 0, 0, 0.05)',
+      textAlign: 'center'
+    }}>
+      <div style={{
+        marginBottom: spacing[4]
+      }}>
+        <Briefcase size={48} color={colors.primary} style={{ marginBottom: spacing[3] }} />
+        <h3 style={{
+          fontSize: '24px',
+          fontWeight: '700',
+          color: colors.textPrimary,
+          margin: 0,
+          marginBottom: spacing[2]
+        }}>
+          Become a Service Provider
+        </h3>
+        <p style={{
+          color: colors.textSecondary,
+          fontSize: '16px',
+          lineHeight: 1.5,
+          margin: 0,
+          maxWidth: '500px',
+          marginLeft: 'auto',
+          marginRight: 'auto'
+        }}>
+          Share your expertise and help students succeed. Provide services like mock interviews,
+          CV reviews, and mentoring while earning additional income.
+        </p>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+        gap: spacing[4],
+        marginBottom: spacing[6]
+      }}>
+        <div style={{
+          padding: spacing[4],
+          backgroundColor: colors.background,
+          borderRadius: '12px',
+          textAlign: 'center'
+        }}>
+          <DollarSign size={32} color={colors.primary} style={{ marginBottom: spacing[2] }} />
+          <h4 style={{ margin: 0, marginBottom: spacing[1], color: colors.textPrimary }}>
+            Earn Income
+          </h4>
+          <p style={{ margin: 0, fontSize: '14px', color: colors.textSecondary }}>
+            Set your own rates and earn from your expertise
+          </p>
+        </div>
+
+        <div style={{
+          padding: spacing[4],
+          backgroundColor: colors.background,
+          borderRadius: '12px',
+          textAlign: 'center'
+        }}>
+          <Users size={32} color={colors.primary} style={{ marginBottom: spacing[2] }} />
+          <h4 style={{ margin: 0, marginBottom: spacing[1], color: colors.textPrimary }}>
+            Help Students
+          </h4>
+          <p style={{ margin: 0, fontSize: '14px', color: colors.textSecondary }}>
+            Guide the next generation of researchers
+          </p>
+        </div>
+
+        <div style={{
+          padding: spacing[4],
+          backgroundColor: colors.background,
+          borderRadius: '12px',
+          textAlign: 'center'
+        }}>
+          <Award size={32} color={colors.primary} style={{ marginBottom: spacing[2] }} />
+          <h4 style={{ margin: 0, marginBottom: spacing[1], color: colors.textPrimary }}>
+            Build Reputation
+          </h4>
+          <p style={{ margin: 0, fontSize: '14px', color: colors.textSecondary }}>
+            Establish yourself as a trusted mentor
+          </p>
+        </div>
+      </div>
+
+      <button
+        onClick={onEnable}
+        style={{
+          backgroundColor: colors.primary,
+          color: 'white',
+          border: 'none',
+          borderRadius: '12px',
+          padding: `${spacing[3]} ${spacing[6]}`,
+          fontSize: '16px',
+          fontWeight: '600',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease'
+        }}
+      >
+        Enable Service Provider
+      </button>
+    </div>
+  );
+};
+
+// Service Statistics Component
+const ServiceStats = ({ stats, isMobile }) => {
+  const statItems = [
+    {
+      label: 'This Month Bookings',
+      value: stats.monthlyBookings,
+      icon: Calendar,
+      color: colors.primary
+    },
+    {
+      label: 'Average Rating',
+      value: `${stats.averageRating}/5`,
+      icon: Star,
+      color: colors.warning
+    },
+    {
+      label: 'Total Earnings',
+      value: `$${stats.totalEarnings}`,
+      icon: DollarSign,
+      color: colors.success
+    },
+    {
+      label: 'Completed Services',
+      value: stats.completedServices,
+      icon: CheckCircle,
+      color: colors.primary
+    }
+  ];
+
+  return (
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      padding: spacing[6],
+      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+      border: '1px solid rgba(0, 0, 0, 0.05)'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        marginBottom: spacing[4]
+      }}>
+        <BarChart3 size={24} color={colors.primary} />
+        <h3 style={{
+          fontSize: '20px',
+          fontWeight: '700',
+          color: colors.textPrimary,
+          margin: 0,
+          marginLeft: spacing[2]
+        }}>
+          Performance Overview
+        </h3>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+        gap: spacing[4]
+      }}>
+        {statItems.map((item, index) => {
+          const Icon = item.icon;
+          return (
+            <div key={index} style={{
+              padding: spacing[4],
+              backgroundColor: colors.background,
+              borderRadius: '12px',
+              textAlign: 'center'
+            }}>
+              <Icon size={24} color={item.color} style={{ marginBottom: spacing[2] }} />
+              <div style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: colors.textPrimary,
+                marginBottom: spacing[1]
+              }}>
+                {item.value}
+              </div>
+              <div style={{
+                fontSize: '12px',
+                color: colors.textSecondary
+              }}>
+                {item.label}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// Quick Actions Component
+const QuickActions = ({ isMobile }) => {
+  const actions = [
+    { label: 'View Calendar', icon: Calendar, color: colors.primary },
+    { label: 'Service Settings', icon: Settings, color: colors.textSecondary },
+    { label: 'Earnings Report', icon: TrendingUp, color: colors.success }
+  ];
+
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+      gap: spacing[3]
+    }}>
+      {actions.map((action, index) => {
+        const Icon = action.icon;
+        return (
+          <button
+            key={index}
+            style={{
+              backgroundColor: 'white',
+              border: `1px solid ${colors.border}`,
+              borderRadius: '12px',
+              padding: spacing[4],
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing[2],
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Icon size={20} color={action.color} />
+            <span style={{
+              fontSize: '14px',
+              fontWeight: '500',
+              color: colors.textPrimary
+            }}>
+              {action.label}
+            </span>
+            <ChevronRight size={16} color={colors.textTertiary} style={{ marginLeft: 'auto' }} />
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+// Upcoming Bookings Component
+const UpcomingBookings = ({ bookings, isMobile }) => {
+  return (
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      padding: spacing[6],
+      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+      border: '1px solid rgba(0, 0, 0, 0.05)'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: spacing[4]
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Clock3 size={24} color={colors.primary} />
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: '700',
+            color: colors.textPrimary,
+            margin: 0,
+            marginLeft: spacing[2]
+          }}>
+            Upcoming Sessions
+          </h3>
+        </div>
+        <span style={{
+          backgroundColor: `${colors.primary}15`,
+          color: colors.primary,
+          padding: `${spacing[1]} ${spacing[2]}`,
+          borderRadius: '12px',
+          fontSize: '12px',
+          fontWeight: '600'
+        }}>
+          {bookings.length} sessions
+        </span>
+      </div>
+
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: spacing[3]
+      }}>
+        {bookings.map((booking) => (
+          <div key={booking.id} style={{
+            padding: spacing[4],
+            backgroundColor: colors.background,
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: spacing[1]
+              }}>
+                {booking.service}
+              </div>
+              <div style={{
+                fontSize: '14px',
+                color: colors.textSecondary,
+                marginBottom: spacing[1]
+              }}>
+                {booking.student} • {booking.date} at {booking.time}
+              </div>
+              <span style={{
+                fontSize: '12px',
+                padding: `${spacing[1]} ${spacing[2]}`,
+                backgroundColor: `${colors.success}15`,
+                color: colors.success,
+                borderRadius: '8px',
+                fontWeight: '500'
+              }}>
+                Confirmed
+              </span>
+            </div>
+            <ChevronRight size={20} color={colors.textTertiary} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Pending Requests Component
+const PendingRequests = ({ requests, isMobile }) => {
+  return (
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      padding: spacing[6],
+      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+      border: '1px solid rgba(0, 0, 0, 0.05)'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        marginBottom: spacing[4]
+      }}>
+        <MessageSquare size={24} color={colors.warning} />
+        <h3 style={{
+          fontSize: '20px',
+          fontWeight: '700',
+          color: colors.textPrimary,
+          margin: 0,
+          marginLeft: spacing[2]
+        }}>
+          Pending Requests
+        </h3>
+      </div>
+
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: spacing[4]
+      }}>
+        {requests.map((request) => (
+          <div key={request.id} style={{
+            padding: spacing[4],
+            backgroundColor: colors.background,
+            borderRadius: '12px'
+          }}>
+            <div style={{
+              marginBottom: spacing[3]
+            }}>
+              <div style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: spacing[1]
+              }}>
+                {request.service} Request
+              </div>
+              <div style={{
+                fontSize: '14px',
+                color: colors.textSecondary,
+                marginBottom: spacing[2]
+              }}>
+                From: {request.student} • Requested: {request.requestedDate}
+              </div>
+              <div style={{
+                fontSize: '14px',
+                color: colors.textSecondary,
+                marginBottom: spacing[1]
+              }}>
+                Background: {request.background}
+              </div>
+              <div style={{
+                fontSize: '14px',
+                color: colors.textSecondary,
+                fontStyle: 'italic'
+              }}>
+                "{request.message}"
+              </div>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              gap: spacing[2]
+            }}>
+              <button style={{
+                backgroundColor: colors.success,
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: `${spacing[2]} ${spacing[3]}`,
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer'
+              }}>
+                Accept
+              </button>
+              <button style={{
+                backgroundColor: 'transparent',
+                color: colors.textSecondary,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '8px',
+                padding: `${spacing[2]} ${spacing[3]}`,
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer'
+              }}>
+                Decline
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Recent Reviews Component
+const RecentReviews = ({ reviews, isMobile }) => {
+  return (
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      padding: spacing[6],
+      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+      border: '1px solid rgba(0, 0, 0, 0.05)'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: spacing[4]
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Star size={24} color={colors.warning} />
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: '700',
+            color: colors.textPrimary,
+            margin: 0,
+            marginLeft: spacing[2]
+          }}>
+            Recent Reviews
+          </h3>
+        </div>
+        <span style={{
+          backgroundColor: `${colors.warning}15`,
+          color: colors.warning,
+          padding: `${spacing[1]} ${spacing[2]}`,
+          borderRadius: '12px',
+          fontSize: '12px',
+          fontWeight: '600'
+        }}>
+          {reviews.length} reviews
+        </span>
+      </div>
+
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: spacing[4]
+      }}>
+        {reviews.map((review) => (
+          <div key={review.id} style={{
+            padding: spacing[4],
+            backgroundColor: colors.background,
+            borderRadius: '12px'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: spacing[2]
+            }}>
+              <div>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  marginBottom: spacing[1]
+                }}>
+                  {review.student}
+                </div>
+                <div style={{
+                  fontSize: '12px',
+                  color: colors.textSecondary
+                }}>
+                  {review.service} • {review.date}
+                </div>
+              </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[1]
+              }}>
+                {[1,2,3,4,5].map((star) => (
+                  <Star
+                    key={star}
+                    size={16}
+                    fill={star <= review.rating ? 'gold' : 'none'}
+                    color={star <= review.rating ? 'gold' : colors.textTertiary}
+                  />
+                ))}
+              </div>
+            </div>
+            <div style={{
+              fontSize: '14px',
+              color: colors.textSecondary,
+              lineHeight: 1.4,
+              fontStyle: 'italic'
+            }}>
+              "{review.comment}"
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

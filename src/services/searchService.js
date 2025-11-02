@@ -571,15 +571,16 @@ export class SearchService {
       }
 
       const data = await response.json();
+      console.log('DEBUG: Full API response for lab:', data);
 
       // Transform single lab data to match our expected format
       return {
         id: data.id.toString(),
         labName: data.name,
         professorName: data.head_professor?.name || 'Unknown',
-        universityName: data.university_name,
-        department: data.department_name || data.department,
-        researchGroup: data.research_group_name || '',
+        universityName: data.university_name || data.university?.name,
+        department: data.department_name || data.department?.name || data.department,
+        researchGroup: data.research_group_name || data.research_group?.name || '',
         overallRating: parseFloat(data.overall_rating) || 0,
         reviewCount: data.review_count || 0,
         researchAreas: data.research_areas || [],
@@ -602,11 +603,12 @@ export class SearchService {
         professorWebsite: data.head_professor?.personal_website || '',
         professorScholarUrl: data.head_professor?.google_scholar_url || '',
         ratingBreakdown: data.rating_breakdown || null,
-        // Add ID fields for write review functionality
-        professorId: data.head_professor?.id?.toString() || '',
-        universityId: data.university_id?.toString() || '',
-        departmentId: data.department_id?.toString() || '',
-        researchGroupId: data.research_group_id?.toString() || '',
+        recruitment_status: data.recruitment_status || null,
+        // Add ID fields for write review functionality - try multiple possible field names
+        professorId: data.head_professor?.id?.toString() || data.professor_id?.toString() || '',
+        universityId: data.university_id?.toString() || data.university?.id?.toString() || '',
+        departmentId: data.department_id?.toString() || data.department?.id?.toString() || '',
+        researchGroupId: data.research_group_id?.toString() || data.research_group?.id?.toString() || '',
         labId: data.id?.toString() || ''
       };
     } catch (error) {
