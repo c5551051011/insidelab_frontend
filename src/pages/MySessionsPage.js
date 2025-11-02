@@ -226,12 +226,301 @@ const MySessionsPage = () => {
           },
           confirmedSlot: {
             date: '2024-11-15',
-            time: '2:00 PM'
+            time: '2:00 PM',
+            zoomLink: 'https://stanford.zoom.us/j/1234567890?pwd=abcdef'
           },
           price: 150.00
         };
 
-        setSessions([dummySession, ...transformedSessions]);
+        // Add multiple dummy sessions for testing different statuses
+        const dummySessions = [
+          dummySession, // confirmed session (already defined above)
+
+          // Pending session
+          {
+            id: 'dummy-session-2',
+            type: 'mock-interview',
+            typeDisplay: 'Mock Interview',
+            status: 'pending',
+            createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+            targetLabs: [
+              { name: 'Robotics Lab', university: 'CMU', field: 'Robotics', priority: 1 },
+              { name: 'AI Lab', university: 'UC Berkeley', field: 'Computer Science', priority: 2 }
+            ],
+            researchAreas: ['Robotics', 'Computer Vision', 'Machine Learning'],
+            focusAreas: ['Autonomous Systems', 'Robot Perception'],
+            preferredSlots: ['2024-11-20 at 3:00 PM', '2024-11-21 at 1:00 PM', '2024-11-22 at 10:00 AM'],
+            researchAreaCount: 3,
+            targetLabCount: 2,
+            preferredSlotCount: 3,
+            primaryResearchArea: 'Robotics',
+            primaryLab: 'Robotics Lab',
+            matchedInterviewer: null,
+            confirmedSlot: null,
+            price: 120.00
+          },
+
+          // Matching session
+          {
+            id: 'dummy-session-3',
+            type: 'mock-interview',
+            typeDisplay: 'Mock Interview',
+            status: 'matching',
+            createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+            targetLabs: [
+              { name: 'Quantum Computing Lab', university: 'MIT', field: 'Physics', priority: 1 },
+              { name: 'Theoretical CS Lab', university: 'Harvard', field: 'Computer Science', priority: 2 }
+            ],
+            researchAreas: ['Quantum Computing', 'Theoretical Computer Science', 'Cryptography'],
+            focusAreas: ['Quantum Algorithms', 'Quantum Error Correction'],
+            preferredSlots: ['2024-11-18 at 2:00 PM', '2024-11-19 at 4:00 PM'],
+            researchAreaCount: 3,
+            targetLabCount: 2,
+            preferredSlotCount: 2,
+            primaryResearchArea: 'Quantum Computing',
+            primaryLab: 'Quantum Computing Lab',
+            matchedInterviewer: null,
+            confirmedSlot: null,
+            price: 180.00
+          },
+
+          // Another confirmed session with different interviewer
+          {
+            id: 'dummy-session-4',
+            type: 'mock-interview',
+            typeDisplay: 'Mock Interview',
+            status: 'confirmed',
+            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+            targetLabs: [
+              { name: 'Bioengineering Lab', university: 'Stanford', field: 'Bioengineering', priority: 1 }
+            ],
+            researchAreas: ['Bioengineering', 'Synthetic Biology', 'Biomaterials'],
+            focusAreas: ['Tissue Engineering', 'Gene Therapy'],
+            preferredSlots: ['2024-11-25 at 11:00 AM'],
+            researchAreaCount: 3,
+            targetLabCount: 1,
+            preferredSlotCount: 1,
+            primaryResearchArea: 'Bioengineering',
+            primaryLab: 'Bioengineering Lab',
+            matchedInterviewer: {
+              name: 'Dr. Michael Chen',
+              position: 'Associate Professor',
+              university: 'Stanford University',
+              department: 'Bioengineering',
+              email: 'michael.chen@stanford.edu',
+              matchType: 'related-field',
+              averageRating: 4.6,
+              reviewCount: 18,
+              recentReviews: [
+                {
+                  rating: 5,
+                  comment: 'Dr. Chen provided excellent insights into bioengineering PhD programs. Very helpful!'
+                },
+                {
+                  rating: 4,
+                  comment: 'Good interview practice. He asked challenging questions that prepared me well.'
+                },
+                {
+                  rating: 5,
+                  comment: 'Knowledgeable about the field and gave great advice on research directions.'
+                }
+              ],
+              education: [
+                'PhD in Bioengineering - Caltech',
+                'MS in Chemical Engineering - MIT'
+              ],
+              researchAreas: [
+                'Bioengineering',
+                'Synthetic Biology',
+                'Biomaterials',
+                'Tissue Engineering'
+              ],
+              lab: 'Bioengineering Lab',
+              bio: 'Dr. Chen focuses on bioengineering applications in medicine and synthetic biology.',
+              profileImage: null
+            },
+            confirmedSlot: {
+              date: '2024-11-25',
+              time: '11:00 AM',
+              zoomLink: 'https://stanford.zoom.us/j/9876543210?pwd=xyz123'
+            },
+            price: 160.00
+          },
+
+          // Q&A Session - pending
+          {
+            id: 'dummy-session-5',
+            type: 'qa-session',
+            typeDisplay: 'Q&A Session',
+            status: 'pending',
+            createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+            targetLabs: [
+              { name: 'Data Science Lab', university: 'NYU', field: 'Data Science', priority: 1 }
+            ],
+            researchAreas: ['Data Science', 'Machine Learning', 'Statistics'],
+            focusAreas: ['Big Data Analytics', 'Predictive Modeling'],
+            preferredSlots: ['2024-11-17 at 2:00 PM', '2024-11-18 at 3:00 PM'],
+            researchAreaCount: 3,
+            targetLabCount: 1,
+            preferredSlotCount: 2,
+            primaryResearchArea: 'Data Science',
+            primaryLab: 'Data Science Lab',
+            matchedInterviewer: null,
+            confirmedSlot: null,
+            price: 80.00
+          },
+
+          // Completed Mock Interview
+          {
+            id: 'dummy-session-6',
+            type: 'mock-interview',
+            typeDisplay: 'Mock Interview',
+            status: 'completed',
+            createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago
+            targetLabs: [
+              { name: 'HCI Lab', university: 'MIT', field: 'Computer Science', priority: 1 }
+            ],
+            researchAreas: ['Human-Computer Interaction', 'User Experience', 'Interface Design'],
+            focusAreas: ['Accessibility', 'Mobile Interfaces'],
+            preferredSlots: ['2024-10-25 at 3:00 PM'],
+            researchAreaCount: 3,
+            targetLabCount: 1,
+            preferredSlotCount: 1,
+            primaryResearchArea: 'Human-Computer Interaction',
+            primaryLab: 'HCI Lab',
+            matchedInterviewer: {
+              name: 'Dr. Amanda Rodriguez',
+              position: 'Professor',
+              university: 'MIT',
+              department: 'Computer Science',
+              email: 'amanda.rodriguez@mit.edu',
+              matchType: 'exact-lab',
+              averageRating: 4.9,
+              reviewCount: 32,
+              recentReviews: [
+                {
+                  rating: 5,
+                  comment: 'Outstanding interview experience! Dr. Rodriguez gave detailed feedback and helped me improve significantly.'
+                },
+                {
+                  rating: 5,
+                  comment: 'Best mock interview I ever had. Very professional and insightful.'
+                },
+                {
+                  rating: 4,
+                  comment: 'Great preparation for real interviews. Highly recommend!'
+                }
+              ],
+              education: [
+                'PhD in Computer Science - Carnegie Mellon',
+                'MS in HCI - Georgia Tech'
+              ],
+              researchAreas: [
+                'Human-Computer Interaction',
+                'User Experience Design',
+                'Accessibility',
+                'Mobile Computing'
+              ],
+              lab: 'HCI Lab',
+              bio: 'Dr. Rodriguez is a leading expert in HCI and accessibility research.',
+              profileImage: null
+            },
+            confirmedSlot: {
+              date: '2024-10-25',
+              time: '3:00 PM',
+              zoomLink: 'https://mit.zoom.us/j/5555555555?pwd=completed'
+            },
+            completedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+            price: 140.00
+          },
+
+          // Completed Q&A Session
+          {
+            id: 'dummy-session-7',
+            type: 'qa-session',
+            typeDisplay: 'Q&A Session',
+            status: 'completed',
+            createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), // 15 days ago
+            targetLabs: [
+              { name: 'Neuroscience Lab', university: 'Harvard', field: 'Neuroscience', priority: 1 }
+            ],
+            researchAreas: ['Neuroscience', 'Cognitive Science', 'Brain Imaging'],
+            focusAreas: ['fMRI', 'Neural Networks'],
+            preferredSlots: ['2024-10-20 at 1:00 PM'],
+            researchAreaCount: 3,
+            targetLabCount: 1,
+            preferredSlotCount: 1,
+            primaryResearchArea: 'Neuroscience',
+            primaryLab: 'Neuroscience Lab',
+            matchedInterviewer: {
+              name: 'Dr. James Park',
+              position: 'Associate Professor',
+              university: 'Harvard University',
+              department: 'Psychology',
+              email: 'james.park@harvard.edu',
+              matchType: 'related-field',
+              averageRating: 4.7,
+              reviewCount: 15,
+              recentReviews: [
+                {
+                  rating: 5,
+                  comment: 'Dr. Park answered all my questions about neuroscience PhD programs thoroughly.'
+                },
+                {
+                  rating: 4,
+                  comment: 'Very knowledgeable and helpful session.'
+                }
+              ],
+              education: [
+                'PhD in Neuroscience - Harvard',
+                'BS in Psychology - Yale'
+              ],
+              researchAreas: [
+                'Neuroscience',
+                'Cognitive Psychology',
+                'Brain Imaging',
+                'Memory Research'
+              ],
+              lab: 'Neuroscience Lab',
+              bio: 'Dr. Park studies memory and cognition using advanced brain imaging techniques.',
+              profileImage: null
+            },
+            confirmedSlot: {
+              date: '2024-10-20',
+              time: '1:00 PM',
+              zoomLink: 'https://harvard.zoom.us/j/7777777777?pwd=neurosci'
+            },
+            completedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(), // 12 days ago
+            price: 90.00
+          },
+
+          // Cancelled session
+          {
+            id: 'dummy-session-8',
+            type: 'mock-interview',
+            typeDisplay: 'Mock Interview',
+            status: 'cancelled',
+            createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), // 8 days ago
+            targetLabs: [
+              { name: 'Materials Science Lab', university: 'UC Berkeley', field: 'Materials Science', priority: 1 }
+            ],
+            researchAreas: ['Materials Science', 'Nanotechnology', 'Energy Storage'],
+            focusAreas: ['Battery Technology', 'Solar Cells'],
+            preferredSlots: ['2024-11-01 at 4:00 PM'],
+            researchAreaCount: 3,
+            targetLabCount: 1,
+            preferredSlotCount: 1,
+            primaryResearchArea: 'Materials Science',
+            primaryLab: 'Materials Science Lab',
+            matchedInterviewer: null,
+            confirmedSlot: null,
+            cancelledAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), // 6 days ago
+            cancelReason: 'Interviewer unavailable due to conference travel',
+            price: 130.00
+          }
+        ];
+
+        setSessions([...dummySessions, ...transformedSessions]);
       } catch (err) {
         console.error('Error fetching sessions:', err);
         setError(err.message);
@@ -1028,9 +1317,9 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile, expan
             </div>
           </div>
 
-          {session.meetingLink && (
+          {(session.meetingLink || session.confirmedSlot?.zoomLink) && (
             <a
-              href={session.meetingLink}
+              href={session.meetingLink || session.confirmedSlot?.zoomLink}
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -1048,7 +1337,7 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile, expan
               }}
             >
               <Video size={16} />
-              Join Meeting
+              Join Zoom Meeting
             </a>
           )}
         </div>
