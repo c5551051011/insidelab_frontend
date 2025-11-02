@@ -352,14 +352,6 @@ const Header = () => {
                     }}
                   />
 
-                  <MobileMenuItem
-                    icon={<FileText size={20} color={colors.textSecondary} />}
-                    text="My Reviews"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      window.location.href = '/my-reviews';
-                    }}
-                  />
 
                   <MobileMenuItem
                     icon={<Video size={20} color={colors.textSecondary} />}
@@ -618,11 +610,6 @@ const UserMenu = ({ user, isOpen, onToggle, onLogout, userMenuRef }) => {
             icon={<User size={16} />}
             text="My Profile"
             onClick={() => window.location.href = '/profile'}
-          />
-          <UserMenuItem
-            icon={<FileText size={16} />}
-            text="My Reviews"
-            onClick={() => window.location.href = '/my-reviews'}
           />
           <UserMenuItem
             icon={<Video size={16} />}
