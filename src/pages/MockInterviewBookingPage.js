@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import UniversityDepartmentSelector from '../components/UniversityDepartmentSelector';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { InterviewService } from '../services/interviewService';
@@ -50,7 +51,13 @@ const MockInterviewBookingPage = () => {
   const [researchAreas, setResearchAreas] = useState([]);
   const [researchAreasLoading, setResearchAreasLoading] = useState(true);
 
-  // University and department selection
+  // University and department selection (compatible with UniversityDepartmentSelector)
+  const [selectedUniversityId, setSelectedUniversityId] = useState('');
+  const [selectedUniversityName, setSelectedUniversityName] = useState('');
+  const [selectedUniversityDepartmentId, setSelectedUniversityDepartmentId] = useState('');
+  const [selectedDepartmentName, setSelectedDepartmentName] = useState('');
+
+  // Legacy state for backward compatibility
   const [selectedUniversity, setSelectedUniversity] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [availableUniversities, setAvailableUniversities] = useState([]);
@@ -62,6 +69,32 @@ const MockInterviewBookingPage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Handlers for UniversityDepartmentSelector
+  const handleUniversitySelected = (universityId, universityName) => {
+    console.log('University selected:', universityId, universityName);
+    setSelectedUniversityId(universityId);
+    setSelectedUniversityName(universityName);
+
+    // Update legacy state for compatibility
+    const university = { id: universityId, name: universityName };
+    setSelectedUniversity(university);
+
+    // Reset department selection
+    setSelectedUniversityDepartmentId('');
+    setSelectedDepartmentName('');
+    setSelectedDepartment(null);
+  };
+
+  const handleDepartmentSelected = (departmentId, departmentName) => {
+    console.log('Department selected:', departmentId, departmentName);
+    setSelectedUniversityDepartmentId(departmentId);
+    setSelectedDepartmentName(departmentName);
+
+    // Update legacy state for compatibility
+    const department = { id: departmentId, name: departmentName, department: departmentId };
+    setSelectedDepartment(department);
+  };
+
   // Check authentication
   useEffect(() => {
     if (!AuthService.isAuthenticated()) {
@@ -69,43 +102,7 @@ const MockInterviewBookingPage = () => {
     }
   }, [navigate]);
 
-  // Load universities on component mount
-  useEffect(() => {
-    const loadUniversities = async () => {
-      try {
-        console.log('Loading universities...');
-        const universities = await SearchService.getUniversities();
-        setAvailableUniversities(universities);
-        console.log(`Loaded ${universities.length} universities`);
-      } catch (error) {
-        console.error('Error loading universities:', error);
-      }
-    };
-
-    loadUniversities();
-  }, []);
-
-  // Load departments when university is selected
-  useEffect(() => {
-    if (selectedUniversity) {
-      const loadDepartments = async () => {
-        try {
-          console.log('Loading departments for university ID:', selectedUniversity.id);
-          const departments = await SearchService.getDepartments(selectedUniversity.id);
-          setAvailableDepartments(departments);
-          setSelectedDepartment(null); // Reset department selection
-          console.log(`Loaded ${departments.length} departments`);
-        } catch (error) {
-          console.error('Error loading departments:', error);
-        }
-      };
-
-      loadDepartments();
-    } else {
-      setAvailableDepartments([]);
-      setSelectedDepartment(null);
-    }
-  }, [selectedUniversity]);
+  // Note: University and department loading is now handled by UniversityDepartmentSelector component
 
   // Load lab data when both university and department are selected
   useEffect(() => {
@@ -176,19 +173,19 @@ const MockInterviewBookingPage = () => {
 
   // Load research areas when department is selected
   useEffect(() => {
-    if (selectedDepartment) {
+    if (selectedUniversityDepartmentId) {
       const loadResearchAreas = async () => {
         setResearchAreasLoading(true);
         try {
-          // Use department_id (selectedDepartment.department) instead of university_department_id (selectedDepartment.id)
-          const departmentId = selectedDepartment.department;
-          console.log('Loading research areas for department_id:', departmentId, '(university_department_id:', selectedDepartment.id, ')');
+          // Use selectedUniversityDepartmentId as department_id directly
+          const departmentId = selectedUniversityDepartmentId;
+          console.log('Loading research areas for department_id:', departmentId);
           const areas = await SearchService.getResearchAreasByDepartment(departmentId);
 
           // Ensure we always set an array
           if (Array.isArray(areas)) {
             setResearchAreas(areas);
-            console.log(`Loaded ${areas.length} research areas for department ${selectedDepartment.name}`);
+            console.log(`Loaded ${areas.length} research areas for department ${selectedDepartmentName}`);
           } else {
             console.warn('Research areas response is not an array:', areas);
             setResearchAreas([]);
@@ -208,7 +205,7 @@ const MockInterviewBookingPage = () => {
       setSelectedResearchAreas([]);
       setResearchAreasLoading(false);
     }
-  }, [selectedDepartment]);
+  }, [selectedUniversityDepartmentId, selectedDepartmentName]);
 
   const sessionTypes = {
     'mock_interview': {
@@ -303,7 +300,7 @@ const MockInterviewBookingPage = () => {
   );
 
   const canProceed = () => {
-    if (currentStep === 1) return selectedUniversity && selectedDepartment;
+    if (currentStep === 1) return selectedUniversityId && selectedUniversityDepartmentId;
     if (currentStep === 2) return sessionType;
     if (currentStep === 3) return selectedResearchAreas.length > 0;
     if (currentStep === 4) return selectedLabs.length > 0;
@@ -378,12 +375,11 @@ const MockInterviewBookingPage = () => {
           {/* Step 1: University & Department Selection */}
           {currentStep === 1 && (
             <UniversityDepartmentStep
-              selectedUniversity={selectedUniversity}
-              setSelectedUniversity={setSelectedUniversity}
-              selectedDepartment={selectedDepartment}
-              setSelectedDepartment={setSelectedDepartment}
-              availableUniversities={availableUniversities}
-              availableDepartments={availableDepartments}
+              selectedUniversityId={selectedUniversityId}
+              selectedUniversityName={selectedUniversityName}
+              selectedUniversityDepartmentId={selectedUniversityDepartmentId}
+              onUniversitySelected={handleUniversitySelected}
+              onDepartmentSelected={handleDepartmentSelected}
               isMobile={isMobile}
             />
           )}
@@ -1744,12 +1740,11 @@ const ReviewStep = ({
 
 // University & Department Selection Step
 const UniversityDepartmentStep = ({
-  selectedUniversity,
-  setSelectedUniversity,
-  selectedDepartment,
-  setSelectedDepartment,
-  availableUniversities,
-  availableDepartments,
+  selectedUniversityId,
+  selectedUniversityName,
+  selectedUniversityDepartmentId,
+  onUniversitySelected,
+  onDepartmentSelected,
   isMobile
 }) => {
   return (
@@ -1772,92 +1767,15 @@ const UniversityDepartmentStep = ({
         Select the university and department you're interested in for your mock interview
       </p>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-        gap: spacing[4],
-        marginBottom: spacing[6]
-      }}>
-        {/* University Selection */}
-        <div>
-          <label style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: colors.textPrimary,
-            marginBottom: spacing[2],
-            fontFamily: 'Inter'
-          }}>
-            University *
-          </label>
-          <select
-            value={selectedUniversity?.id || ''}
-            onChange={(e) => {
-              const universityId = e.target.value;
-              const university = availableUniversities.find(uni => uni.id.toString() === universityId);
-              setSelectedUniversity(university || null);
-            }}
-            style={{
-              width: '100%',
-              padding: spacing[3],
-              border: `1px solid ${colors.border}`,
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontFamily: 'Inter',
-              backgroundColor: 'white',
-              color: colors.textPrimary
-            }}
-          >
-            <option value="">Select University</option>
-            {availableUniversities.map(university => (
-              <option key={university.id} value={university.id}>
-                {university.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Department Selection */}
-        <div>
-          <label style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: colors.textPrimary,
-            marginBottom: spacing[2],
-            fontFamily: 'Inter'
-          }}>
-            Department *
-          </label>
-          <select
-            value={selectedDepartment?.id || ''}
-            onChange={(e) => {
-              const departmentId = e.target.value;
-              const department = availableDepartments.find(dept => dept.id.toString() === departmentId);
-              setSelectedDepartment(department || null);
-            }}
-            disabled={!selectedUniversity}
-            style={{
-              width: '100%',
-              padding: spacing[3],
-              border: `1px solid ${colors.border}`,
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontFamily: 'Inter',
-              backgroundColor: selectedUniversity ? 'white' : colors.backgroundSecondary,
-              color: selectedUniversity ? colors.textPrimary : colors.textTertiary,
-              cursor: selectedUniversity ? 'pointer' : 'not-allowed'
-            }}
-          >
-            <option value="">Select Department</option>
-            {availableDepartments.map(department => (
-              <option key={department.id} value={department.id}>
-                {department.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <UniversityDepartmentSelector
+        selectedUniversityId={selectedUniversityId}
+        selectedUniversityName={selectedUniversityName}
+        selectedUniversityDepartmentId={selectedUniversityDepartmentId}
+        onUniversitySelected={onUniversitySelected}
+        onDepartmentSelected={onDepartmentSelected}
+        isRequired={true}
+        layout="responsive"
+      />
     </div>
   );
 };

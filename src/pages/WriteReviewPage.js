@@ -610,6 +610,7 @@ const WriteReviewPage = () => {
               onUniversitySelected={handleUniversitySelected}
               onDepartmentSelected={handleDepartmentSelected}
               isRequired={true}
+              layout="responsive"
             />
 
             {/* Research Group Selection */}

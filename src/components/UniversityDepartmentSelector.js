@@ -10,8 +10,16 @@ const UniversityDepartmentSelector = ({
   selectedUniversityDepartmentId,
   onUniversitySelected,
   onDepartmentSelected,
-  isRequired = true
+  isRequired = true,
+  layout = 'responsive' // 'responsive' (default), 'vertical', 'horizontal'
 }) => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [universities, setUniversities] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loadingUniversities, setLoadingUniversities] = useState(false);
@@ -166,8 +174,30 @@ const UniversityDepartmentSelector = ({
     }
   };
 
+  // Determine layout style
+  const getLayoutStyle = () => {
+    if (layout === 'horizontal') {
+      return {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: spacing[4]
+      };
+    } else if (layout === 'vertical') {
+      return {
+        display: 'flex',
+        flexDirection: 'column'
+      };
+    } else { // responsive
+      return {
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+        gap: spacing[4]
+      };
+    }
+  };
+
   return (
-    <div>
+    <div style={getLayoutStyle()}>
       {/* University Selection */}
       <DropdownField
         label="University"

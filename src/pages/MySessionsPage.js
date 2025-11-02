@@ -9,7 +9,13 @@ import {
   Video,
   MessageSquare,
   Mail,
-  Loader
+  Loader,
+  Star,
+  GraduationCap,
+  BookOpen,
+  Award,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -24,6 +30,7 @@ const MySessionsPage = () => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expandedInterviewers, setExpandedInterviewers] = useState({}); // State for toggling interviewer details
 
   // Add spin animation
   React.useEffect(() => {
@@ -59,6 +66,7 @@ const MySessionsPage = () => {
         const transformedSessions = (data?.results || []).map(session => ({
           id: session.id,
           type: session.session_type,
+          typeDisplay: session.session_type_display || (session.session_type === 'mock-interview' ? 'Mock Interview' : 'Q&A Session'),
           status: session.status,
           createdAt: session.created_at,
 
@@ -94,8 +102,59 @@ const MySessionsPage = () => {
             university: session.interviewer.university,
             department: session.interviewer.department,
             email: session.interviewer.email,
-            matchType: session.match_type
-          } : null,
+            matchType: session.match_type,
+            averageRating: session.interviewer.average_rating || 0,
+            reviewCount: session.interviewer.review_count || 0,
+            recentReviews: session.interviewer.recent_reviews || [],
+            education: session.interviewer.education || [],
+            researchAreas: session.interviewer.research_areas || [],
+            lab: session.interviewer.lab_name || session.interviewer.lab || '',
+            bio: session.interviewer.bio || '',
+            profileImage: session.interviewer.profile_image || null
+          } : (session.status === 'confirmed' ? {
+            // Dummy data for testing when no interviewer data is available
+            name: 'Dr. Sarah Johnson',
+            position: 'Assistant Professor',
+            university: 'Stanford University',
+            department: 'Computer Science',
+            email: 'sarah.johnson@stanford.edu',
+            matchType: 'exact-lab',
+            averageRating: 4.8,
+            reviewCount: 24,
+            recentReviews: [
+              {
+                rating: 5,
+                comment: 'Excellent interviewer! Very knowledgeable about machine learning and provided great feedback on my research approach.'
+              },
+              {
+                rating: 5,
+                comment: 'Dr. Johnson was incredibly helpful in discussing my PhD application strategy. Highly recommend!'
+              },
+              {
+                rating: 4,
+                comment: 'Great insights into the research process. The mock interview was very realistic and helpful.'
+              },
+              {
+                rating: 5,
+                comment: 'Professional and encouraging. Gave me confidence for my actual interviews.'
+              }
+            ],
+            education: [
+              'PhD in Computer Science - MIT',
+              'MS in Computer Science - UC Berkeley',
+              'BS in Mathematics - Harvard University'
+            ],
+            researchAreas: [
+              'Machine Learning',
+              'Natural Language Processing',
+              'Computer Vision',
+              'Deep Learning',
+              'AI Ethics'
+            ],
+            lab: 'AI Research Lab',
+            bio: 'Dr. Johnson specializes in machine learning and AI research with focus on natural language processing.',
+            profileImage: null
+          } : null),
           confirmedSlot: session.confirmed_date && session.confirmed_time ? {
             date: session.confirmed_date,
             time: session.confirmed_time
@@ -103,7 +162,76 @@ const MySessionsPage = () => {
           price: parseFloat(session.total_price || 0)
         }));
 
-        setSessions(transformedSessions);
+        // Add dummy session for testing interviewer UI
+        const dummySession = {
+          id: 'dummy-session-1',
+          type: 'mock-interview',
+          typeDisplay: 'Mock Interview',
+          status: 'confirmed',
+          createdAt: new Date().toISOString(),
+          targetLabs: [
+            { name: 'AI Research Lab', university: 'Stanford University', field: 'Computer Science', priority: 1 },
+            { name: 'ML Systems Lab', university: 'MIT', field: 'Computer Science', priority: 2 }
+          ],
+          researchAreas: ['Machine Learning', 'Natural Language Processing', 'Computer Vision'],
+          focusAreas: ['Deep Learning', 'Neural Networks'],
+          preferredSlots: ['2024-11-15 at 2:00 PM', '2024-11-16 at 10:00 AM'],
+          researchAreaCount: 3,
+          targetLabCount: 2,
+          preferredSlotCount: 2,
+          primaryResearchArea: 'Machine Learning',
+          primaryLab: 'AI Research Lab',
+          matchedInterviewer: {
+            name: 'Dr. Sarah Johnson',
+            position: 'Assistant Professor',
+            university: 'Stanford University',
+            department: 'Computer Science',
+            email: 'sarah.johnson@stanford.edu',
+            matchType: 'exact-lab',
+            averageRating: 4.8,
+            reviewCount: 24,
+            recentReviews: [
+              {
+                rating: 5,
+                comment: 'Excellent interviewer! Very knowledgeable about machine learning and provided great feedback on my research approach.'
+              },
+              {
+                rating: 5,
+                comment: 'Dr. Johnson was incredibly helpful in discussing my PhD application strategy. Highly recommend!'
+              },
+              {
+                rating: 4,
+                comment: 'Great insights into the research process. The mock interview was very realistic and helpful.'
+              },
+              {
+                rating: 5,
+                comment: 'Professional and encouraging. Gave me confidence for my actual interviews.'
+              }
+            ],
+            education: [
+              'PhD in Computer Science - MIT',
+              'MS in Computer Science - UC Berkeley',
+              'BS in Mathematics - Harvard University'
+            ],
+            researchAreas: [
+              'Machine Learning',
+              'Natural Language Processing',
+              'Computer Vision',
+              'Deep Learning',
+              'AI Ethics'
+            ],
+            lab: 'AI Research Lab',
+            bio: 'Dr. Johnson specializes in machine learning and AI research with focus on natural language processing.',
+            profileImage: null
+          },
+          confirmedSlot: {
+            date: '2024-11-15',
+            time: '2:00 PM'
+          },
+          price: 150.00
+        };
+
+        setSessions([dummySession, ...transformedSessions]);
       } catch (err) {
         console.error('Error fetching sessions:', err);
         setError(err.message);
@@ -359,6 +487,8 @@ const MySessionsPage = () => {
                 getStatusInfo={getStatusInfo}
                 getMatchTypeInfo={getMatchTypeInfo}
                 isMobile={isMobile}
+                expandedInterviewers={expandedInterviewers}
+                setExpandedInterviewers={setExpandedInterviewers}
               />
             ))}
           </div>
@@ -371,7 +501,7 @@ const MySessionsPage = () => {
 };
 
 // Session Card Component
-const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile }) => {
+const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile, expandedInterviewers, setExpandedInterviewers }) => {
   const statusInfo = getStatusInfo(session.status);
   const StatusIcon = statusInfo.icon;
   const sessionIcon = session.type === 'mock-interview' ? Video : MessageSquare;
@@ -430,7 +560,7 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile }) => 
               color: colors.textPrimary,
               marginBottom: spacing[1]
             }}>
-              {session.type === 'mock-interview' ? 'Mock Interview' : 'Q&A Session'}
+              {session.typeDisplay}
             </h3>
             <div style={{
               fontSize: '12px',
@@ -575,73 +705,293 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile }) => 
       {/* Matched Interviewer (if confirmed) */}
       {session.status === 'confirmed' && session.matchedInterviewer && (
         <div style={{
-          marginBottom: spacing[4],
-          padding: spacing[4],
-          backgroundColor: `${colors.success}08`,
-          borderRadius: '8px',
-          border: `1px solid ${colors.success}40`
+          marginBottom: spacing[4]
         }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            marginBottom: spacing[3]
-          }}>
+          {/* Interviewer Header - Always Visible */}
+          <div
+            onClick={() => setExpandedInterviewers(prev => ({
+              ...prev,
+              [session.id]: !prev[session.id]
+            }))}
+            style={{
+              padding: spacing[3],
+              backgroundColor: `${colors.success}08`,
+              borderRadius: '8px',
+              border: `1px solid ${colors.success}40`,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              marginBottom: expandedInterviewers[session.id] ? spacing[2] : 0
+            }}
+          >
             <div style={{
-              fontSize: '13px',
-              fontWeight: '600',
-              color: colors.textPrimary,
-              marginBottom: spacing[2]
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
             }}>
-              Matched Interviewer
-            </div>
-            <div style={{
-              fontSize: '11px',
-              padding: `${spacing[1]} ${spacing[2]}`,
-              backgroundColor: getMatchTypeInfo(session.matchedInterviewer.matchType).color + '20',
-              color: getMatchTypeInfo(session.matchedInterviewer.matchType).color,
-              borderRadius: '12px',
-              fontWeight: '600'
-            }}>
-              {getMatchTypeInfo(session.matchedInterviewer.matchType).label}
+              {/* Left side - Basic interviewer info */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[3],
+                flex: 1
+              }}>
+                {/* Profile Image */}
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: colors.primary + '20',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  {session.matchedInterviewer.profileImage ? (
+                    <img
+                      src={session.matchedInterviewer.profileImage}
+                      alt={session.matchedInterviewer.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: '50%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  ) : (
+                    <User size={18} color={colors.primary} />
+                  )}
+                </div>
+
+                {/* Basic Info */}
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: colors.textPrimary,
+                    marginBottom: '2px'
+                  }}>
+                    {session.matchedInterviewer.name}
+                  </div>
+
+                  {/* Rating */}
+                  {session.matchedInterviewer.averageRating > 0 && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: spacing[1],
+                      marginBottom: '2px'
+                    }}>
+                      <Star size={12} color={colors.warning} fill={colors.warning} />
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        color: colors.textPrimary
+                      }}>
+                        {session.matchedInterviewer.averageRating.toFixed(1)}
+                      </span>
+                      <span style={{
+                        fontSize: '11px',
+                        color: colors.textSecondary
+                      }}>
+                        ({session.matchedInterviewer.reviewCount} reviews)
+                      </span>
+                    </div>
+                  )}
+
+                  <div style={{
+                    fontSize: '12px',
+                    color: colors.textSecondary
+                  }}>
+                    {session.matchedInterviewer.position} • {session.matchedInterviewer.university}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right side - Match type and expand button */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[2]
+              }}>
+                <div style={{
+                  fontSize: '10px',
+                  padding: `${spacing[1]} ${spacing[2]}`,
+                  backgroundColor: getMatchTypeInfo(session.matchedInterviewer.matchType).color + '20',
+                  color: getMatchTypeInfo(session.matchedInterviewer.matchType).color,
+                  borderRadius: '12px',
+                  fontWeight: '600'
+                }}>
+                  {getMatchTypeInfo(session.matchedInterviewer.matchType).label}
+                </div>
+
+                {expandedInterviewers[session.id] ? (
+                  <ChevronUp size={16} color={colors.textTertiary} />
+                ) : (
+                  <ChevronDown size={16} color={colors.textTertiary} />
+                )}
+              </div>
             </div>
           </div>
 
-          <div style={{ marginBottom: spacing[3] }}>
+          {/* Expanded Interviewer Details */}
+          {expandedInterviewers[session.id] && (
             <div style={{
-              fontSize: '15px',
-              fontWeight: '600',
-              color: colors.textPrimary,
-              marginBottom: spacing[1]
+              padding: spacing[4],
+              backgroundColor: colors.background,
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`
             }}>
-              {session.matchedInterviewer.name}
-            </div>
-            <div style={{
-              fontSize: '13px',
-              color: colors.textSecondary
-            }}>
-              {session.matchedInterviewer.position} • {session.matchedInterviewer.department}
-            </div>
-            <div style={{
-              fontSize: '13px',
-              color: colors.textSecondary
-            }}>
-              {session.matchedInterviewer.university} • {session.matchedInterviewer.lab}
-            </div>
-          </div>
+              {/* Research Areas */}
+              {session.matchedInterviewer.researchAreas && session.matchedInterviewer.researchAreas.length > 0 && (
+                <div style={{ marginBottom: spacing[4] }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: spacing[1],
+                    marginBottom: spacing[2]
+                  }}>
+                    <BookOpen size={14} color={colors.textTertiary} />
+                    <span style={{
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      color: colors.textPrimary
+                    }}>
+                      Research Areas
+                    </span>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: spacing[1]
+                  }}>
+                    {session.matchedInterviewer.researchAreas.slice(0, 5).map((area, index) => (
+                      <span
+                        key={index}
+                        style={{
+                          fontSize: '11px',
+                          padding: `${spacing[1]} ${spacing[2]}`,
+                          backgroundColor: colors.primary + '15',
+                          color: colors.primary,
+                          borderRadius: '12px',
+                          fontWeight: '500'
+                        }}
+                      >
+                        {typeof area === 'string' ? area : area.name}
+                      </span>
+                    ))}
+                    {session.matchedInterviewer.researchAreas.length > 5 && (
+                      <span style={{
+                        fontSize: '11px',
+                        color: colors.textTertiary,
+                        padding: `${spacing[1]} ${spacing[2]}`
+                      }}>
+                        +{session.matchedInterviewer.researchAreas.length - 5} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
-          {/* Contact Info */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: spacing[2],
-            fontSize: '13px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
-              <Mail size={14} color={colors.textTertiary} />
-              <span style={{ color: colors.textSecondary }}>{session.matchedInterviewer.email}</span>
+              {/* Education */}
+              {session.matchedInterviewer.education && session.matchedInterviewer.education.length > 0 && (
+                <div style={{ marginBottom: spacing[4] }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: spacing[1],
+                    marginBottom: spacing[2]
+                  }}>
+                    <GraduationCap size={14} color={colors.textTertiary} />
+                    <span style={{
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      color: colors.textPrimary
+                    }}>
+                      Education
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: colors.textSecondary }}>
+                    {session.matchedInterviewer.education.slice(0, 3).map((edu, index) => (
+                      <div key={index} style={{ marginBottom: spacing[1] }}>
+                        {typeof edu === 'string' ? edu : `${edu.degree} in ${edu.field} - ${edu.institution}`}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent Reviews */}
+              {session.matchedInterviewer.recentReviews && session.matchedInterviewer.recentReviews.length > 0 && (
+                <div style={{ marginBottom: spacing[4] }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: spacing[1],
+                    marginBottom: spacing[2]
+                  }}>
+                    <MessageSquare size={14} color={colors.textTertiary} />
+                    <span style={{
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      color: colors.textPrimary
+                    }}>
+                      Recent Reviews
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+                    {session.matchedInterviewer.recentReviews.slice(0, 4).map((review, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          padding: spacing[3],
+                          backgroundColor: `${colors.primary}05`,
+                          borderRadius: '8px',
+                          borderLeft: `3px solid ${colors.primary}30`
+                        }}
+                      >
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: spacing[1],
+                          marginBottom: spacing[2]
+                        }}>
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              size={12}
+                              color={i < (review.rating || 5) ? colors.warning : colors.border}
+                              fill={i < (review.rating || 5) ? colors.warning : 'none'}
+                            />
+                          ))}
+                        </div>
+                        <div style={{
+                          fontSize: '12px',
+                          color: colors.textSecondary,
+                          lineHeight: '1.5'
+                        }}>
+                          "{typeof review === 'string' ? review : review.comment || review.text || 'Great interviewer!'}"
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Contact Info */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[2],
+                padding: spacing[3],
+                backgroundColor: `${colors.success}08`,
+                borderRadius: '8px',
+                fontSize: '13px'
+              }}>
+                <Mail size={14} color={colors.textTertiary} />
+                <span style={{ color: colors.textSecondary }}>{session.matchedInterviewer.email}</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
