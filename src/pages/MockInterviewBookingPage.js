@@ -60,8 +60,6 @@ const MockInterviewBookingPage = () => {
   // Legacy state for backward compatibility
   const [selectedUniversity, setSelectedUniversity] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [availableUniversities, setAvailableUniversities] = useState([]);
-  const [availableDepartments, setAvailableDepartments] = useState([]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);

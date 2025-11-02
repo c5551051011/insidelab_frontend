@@ -9,11 +9,9 @@ import {
   Video,
   MessageSquare,
   Mail,
-  Loader,
   Star,
   GraduationCap,
   BookOpen,
-  Award,
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
