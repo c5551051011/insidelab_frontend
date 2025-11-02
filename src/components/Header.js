@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, ChevronDown, User, LogOut, FileText, Video } from 'lucide-react';
+import { Menu, X, ChevronDown, User, LogOut, Video } from 'lucide-react';
 import { PrimaryButton } from './Button';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
