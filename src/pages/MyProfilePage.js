@@ -22,8 +22,8 @@ import {
   DollarSign,
   TrendingUp,
   MessageSquare,
-  Video,
-  FileCheck,
+  // Video,
+  // FileCheck,
   Users,
   BarChart3,
   Clock3,
@@ -2455,7 +2455,7 @@ const AccountInfoCard = ({ icon: Icon, label, value, valueColor }) => {
 // Service Provider Tab Component
 const ServiceProviderTab = ({ user, isMobile }) => {
   const [isServiceProvider, setIsServiceProvider] = useState(user?.can_provide_services || false);
-  const [serviceStats, setServiceStats] = useState({
+  const [serviceStats] = useState({
     monthlyBookings: 12,
     averageRating: 4.8,
     totalEarnings: 2400,

@@ -1152,7 +1152,7 @@ const PublicationsSection = ({ publications }) => {
 
 // Reviews Section Component
 const ReviewsSection = ({ lab, onWriteReview }) => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // TODO: Add navigation functionality
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
