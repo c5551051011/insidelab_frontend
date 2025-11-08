@@ -11,7 +11,6 @@ import { ReviewService } from '../services/reviewService';
 import { UniversityService } from '../services/universityService';
 import { AuthService } from '../services/authService';
 import { ApiService } from '../services/apiService';
-import { DropdownField } from '../components/Dropdown';
 
 const WriteReviewPage = () => {
   const navigate = useNavigate();
