@@ -270,15 +270,21 @@ const MockInterviewBookingPage = () => {
 
     try {
       // Validate and prepare booking data
+      console.log('Selected research areas before mapping:', selectedResearchAreas);
+      const researchAreaIds = selectedResearchAreas.map(area => area.id);
+      console.log('Research area IDs:', researchAreaIds);
+
       const bookingData = {
         sessionType,
         selectedLabs: selectedLabs.map(lab => lab.id),
-        researchAreaIds: selectedResearchAreas.map(area => area.id),
+        researchAreaIds,
         focusAreas,
         preferredSlots,
         additionalNotes,
         totalPrice: calculatePrice()
       };
+
+      console.log('Booking data before transform:', bookingData);
 
       // Transform to API format
       const apiData = InterviewService.transformBookingToApiFormat(bookingData);

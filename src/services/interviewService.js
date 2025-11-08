@@ -214,7 +214,7 @@ export class InterviewService {
    * Transform frontend booking data to API format
    */
   static transformBookingToApiFormat(bookingData) {
-    const { sessionType, selectedLabs, researchAreaId, focusAreas, preferredSlots, additionalNotes, totalPrice } = bookingData;
+    const { sessionType, selectedLabs, researchAreaIds, focusAreas, preferredSlots, additionalNotes, totalPrice } = bookingData;
 
     // Transform slots to API format
     const apiSlots = preferredSlots
@@ -238,9 +238,9 @@ export class InterviewService {
       total_price: totalPrice || 0
     };
 
-    // Add research_area if provided
-    if (researchAreaId) {
-      apiData.research_area = researchAreaId;
+    // Add research areas if provided
+    if (researchAreaIds && researchAreaIds.length > 0) {
+      apiData.selected_research_areas = researchAreaIds;
     }
 
     return apiData;
