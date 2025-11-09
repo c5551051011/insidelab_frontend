@@ -155,9 +155,31 @@ const MySessionsPage = () => {
           } : null),
           confirmedSlot: session.confirmed_date && session.confirmed_time ? {
             date: session.confirmed_date,
-            time: session.confirmed_time
+            time: session.confirmed_time,
+            zoomLink: session.zoom_link
           } : null,
-          price: parseFloat(session.total_price || 0)
+          price: parseFloat(session.total_price || 0),
+
+          // Completed session additional data
+          ...(session.status === 'completed' && {
+            completedAt: session.completed_at,
+            interviewerFeedback: session.interviewer_feedback ? {
+              overallPerformance: session.interviewer_feedback.overall_performance,
+              performanceScore: session.interviewer_feedback.performance_score,
+              strengths: session.interviewer_feedback.strengths || [],
+              areasForImprovement: session.interviewer_feedback.areas_for_improvement || [],
+              detailedFeedback: session.interviewer_feedback.detailed_feedback,
+              recommendations: session.interviewer_feedback.recommendations || []
+            } : null,
+            sessionSummary: session.session_summary ? {
+              durationMinutes: session.session_summary.duration_minutes,
+              topicsCovered: session.session_summary.topics_covered || [],
+              questionsAsked: session.session_summary.questions_asked,
+              interviewerRatingFromStudent: session.session_summary.interviewer_rating_from_student,
+              wouldRecommendInterviewer: session.session_summary.would_recommend_interviewer
+            } : null,
+            actionItems: session.action_items || []
+          })
         }));
 
         // Add dummy session for testing interviewer UI
@@ -429,7 +451,46 @@ const MySessionsPage = () => {
               zoomLink: 'https://mit.zoom.us/j/5555555555?pwd=completed'
             },
             completedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-            price: 140.00
+            price: 140.00,
+
+            // Completed session additional data
+            interviewerFeedback: {
+              overallPerformance: 'excellent',
+              performanceScore: 4.5,
+              strengths: [
+                'Clear communication skills',
+                'Well-prepared research questions',
+                'Strong technical knowledge in HCI'
+              ],
+              areasForImprovement: [
+                'Could provide more specific examples of past projects',
+                'Consider practicing presentation of research methodology'
+              ],
+              detailedFeedback: 'The student demonstrated excellent preparation and asked thoughtful questions about the HCI research program. Communication was clear and professional throughout the session. The discussion about accessibility research showed deep understanding of the field.',
+              recommendations: [
+                'Apply to top HCI programs at MIT, Stanford, and CMU',
+                'Consider reaching out to Dr. Smith for accessibility research',
+                'Highlight your UX design background in applications'
+              ]
+            },
+            sessionSummary: {
+              durationMinutes: 50,
+              topicsCovered: [
+                'HCI research background discussion',
+                'PhD application strategy for HCI programs',
+                'Mock interview questions',
+                'Accessibility research opportunities'
+              ],
+              questionsAsked: 15,
+              interviewerRatingFromStudent: 5,
+              wouldRecommendInterviewer: true
+            },
+            actionItems: [
+              'Revise personal statement to emphasize accessibility focus',
+              'Practice presenting research in 5-minute format',
+              'Research Dr. Rodriguez\'s recent publications on mobile accessibility',
+              'Schedule follow-up session for application review'
+            ]
           },
 
           // Completed Q&A Session
@@ -489,7 +550,46 @@ const MySessionsPage = () => {
               zoomLink: 'https://harvard.zoom.us/j/7777777777?pwd=neurosci'
             },
             completedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(), // 12 days ago
-            price: 90.00
+            price: 90.00,
+
+            // Completed Q&A session additional data
+            interviewerFeedback: {
+              overallPerformance: 'good',
+              performanceScore: 4.2,
+              strengths: [
+                'Strong interest in neuroscience research',
+                'Good analytical thinking',
+                'Asked relevant questions about fMRI techniques'
+              ],
+              areasForImprovement: [
+                'Could benefit from more background reading in cognitive neuroscience',
+                'Practice explaining complex concepts more simply'
+              ],
+              detailedFeedback: 'The student showed genuine interest in neuroscience research and asked good questions about our lab\'s fMRI studies. However, some foundational knowledge gaps were evident.',
+              recommendations: [
+                'Take a cognitive neuroscience course before applying',
+                'Consider research assistant positions to gain hands-on experience',
+                'Read recent papers in Nature Neuroscience'
+              ]
+            },
+            sessionSummary: {
+              durationMinutes: 35,
+              topicsCovered: [
+                'Neuroscience research overview',
+                'Graduate program requirements',
+                'fMRI methodology discussion',
+                'Lab culture and expectations'
+              ],
+              questionsAsked: 8,
+              interviewerRatingFromStudent: 4,
+              wouldRecommendInterviewer: true
+            },
+            actionItems: [
+              'Complete online neuroscience course on Coursera',
+              'Read assigned papers on memory research',
+              'Contact graduate coordinator for program requirements',
+              'Consider scheduling follow-up session after coursework'
+            ]
           },
 
           // Cancelled session
