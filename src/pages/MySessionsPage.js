@@ -1528,6 +1528,292 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile, expan
         </div>
       )}
 
+      {/* Completed Session Additional Information */}
+      {session.status === 'completed' && (
+        <div style={{
+          marginTop: spacing[4],
+          paddingTop: spacing[4],
+          borderTop: `1px solid ${colors.border}`
+        }}>
+          {/* Interviewer Feedback */}
+          {session.interviewerFeedback && (
+            <div style={{ marginBottom: spacing[4] }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[2],
+                marginBottom: spacing[3]
+              }}>
+                <div style={{
+                  padding: spacing[2],
+                  backgroundColor: colors.success + '20',
+                  borderRadius: '8px'
+                }}>
+                  <CheckCircle size={16} color={colors.success} />
+                </div>
+                <div>
+                  <div style={{
+                    fontSize: '16px',
+                    fontWeight: '700',
+                    color: colors.textPrimary
+                  }}>
+                    Interview Feedback
+                  </div>
+                  <div style={{
+                    fontSize: '13px',
+                    color: colors.textSecondary
+                  }}>
+                    Performance Score: {session.interviewerFeedback.performanceScore}/5.0 ({session.interviewerFeedback.overallPerformance})
+                  </div>
+                </div>
+              </div>
+
+              {/* Strengths */}
+              {session.interviewerFeedback.strengths && session.interviewerFeedback.strengths.length > 0 && (
+                <div style={{ marginBottom: spacing[3] }}>
+                  <div style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: colors.success,
+                    marginBottom: spacing[2]
+                  }}>
+                    💪 Strengths
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: spacing[2]
+                  }}>
+                    {session.interviewerFeedback.strengths.map((strength, idx) => (
+                      <div key={idx} style={{
+                        padding: `${spacing[1]} ${spacing[2]}`,
+                        backgroundColor: colors.success + '10',
+                        border: `1px solid ${colors.success}30`,
+                        borderRadius: '12px',
+                        fontSize: '12px',
+                        color: colors.success,
+                        fontWeight: '500'
+                      }}>
+                        {strength}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Areas for Improvement */}
+              {session.interviewerFeedback.areasForImprovement && session.interviewerFeedback.areasForImprovement.length > 0 && (
+                <div style={{ marginBottom: spacing[3] }}>
+                  <div style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: colors.warning,
+                    marginBottom: spacing[2]
+                  }}>
+                    📈 Areas for Improvement
+                  </div>
+                  <div style={{ fontSize: '12px', color: colors.textSecondary, lineHeight: 1.5 }}>
+                    {session.interviewerFeedback.areasForImprovement.map((area, idx) => (
+                      <div key={idx} style={{
+                        marginBottom: spacing[1],
+                        paddingLeft: spacing[2],
+                        position: 'relative'
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          left: 0,
+                          color: colors.warning
+                        }}>•</span>
+                        {area}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Detailed Feedback */}
+              {session.interviewerFeedback.detailedFeedback && (
+                <div style={{
+                  padding: spacing[3],
+                  backgroundColor: colors.background,
+                  borderRadius: '8px',
+                  marginBottom: spacing[3]
+                }}>
+                  <div style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: colors.textPrimary,
+                    marginBottom: spacing[2]
+                  }}>
+                    📝 Detailed Feedback
+                  </div>
+                  <div style={{
+                    fontSize: '12px',
+                    color: colors.textSecondary,
+                    lineHeight: 1.5
+                  }}>
+                    {session.interviewerFeedback.detailedFeedback}
+                  </div>
+                </div>
+              )}
+
+              {/* Recommendations */}
+              {session.interviewerFeedback.recommendations && session.interviewerFeedback.recommendations.length > 0 && (
+                <div style={{ marginBottom: spacing[3] }}>
+                  <div style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: colors.primary,
+                    marginBottom: spacing[2]
+                  }}>
+                    🎯 Recommendations
+                  </div>
+                  <div style={{ fontSize: '12px', color: colors.textSecondary, lineHeight: 1.5 }}>
+                    {session.interviewerFeedback.recommendations.map((rec, idx) => (
+                      <div key={idx} style={{
+                        marginBottom: spacing[1],
+                        paddingLeft: spacing[2],
+                        position: 'relative'
+                      }}>
+                        <span style={{
+                          position: 'absolute',
+                          left: 0,
+                          color: colors.primary
+                        }}>•</span>
+                        {rec}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Session Summary */}
+          {session.sessionSummary && (
+            <div style={{ marginBottom: spacing[4] }}>
+              <div style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: spacing[3]
+              }}>
+                📊 Session Summary
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                gap: spacing[3],
+                marginBottom: spacing[3]
+              }}>
+                <div style={{
+                  padding: spacing[2],
+                  backgroundColor: colors.background,
+                  borderRadius: '6px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    fontSize: '18px',
+                    fontWeight: '700',
+                    color: colors.primary
+                  }}>
+                    {session.sessionSummary.durationMinutes}
+                  </div>
+                  <div style={{
+                    fontSize: '11px',
+                    color: colors.textSecondary
+                  }}>
+                    minutes
+                  </div>
+                </div>
+                <div style={{
+                  padding: spacing[2],
+                  backgroundColor: colors.background,
+                  borderRadius: '6px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    fontSize: '18px',
+                    fontWeight: '700',
+                    color: colors.primary
+                  }}>
+                    {session.sessionSummary.questionsAsked}
+                  </div>
+                  <div style={{
+                    fontSize: '11px',
+                    color: colors.textSecondary
+                  }}>
+                    questions
+                  </div>
+                </div>
+                <div style={{
+                  padding: spacing[2],
+                  backgroundColor: colors.background,
+                  borderRadius: '6px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    fontSize: '18px',
+                    fontWeight: '700',
+                    color: colors.warning
+                  }}>
+                    {session.sessionSummary.interviewerRatingFromStudent}/5
+                  </div>
+                  <div style={{
+                    fontSize: '11px',
+                    color: colors.textSecondary
+                  }}>
+                    your rating
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Items */}
+          {session.actionItems && session.actionItems.length > 0 && (
+            <div style={{ marginBottom: spacing[4] }}>
+              <div style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                marginBottom: spacing[3]
+              }}>
+                ✅ Next Steps
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+                {session.actionItems.map((item, idx) => (
+                  <div key={idx} style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: spacing[2],
+                    padding: spacing[2],
+                    backgroundColor: colors.primary + '05',
+                    borderRadius: '6px'
+                  }}>
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      border: `2px solid ${colors.primary}40`,
+                      borderRadius: '3px',
+                      marginTop: '2px',
+                      flexShrink: 0
+                    }} />
+                    <div style={{
+                      fontSize: '12px',
+                      color: colors.textSecondary,
+                      lineHeight: 1.4
+                    }}>
+                      {item}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Price */}
       <div style={{
         display: 'flex',
