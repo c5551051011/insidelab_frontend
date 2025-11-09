@@ -1441,8 +1441,159 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile, expan
         </div>
       )}
 
-      {/* Preferred Slots (if not confirmed) */}
-      {session.status !== 'confirmed' && session.preferredSlots && (
+      {/* Show Confirmed Schedule for Completed Sessions */}
+      {session.status === 'completed' && session.matchedInterviewer && session.confirmedSlot ? (
+        <div style={{
+          marginBottom: spacing[3],
+          padding: spacing[4],
+          backgroundColor: `${colors.success}08`,
+          borderRadius: '8px',
+          border: `1px solid ${colors.success}30`
+        }}>
+          {/* Interviewer Info */}
+          <div style={{ marginBottom: spacing[4] }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing[3],
+              marginBottom: spacing[2]
+            }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                backgroundColor: colors.primary,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '18px',
+                fontWeight: '600'
+              }}>
+                {session.matchedInterviewer.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+              </div>
+              <div>
+                <div style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  marginBottom: spacing[1]
+                }}>
+                  {session.matchedInterviewer.name}
+                </div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing[2],
+                  marginBottom: spacing[1]
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: spacing[1]
+                  }}>
+                    <Star size={14} color={colors.warning} fill={colors.warning} />
+                    <span style={{
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: colors.textPrimary
+                    }}>
+                      {session.matchedInterviewer.averageRating}
+                    </span>
+                  </div>
+                  <span style={{
+                    fontSize: '13px',
+                    color: colors.textSecondary
+                  }}>
+                    ({session.matchedInterviewer.reviewCount} reviews)
+                  </span>
+                </div>
+                <div style={{
+                  fontSize: '13px',
+                  color: colors.textSecondary
+                }}>
+                  {session.matchedInterviewer.position} • {session.matchedInterviewer.university}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Confirmed Schedule */}
+          <div>
+            <div style={{
+              fontSize: '14px',
+              fontWeight: '600',
+              color: colors.success,
+              marginBottom: spacing[2]
+            }}>
+              Confirmed Schedule
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing[3],
+              marginBottom: spacing[3]
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[2]
+              }}>
+                <Calendar size={16} color={colors.success} />
+                <span style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: colors.textPrimary
+                }}>
+                  {new Date(session.confirmedSlot.date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </span>
+              </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[2]
+              }}>
+                <Clock size={16} color={colors.success} />
+                <span style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: colors.textPrimary
+                }}>
+                  {session.confirmedSlot.time}
+                </span>
+              </div>
+            </div>
+            {session.confirmedSlot.zoomLink && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[2]
+              }}>
+                <Video size={16} color={colors.primary} />
+                <a
+                  href={session.confirmedSlot.zoomLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: '14px',
+                    color: colors.primary,
+                    textDecoration: 'none',
+                    fontWeight: '500'
+                  }}
+                >
+                  Join Zoom Meeting
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* Preferred Slots (if not confirmed and not completed) */
+        session.status !== 'confirmed' && session.preferredSlots && (
         <div style={{
           marginBottom: spacing[3],
           padding: spacing[4],
@@ -1500,6 +1651,7 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile, expan
             ))
           ) : null}
         </div>
+        )
       )}
 
       {/* Focus Areas */}
@@ -1612,18 +1764,21 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile, expan
                   }}>
                     📈 Areas for Improvement
                   </div>
-                  <div style={{ fontSize: '12px', color: colors.textSecondary, lineHeight: 1.5 }}>
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: spacing[2]
+                  }}>
                     {session.interviewerFeedback.areasForImprovement.map((area, idx) => (
                       <div key={idx} style={{
-                        marginBottom: spacing[1],
-                        paddingLeft: spacing[2],
-                        position: 'relative'
+                        padding: `${spacing[1]} ${spacing[2]}`,
+                        backgroundColor: colors.warning + '10',
+                        border: `1px solid ${colors.warning}30`,
+                        borderRadius: '12px',
+                        fontSize: '12px',
+                        color: colors.warning,
+                        fontWeight: '500'
                       }}>
-                        <span style={{
-                          position: 'absolute',
-                          left: 0,
-                          color: colors.warning
-                        }}>•</span>
                         {area}
                       </div>
                     ))}
@@ -1645,11 +1800,11 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile, expan
                     color: colors.textPrimary,
                     marginBottom: spacing[2]
                   }}>
-                    📝 Detailed Feedback
+                    Detailed Feedback
                   </div>
                   <div style={{
                     fontSize: '12px',
-                    color: colors.textSecondary,
+                    color: colors.textPrimary,
                     lineHeight: 1.5
                   }}>
                     {session.interviewerFeedback.detailedFeedback}
@@ -1663,12 +1818,12 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile, expan
                   <div style={{
                     fontSize: '13px',
                     fontWeight: '600',
-                    color: colors.primary,
+                    color: colors.textPrimary,
                     marginBottom: spacing[2]
                   }}>
-                    🎯 Recommendations
+                    Recommendations
                   </div>
-                  <div style={{ fontSize: '12px', color: colors.textSecondary, lineHeight: 1.5 }}>
+                  <div style={{ fontSize: '12px', color: colors.textPrimary, lineHeight: 1.5 }}>
                     {session.interviewerFeedback.recommendations.map((rec, idx) => (
                       <div key={idx} style={{
                         marginBottom: spacing[1],
@@ -1678,7 +1833,7 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile, expan
                         <span style={{
                           position: 'absolute',
                           left: 0,
-                          color: colors.primary
+                          color: colors.textPrimary
                         }}>•</span>
                         {rec}
                       </div>
@@ -1689,128 +1844,6 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile, expan
             </div>
           )}
 
-          {/* Session Summary */}
-          {session.sessionSummary && (
-            <div style={{ marginBottom: spacing[4] }}>
-              <div style={{
-                fontSize: '14px',
-                fontWeight: '600',
-                color: colors.textPrimary,
-                marginBottom: spacing[3]
-              }}>
-                📊 Session Summary
-              </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                gap: spacing[3],
-                marginBottom: spacing[3]
-              }}>
-                <div style={{
-                  padding: spacing[2],
-                  backgroundColor: colors.background,
-                  borderRadius: '6px',
-                  textAlign: 'center'
-                }}>
-                  <div style={{
-                    fontSize: '18px',
-                    fontWeight: '700',
-                    color: colors.primary
-                  }}>
-                    {session.sessionSummary.durationMinutes}
-                  </div>
-                  <div style={{
-                    fontSize: '11px',
-                    color: colors.textSecondary
-                  }}>
-                    minutes
-                  </div>
-                </div>
-                <div style={{
-                  padding: spacing[2],
-                  backgroundColor: colors.background,
-                  borderRadius: '6px',
-                  textAlign: 'center'
-                }}>
-                  <div style={{
-                    fontSize: '18px',
-                    fontWeight: '700',
-                    color: colors.primary
-                  }}>
-                    {session.sessionSummary.questionsAsked}
-                  </div>
-                  <div style={{
-                    fontSize: '11px',
-                    color: colors.textSecondary
-                  }}>
-                    questions
-                  </div>
-                </div>
-                <div style={{
-                  padding: spacing[2],
-                  backgroundColor: colors.background,
-                  borderRadius: '6px',
-                  textAlign: 'center'
-                }}>
-                  <div style={{
-                    fontSize: '18px',
-                    fontWeight: '700',
-                    color: colors.warning
-                  }}>
-                    {session.sessionSummary.interviewerRatingFromStudent}/5
-                  </div>
-                  <div style={{
-                    fontSize: '11px',
-                    color: colors.textSecondary
-                  }}>
-                    your rating
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Action Items */}
-          {session.actionItems && session.actionItems.length > 0 && (
-            <div style={{ marginBottom: spacing[4] }}>
-              <div style={{
-                fontSize: '14px',
-                fontWeight: '600',
-                color: colors.textPrimary,
-                marginBottom: spacing[3]
-              }}>
-                ✅ Next Steps
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
-                {session.actionItems.map((item, idx) => (
-                  <div key={idx} style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: spacing[2],
-                    padding: spacing[2],
-                    backgroundColor: colors.primary + '05',
-                    borderRadius: '6px'
-                  }}>
-                    <div style={{
-                      width: '16px',
-                      height: '16px',
-                      border: `2px solid ${colors.primary}40`,
-                      borderRadius: '3px',
-                      marginTop: '2px',
-                      flexShrink: 0
-                    }} />
-                    <div style={{
-                      fontSize: '12px',
-                      color: colors.textSecondary,
-                      lineHeight: 1.4
-                    }}>
-                      {item}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
