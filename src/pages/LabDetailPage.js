@@ -272,6 +272,7 @@ const LabDetailPage = () => {
         onBookmarkToggle={handleBookmarkToggle}
         onBack={() => navigate(-1)}
         onWriteReview={handleWriteReview}
+        isCompactLayout={isCompactLayout}
       />
 
       {/* Main Content */}
@@ -305,7 +306,14 @@ const LabDetailPage = () => {
 };
 
 // Lab Header Component
-const LabHeader = ({ lab, isBookmarked, onBookmarkToggle, onBack, onWriteReview }) => {
+const LabHeader = ({
+  lab,
+  isBookmarked,
+  onBookmarkToggle,
+  onBack,
+  onWriteReview,
+  isCompactLayout = false,
+}) => {
   const getInitials = (name) => {
     return name.split(' ').map(n => n.charAt(0)).slice(0, 2).join('').toUpperCase();
   };
