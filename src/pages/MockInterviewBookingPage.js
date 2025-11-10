@@ -21,10 +21,11 @@ import { AuthService } from '../services/authService';
 import { InterviewService } from '../services/interviewService';
 import { SearchService } from '../services/searchService';
 import { BookmarkService } from '../services/bookmarkService';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const MockInterviewBookingPage = () => {
   const navigate = useNavigate();
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const { isMobile } = useBreakpoint();
   const [currentStep, setCurrentStep] = useState(1);
 
   // Form state
@@ -61,12 +62,6 @@ const MockInterviewBookingPage = () => {
   // Legacy state for backward compatibility
   const [selectedUniversity, setSelectedUniversity] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState(null);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   // Handlers for UniversityDepartmentSelector
   const handleUniversitySelected = (universityId, universityName) => {

@@ -20,10 +20,11 @@ import Footer from '../components/Footer';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { InterviewService } from '../services/interviewService';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const MySessionsPage = () => {
   const navigate = useNavigate();
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const { isMobile } = useBreakpoint();
   const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming', 'past', 'all'
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -631,12 +632,6 @@ const MySessionsPage = () => {
       fetchSessions();
     }
   }, [activeTab]);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     if (!AuthService.isAuthenticated()) {

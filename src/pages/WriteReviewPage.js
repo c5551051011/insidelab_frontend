@@ -12,10 +12,14 @@ import { UniversityService } from '../services/universityService';
 import { AuthService } from '../services/authService';
 import { ApiService } from '../services/apiService';
 import { DropdownField } from '../components/Dropdown';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const WriteReviewPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { width } = useBreakpoint();
+  const isCompact600 = width < 600;
+  const isCompact640 = width < 640;
 
   // Form state
   const [formData, setFormData] = useState({
@@ -826,14 +830,14 @@ const WriteReviewPage = () => {
 
             {/* Position and Duration */}
             <div style={{
-              display: window.innerWidth < 600 ? 'block' : 'flex',
+              display: isCompact600 ? 'block' : 'flex',
               gap: spacing[4],
               marginBottom: spacing[6]
             }}>
               {/* Position */}
               <div style={{
                 flex: 1,
-                marginBottom: window.innerWidth < 600 ? spacing[4] : 0
+                marginBottom: isCompact600 ? spacing[4] : 0
               }}>
                 <label style={{
                   display: 'block',
@@ -1014,7 +1018,7 @@ const WriteReviewPage = () => {
               </p>
 
               {ratingCategories.map((category, index) => {
-                const isMobile = window.innerWidth < 640;
+                const isMobile = isCompact640;
 
                 return (
                   <div key={category} style={{
@@ -1141,14 +1145,14 @@ const WriteReviewPage = () => {
 
             {/* Pros and Cons */}
             <div style={{
-              display: window.innerWidth < 600 ? 'block' : 'flex',
+              display: isCompact600 ? 'block' : 'flex',
               gap: spacing[4],
               marginBottom: spacing[6]
             }}>
               {/* Pros */}
               <div style={{
                 flex: 1,
-                marginBottom: window.innerWidth < 600 ? spacing[4] : 0
+                marginBottom: isCompact600 ? spacing[4] : 0
               }}>
                 <label style={{
                   display: 'block',
