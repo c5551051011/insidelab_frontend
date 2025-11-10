@@ -8,6 +8,7 @@ import SearchResults from '../components/search/SearchResults';
 import { colors, spacing } from '../theme';
 import { SearchService } from '../services/searchService';
 import { SearchFilter } from '../models/Lab';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const SearchPage = () => {
   const navigate = useNavigate();
@@ -26,9 +27,8 @@ const SearchPage = () => {
   const [error, setError] = useState(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
-
-  // Responsive breakpoints
-  const isMobile = window.innerWidth < 1000;
+  const { width } = useBreakpoint();
+  const isMobile = width < 1000;
 
   // Debounced search function
   const performSearch = useCallback(async (searchQuery, searchFilters, page = 1, append = false) => {

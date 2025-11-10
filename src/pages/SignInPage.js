@@ -6,6 +6,7 @@ import { FormInput } from '../components/FormInput';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { ApiException } from '../services/apiService';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const SignInPage = () => {
   const navigate = useNavigate();
@@ -15,8 +16,7 @@ const SignInPage = () => {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-
-  const isMobile = window.innerWidth < 768;
+  const { isMobile } = useBreakpoint();
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

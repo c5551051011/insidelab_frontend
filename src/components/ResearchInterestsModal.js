@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, BookOpen } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import { ResearchProfileService } from '../services/researchProfileService';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const ResearchInterestsModal = ({ isOpen, onClose, user, onUserUpdate }) => {
   const [researchArea, setResearchArea] = useState('');
@@ -13,13 +14,7 @@ const ResearchInterestsModal = ({ isOpen, onClose, user, onUserUpdate }) => {
   const [newKeyword, setNewKeyword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const { isMobile } = useBreakpoint();
 
   useEffect(() => {
     if (isOpen && user) {

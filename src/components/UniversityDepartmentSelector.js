@@ -3,6 +3,7 @@ import { colors, spacing } from '../theme';
 import { UniversityService } from '../services/universityService';
 import { ReviewService } from '../services/reviewService';
 import { DropdownField } from './Dropdown';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const UniversityDepartmentSelector = ({
   selectedUniversityId,
@@ -13,13 +14,7 @@ const UniversityDepartmentSelector = ({
   isRequired = true,
   layout = 'responsive' // 'responsive' (default), 'vertical', 'horizontal'
 }) => {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const { isMobile } = useBreakpoint();
   const [universities, setUniversities] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loadingUniversities, setLoadingUniversities] = useState(false);

@@ -8,10 +8,11 @@ import { AuthService } from '../services/authService';
 import { ApiException } from '../services/apiService';
 import { UniversityService } from '../services/universityService';
 import { ReviewService } from '../services/reviewService';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const SignupPage = () => {
   const navigate = useNavigate();
-const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     email: '',
     username: '',
     name: '',
@@ -30,8 +31,7 @@ const [formData, setFormData] = useState({
   const [loadingDepartments, setLoadingDepartments] = useState(false);
   const [showAddUniversity, setShowAddUniversity] = useState(false);
   const [showAddDepartment, setShowAddDepartment] = useState(false);
-
-  const isMobile = window.innerWidth < 768;
+  const { isMobile } = useBreakpoint();
 
   // Generate random username and load universities on component mount
   useEffect(() => {

@@ -9,6 +9,7 @@ import AddLabModal from './AddLabModal';
 import { ReviewService } from '../../services/reviewService';
 import { UniversityService } from '../../services/universityService';
 import { ReviewFormData, POSITION_OPTIONS, DURATION_OPTIONS, VALIDATION_RULES } from '../../models/Review';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 const ReviewForm = ({
   initialData = {},
@@ -39,13 +40,12 @@ const ReviewForm = ({
   const [showAddDepartment, setShowAddDepartment] = useState(false);
   const [showAddResearchGroup, setShowAddResearchGroup] = useState(false);
   const [showAddLab, setShowAddLab] = useState(false);
+  const { isMobile } = useBreakpoint();
 
   // Lab search state
   const [labSearchQuery, setLabSearchQuery] = useState('');
   const [labSearchResults, setLabSearchResults] = useState([]);
   const [showLabSuggestions, setShowLabSuggestions] = useState(false);
-
-  const isMobile = window.innerWidth < 768;
 
   // Load initial data
   useEffect(() => {

@@ -3,6 +3,7 @@ import { X, User, Mail, Building2, GraduationCap, Globe, Save, Loader } from 'lu
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { UniversityService } from '../services/universityService';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
   const [formData, setFormData] = useState({
@@ -23,6 +24,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
   const [universities, setUniversities] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const { isMobile } = useBreakpoint();
 
   // Position options
   const positionOptions = [
@@ -194,8 +196,6 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
   };
 
   if (!isOpen) return null;
-
-  const isMobile = window.innerWidth < 768;
 
   return (
     <div style={{

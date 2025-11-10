@@ -4,10 +4,11 @@ import { Menu, X, ChevronDown, User, LogOut, Video } from 'lucide-react';
 import { PrimaryButton } from './Button';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const Header = () => {
-  const screenWidth = window.innerWidth;
-  const isMobile = screenWidth < 850;
+  const { width } = useBreakpoint();
+  const isMobile = width < 850;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);

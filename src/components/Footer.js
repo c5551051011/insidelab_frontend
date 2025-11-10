@@ -2,11 +2,12 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, School, HelpCircle } from 'lucide-react';
 import { colors, spacing, sectionSpacing } from '../theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const Footer = () => {
-  const screenWidth = window.innerWidth;
-  const isMobile = screenWidth < 768;
-  const isTablet = screenWidth >= 768 && screenWidth < 1024;
+  const { width } = useBreakpoint();
+  const isMobile = width < 768;
+  const isTablet = width >= 768 && width < 1024;
 
   const renderFooterContent = () => {
     if (isMobile) {
@@ -63,7 +64,7 @@ const Footer = () => {
         {renderFooterContent()}
 
         <div style={{ marginTop: spacing[8] }}>
-          <BottomBar />
+          <BottomBar isMobile={isMobile} />
         </div>
       </div>
     </footer>
@@ -270,16 +271,16 @@ const SupportLinks = () => {
   );
 };
 
-const BottomBar = () => {
+const BottomBar = ({ isMobile }) => {
   return (
     <div
       style={{
         borderTop: `1px solid ${colors.border || '#E2E8F0'}`,
         paddingTop: spacing[6],
         display: 'flex',
-        flexDirection: window.innerWidth < 768 ? 'column' : 'row',
+        flexDirection: isMobile ? 'column' : 'row',
         justifyContent: 'space-between',
-        alignItems: window.innerWidth < 768 ? 'flex-start' : 'center',
+        alignItems: isMobile ? 'flex-start' : 'center',
         gap: spacing[4],
       }}
     >

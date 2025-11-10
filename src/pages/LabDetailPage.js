@@ -22,6 +22,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { colors, spacing } from '../theme';
 import { SearchService } from '../services/searchService';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const LabDetailPage = () => {
   const { name } = useParams();
@@ -31,9 +32,9 @@ const LabDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
-
-  // Responsive breakpoint
-  const isMobile = window.innerWidth < 1000;
+  const { width } = useBreakpoint();
+  const isMobile = width < 1000;
+  const isSmallScreen = width < 768;
 
   useEffect(() => {
     const loadLabDetails = async () => {
@@ -396,7 +397,7 @@ const LabHeader = ({ lab, isBookmarked, onBookmarkToggle, onBack, onWriteReview 
           {/* Lab Details */}
           <div style={{ flex: 1, color: 'white' }}>
             <h1 style={{
-              fontSize: window.innerWidth < 768 ? '18px' : '22px',
+              fontSize: isSmallScreen ? '18px' : '22px',
               fontWeight: '600',
               margin: 0,
               marginBottom: spacing[1]
