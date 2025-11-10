@@ -442,7 +442,7 @@ const Header = () => {
                 </>
               )}
           </div>
-        </div>
+        </Modal>
       )}
     </header>
   );
