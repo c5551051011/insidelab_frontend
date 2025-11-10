@@ -1379,275 +1379,24 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile, expan
 
       {/* Confirmed Schedule */}
       {session.status === 'confirmed' && session.confirmedSlot && (
-        <div style={{
-          marginBottom: spacing[4],
-          padding: spacing[4],
-          backgroundColor: `${colors.primary}08`,
-          borderRadius: '8px'
-        }}>
-          <div style={{
-            fontSize: '13px',
-            fontWeight: '600',
-            color: colors.textPrimary,
-            marginBottom: spacing[2]
-          }}>
-            Confirmed Schedule
-          </div>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing[4],
-            fontSize: '14px',
-            color: colors.textSecondary
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
-              <Calendar size={16} />
-              {formatDate(session.confirmedSlot.date)}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
-              <Clock size={16} />
-              {formatTime(session.confirmedSlot.time)}
-            </div>
-          </div>
-
-          {(session.meetingLink || session.confirmedSlot?.zoomLink) && (
-            <a
-              href={session.meetingLink || session.confirmedSlot?.zoomLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: spacing[2],
-                marginTop: spacing[3],
-                padding: `${spacing[2]} ${spacing[4]}`,
-                backgroundColor: colors.primary,
-                color: 'white',
-                borderRadius: '6px',
-                textDecoration: 'none',
-                fontSize: '13px',
-                fontWeight: '600'
-              }}
-            >
-              <Video size={16} />
-              Join Zoom Meeting
-            </a>
-          )}
-        </div>
+        <ConfirmedScheduleSection
+          session={session}
+          formatDateFn={formatDate}
+          formatTimeFn={formatTime}
+        />
       )}
 
       {/* Show Confirmed Schedule for Completed Sessions */}
-      {session.status === 'completed' && session.matchedInterviewer && session.confirmedSlot ? (
-        <div style={{
-          marginBottom: spacing[3],
-          padding: spacing[4],
-          backgroundColor: `${colors.success}08`,
-          borderRadius: '8px',
-          border: `1px solid ${colors.success}30`
-        }}>
-          {/* Interviewer Info */}
-          <div style={{ marginBottom: spacing[4] }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing[3],
-              marginBottom: spacing[2]
-            }}>
-              <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: '50%',
-                backgroundColor: colors.primary,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white',
-                fontSize: '18px',
-                fontWeight: '600'
-              }}>
-                {session.matchedInterviewer.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-              </div>
-              <div>
-                <div style={{
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  color: colors.textPrimary,
-                  marginBottom: spacing[1]
-                }}>
-                  {session.matchedInterviewer.name}
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: spacing[2],
-                  marginBottom: spacing[1]
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: spacing[1]
-                  }}>
-                    <Star size={14} color={colors.warning} fill={colors.warning} />
-                    <span style={{
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: colors.textPrimary
-                    }}>
-                      {session.matchedInterviewer.averageRating}
-                    </span>
-                  </div>
-                  <span style={{
-                    fontSize: '13px',
-                    color: colors.textSecondary
-                  }}>
-                    ({session.matchedInterviewer.reviewCount} reviews)
-                  </span>
-                </div>
-                <div style={{
-                  fontSize: '13px',
-                  color: colors.textSecondary
-                }}>
-                  {session.matchedInterviewer.position} • {session.matchedInterviewer.university}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Confirmed Schedule */}
-          <div>
-            <div style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: colors.success,
-              marginBottom: spacing[2]
-            }}>
-              Confirmed Schedule
-            </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing[3],
-              marginBottom: spacing[3]
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing[2]
-              }}>
-                <Calendar size={16} color={colors.success} />
-                <span style={{
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: colors.textPrimary
-                }}>
-                  {new Date(session.confirmedSlot.date).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </span>
-              </div>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing[2]
-              }}>
-                <Clock size={16} color={colors.success} />
-                <span style={{
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: colors.textPrimary
-                }}>
-                  {session.confirmedSlot.time}
-                </span>
-              </div>
-            </div>
-            {session.confirmedSlot.zoomLink && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing[2]
-              }}>
-                <Video size={16} color={colors.primary} />
-                <a
-                  href={session.confirmedSlot.zoomLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    fontSize: '14px',
-                    color: colors.primary,
-                    textDecoration: 'none',
-                    fontWeight: '500'
-                  }}
-                >
-                  Join Zoom Meeting
-                </a>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        /* Preferred Slots (if not confirmed and not completed) */
-        session.status !== 'confirmed' && session.preferredSlots && (
-        <div style={{
-          marginBottom: spacing[3],
-          padding: spacing[4],
-          backgroundColor: colors.backgroundSecondary,
-          borderRadius: '8px'
-        }}>
-          <div style={{
-            fontSize: '13px',
-            fontWeight: '600',
-            color: colors.textPrimary,
-            marginBottom: spacing[2]
-          }}>
-            Your Preferred Time Slots
-            {session.preferredSlotCount && (
-              <span style={{
-                fontSize: '11px',
-                fontWeight: '500',
-                color: colors.textSecondary,
-                marginLeft: spacing[2]
-              }}>
-                ({session.preferredSlotCount} slots)
-              </span>
-            )}
-          </div>
-          {typeof session.preferredSlots === 'string' ? (
-            <div style={{
-              fontSize: '13px',
-              color: colors.textSecondary,
-              lineHeight: 1.5
-            }}>
-              {session.preferredSlots}
-            </div>
-          ) : Array.isArray(session.preferredSlots) ? (
-            session.preferredSlots.map((slot, idx) => (
-              <div key={idx} style={{
-                fontSize: '13px',
-                color: colors.textSecondary,
-                marginBottom: spacing[1],
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing[2]
-              }}>
-                <span style={{
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  padding: `2px ${spacing[2]}`,
-                  backgroundColor: `${colors.primary}20`,
-                  color: colors.primary,
-                  borderRadius: '4px'
-                }}>
-                  #{slot.priority || idx + 1}
-                </span>
-                {typeof slot === 'string' ? slot : slot.date && slot.time ? `${formatDate(slot.date)} at ${formatTime(slot.time)}` : 'Time slot details'}
-              </div>
-            ))
-          ) : null}
-        </div>
-        )
+      {session.status === 'completed' && session.confirmedSlot && (
+        <ConfirmedScheduleSection
+          session={session}
+          variant="completed"
+          showZoomLink={false}
+          formatDateFn={formatDate}
+          formatTimeFn={formatTime}
+        />
       )}
+
 
       {/* Focus Areas */}
       {session.focusAreas && (
@@ -1864,6 +1613,80 @@ const SessionCard = ({ session, getStatusInfo, getMatchTypeInfo, isMobile, expan
           ${session.price}
         </div>
       </div>
+    </div>
+  );
+};
+
+
+const ConfirmedScheduleSection = ({
+  session,
+  variant = 'confirmed',
+  showZoomLink = true,
+  formatDateFn,
+  formatTimeFn,
+}) => {
+  if (!session?.confirmedSlot) return null;
+
+  const accentColor = variant === 'completed' ? colors.success : colors.primary;
+  const backgroundColor = `${accentColor}08`;
+  const borderStyle = variant === 'completed' ? `1px solid ${accentColor}30` : 'none';
+
+  return (
+    <div style={{
+      marginBottom: spacing[variant === 'completed' ? 3 : 4],
+      padding: spacing[4],
+      backgroundColor,
+      borderRadius: '8px',
+      border: borderStyle
+    }}>
+      <div style={{
+        fontSize: '13px',
+        fontWeight: '600',
+        color: colors.textPrimary,
+        marginBottom: spacing[2]
+      }}>
+        Confirmed Schedule
+      </div>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: spacing[4],
+        fontSize: '14px',
+        color: colors.textSecondary
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
+          <Calendar size={16} color={accentColor} />
+          {formatDateFn ? formatDateFn(session.confirmedSlot.date) : session.confirmedSlot.date}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
+          <Clock size={16} color={accentColor} />
+          {formatTimeFn ? formatTimeFn(session.confirmedSlot.time) : session.confirmedSlot.time}
+        </div>
+      </div>
+
+      {showZoomLink && (session.meetingLink || session.confirmedSlot?.zoomLink) && (
+        <a
+          href={session.meetingLink || session.confirmedSlot?.zoomLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: spacing[2],
+            marginTop: spacing[3],
+            padding: `${spacing[2]} ${spacing[4]}`,
+            backgroundColor: accentColor,
+            color: 'white',
+            borderRadius: '6px',
+            textDecoration: 'none',
+            fontSize: '13px',
+            fontWeight: '600'
+          }}
+        >
+          <Video size={16} />
+          Join Zoom Meeting
+        </a>
+      )}
     </div>
   );
 };
