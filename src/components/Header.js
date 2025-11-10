@@ -5,6 +5,7 @@ import { PrimaryButton } from './Button';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import Modal from './Modal';
 
 const Header = () => {
   const { width } = useBreakpoint();
@@ -202,32 +203,27 @@ const Header = () => {
 
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        <Modal
+          onClose={() => setMobileMenuOpen(false)}
+          maxWidth="100%"
+          maxHeight="100%"
+          padding={0}
+          borderRadius="0"
+          boxShadow="none"
+          overlayStyle={{
+            alignItems: 'flex-start',
+            justifyContent: 'flex-end',
+            padding: 0,
             zIndex: 999,
           }}
-          onClick={() => setMobileMenuOpen(false)}
+          contentStyle={{
+            height: '100%',
+            backgroundColor: colors.background,
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: '-4px 0 20px rgba(0, 0, 0, 0.1)'
+          }}
         >
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              width: '100%',
-              height: '100%',
-              backgroundColor: colors.background,
-              display: 'flex',
-              flexDirection: 'column',
-              boxShadow: '-4px 0 20px rgba(0, 0, 0, 0.1)'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
             {/* Mobile Menu Header - Same height as main header */}
             <div style={{
               height: '72px',
@@ -446,8 +442,7 @@ const Header = () => {
                 </>
               )}
             </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </header>
   );
