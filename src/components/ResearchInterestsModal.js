@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, BookOpen } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import { ResearchProfileService } from '../services/researchProfileService';
+import Modal from './Modal';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const ResearchInterestsModal = ({ isOpen, onClose, user, onUserUpdate }) => {
@@ -100,41 +101,28 @@ const ResearchInterestsModal = ({ isOpen, onClose, user, onUserUpdate }) => {
   if (!isOpen) return null;
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 1000,
-          display: 'flex',
-          alignItems: isMobile ? 'flex-end' : 'center',
-          justifyContent: 'center',
-          padding: isMobile ? 0 : spacing[4]
-        }}
-      >
-        {/* Modal */}
-        <div
-          onClick={(e) => e.stopPropagation()}
-          style={{
-            backgroundColor: 'white',
-            borderRadius: isMobile ? '24px 24px 0 0' : '16px',
-            width: isMobile ? '100%' : '100%',
-            maxWidth: isMobile ? '100%' : '600px',
-            maxHeight: isMobile ? '90vh' : '85vh',
-            display: 'flex',
-            flexDirection: 'column',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
-          }}
-        >
-          {/* Header */}
-          <div style={{
-            padding: isMobile ? spacing[5] : spacing[6],
+    <Modal
+      onClose={onClose}
+      maxWidth={isMobile ? '100%' : '600px'}
+      maxHeight={isMobile ? '90vh' : '85vh'}
+      padding={0}
+      overlayStyle={{
+        alignItems: isMobile ? 'flex-end' : 'center',
+        justifyContent: 'center',
+        padding: isMobile ? 0 : spacing[4]
+      }}
+      contentStyle={{
+        borderRadius: isMobile ? '24px 24px 0 0' : '16px',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: 'white',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+      }}
+    >
+        {/* Header */}
+        <div style={{
+          padding: isMobile ? spacing[5] : spacing[6],
             borderBottom: `1px solid ${colors.border}`,
             display: 'flex',
             alignItems: 'center',
@@ -642,8 +630,7 @@ const ResearchInterestsModal = ({ isOpen, onClose, user, onUserUpdate }) => {
             </button>
           </div>
         </div>
-      </div>
-    </>
+    </Modal>
   );
 };
 
