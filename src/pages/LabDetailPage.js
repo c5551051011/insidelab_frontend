@@ -34,7 +34,7 @@ const LabDetailPage = () => {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const { width } = useBreakpoint();
   const isMobile = width < 1000;
-  const isSmallScreen = width < 768;
+  const isCompactLayout = width < 768;
 
   useEffect(() => {
     const loadLabDetails = async () => {
@@ -397,7 +397,7 @@ const LabHeader = ({ lab, isBookmarked, onBookmarkToggle, onBack, onWriteReview 
           {/* Lab Details */}
           <div style={{ flex: 1, color: 'white' }}>
             <h1 style={{
-              fontSize: isSmallScreen ? '18px' : '22px',
+              fontSize: isCompactLayout ? '18px' : '22px',
               fontWeight: '600',
               margin: 0,
               marginBottom: spacing[1]
