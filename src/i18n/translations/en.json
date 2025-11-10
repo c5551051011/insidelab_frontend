@@ -1,0 +1,170 @@
+{
+  "common": {
+    "buttons": {
+      "submit": "Submit",
+      "cancel": "Cancel",
+      "save": "Save",
+      "edit": "Edit",
+      "delete": "Delete",
+      "search": "Search",
+      "login": "Log In",
+      "signup": "Sign Up",
+      "logout": "Sign Out"
+    },
+    "navigation": {
+      "home": "Home",
+      "search": "Search",
+      "profile": "My Profile",
+      "sessions": "My Sessions",
+      "about": "About"
+    },
+    "forms": {
+      "email": "Email",
+      "password": "Password",
+      "name": "Name",
+      "required": "Required"
+    }
+  },
+  "header": {
+    "brand": "Insidelab",
+    "menu": {
+      "search": "Search",
+      "profile": "My Profile",
+      "sessions": "My Sessions",
+      "signOut": "Sign Out"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Your Gateway to Graduate School Success",
+      "subtitle": "Search labs with detailed ratings, read honest reviews from current grad students, and find the perfect research environment for your goals.",
+      "cta": "Start Exploring",
+      "learnMore": "Learn More",
+      "searchPlaceholder": "Search by university, professor, lab name, or research area",
+      "searchPlaceholderShort": "Search labs, professors...",
+      "writeReview": "Write Review",
+      "mockInterview": "Book Mock Interview"
+    },
+    "features": {
+      "title": "Why Choose Insidelab?",
+      "research": {
+        "title": "Research Discovery",
+        "description": "Find cutting-edge research projects and collaborate with top researchers"
+      },
+      "networking": {
+        "title": "Professional Networking",
+        "description": "Build meaningful connections within the academic and research community"
+      },
+      "opportunities": {
+        "title": "Career Opportunities",
+        "description": "Discover internships, positions, and collaboration opportunities"
+      }
+    },
+    "stats": {
+      "title": "Trusted by Students Worldwide",
+      "subtitle": "Join thousands of successful graduate school applicants",
+      "labsReviewed": "Lab Reviewed",
+      "successfulApplicants": "Successful Applicants",
+      "universitiesCovered": "Universities Covered",
+      "successRate": "Success Rate"
+    },
+    "services": {
+      "title": "Everything You Need for Graduate School Success",
+      "search": {
+        "title": "Search Lab Reviews",
+        "description": "Discover authentic reviews from current and former graduate students about research labs, professors, and programs.",
+        "feature1": "Filter by university, department, or research area",
+        "feature2": "Read detailed anonymous reviews",
+        "feature3": "Compare lab ratings and metrics",
+        "feature4": "Save labs to your watchlist",
+        "button": "Explore Reviews"
+      },
+      "cv": {
+        "title": "CV & Resume Feedback",
+        "description": "Get professional feedback on your academic CV and resume from experienced graduate students and industry professionals.",
+        "feature1": "AI-powered initial screening",
+        "feature2": "Human expert review and comments",
+        "feature3": "Field-specific formatting guidelines",
+        "feature4": "Before/after improvement tracking",
+        "button": "Upload Document"
+      },
+      "interview": {
+        "title": "Mock Interview Sessions",
+        "description": "Practice PhD admissions and job interviews with personalized mock sessions tailored to your field and target programs.",
+        "feature1": "AI-powered interview simulation",
+        "feature2": "Field-specific question databases",
+        "feature3": "Real-time feedback and scoring",
+        "feature4": "Video analysis and improvement tips",
+        "button": "Start Practice"
+      }
+    },
+    "cta": {
+      "title": "Ready to Start Your Graduate School Journey?",
+      "subtitle": "Join thousands of students who have successfully navigated their graduate school applications with our expert guidance and insider insights.",
+      "startButton": "Get Started Free",
+      "button": "Get Started Today",
+      "browseReviews": "Browse Reviews"
+    }
+  },
+  "search": {
+    "pageTitle": "Search Research Labs",
+    "pageDescription": "Find the perfect research lab with detailed reviews and ratings from current students",
+    "searchPlaceholder": "Search by university, professor, lab name, or research area",
+    "filters": "Filters",
+    "results": {
+      "loading": "Searching...",
+      "error": "Failed to search labs",
+      "noResults": "No labs found",
+      "loadMore": "Load More",
+      "totalResults": "{{count}} labs found"
+    },
+    "tips": {
+      "title": "Search Tips",
+      "university": {
+        "title": "Search by University",
+        "description": "Try \"Stanford\", \"MIT\", \"Carnegie Mellon\"",
+        "example": "Stanford University"
+      },
+      "research": {
+        "title": "Search by Research Area",
+        "description": "Try \"Machine Learning\", \"Computer Vision\", \"NLP\"",
+        "example": "Machine Learning"
+      },
+      "professor": {
+        "title": "Search by Professor",
+        "description": "Try \"Dr. Sarah Chen\", \"Prof. Johnson\"",
+        "example": "Dr. Sarah Chen"
+      },
+      "lab": {
+        "title": "Search by Lab Name",
+        "description": "Try \"Computer Vision Lab\", \"AI Research\"",
+        "example": "Computer Vision Lab"
+      }
+    }
+  },
+  "footer": {
+    "company": {
+      "title": "Company",
+      "about": "About Us",
+      "careers": "Careers",
+      "contact": "Contact"
+    },
+    "resources": {
+      "title": "Resources",
+      "help": "Help Center",
+      "community": "Community",
+      "blog": "Blog"
+    },
+    "legal": {
+      "title": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "cookies": "Cookie Policy"
+    },
+    "social": {
+      "title": "Follow Us"
+    },
+    "rights": "All rights reserved.",
+    "description": "Connecting researchers and fostering innovation through collaborative research networks."
+  }
+}

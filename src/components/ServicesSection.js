@@ -3,52 +3,54 @@ import { Link } from 'react-router-dom';
 import { Search, FileText, Video, Check } from 'lucide-react';
 import { colors, shadows, textStyles, spacing, sectionSpacing, borderRadius } from '../theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useTranslation } from '../i18n';
 
 const ServicesSection = () => {
   const { isMobile, isTablet } = useBreakpoint();
+  const { t } = useTranslation();
 
   const services = [
     {
       emoji: '🔍',
-      title: 'Search Lab Reviews',
-      description: 'Discover authentic reviews from current and former graduate students about research labs, professors, and programs.',
+      title: t('home.services.search.title', 'Search Lab Reviews'),
+      description: t('home.services.search.description', 'Discover authentic reviews from current and former graduate students about research labs, professors, and programs.'),
       features: [
-        'Filter by university, department, or research area',
-        'Read detailed anonymous reviews',
-        'Compare lab ratings and metrics',
-        'Save labs to your watchlist',
+        t('home.services.search.feature1', 'Filter by university, department, or research area'),
+        t('home.services.search.feature2', 'Read detailed anonymous reviews'),
+        t('home.services.search.feature3', 'Compare lab ratings and metrics'),
+        t('home.services.search.feature4', 'Save labs to your watchlist'),
       ],
-      buttonText: 'Explore Reviews',
+      buttonText: t('home.services.search.button', 'Explore Reviews'),
       imagePath: '/assets/images/review_image.png',
       route: '/search',
       icon: Search,
     },
     {
       emoji: '📄',
-      title: 'CV & Resume Feedback',
-      description: 'Get professional feedback on your academic CV and resume from experienced graduate students and industry professionals.',
+      title: t('home.services.cv.title', 'CV & Resume Feedback'),
+      description: t('home.services.cv.description', 'Get professional feedback on your academic CV and resume from experienced graduate students and industry professionals.'),
       features: [
-        'AI-powered initial screening',
-        'Human expert review and comments',
-        'Field-specific formatting guidelines',
-        'Before/after improvement tracking',
+        t('home.services.cv.feature1', 'AI-powered initial screening'),
+        t('home.services.cv.feature2', 'Human expert review and comments'),
+        t('home.services.cv.feature3', 'Field-specific formatting guidelines'),
+        t('home.services.cv.feature4', 'Before/after improvement tracking'),
       ],
-      buttonText: 'Upload Document',
+      buttonText: t('home.services.cv.button', 'Upload Document'),
       imagePath: '/assets/images/resume_image.png',
       route: '/services/cv-review',
       icon: FileText,
     },
     {
       emoji: '🎤',
-      title: 'Mock Interview Sessions',
-      description: 'Practice PhD admissions and job interviews with personalized mock sessions tailored to your field and target programs.',
+      title: t('home.services.interview.title', 'Mock Interview Sessions'),
+      description: t('home.services.interview.description', 'Practice PhD admissions and job interviews with personalized mock sessions tailored to your field and target programs.'),
       features: [
-        'AI-powered interview simulation',
-        'Field-specific question databases',
-        'Real-time feedback and scoring',
-        'Video analysis and improvement tips',
+        t('home.services.interview.feature1', 'AI-powered interview simulation'),
+        t('home.services.interview.feature2', 'Field-specific question databases'),
+        t('home.services.interview.feature3', 'Real-time feedback and scoring'),
+        t('home.services.interview.feature4', 'Video analysis and improvement tips'),
       ],
-      buttonText: 'Start Practice',
+      buttonText: t('home.services.interview.button', 'Start Practice'),
       imagePath: '/assets/images/interview_image.png',
       route: '/services/mock-interview',
       icon: Video,
@@ -114,7 +116,7 @@ const ServicesSection = () => {
               color: colors.textPrimary,
             }}
           >
-            Everything You Need for Graduate School Success
+            {t('home.services.title', 'Everything You Need for Graduate School Success')}
           </h2>
         </div>
 

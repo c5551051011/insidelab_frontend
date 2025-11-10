@@ -1,0 +1,170 @@
+{
+  "common": {
+    "buttons": {
+      "submit": "제출",
+      "cancel": "취소",
+      "save": "저장",
+      "edit": "편집",
+      "delete": "삭제",
+      "search": "검색",
+      "login": "로그인",
+      "signup": "회원가입",
+      "logout": "로그아웃"
+    },
+    "navigation": {
+      "home": "홈",
+      "search": "검색",
+      "profile": "내 프로필",
+      "sessions": "내 세션",
+      "about": "소개"
+    },
+    "forms": {
+      "email": "이메일",
+      "password": "비밀번호",
+      "name": "이름",
+      "required": "필수"
+    }
+  },
+  "header": {
+    "brand": "Insidelab",
+    "menu": {
+      "search": "검색",
+      "profile": "내 프로필",
+      "sessions": "내 세션",
+      "signOut": "로그아웃"
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "대학원 성공의 관문",
+      "subtitle": "상세한 평점이 있는 연구실을 검색하고, 현재 대학원생들의 솔직한 리뷰를 읽으며, 당신의 목표에 완벽한 연구 환경을 찾으세요.",
+      "cta": "탐색 시작하기",
+      "learnMore": "자세히 알아보기",
+      "searchPlaceholder": "대학교, 교수, 연구실 이름 또는 연구 분야로 검색",
+      "searchPlaceholderShort": "연구실, 교수 검색...",
+      "writeReview": "리뷰 작성",
+      "mockInterview": "모의 면접 예약"
+    },
+    "features": {
+      "title": "Insidelab을 선택하는 이유",
+      "research": {
+        "title": "연구 발견",
+        "description": "최첨단 연구 프로젝트를 찾고 최고의 연구자들과 협업하세요"
+      },
+      "networking": {
+        "title": "전문적 네트워킹",
+        "description": "학술 및 연구 커뮤니티 내에서 의미 있는 연결을 구축하세요"
+      },
+      "opportunities": {
+        "title": "커리어 기회",
+        "description": "인턴십, 포지션, 협업 기회를 발견하세요"
+      }
+    },
+    "stats": {
+      "title": "전 세계 학생들이 신뢰하는",
+      "subtitle": "수천 명의 성공적인 대학원 지원자들과 함께하세요",
+      "labsReviewed": "리뷰된 연구실",
+      "successfulApplicants": "성공한 지원자",
+      "universitiesCovered": "포함된 대학",
+      "successRate": "성공률"
+    },
+    "services": {
+      "title": "대학원 성공을 위한 모든 것",
+      "search": {
+        "title": "연구실 리뷰 검색",
+        "description": "현재 및 이전 대학원생들의 연구실, 교수, 프로그램에 대한 진정한 리뷰를 발견하세요.",
+        "feature1": "대학교, 학과 또는 연구 분야별 필터링",
+        "feature2": "상세한 익명 리뷰 읽기",
+        "feature3": "연구실 평점 및 지표 비교",
+        "feature4": "관심 연구실 저장",
+        "button": "리뷰 탐색하기"
+      },
+      "cv": {
+        "title": "이력서 및 CV 피드백",
+        "description": "경험있는 대학원생과 업계 전문가로부터 학술 CV와 이력서에 대한 전문적인 피드백을 받으세요.",
+        "feature1": "AI 기반 초기 심사",
+        "feature2": "인간 전문가 리뷰 및 코멘트",
+        "feature3": "분야별 서식 가이드라인",
+        "feature4": "개선 전후 추적",
+        "button": "문서 업로드"
+      },
+      "interview": {
+        "title": "모의 면접 세션",
+        "description": "귀하의 분야와 목표 프로그램에 맞춤화된 개인화된 모의 세션으로 PhD 입학 및 취업 면접을 연습하세요.",
+        "feature1": "AI 기반 면접 시뮬레이션",
+        "feature2": "분야별 질문 데이터베이스",
+        "feature3": "실시간 피드백 및 점수",
+        "feature4": "비디오 분석 및 개선 팁",
+        "button": "연습 시작하기"
+      }
+    },
+    "cta": {
+      "title": "대학원 여정을 시작할 준비가 되셨나요?",
+      "subtitle": "전문가 지도와 내부 인사이트로 대학원 지원을 성공적으로 헤쳐나간 수천 명의 학생들과 함께하세요.",
+      "startButton": "무료로 시작하기",
+      "button": "지금 시작하기",
+      "browseReviews": "리뷰 둘러보기"
+    }
+  },
+  "search": {
+    "pageTitle": "연구실 검색",
+    "pageDescription": "현재 학생들의 상세한 리뷰와 평점으로 완벽한 연구실을 찾으세요",
+    "searchPlaceholder": "대학교, 교수, 연구실 이름 또는 연구 분야로 검색",
+    "filters": "필터",
+    "results": {
+      "loading": "검색 중...",
+      "error": "연구실 검색에 실패했습니다",
+      "noResults": "연구실을 찾을 수 없습니다",
+      "loadMore": "더 보기",
+      "totalResults": "{{count}}개의 연구실을 찾았습니다"
+    },
+    "tips": {
+      "title": "검색 팁",
+      "university": {
+        "title": "대학교로 검색",
+        "description": "\"Stanford\", \"MIT\", \"Carnegie Mellon\"을 시도해보세요",
+        "example": "Stanford University"
+      },
+      "research": {
+        "title": "연구 분야로 검색",
+        "description": "\"Machine Learning\", \"Computer Vision\", \"NLP\"를 시도해보세요",
+        "example": "Machine Learning"
+      },
+      "professor": {
+        "title": "교수로 검색",
+        "description": "\"Dr. Sarah Chen\", \"Prof. Johnson\"을 시도해보세요",
+        "example": "Dr. Sarah Chen"
+      },
+      "lab": {
+        "title": "연구실 이름으로 검색",
+        "description": "\"Computer Vision Lab\", \"AI Research\"를 시도해보세요",
+        "example": "Computer Vision Lab"
+      }
+    }
+  },
+  "footer": {
+    "company": {
+      "title": "회사",
+      "about": "회사 소개",
+      "careers": "채용",
+      "contact": "문의"
+    },
+    "resources": {
+      "title": "리소스",
+      "help": "도움말 센터",
+      "community": "커뮤니티",
+      "blog": "블로그"
+    },
+    "legal": {
+      "title": "법적 고지",
+      "privacy": "개인정보처리방침",
+      "terms": "서비스 약관",
+      "cookies": "쿠키 정책"
+    },
+    "social": {
+      "title": "팔로우하기"
+    },
+    "rights": "모든 권리 보유.",
+    "description": "연구자들을 연결하고 협력적 연구 네트워크를 통해 혁신을 촉진합니다."
+  }
+}

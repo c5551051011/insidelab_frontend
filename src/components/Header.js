@@ -6,10 +6,13 @@ import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { Modal } from './Modal';
+import LanguageSelector from './LanguageSelector';
+import { useTranslation } from '../i18n';
 
 const Header = () => {
   const { width } = useBreakpoint();
   const isMobile = width < 850;
+  const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -123,31 +126,39 @@ const Header = () => {
             alignItems: 'center',
             gap: spacing[3]
           }}>
-            <NavLink to="/search">Search</NavLink>
+            <NavLink to="/search">{t('header.menu.search')}</NavLink>
+            <LanguageSelector />
           </div>
         )}
 
-        {/* Mobile Menu Button */}
+        {/* Mobile Menu Button and Language Selector */}
         {isMobile && (
-          <button
-            onClick={() => setMobileMenuOpen(true)}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: spacing[2],
-              borderRadius: '6px',
-              transition: 'background-color 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = colors.backgroundLight;
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-            }}
-          >
-            <Menu size={24} color={colors.textPrimary} />
-          </button>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing[2]
+          }}>
+            <LanguageSelector compact={true} />
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: spacing[2],
+                borderRadius: '6px',
+                transition: 'background-color 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = colors.backgroundLight;
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'transparent';
+              }}
+            >
+              <Menu size={24} color={colors.textPrimary} />
+            </button>
+          </div>
         )}
 
         {/* Auth Section - Hidden on mobile */}
@@ -187,13 +198,13 @@ const Header = () => {
                     e.target.style.backgroundColor = 'transparent';
                   }}
                 >
-                  Log In
+                  {t('common.buttons.login')}
                 </Link>
                 <PrimaryButton
                   to="/signup"
                   size="small"
                 >
-                  Sign Up
+                  {t('common.buttons.signup')}
                 </PrimaryButton>
               </>
             )}
@@ -325,7 +336,7 @@ const Header = () => {
               {/* Navigation Links */}
               <MobileMenuItem
                 icon={<span style={{ fontSize: '18px' }}>🔍</span>}
-                text="Search"
+                text={t('header.menu.search')}
                 onClick={() => {
                   setMobileMenuOpen(false);
                   window.location.href = '/search';
@@ -337,7 +348,7 @@ const Header = () => {
 
                   <MobileMenuItem
                     icon={<User size={20} color={colors.textSecondary} />}
-                    text="My Profile"
+                    text={t('header.menu.profile')}
                     onClick={() => {
                       setMobileMenuOpen(false);
                       window.location.href = '/profile';
@@ -347,7 +358,7 @@ const Header = () => {
 
                   <MobileMenuItem
                     icon={<Video size={20} color={colors.textSecondary} />}
-                    text="My Sessions"
+                    text={t('header.menu.sessions')}
                     onClick={() => {
                       setMobileMenuOpen(false);
                       window.location.href = '/my-sessions';
@@ -363,7 +374,7 @@ const Header = () => {
 
                   <MobileMenuItem
                     icon={<LogOut size={20} color={colors.error} />}
-                    text="Sign Out"
+                    text={t('header.menu.signOut')}
                     onClick={() => {
                       handleLogout();
                       setMobileMenuOpen(false);
@@ -400,7 +411,7 @@ const Header = () => {
                         e.target.style.backgroundColor = 'transparent';
                       }}
                     >
-                      Log In
+                      {t('common.buttons.login')}
                     </Link>
 
                     <Link
@@ -427,7 +438,7 @@ const Header = () => {
                         e.target.style.backgroundColor = colors.primary;
                       }}
                     >
-                      Sign Up
+                      {t('common.buttons.signup')}
                     </Link>
                   </div>
                 </>
@@ -502,6 +513,7 @@ const MobileMenuItem = ({ icon, text, onClick, style = {} }) => {
 };
 
 const UserMenu = ({ user, isOpen, onToggle, onLogout, userMenuRef }) => {
+  const { t } = useTranslation();
   const getUserInitial = () => {
     if (user?.name) {
       return user.name.charAt(0).toUpperCase();
@@ -595,12 +607,12 @@ const UserMenu = ({ user, isOpen, onToggle, onLogout, userMenuRef }) => {
         }}>
           <UserMenuItem
             icon={<User size={16} />}
-            text="My Profile"
+            text={t('header.menu.profile')}
             onClick={() => window.location.href = '/profile'}
           />
           <UserMenuItem
             icon={<Video size={16} />}
-            text="My Sessions"
+            text={t('header.menu.sessions')}
             onClick={() => window.location.href = '/my-sessions'}
           />
           <div style={{
@@ -610,7 +622,7 @@ const UserMenu = ({ user, isOpen, onToggle, onLogout, userMenuRef }) => {
           }} />
           <UserMenuItem
             icon={<LogOut size={16} />}
-            text="Sign Out"
+            text={t('header.menu.signOut')}
             onClick={onLogout}
             style={{ color: colors.error }}
           />

@@ -2,30 +2,32 @@ import React from 'react';
 import { School, Trophy, Building2, TrendingUp } from 'lucide-react';
 import { colors, textStyles, spacing, sectionSpacing } from '../theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useTranslation } from '../i18n';
 
 const TrustedMetricsSection = () => {
   const { isMobile } = useBreakpoint();
+  const { t } = useTranslation();
 
   const metrics = [
     {
       icon: School,
       number: '15,000+',
-      label: 'Lab Reviewed',
+      label: t('home.stats.labsReviewed', 'Lab Reviewed'),
     },
     {
       icon: Trophy,
       number: '3,200+',
-      label: 'Successful Applicants',
+      label: t('home.stats.successfulApplicants', 'Successful Applicants'),
     },
     {
       icon: Building2,
       number: '500+',
-      label: 'Universities Covered',
+      label: t('home.stats.universitiesCovered', 'Universities Covered'),
     },
     {
       icon: TrendingUp,
       number: '98%',
-      label: 'Success Rate',
+      label: t('home.stats.successRate', 'Success Rate'),
     },
   ];
 
@@ -51,7 +53,7 @@ const TrustedMetricsSection = () => {
               marginBottom: isMobile ? spacing[3] : spacing[4],
             }}
           >
-            Trusted by Students Worldwide
+            {t('home.stats.title', 'Trusted by Students Worldwide')}
           </h2>
           <p
             style={{
@@ -59,7 +61,7 @@ const TrustedMetricsSection = () => {
               color: colors.metricsSubtext,
             }}
           >
-            Join thousands of successful graduate school applicants
+            {t('home.stats.subtitle', 'Join thousands of successful graduate school applicants')}
           </p>
         </div>
 

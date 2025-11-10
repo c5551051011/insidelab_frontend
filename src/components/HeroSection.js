@@ -4,12 +4,14 @@ import { Search, FileText, Video } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from './Button';
 import { colors, gradients, spacing, sectionSpacing } from '../theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useTranslation } from '../i18n';
 
 const HeroSection = () => {
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const { isMobile } = useBreakpoint();
+  const { t } = useTranslation();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -83,7 +85,7 @@ const HeroSection = () => {
                 padding: isMobile ? '0 16px' : '0',
               }}
             >
-              Your Gateway to Graduate School Success
+              {t('home.hero.title')}
             </h1>
 
             <p
@@ -97,8 +99,7 @@ const HeroSection = () => {
                 padding: isMobile ? '0 16px' : '0',
               }}
             >
-              Search labs with detailed ratings, read honest reviews from current grad students,
-              and find the perfect research environment for your goals.
+              {t('home.hero.subtitle')}
             </p>
           </div>
 
@@ -141,7 +142,7 @@ const HeroSection = () => {
                 onChange={(e) => setSearchValue(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
-                placeholder={isMobile ? "Search labs, professors..." : "Search by university, professor, lab name, or research area"}
+                placeholder={isMobile ? t('home.hero.searchPlaceholderShort', 'Search labs, professors...') : t('home.hero.searchPlaceholder', 'Search by university, professor, lab name, or research area')}
                 style={{
                   width: '100%',
                   height: isMobile ? '48px' : '60px',
@@ -185,7 +186,7 @@ const HeroSection = () => {
               variant="outline"
               style={isMobile ? { width: '100%' } : {}}
             >
-              Write Review
+              {t('home.hero.writeReview', 'Write Review')}
             </PrimaryButton>
 
             <SecondaryButton
@@ -195,7 +196,7 @@ const HeroSection = () => {
               variant="outline"
               style={isMobile ? { width: '100%' } : {}}
             >
-              Book Mock Interview
+              {t('home.hero.mockInterview', 'Book Mock Interview')}
             </SecondaryButton>
           </div>
         </div>

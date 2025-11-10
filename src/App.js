@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { LanguageProvider } from './i18n';
 import Homepage from './pages/Homepage';
 import SignInPage from './pages/SignInPage';
 import SignupPage from './pages/SignupPage';
@@ -12,21 +13,23 @@ import MySessionsPage from './pages/MySessionsPage';
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<Homepage />} />
-          <Route path="/sign-in" element={<SignInPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/write-review" element={<WriteReviewPage />} />
-          <Route path="/profile" element={<MyProfilePage />} />
-          <Route path="/lab/:name" element={<LabDetailPage />} />
-          <Route path="/services/mock-interview" element={<MockInterviewBookingPage />} />
-          <Route path="/my-sessions" element={<MySessionsPage />} />
-        </Routes>
-      </div>
-    </Router>
+    <LanguageProvider>
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<Homepage />} />
+            <Route path="/sign-in" element={<SignInPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/write-review" element={<WriteReviewPage />} />
+            <Route path="/profile" element={<MyProfilePage />} />
+            <Route path="/lab/:name" element={<LabDetailPage />} />
+            <Route path="/services/mock-interview" element={<MockInterviewBookingPage />} />
+            <Route path="/my-sessions" element={<MySessionsPage />} />
+          </Routes>
+        </div>
+      </Router>
+    </LanguageProvider>
   );
 }
 

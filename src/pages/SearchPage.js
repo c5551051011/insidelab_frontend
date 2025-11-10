@@ -9,10 +9,12 @@ import { colors, spacing } from '../theme';
 import { SearchService } from '../services/searchService';
 import { SearchFilter } from '../models/Lab';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useTranslation } from '../i18n';
 
 const SearchPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { t } = useTranslation();
 
   // State management
   const [query, setQuery] = useState('');
@@ -63,7 +65,7 @@ const SearchPage = () => {
         // Don't set error state for load more failures to avoid disrupting user experience
       } else {
         // For initial search errors, clear results and show error
-        setError(err.message || 'Failed to search labs');
+        setError(err.message || t('search.results.error', 'Failed to search labs'));
         setSearchResults({
           results: [],
           total: 0,
@@ -139,7 +141,7 @@ const SearchPage = () => {
         }
       } catch (err) {
         console.error('Error loading initial data:', err);
-        setError('Failed to load labs');
+        setError(t('search.results.error', 'Failed to search labs'));
       } finally {
         setLoading(false);
         setInitialLoad(false);
@@ -192,7 +194,7 @@ const SearchPage = () => {
               marginBottom: spacing[2],
               fontFamily: 'Inter'
             }}>
-              Search Research Labs
+              {t('search.pageTitle', 'Search Research Labs')}
             </h1>
 
             <p style={{
@@ -202,7 +204,7 @@ const SearchPage = () => {
               fontFamily: 'Inter',
               lineHeight: 1.5
             }}>
-              Find the perfect research lab with detailed reviews and ratings from current students
+              {t('search.pageDescription', 'Find the perfect research lab with detailed reviews and ratings from current students')}
             </p>
 
             {/* Search Bar */}
@@ -245,7 +247,7 @@ const SearchPage = () => {
                   }}
                 >
                   <Filter size={16} />
-                  Filters
+                  {t('search.filters', 'Filters')}
                   {filters.hasActiveFilters() && (
                     <span style={{
                       backgroundColor: colors.primary,
@@ -306,26 +308,28 @@ const SearchPage = () => {
 
 // Search Tips Component
 const SearchTips = () => {
+  const { t } = useTranslation();
+
   const tips = [
     {
-      title: 'Search by University',
-      description: 'Try "Stanford", "MIT", "Carnegie Mellon"',
-      example: 'Stanford University'
+      title: t('search.tips.university.title', 'Search by University'),
+      description: t('search.tips.university.description', 'Try "Stanford", "MIT", "Carnegie Mellon"'),
+      example: t('search.tips.university.example', 'Stanford University')
     },
     {
-      title: 'Search by Research Area',
-      description: 'Try "Machine Learning", "Computer Vision", "NLP"',
-      example: 'Machine Learning'
+      title: t('search.tips.research.title', 'Search by Research Area'),
+      description: t('search.tips.research.description', 'Try "Machine Learning", "Computer Vision", "NLP"'),
+      example: t('search.tips.research.example', 'Machine Learning')
     },
     {
-      title: 'Search by Professor',
-      description: 'Try "Dr. Sarah Chen", "Prof. Johnson"',
-      example: 'Dr. Sarah Chen'
+      title: t('search.tips.professor.title', 'Search by Professor'),
+      description: t('search.tips.professor.description', 'Try "Dr. Sarah Chen", "Prof. Johnson"'),
+      example: t('search.tips.professor.example', 'Dr. Sarah Chen')
     },
     {
-      title: 'Search by Lab Name',
-      description: 'Try "Computer Vision Lab", "AI Research"',
-      example: 'Computer Vision Lab'
+      title: t('search.tips.lab.title', 'Search by Lab Name'),
+      description: t('search.tips.lab.description', 'Try "Computer Vision Lab", "AI Research"'),
+      example: t('search.tips.lab.example', 'Computer Vision Lab')
     }
   ];
 
@@ -345,7 +349,7 @@ const SearchTips = () => {
         fontFamily: 'Inter',
         textAlign: 'center'
       }}>
-        Search Tips
+        {t('search.tips.title', 'Search Tips')}
       </h3>
 
       <div style={{
