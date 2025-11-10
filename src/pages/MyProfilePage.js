@@ -36,9 +36,11 @@ import ResearchInterestsModal from '../components/ResearchInterestsModal';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useTranslation } from '../i18n';
 
 const MyProfilePage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -71,7 +73,7 @@ const MyProfilePage = () => {
   }, [navigate]);
 
   const handleSignOut = () => {
-    if (window.confirm('Are you sure you want to sign out?')) {
+    if (window.confirm(t('profile.signOutConfirm', 'Are you sure you want to sign out?'))) {
       AuthService.logout();
       // No need to navigate - logout will handle redirect and refresh
     }
@@ -107,7 +109,7 @@ const MyProfilePage = () => {
             fontSize: '18px',
             color: colors.textSecondary
           }}>
-            Loading profile...
+            {t('profile.loading', 'Loading profile...')}
           </div>
         </div>
         <Footer />
@@ -129,7 +131,7 @@ const MyProfilePage = () => {
             fontSize: '18px',
             color: colors.textSecondary
           }}>
-            Please log in to view your profile.
+            {t('profile.loginRequired', 'Please log in to view your profile.')}
           </div>
         </div>
         <Footer />
@@ -242,6 +244,7 @@ const MyProfilePage = () => {
 
 // New Mobile Profile Card Component
 const MobileProfileCard = ({ user, onSignOut, onEditProfile }) => {
+  const { t } = useTranslation();
   const getInitials = (name) => {
     return name ? name.charAt(0).toUpperCase() : 'U';
   };
@@ -251,19 +254,19 @@ const MobileProfileCard = ({ user, onSignOut, onEditProfile }) => {
     switch (status) {
       case 'verified':
         return {
-          text: 'Verified',
+          text: t('profile.verification.verified', 'Verified'),
           icon: CheckCircle,
           color: colors.success
         };
       case 'pending':
         return {
-          text: 'Pending',
+          text: t('profile.verification.pending', 'Pending'),
           icon: Clock,
           color: colors.warning
         };
       default:
         return {
-          text: 'Unverified',
+          text: t('profile.verification.unverified', 'Unverified'),
           icon: Clock,
           color: colors.textTertiary
         };
@@ -357,7 +360,7 @@ const MobileProfileCard = ({ user, onSignOut, onEditProfile }) => {
           }}
         >
           <Edit3 size={16} />
-          Edit Profile
+          {t('profile.editProfile', 'Edit Profile')}
         </button>
 
         <button
@@ -385,13 +388,14 @@ const MobileProfileCard = ({ user, onSignOut, onEditProfile }) => {
 
 // Mobile Tab Navigation Component
 const MobileTabNavigation = ({ activeTab, onTabChange }) => {
+  const { t } = useTranslation();
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: User },
-    { id: 'academic', label: 'Academic', icon: GraduationCap },
-    { id: 'research', label: 'Research', icon: BookOpen },
-    { id: 'reviews', label: 'Reviews', icon: FileText },
-    { id: 'services', label: 'Services', icon: Briefcase },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'overview', label: t('profile.tabs.overview', 'Overview'), icon: User },
+    { id: 'academic', label: t('profile.tabs.academic', 'Academic'), icon: GraduationCap },
+    { id: 'research', label: t('profile.tabs.research', 'Research'), icon: BookOpen },
+    { id: 'reviews', label: t('profile.tabs.reviews', 'Reviews'), icon: FileText },
+    { id: 'services', label: t('profile.tabs.services', 'Services'), icon: Briefcase },
+    { id: 'settings', label: t('profile.tabs.settings', 'Settings'), icon: Settings }
   ];
 
   return (
@@ -475,6 +479,7 @@ const MobileContent = ({ user, activeTab, onEditResearch }) => {
 
 // Mobile Tab Content Components
 const MobileOverviewTab = ({ user }) => {
+  const { t } = useTranslation();
   return (
     <div>
       {/* Overview Stats */}
@@ -486,13 +491,13 @@ const MobileOverviewTab = ({ user }) => {
       }}>
         <MobileStatCard
           icon={CheckCircle}
-          label="Status"
-          value={user.is_verified ? "Verified" : "Unverified"}
+          label={t('profile.stats.status', 'Status')}
+          value={user.is_verified ? t('profile.verification.verified', 'Verified') : t('profile.verification.unverified', 'Unverified')}
           color={user.is_verified ? colors.success : colors.warning}
         />
         <MobileStatCard
           icon={Calendar}
-          label="Member"
+          label={t('profile.stats.member', 'Member')}
           value={user.joined_date ? new Date(user.joined_date).getFullYear() : "2024"}
           color={colors.info}
         />
@@ -513,7 +518,7 @@ const MobileOverviewTab = ({ user }) => {
           color: colors.textPrimary,
           marginBottom: spacing[4]
         }}>
-          Academic Information
+          {t('profile.overview.academicInfo', 'Academic Information')}
         </h3>
 
         <div style={{
@@ -521,10 +526,10 @@ const MobileOverviewTab = ({ user }) => {
           flexDirection: 'column',
           gap: spacing[3]
         }}>
-          <MobileInfoRow label="University" value={user.university_name || user.university || 'Not specified'} />
-          <MobileInfoRow label="Department" value={user.department_name || user.department || 'Not specified'} />
-          <MobileInfoRow label="Position" value={user.position || 'Not specified'} />
-          <MobileInfoRow label="Lab Name" value={user.lab_name || 'Not specified'} />
+          <MobileInfoRow label={t('profile.academic.university', 'University')} value={user.university_name || user.university || t('profile.academic.notSpecified', 'Not specified')} />
+          <MobileInfoRow label={t('profile.academic.department', 'Department')} value={user.department_name || user.department || t('profile.academic.notSpecified', 'Not specified')} />
+          <MobileInfoRow label={t('profile.academic.position', 'Position')} value={user.position || t('profile.academic.notSpecified', 'Not specified')} />
+          <MobileInfoRow label={t('profile.academic.labName', 'Lab Name')} value={user.lab_name || t('profile.academic.notSpecified', 'Not specified')} />
         </div>
       </div>
 
@@ -551,6 +556,7 @@ const MobileResearchTab = ({ user, onEditResearch }) => {
 };
 
 const MobileReviewsTab = ({ user }) => {
+  const { t } = useTranslation();
   const reviews = [
     {
       id: 1,
@@ -578,7 +584,7 @@ const MobileReviewsTab = ({ user }) => {
           color: colors.textPrimary,
           margin: 0
         }}>
-          My Reviews
+          {t('profile.reviews.title', 'My Reviews')}
         </h2>
         <button style={{
           backgroundColor: colors.primary,
@@ -590,7 +596,7 @@ const MobileReviewsTab = ({ user }) => {
           fontWeight: '600',
           cursor: 'pointer'
         }}>
-          Write New
+          {t('profile.reviews.writeNewShort', 'Write New')}
         </button>
       </div>
 
@@ -604,6 +610,7 @@ const MobileReviewsTab = ({ user }) => {
 };
 
 const MobileSettingsTab = ({ user }) => {
+  const { t } = useTranslation();
   return (
     <div>
       <h2 style={{
@@ -612,7 +619,7 @@ const MobileSettingsTab = ({ user }) => {
         color: colors.textPrimary,
         marginBottom: spacing[6]
       }}>
-        Account Settings
+        {t('profile.settings.title', 'Account Settings')}
       </h2>
       <AccountInformation user={user} isMobile={true} />
     </div>
@@ -622,6 +629,7 @@ const MobileSettingsTab = ({ user }) => {
 
 // Desktop Profile Sidebar Component
 const ProfileSidebar = ({ user, activeTab, onTabChange, onSignOut, onEditProfile }) => {
+  const { t } = useTranslation();
   const getInitials = (name) => {
     return name ? name.charAt(0).toUpperCase() : 'U';
   };
@@ -631,19 +639,19 @@ const ProfileSidebar = ({ user, activeTab, onTabChange, onSignOut, onEditProfile
     switch (status) {
       case 'verified':
         return {
-          text: 'Verified',
+          text: t('profile.verification.verified', 'Verified'),
           icon: CheckCircle,
           color: colors.success
         };
       case 'pending':
         return {
-          text: 'Pending',
+          text: t('profile.verification.pending', 'Pending'),
           icon: Clock,
           color: colors.warning
         };
       default:
         return {
-          text: 'Unverified',
+          text: t('profile.verification.unverified', 'Unverified'),
           icon: Clock,
           color: colors.textTertiary
         };
@@ -654,13 +662,13 @@ const ProfileSidebar = ({ user, activeTab, onTabChange, onSignOut, onEditProfile
   const VerificationIcon = verification.icon;
 
   const menuItems = [
-    { id: 'overview', label: 'Overview', icon: User },
-    { id: 'academic', label: 'Academic Profile', icon: GraduationCap },
-    { id: 'research', label: 'Research Interests', icon: BookOpen },
-    { id: 'reviews', label: 'My Reviews', icon: FileText },
-    { id: 'services', label: 'Service Provider', icon: Briefcase },
-    { id: 'settings', label: 'Account Settings', icon: Settings },
-    { id: 'privacy', label: 'Privacy & Security', icon: Shield }
+    { id: 'overview', label: t('profile.tabs.overview', 'Overview'), icon: User },
+    { id: 'academic', label: t('profile.tabs.academicProfile', 'Academic Profile'), icon: GraduationCap },
+    { id: 'research', label: t('profile.tabs.researchInterests', 'Research Interests'), icon: BookOpen },
+    { id: 'reviews', label: t('profile.tabs.myReviews', 'My Reviews'), icon: FileText },
+    { id: 'services', label: t('profile.tabs.serviceProvider', 'Service Provider'), icon: Briefcase },
+    { id: 'settings', label: t('profile.tabs.accountSettings', 'Account Settings'), icon: Settings },
+    { id: 'privacy', label: t('profile.tabs.privacySecurity', 'Privacy & Security'), icon: Shield }
   ];
 
   return (
@@ -748,7 +756,7 @@ const ProfileSidebar = ({ user, activeTab, onTabChange, onSignOut, onEditProfile
               fontSize: '12px',
               color: colors.textSecondary
             }}>
-              Reviews
+              {t('profile.stats.reviews', 'Reviews')}
             </div>
           </div>
           <div style={{ textAlign: 'center' }}>
@@ -764,7 +772,7 @@ const ProfileSidebar = ({ user, activeTab, onTabChange, onSignOut, onEditProfile
               fontSize: '12px',
               color: colors.textSecondary
             }}>
-              Helpful
+              {t('profile.stats.helpful', 'Helpful')}
             </div>
           </div>
         </div>
@@ -791,7 +799,7 @@ const ProfileSidebar = ({ user, activeTab, onTabChange, onSignOut, onEditProfile
           }}
         >
           <Edit3 size={16} />
-          Edit Profile
+          {t('profile.editProfile', 'Edit Profile')}
         </button>
 
         {/* Sign Out */}
@@ -815,7 +823,7 @@ const ProfileSidebar = ({ user, activeTab, onTabChange, onSignOut, onEditProfile
           }}
         >
           <LogOut size={16} />
-          Sign Out
+          {t('profile.signOut', 'Sign Out')}
         </button>
       </div>
 
@@ -900,6 +908,7 @@ const ProfileContent = ({ user, activeTab, onEditProfile, onEditResearch }) => {
 
 // Overview Tab
 const OverviewTab = ({ user, onEditProfile }) => {
+  const { t } = useTranslation();
   return (
     <div style={{ padding: spacing[8] }}>
       <div style={{
@@ -918,14 +927,14 @@ const OverviewTab = ({ user, onEditProfile }) => {
             margin: 0,
             marginBottom: spacing[2]
           }}>
-            Profile Overview
+            {t('profile.overview.title', 'Profile Overview')}
           </h1>
           <p style={{
             fontSize: '16px',
             color: colors.textSecondary,
             margin: 0
           }}>
-            Manage your academic profile and research information
+            {t('profile.overview.description', 'Manage your academic profile and research information')}
           </p>
         </div>
         <button
@@ -945,7 +954,7 @@ const OverviewTab = ({ user, onEditProfile }) => {
           }}
         >
           <Edit3 size={16} />
-          Edit Profile
+          {t('profile.editProfile', 'Edit Profile')}
         </button>
       </div>
 
@@ -958,30 +967,30 @@ const OverviewTab = ({ user, onEditProfile }) => {
       }}>
         <OverviewStatCard
           icon={FileText}
-          label="Reviews Written"
+          label={t('profile.stats.reviewsWritten', 'Reviews Written')}
           value={user.review_count || 0}
-          trend="+2 this month"
+          trend={t('profile.stats.thisMonth', '+2 this month')}
           color={colors.primary}
         />
         <OverviewStatCard
           icon={Heart}
-          label="Helpful Votes"
+          label={t('profile.stats.helpfulVotes', 'Helpful Votes')}
           value={user.helpful_votes || 0}
-          trend="+15 this month"
+          trend={t('profile.stats.helpfulMonth', '+15 this month')}
           color={colors.success}
         />
         <OverviewStatCard
           icon={CheckCircle}
-          label="Verification"
-          value={user.is_verified ? "Verified" : "Unverified"}
+          label={t('profile.stats.verification', 'Verification')}
+          value={user.is_verified ? t('profile.verification.verified', 'Verified') : t('profile.verification.unverified', 'Unverified')}
           trend={user.verification_status || "Status"}
           color={user.is_verified ? colors.success : colors.warning}
         />
         <OverviewStatCard
           icon={Calendar}
-          label="Member Since"
+          label={t('profile.stats.memberSince', 'Member Since')}
           value={user.joined_date ? new Date(user.joined_date).getFullYear() : "2024"}
-          trend="Years active"
+          trend={t('profile.stats.yearsActive', 'Years active')}
           color={colors.info}
         />
       </div>
@@ -1001,6 +1010,7 @@ const OverviewTab = ({ user, onEditProfile }) => {
 
 // Academic Tab
 const AcademicTab = ({ user }) => {
+  const { t } = useTranslation();
   return (
     <div style={{ padding: spacing[8] }}>
       <div style={{
@@ -1015,14 +1025,14 @@ const AcademicTab = ({ user }) => {
           margin: 0,
           marginBottom: spacing[2]
         }}>
-          Academic Profile
+          {t('profile.academic.title', 'Academic Profile')}
         </h1>
         <p style={{
           fontSize: '16px',
           color: colors.textSecondary,
           margin: 0
         }}>
-          Your academic background and institutional information
+          {t('profile.academic.description', 'Your academic background and institutional information')}
         </p>
       </div>
 
@@ -1033,6 +1043,7 @@ const AcademicTab = ({ user }) => {
 
 // Research Tab
 const ResearchTab = ({ user, onEditResearch }) => {
+  const { t } = useTranslation();
   return (
     <div style={{ padding: spacing[8] }}>
       <div style={{
@@ -1047,14 +1058,14 @@ const ResearchTab = ({ user, onEditResearch }) => {
           margin: 0,
           marginBottom: spacing[2]
         }}>
-          Research Interests
+          {t('profile.research.title', 'Research Interests')}
         </h1>
         <p style={{
           fontSize: '16px',
           color: colors.textSecondary,
           margin: 0
         }}>
-          Your research areas, publications, and academic interests
+          {t('profile.research.description', 'Your research areas, publications, and academic interests')}
         </p>
       </div>
 
@@ -1065,6 +1076,7 @@ const ResearchTab = ({ user, onEditResearch }) => {
 
 // Reviews Tab
 const ReviewsTab = ({ user }) => {
+  const { t } = useTranslation();
   const reviews = [
     {
       id: 1,
@@ -1106,14 +1118,14 @@ const ReviewsTab = ({ user }) => {
             margin: 0,
             marginBottom: spacing[2]
           }}>
-            My Reviews
+            {t('profile.reviews.title', 'My Reviews')}
           </h1>
           <p style={{
             fontSize: '16px',
             color: colors.textSecondary,
             margin: 0
           }}>
-            Reviews you've written about professors and labs
+            {t('profile.reviews.description', 'Reviews you\'ve written about professors and labs')}
           </p>
         </div>
         <button style={{
@@ -1126,7 +1138,7 @@ const ReviewsTab = ({ user }) => {
           fontWeight: '600',
           cursor: 'pointer'
         }}>
-          Write New Review
+          {t('profile.reviews.writeNew', 'Write New Review')}
         </button>
       </div>
 
@@ -1141,6 +1153,7 @@ const ReviewsTab = ({ user }) => {
 
 // Settings Tab
 const SettingsTab = ({ user }) => {
+  const { t } = useTranslation();
   return (
     <div style={{ padding: spacing[8] }}>
       <div style={{
@@ -1155,14 +1168,14 @@ const SettingsTab = ({ user }) => {
           margin: 0,
           marginBottom: spacing[2]
         }}>
-          Account Settings
+          {t('profile.settings.title', 'Account Settings')}
         </h1>
         <p style={{
           fontSize: '16px',
           color: colors.textSecondary,
           margin: 0
         }}>
-          Manage your account preferences and information
+          {t('profile.settings.description', 'Manage your account preferences and information')}
         </p>
       </div>
 
@@ -1173,6 +1186,7 @@ const SettingsTab = ({ user }) => {
 
 // Privacy Tab
 const PrivacyTab = ({ user }) => {
+  const { t } = useTranslation();
   return (
     <div style={{ padding: spacing[8] }}>
       <div style={{
@@ -1187,14 +1201,14 @@ const PrivacyTab = ({ user }) => {
           margin: 0,
           marginBottom: spacing[2]
         }}>
-          Privacy & Security
+          {t('profile.privacy.title', 'Privacy & Security')}
         </h1>
         <p style={{
           fontSize: '16px',
           color: colors.textSecondary,
           margin: 0
         }}>
-          Control your privacy settings and account security
+          {t('profile.privacy.description', 'Control your privacy settings and account security')}
         </p>
       </div>
 
@@ -1206,12 +1220,13 @@ const PrivacyTab = ({ user }) => {
 
 // Academic Profile Component
 const AcademicProfile = ({ user, isMobile }) => {
+  const { t } = useTranslation();
   const academicInfo = [
-    { label: 'University', value: user.university_name || user.university, icon: Building2 },
-    { label: 'Department', value: user.department_name || user.department, icon: GraduationCap },
-    { label: 'Position', value: user.position, icon: Award },
-    { label: 'Lab Name', value: user.lab_name, icon: BookOpen },
-    { label: 'Language', value: user.language === 'ko' ? '한국어' : user.language === 'en' ? 'English' : user.language, icon: Globe }
+    { label: t('profile.academic.university', 'University'), value: user.university_name || user.university, icon: Building2 },
+    { label: t('profile.academic.department', 'Department'), value: user.department_name || user.department, icon: GraduationCap },
+    { label: t('profile.academic.position', 'Position'), value: user.position, icon: Award },
+    { label: t('profile.academic.labName', 'Lab Name'), value: user.lab_name, icon: BookOpen },
+    { label: t('profile.academic.language', 'Language'), value: user.language === 'ko' ? '한국어' : user.language === 'en' ? 'English' : user.language, icon: Globe }
   ];
 
   return (
@@ -1235,7 +1250,7 @@ const AcademicProfile = ({ user, isMobile }) => {
           color: colors.textPrimary,
           margin: 0
         }}>
-          Academic Profile
+          {t('profile.academic.title', 'Academic Profile')}
         </h2>
         <button style={{
           backgroundColor: 'transparent',
@@ -1251,7 +1266,7 @@ const AcademicProfile = ({ user, isMobile }) => {
           gap: spacing[2]
         }}>
           <Edit3 size={14} />
-          Edit
+          {t('profile.academic.edit', 'Edit')}
         </button>
       </div>
 
@@ -1273,7 +1288,7 @@ const AcademicProfile = ({ user, isMobile }) => {
             color: colors.textPrimary,
             marginBottom: spacing[3]
           }}>
-            Bio
+            {t('profile.academic.bio', 'Bio')}
           </h3>
           <p style={{
             fontSize: '14px',
@@ -1315,7 +1330,7 @@ const InfoRow = ({ info }) => {
           color: colors.textPrimary,
           fontWeight: '500'
         }}>
-          {info.value || 'Not specified'}
+          {info.value || t('profile.academic.notSpecified', 'Not specified')}
         </div>
       </div>
     </div>
@@ -1324,6 +1339,7 @@ const InfoRow = ({ info }) => {
 
 // Research Interests Component
 const ResearchInterests = ({ user, isMobile, onEdit }) => {
+  const { t } = useTranslation();
   const researchProfile = user?.research_profile;
 
   return (
@@ -1347,7 +1363,7 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
           color: colors.textPrimary,
           margin: 0
         }}>
-          Research Interests
+          {t('profile.research.title', 'Research Interests')}
         </h2>
         <button
           onClick={onEdit}
@@ -1366,7 +1382,7 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
           }}
         >
           <Edit3 size={14} />
-          Edit
+          {t('profile.research.edit', 'Edit')}
         </button>
       </div>
 
@@ -1379,7 +1395,7 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
             color: colors.textPrimary,
             marginBottom: spacing[3]
           }}>
-            Primary Research Area
+            {t('profile.research.primaryResearchArea', 'Primary Research Area')}
           </h3>
           <div style={{
             display: 'inline-block',
@@ -1404,7 +1420,7 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
             color: colors.textPrimary,
             marginBottom: spacing[3]
           }}>
-            Specialties & Interests
+            {t('profile.research.specialtiesInterests', 'Specialties & Interests')}
           </h3>
           <div style={{
             display: 'flex',
@@ -1439,7 +1455,7 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
             color: colors.textPrimary,
             marginBottom: spacing[3]
           }}>
-            Research Keywords
+            {t('profile.research.researchKeywords', 'Research Keywords')}
           </h3>
           <div style={{
             display: 'flex',
@@ -1474,7 +1490,7 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
             color: colors.textPrimary,
             marginBottom: spacing[3]
           }}>
-            Academic Background
+            {t('profile.research.academicBackground', 'Academic Background')}
           </h3>
           <div style={{
             padding: spacing[4],
@@ -1498,7 +1514,7 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
             color: colors.textPrimary,
             marginBottom: spacing[3]
           }}>
-            Research Goals
+            {t('profile.research.researchGoals', 'Research Goals')}
           </h3>
           <div style={{
             padding: spacing[4],
@@ -1525,13 +1541,13 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
             fontSize: '16px',
             marginBottom: spacing[2]
           }}>
-            No research profile created yet
+            {t('profile.research.noProfile', 'No research profile created yet')}
           </p>
           <p style={{
             fontSize: '14px',
             marginBottom: spacing[4]
           }}>
-            Create your research profile to showcase your interests, background, and goals.
+            {t('profile.research.createDescription', 'Create your research profile to showcase your interests, background, and goals.')}
           </p>
           <button
             onClick={onEdit}
@@ -1546,7 +1562,7 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
               cursor: 'pointer'
             }}
           >
-            Create Research Profile
+            {t('profile.research.createProfile', 'Create Research Profile')}
           </button>
         </div>
       )}
@@ -1556,6 +1572,7 @@ const ResearchInterests = ({ user, isMobile, onEdit }) => {
 
 // Account Information Component
 const AccountInformation = ({ user, isMobile }) => {
+  const { t } = useTranslation();
   return (
     <div style={{
       backgroundColor: 'white',
@@ -1570,7 +1587,7 @@ const AccountInformation = ({ user, isMobile }) => {
         color: colors.textPrimary,
         marginBottom: spacing[6]
       }}>
-        Account Information
+        {t('profile.settings.accountInfo', 'Account Information')}
       </h2>
 
       <div style={{
@@ -1580,33 +1597,33 @@ const AccountInformation = ({ user, isMobile }) => {
       }}>
         <AccountInfoCard
           icon={Mail}
-          label="Email"
+          label={t('profile.settings.email', 'Email')}
           value={user.email}
         />
 
         <AccountInfoCard
           icon={User}
-          label="Username"
-          value={user.username || 'Not set'}
+          label={t('profile.settings.username', 'Username')}
+          value={user.username || t('profile.settings.notSet', 'Not set')}
         />
 
         <AccountInfoCard
           icon={CheckCircle}
-          label="Verification Status"
-          value={user.is_verified ? 'Verified' : 'Unverified'}
+          label={t('profile.settings.verificationStatus', 'Verification Status')}
+          value={user.is_verified ? t('profile.verification.verified', 'Verified') : t('profile.verification.unverified', 'Unverified')}
           valueColor={user.is_verified ? colors.success : colors.textTertiary}
         />
 
         <AccountInfoCard
           icon={Calendar}
-          label="Member Since"
-          value={user.joined_date ? new Date(user.joined_date).toLocaleDateString() : 'Unknown'}
+          label={t('profile.stats.memberSince', 'Member Since')}
+          value={user.joined_date ? new Date(user.joined_date).toLocaleDateString() : t('profile.settings.unknown', 'Unknown')}
         />
 
         {user.review_count !== undefined && (
           <AccountInfoCard
             icon={FileText}
-            label="Reviews Written"
+            label={t('profile.settings.reviewsWritten', 'Reviews Written')}
             value={user.review_count || 0}
           />
         )}
@@ -1614,7 +1631,7 @@ const AccountInformation = ({ user, isMobile }) => {
         {user.helpful_votes !== undefined && (
           <AccountInfoCard
             icon={Heart}
-            label="Helpful Votes"
+            label={t('profile.settings.helpfulVotes', 'Helpful Votes')}
             value={user.helpful_votes || 0}
           />
         )}
@@ -1622,8 +1639,8 @@ const AccountInformation = ({ user, isMobile }) => {
         {user.is_lab_member !== undefined && (
           <AccountInfoCard
             icon={Building2}
-            label="Lab Member"
-            value={user.is_lab_member ? 'Yes' : 'No'}
+            label={t('profile.settings.labMember', 'Lab Member')}
+            value={user.is_lab_member ? t('profile.settings.yes', 'Yes') : t('profile.settings.no', 'No')}
             valueColor={user.is_lab_member ? colors.success : colors.textSecondary}
           />
         )}
@@ -1631,8 +1648,8 @@ const AccountInformation = ({ user, isMobile }) => {
         {user.can_provide_services !== undefined && (
           <AccountInfoCard
             icon={Award}
-            label="Service Provider"
-            value={user.can_provide_services ? 'Yes' : 'No'}
+            label={t('profile.settings.serviceProvider', 'Service Provider')}
+            value={user.can_provide_services ? t('profile.settings.yes', 'Yes') : t('profile.settings.no', 'No')}
             valueColor={user.can_provide_services ? colors.success : colors.textSecondary}
           />
         )}
@@ -1701,6 +1718,7 @@ const OverviewStatCard = ({ icon: Icon, label, value, trend, color }) => {
 
 // Academic Overview
 const AcademicOverview = ({ user }) => {
+  const { t } = useTranslation();
   return (
     <div style={{
       padding: spacing[6],
@@ -1713,7 +1731,7 @@ const AcademicOverview = ({ user }) => {
         color: colors.textPrimary,
         marginBottom: spacing[6]
       }}>
-        Academic Information
+        {t('profile.overview.academicInfo', 'Academic Information')}
       </h3>
 
       <div style={{
@@ -1727,14 +1745,14 @@ const AcademicOverview = ({ user }) => {
             color: colors.textTertiary,
             marginBottom: spacing[1]
           }}>
-            University
+            {t('profile.academic.university', 'University')}
           </div>
           <div style={{
             fontSize: '14px',
             color: colors.textPrimary,
             fontWeight: '600'
           }}>
-            {user.university_name || user.university || 'Not specified'}
+            {user.university_name || user.university || t('profile.academic.notSpecified', 'Not specified')}
           </div>
         </div>
 
@@ -1744,14 +1762,14 @@ const AcademicOverview = ({ user }) => {
             color: colors.textTertiary,
             marginBottom: spacing[1]
           }}>
-            Department
+            {t('profile.academic.department', 'Department')}
           </div>
           <div style={{
             fontSize: '14px',
             color: colors.textPrimary,
             fontWeight: '600'
           }}>
-            {user.department_name || user.department || 'Not specified'}
+            {user.department_name || user.department || t('profile.academic.notSpecified', 'Not specified')}
           </div>
         </div>
 
@@ -1761,14 +1779,14 @@ const AcademicOverview = ({ user }) => {
             color: colors.textTertiary,
             marginBottom: spacing[1]
           }}>
-            Position
+            {t('profile.academic.position', 'Position')}
           </div>
           <div style={{
             fontSize: '14px',
             color: colors.textPrimary,
             fontWeight: '600'
           }}>
-            {user.position || 'Not specified'}
+            {user.position || t('profile.academic.notSpecified', 'Not specified')}
           </div>
         </div>
 
@@ -1778,14 +1796,14 @@ const AcademicOverview = ({ user }) => {
             color: colors.textTertiary,
             marginBottom: spacing[1]
           }}>
-            Lab Name
+            {t('profile.academic.labName', 'Lab Name')}
           </div>
           <div style={{
             fontSize: '14px',
             color: colors.textPrimary,
             fontWeight: '600'
           }}>
-            {user.lab_name || 'Not specified'}
+            {user.lab_name || t('profile.academic.notSpecified', 'Not specified')}
           </div>
         </div>
       </div>
@@ -1795,23 +1813,24 @@ const AcademicOverview = ({ user }) => {
 
 // Recent Activity
 const RecentActivity = ({ user }) => {
+  const { t } = useTranslation();
   const activities = [
     {
       type: 'review',
-      text: 'Wrote a review for Dr. Sarah Johnson',
-      date: '2 days ago',
+      text: t('profile.overview.activities.reviewWritten', 'Wrote a review for Dr. Sarah Johnson'),
+      date: t('profile.overview.activities.daysAgo', '2 days ago'),
       icon: FileText
     },
     {
       type: 'helpful',
-      text: 'Received 3 helpful votes',
-      date: '1 week ago',
+      text: t('profile.overview.activities.helpfulVotes', 'Received 3 helpful votes'),
+      date: t('profile.overview.activities.weekAgo', '1 week ago'),
       icon: Heart
     },
     {
       type: 'profile',
-      text: 'Updated research interests',
-      date: '2 weeks ago',
+      text: t('profile.overview.activities.profileUpdated', 'Updated research interests'),
+      date: t('profile.overview.activities.weeksAgo', '2 weeks ago'),
       icon: User
     }
   ];
@@ -1828,7 +1847,7 @@ const RecentActivity = ({ user }) => {
         color: colors.textPrimary,
         marginBottom: spacing[6]
       }}>
-        Recent Activity
+        {t('profile.overview.recentActivity', 'Recent Activity')}
       </h3>
 
       <div style={{
@@ -1956,7 +1975,7 @@ const ReviewCard = ({ review }) => {
           alignItems: 'center',
           gap: spacing[4]
         }}>
-          <span>{review.helpful} helpful votes</span>
+          <span>{review.helpful} {t && t('profile.reviews.helpfulVotes', 'helpful votes')}</span>
           <span style={{
             backgroundColor: review.status === 'published' ? colors.success : colors.warning,
             color: 'white',

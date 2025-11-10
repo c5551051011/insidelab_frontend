@@ -142,6 +142,169 @@
       }
     }
   },
+  "profile": {
+    "loading": "Loading profile...",
+    "loginRequired": "Please log in to view your profile.",
+    "signOutConfirm": "Are you sure you want to sign out?",
+    "editProfile": "Edit Profile",
+    "signOut": "Sign Out",
+    "tabs": {
+      "overview": "Overview",
+      "academic": "Academic",
+      "research": "Research",
+      "reviews": "Reviews",
+      "services": "Services",
+      "settings": "Settings",
+      "academicProfile": "Academic Profile",
+      "researchInterests": "Research Interests",
+      "myReviews": "My Reviews",
+      "serviceProvider": "Service Provider",
+      "accountSettings": "Account Settings",
+      "privacySecurity": "Privacy & Security"
+    },
+    "verification": {
+      "verified": "Verified",
+      "pending": "Pending",
+      "unverified": "Unverified"
+    },
+    "stats": {
+      "reviews": "Reviews",
+      "helpful": "Helpful",
+      "status": "Status",
+      "member": "Member",
+      "reviewsWritten": "Reviews Written",
+      "helpfulVotes": "Helpful Votes",
+      "verification": "Verification",
+      "memberSince": "Member Since",
+      "yearsActive": "Years active",
+      "thisMonth": "+2 this month",
+      "helpfulMonth": "+15 this month"
+    },
+    "overview": {
+      "title": "Profile Overview",
+      "description": "Manage your academic profile and research information",
+      "academicInfo": "Academic Information",
+      "recentActivity": "Recent Activity",
+      "activities": {
+        "reviewWritten": "Wrote a review for Dr. Sarah Johnson",
+        "helpfulVotes": "Received 3 helpful votes",
+        "profileUpdated": "Updated research interests",
+        "daysAgo": "2 days ago",
+        "weekAgo": "1 week ago",
+        "weeksAgo": "2 weeks ago"
+      }
+    },
+    "academic": {
+      "title": "Academic Profile",
+      "description": "Your academic background and institutional information",
+      "university": "University",
+      "department": "Department",
+      "position": "Position",
+      "labName": "Lab Name",
+      "language": "Language",
+      "bio": "Bio",
+      "notSpecified": "Not specified",
+      "edit": "Edit"
+    },
+    "research": {
+      "title": "Research Interests",
+      "description": "Your research areas, publications, and academic interests",
+      "primaryResearchArea": "Primary Research Area",
+      "specialtiesInterests": "Specialties & Interests",
+      "researchKeywords": "Research Keywords",
+      "academicBackground": "Academic Background",
+      "researchGoals": "Research Goals",
+      "noProfile": "No research profile created yet",
+      "createDescription": "Create your research profile to showcase your interests, background, and goals.",
+      "createProfile": "Create Research Profile",
+      "edit": "Edit"
+    },
+    "reviews": {
+      "title": "My Reviews",
+      "description": "Reviews you've written about professors and labs",
+      "writeNew": "Write New Review",
+      "writeNewShort": "Write New",
+      "helpful": "helpful",
+      "helpfulVotes": "helpful votes",
+      "published": "published",
+      "pending": "pending"
+    },
+    "services": {
+      "title": "Service Provider",
+      "becomeProvider": "Become a Service Provider",
+      "description": "Share your expertise and help students succeed. Provide services like mock interviews, CV reviews, and mentoring while earning additional income.",
+      "benefits": {
+        "earnIncome": {
+          "title": "Earn Income",
+          "description": "Set your own rates and earn from your expertise"
+        },
+        "helpStudents": {
+          "title": "Help Students",
+          "description": "Guide the next generation of researchers"
+        },
+        "buildReputation": {
+          "title": "Build Reputation",
+          "description": "Establish yourself as a trusted mentor"
+        }
+      },
+      "enable": "Enable Service Provider",
+      "stats": {
+        "performanceOverview": "Performance Overview",
+        "thisMonthBookings": "This Month Bookings",
+        "averageRating": "Average Rating",
+        "totalEarnings": "Total Earnings",
+        "completedServices": "Completed Services"
+      },
+      "quickActions": {
+        "viewCalendar": "View Calendar",
+        "serviceSettings": "Service Settings",
+        "earningsReport": "Earnings Report"
+      },
+      "upcomingSessions": "Upcoming Sessions",
+      "sessions": "sessions",
+      "confirmed": "Confirmed",
+      "pendingRequests": "Pending Requests",
+      "requestFrom": "From:",
+      "requested": "Requested:",
+      "background": "Background:",
+      "accept": "Accept",
+      "decline": "Decline",
+      "recentReviews": "Recent Reviews",
+      "reviewsCount": "reviews"
+    },
+    "settings": {
+      "title": "Account Settings",
+      "description": "Manage your account preferences and information",
+      "accountInfo": "Account Information",
+      "email": "Email",
+      "username": "Username",
+      "notSet": "Not set",
+      "verificationStatus": "Verification Status",
+      "reviewsWritten": "Reviews Written",
+      "helpfulVotes": "Helpful Votes",
+      "labMember": "Lab Member",
+      "serviceProvider": "Service Provider",
+      "yes": "Yes",
+      "no": "No",
+      "unknown": "Unknown"
+    },
+    "privacy": {
+      "title": "Privacy & Security",
+      "description": "Control your privacy settings and account security",
+      "profileVisibility": "Profile Visibility",
+      "showEmail": "Show email address",
+      "showEmailDesc": "Other users can see your email",
+      "showUniversity": "Show university information",
+      "showUniversityDesc": "Display your academic affiliation",
+      "showResearch": "Show research interests",
+      "showResearchDesc": "Make your research areas visible",
+      "communication": "Communication",
+      "allowMessages": "Allow direct messages",
+      "allowMessagesDesc": "Other users can send you messages",
+      "emailNotifications": "Email notifications",
+      "emailNotificationsDesc": "Receive updates via email"
+    }
+  },
   "footer": {
     "company": {
       "title": "Company",
