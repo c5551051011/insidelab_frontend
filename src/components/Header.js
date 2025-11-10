@@ -130,10 +130,7 @@ const Header = () => {
         {/* Mobile Menu Button */}
         {isMobile && (
           <button
-            onClick={() => {
-              console.log('Mobile menu button clicked');
-              setMobileMenuOpen(true);
-            }}
+            onClick={() => setMobileMenuOpen(true)}
             style={{
               background: 'none',
               border: 'none',
@@ -205,27 +202,26 @@ const Header = () => {
       </div>
 
       {/* Mobile Menu Overlay */}
-      {console.log('mobileMenuOpen:', mobileMenuOpen)}
       {mobileMenuOpen && (
         <Modal
           onClose={() => setMobileMenuOpen(false)}
           maxWidth="100%"
-          maxHeight="100%"
+          maxHeight="auto"
           padding={0}
           borderRadius="0"
           boxShadow="none"
           overlayStyle={{
             alignItems: 'flex-start',
-            justifyContent: 'flex-end',
+            justifyContent: 'center',
             padding: 0,
             zIndex: 999,
           }}
           contentStyle={{
-            height: '100%',
+            width: '100%',
             backgroundColor: colors.background,
             display: 'flex',
             flexDirection: 'column',
-            boxShadow: '-4px 0 20px rgba(0, 0, 0, 0.1)'
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)'
           }}
         >
           {/* Mobile Menu Header - Same height as main header */}
@@ -320,10 +316,10 @@ const Header = () => {
 
             {/* Mobile Menu Items */}
             <div style={{
-              flex: 1,
-              padding: '20px 0',
+              padding: '20px 24px',
               display: 'flex',
               flexDirection: 'column',
+              gap: spacing[1],
               backgroundColor: colors.background
             }}>
               {/* Navigation Links */}
@@ -338,11 +334,6 @@ const Header = () => {
 
               {isAuthenticated ? (
                 <>
-                  <div style={{
-                    height: '1px',
-                    backgroundColor: colors.border,
-                    margin: '16px 24px'
-                  }} />
 
                   <MobileMenuItem
                     icon={<User size={20} color={colors.textSecondary} />}
@@ -363,10 +354,11 @@ const Header = () => {
                     }}
                   />
 
+                  {/* Sign Out Separator */}
                   <div style={{
                     height: '1px',
                     backgroundColor: colors.border,
-                    margin: '16px 24px'
+                    margin: `${spacing[3]} 0`
                   }} />
 
                   <MobileMenuItem
@@ -381,13 +373,8 @@ const Header = () => {
                 </>
               ) : (
                 <>
-                  <div style={{
-                    height: '1px',
-                    backgroundColor: colors.border,
-                    margin: '16px 24px'
-                  }} />
 
-                  <div style={{ padding: '0 24px', marginTop: 'auto' }}>
+                  <div style={{ marginTop: spacing[4] }}>
                     <Link
                       to="/sign-in"
                       onClick={() => setMobileMenuOpen(false)}
@@ -403,7 +390,7 @@ const Header = () => {
                         border: `1px solid ${colors.border}`,
                         textAlign: 'center',
                         fontFamily: 'Inter',
-                        marginBottom: '12px',
+                        marginBottom: spacing[2],
                         transition: 'all 0.2s ease'
                       }}
                       onMouseEnter={(e) => {
