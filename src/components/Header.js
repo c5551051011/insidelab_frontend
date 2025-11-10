@@ -5,7 +5,7 @@ import { PrimaryButton } from './Button';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import Modal from './Modal';
+import { Modal } from './Modal';
 
 const Header = () => {
   const { width } = useBreakpoint();
@@ -130,7 +130,10 @@ const Header = () => {
         {/* Mobile Menu Button */}
         {isMobile && (
           <button
-            onClick={() => setMobileMenuOpen(true)}
+            onClick={() => {
+              console.log('Mobile menu button clicked');
+              setMobileMenuOpen(true);
+            }}
             style={{
               background: 'none',
               border: 'none',
@@ -202,6 +205,7 @@ const Header = () => {
       </div>
 
       {/* Mobile Menu Overlay */}
+      {console.log('mobileMenuOpen:', mobileMenuOpen)}
       {mobileMenuOpen && (
         <Modal
           onClose={() => setMobileMenuOpen(false)}
