@@ -214,6 +214,7 @@ const Header = () => {
           }}
           onClick={() => setMobileMenuOpen(false)}
         >
+          {/* Mobile Menu Header - Same height as main header */}
           <div
             style={{
               position: 'absolute',
@@ -228,8 +229,8 @@ const Header = () => {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Mobile Menu Header - Same height as main header */}
-            <div style={{
+            <div
+              style={{
               height: '72px',
               minHeight: '72px',
               padding: '0 24px',
@@ -445,8 +446,8 @@ const Header = () => {
                   </div>
                 </>
               )}
-            </div>
           </div>
+        </div>
         </div>
       )}
     </header>
