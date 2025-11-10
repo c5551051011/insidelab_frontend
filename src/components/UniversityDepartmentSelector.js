@@ -4,6 +4,7 @@ import { UniversityService } from '../services/universityService';
 import { ReviewService } from '../services/reviewService';
 import { DropdownField } from './Dropdown';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import Modal from './Modal';
 
 const UniversityDepartmentSelector = ({
   selectedUniversityId,
@@ -245,47 +246,19 @@ const UniversityDepartmentSelector = ({
 
       {/* Add University Modal */}
       {showAddUniversity && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: spacing[4]
-        }}>
-          <AddUniversityModal
-            onAdd={handleAddUniversity}
-            onCancel={() => setShowAddUniversity(false)}
-          />
-        </div>
+        <AddUniversityModal
+          onAdd={handleAddUniversity}
+          onCancel={() => setShowAddUniversity(false)}
+        />
       )}
 
       {/* Add Department Modal */}
       {showAddDepartment && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: spacing[4]
-        }}>
-          <AddDepartmentModal
-            selectedUniversityName={selectedUniversityName}
-            onAdd={handleAddDepartment}
-            onCancel={() => setShowAddDepartment(false)}
-          />
-        </div>
+        <AddDepartmentModal
+          selectedUniversityName={selectedUniversityName}
+          onAdd={handleAddDepartment}
+          onCancel={() => setShowAddDepartment(false)}
+        />
       )}
     </div>
   );
@@ -324,15 +297,15 @@ const AddUniversityModal = ({ onAdd, onCancel }) => {
   };
 
   return (
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: spacing[6],
-      maxWidth: '500px',
-      width: '100%',
-      maxHeight: '80vh',
-      overflowY: 'auto'
-    }}>
+    <Modal onClose={onCancel} maxWidth="500px" maxHeight="80vh">
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: spacing[6],
+        width: '100%',
+        maxHeight: '80vh',
+        overflowY: 'auto'
+      }}>
       <h3 style={{
         fontSize: '20px',
         fontWeight: '700',
@@ -572,7 +545,8 @@ const AddUniversityModal = ({ onAdd, onCancel }) => {
           </button>
         </div>
       </form>
-    </div>
+      </div>
+    </Modal>
   );
 };
 
@@ -597,13 +571,14 @@ const AddDepartmentModal = ({ selectedUniversityName, onAdd, onCancel }) => {
   };
 
   return (
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: spacing[6],
-      maxWidth: '400px',
-      width: '100%'
-    }}>
+    <Modal onClose={onCancel} maxWidth="400px">
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: spacing[6],
+        maxWidth: '400px',
+        width: '100%'
+      }}>
       <h3 style={{
         fontSize: '20px',
         fontWeight: '700',
@@ -691,7 +666,8 @@ const AddDepartmentModal = ({ selectedUniversityName, onAdd, onCancel }) => {
           </button>
         </div>
       </form>
-    </div>
+      </div>
+    </Modal>
   );
 };
 
