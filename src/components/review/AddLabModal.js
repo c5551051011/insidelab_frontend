@@ -3,6 +3,7 @@ import { X, AlertCircle, CheckCircle } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { FormInput } from '../FormInput';
 import { ReviewService } from '../../services/reviewService';
+import Modal from '../Modal';
 
 const AddLabModal = ({ universityId, departmentId, researchGroupId, onClose, onAdd }) => {
   const [formData, setFormData] = useState({
@@ -68,29 +69,8 @@ const AddLabModal = ({ universityId, departmentId, researchGroupId, onClose, onA
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000,
-      padding: spacing[4]
-    }}>
-      <div style={{
-        backgroundColor: colors.surface,
-        borderRadius: '12px',
-        padding: spacing[6],
-        width: '100%',
-        maxWidth: '500px',
-        maxHeight: '90vh',
-        overflowY: 'auto',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-      }}>
+    <Modal onClose={onClose}>
+      <div>
         {/* Header */}
         <div style={{
           display: 'flex',
@@ -283,7 +263,7 @@ const AddLabModal = ({ universityId, departmentId, researchGroupId, onClose, onA
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 };
 
