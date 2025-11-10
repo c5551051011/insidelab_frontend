@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Search, FileText, Video } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from './Button';
 import { colors, gradients, spacing, sectionSpacing } from '../theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const HeroSection = () => {
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
-
-  const isMobile = window.innerWidth < 768;
+  const { isMobile } = useBreakpoint();
 
   const handleSearch = (e) => {
     e.preventDefault();

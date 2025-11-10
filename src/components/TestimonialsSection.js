@@ -1,10 +1,10 @@
 import React from 'react';
 import { Star } from 'lucide-react';
 import { colors, shadows, textStyles, spacing, sectionSpacing, borderRadius } from '../theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const TestimonialsSection = () => {
-  const isMobile = window.innerWidth < 768;
-  const isTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
+  const { isMobile, isTablet } = useBreakpoint();
 
   const testimonials = [
     {

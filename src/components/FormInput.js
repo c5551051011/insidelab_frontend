@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { colors, spacing, borderRadius } from '../theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 export const FormInput = ({
   label,
@@ -18,7 +19,7 @@ export const FormInput = ({
 
   const isPassword = type === 'password';
   const actualType = isPassword && showPassword ? 'text' : type;
-  const isMobile = window.innerWidth < 768;
+  const { isMobile } = useBreakpoint();
 
   return (
     <div style={{ marginBottom: spacing[4] }}>
@@ -137,7 +138,7 @@ export const FormButton = ({
   icon: Icon,
   ...props
 }) => {
-  const isMobile = window.innerWidth < 768;
+  const { isMobile } = useBreakpoint();
 
   const variants = {
     primary: {

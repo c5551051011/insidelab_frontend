@@ -1,9 +1,10 @@
 import React from 'react';
 import { School, Trophy, Building2, TrendingUp } from 'lucide-react';
 import { colors, textStyles, spacing, sectionSpacing } from '../theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const TrustedMetricsSection = () => {
-  const isMobile = window.innerWidth < 768;
+  const { isMobile } = useBreakpoint();
 
   const metrics = [
     {

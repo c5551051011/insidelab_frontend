@@ -2,11 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Search, FileText, Video, Check } from 'lucide-react';
 import { colors, shadows, textStyles, spacing, sectionSpacing, borderRadius } from '../theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const ServicesSection = () => {
-  const screenWidth = window.innerWidth;
-  const isMobile = screenWidth < 768;
-  const isTablet = screenWidth >= 768 && screenWidth < 1024;
+  const { isMobile, isTablet } = useBreakpoint();
 
   const services = [
     {

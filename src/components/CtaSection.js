@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { colors, spacing, sectionSpacing } from '../theme';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const CtaSection = () => {
-  const isMobile = window.innerWidth < 768;
+  const { isMobile } = useBreakpoint();
 
   return (
     <section
