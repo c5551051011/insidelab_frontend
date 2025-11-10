@@ -120,6 +120,7 @@ const ResearchInterestsModal = ({ isOpen, onClose, user, onUserUpdate }) => {
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
       }}
     >
+      <div>
         {/* Header */}
         <div style={{
           padding: isMobile ? spacing[5] : spacing[6],
