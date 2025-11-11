@@ -116,6 +116,8 @@ const SearchPage = () => {
 
   // Load initial data on mount - either from URL query or popular labs
   useEffect(() => {
+    if (!initialLoad) return; // Only run once on initial load
+
     const loadInitialData = async () => {
       try {
         setLoading(true);
@@ -161,7 +163,7 @@ const SearchPage = () => {
     };
 
     loadInitialData();
-  }, [searchParams, t]);
+  }, [initialLoad, searchParams, t]);
 
   // Auto-search when filters change (debounced)
   useEffect(() => {
