@@ -84,7 +84,7 @@ const SearchResults = ({
       }}>
         {labInstances.map((lab, index) => (
           <LabCard
-            key={lab.id || index}
+            key={lab.id ? `${lab.id}-${index}` : index}
             lab={lab}
             searchQuery={query}
             onClick={onLabClick}

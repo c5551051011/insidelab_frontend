@@ -128,7 +128,8 @@ const SearchPage = () => {
         if (urlQuery) {
           // If there's a query in URL, set it and search
           setQuery(urlQuery);
-          await performSearch(urlQuery, filters, 1, false);
+          // Create a new SearchFilter instance to avoid closure issues
+          await performSearch(urlQuery, new SearchFilter(), 1, false);
         } else {
           // Otherwise, load popular labs
           const popularLabs = await SearchService.getPopularLabs();
@@ -149,7 +150,7 @@ const SearchPage = () => {
     };
 
     loadInitialData();
-  }, [searchParams, filters, performSearch, t]);
+  }, [searchParams, performSearch, t]);
 
   // Auto-search when filters change (debounced)
   useEffect(() => {
