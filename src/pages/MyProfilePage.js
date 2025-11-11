@@ -1305,6 +1305,7 @@ const AcademicProfile = ({ user, isMobile }) => {
 };
 
 const InfoRow = ({ info }) => {
+  const { t } = useTranslation();
   const Icon = info.icon;
 
   return (
@@ -1900,6 +1901,7 @@ const RecentActivity = ({ user }) => {
 
 // Review Card
 const ReviewCard = ({ review }) => {
+  const { t } = useTranslation();
   return (
     <div style={{
       padding: spacing[6],
@@ -1975,7 +1977,7 @@ const ReviewCard = ({ review }) => {
           alignItems: 'center',
           gap: spacing[4]
         }}>
-          <span>{review.helpful} {t && t('profile.reviews.helpfulVotes', 'helpful votes')}</span>
+          <span>{review.helpful} {t('profile.reviews.helpfulVotes', 'helpful votes')}</span>
           <span style={{
             backgroundColor: review.status === 'published' ? colors.success : colors.warning,
             color: 'white',
