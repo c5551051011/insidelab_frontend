@@ -44,10 +44,10 @@ const FilterSidebar = ({
   };
 
   // Handle university toggle
-  const handleUniversityToggle = (university) => {
-    const newUniversities = filters.universities.includes(university)
-      ? filters.universities.filter(u => u !== university)
-      : [...filters.universities, university];
+  const handleUniversityToggle = (universityId) => {
+    const newUniversities = filters.universities.includes(universityId)
+      ? filters.universities.filter(u => u !== universityId)
+      : [...filters.universities, universityId];
 
     onFiltersChange({
       ...filters,
@@ -283,10 +283,10 @@ const FilterSidebar = ({
         <div style={{ maxHeight: isMobile ? '150px' : '200px', overflowY: 'auto' }}>
           {filterOptions.universities.map(university => (
             <CheckboxItem
-              key={university}
-              label={university}
-              checked={filters.universities.includes(university)}
-              onChange={() => handleUniversityToggle(university)}
+              key={university.id || university.name}
+              label={university.name || university}
+              checked={filters.universities.includes(university.id || university)}
+              onChange={() => handleUniversityToggle(university.id || university)}
             />
           ))}
         </div>

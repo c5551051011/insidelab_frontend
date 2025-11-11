@@ -114,7 +114,12 @@ export class SearchService {
 
       // Add filters if they exist
       if (filters.universities?.length > 0) {
-        filters.universities.forEach(uni => params.append('university', uni));
+        // Support both single university ID and multiple university IDs
+        if (filters.universities.length === 1) {
+          params.append('university', filters.universities[0]);
+        } else {
+          params.append('universities', filters.universities.join(','));
+        }
       }
 
       if (filters.researchAreas?.length > 0) {
@@ -685,8 +690,11 @@ export class SearchService {
         professorsResponse.json()
       ]);
 
-      // Extract universities from dedicated API (faster and more reliable)
-      const universities = universitiesData.results?.map(uni => uni.name).filter(Boolean).sort() || [];
+      // Extract universities from dedicated API with both ID and name (faster and more reliable)
+      const universities = universitiesData.results?.map(uni => ({
+        id: uni.id,
+        name: uni.name
+      })).filter(uni => uni.id && uni.name).sort((a, b) => a.name.localeCompare(b.name)) || [];
 
       // Extract other filter options from professors data
       const professors = professorsData.results || [];
@@ -702,7 +710,7 @@ export class SearchService {
       const tags = [...new Set(allTags)].filter(Boolean).sort();
 
       return {
-        universities: universities.length > 0 ? universities : this.getFallbackFilterOptions().universities,
+        universities: universities.length > 0 ? universities : this.getFallbackUniversities(),
         departments,
         researchGroups,
         researchAreas: researchAreas.length > 0 ? researchAreas : this.getFallbackResearchAreas(),
@@ -724,13 +732,7 @@ export class SearchService {
   // Fallback filter options when API fails
   static getFallbackFilterOptions() {
     return {
-      universities: [
-        'Purdue University',
-        'Stanford University',
-        'MIT',
-        'Carnegie Mellon University',
-        'UC Berkeley'
-      ],
+      universities: this.getFallbackUniversities(),
       departments: [
         'Computer Science',
         'Electrical Engineering',
@@ -751,6 +753,17 @@ export class SearchService {
         { value: 'university', label: 'University Name (A-Z)' }
       ]
     };
+  }
+
+  // Fallback universities with mock IDs
+  static getFallbackUniversities() {
+    return [
+      { id: 1, name: 'Purdue University' },
+      { id: 2, name: 'Stanford University' },
+      { id: 3, name: 'MIT' },
+      { id: 4, name: 'Carnegie Mellon University' },
+      { id: 5, name: 'UC Berkeley' }
+    ];
   }
 
   static getFallbackResearchAreas() {
