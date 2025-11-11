@@ -690,11 +690,16 @@ export class SearchService {
         professorsResponse.json()
       ]);
 
-      // Extract universities from dedicated API with both ID and name (faster and more reliable)
+      // Extract universities from dedicated API with ID, name, and country (faster and more reliable)
       const universities = universitiesData.results?.map(uni => ({
         id: uni.id,
-        name: uni.name
+        name: uni.name,
+        country: uni.country,
+        city: uni.city
       })).filter(uni => uni.id && uni.name).sort((a, b) => a.name.localeCompare(b.name)) || [];
+
+      // Extract unique countries from universities data
+      const countries = [...new Set(universities.map(uni => uni.country))].filter(Boolean).sort();
 
       // Extract other filter options from professors data
       const professors = professorsData.results || [];
@@ -710,6 +715,7 @@ export class SearchService {
       const tags = [...new Set(allTags)].filter(Boolean).sort();
 
       return {
+        countries: countries.length > 0 ? countries : this.getFallbackCountries(),
         universities: universities.length > 0 ? universities : this.getFallbackUniversities(),
         departments,
         researchGroups,
@@ -732,6 +738,7 @@ export class SearchService {
   // Fallback filter options when API fails
   static getFallbackFilterOptions() {
     return {
+      countries: this.getFallbackCountries(),
       universities: this.getFallbackUniversities(),
       departments: [
         'Computer Science',
@@ -755,14 +762,25 @@ export class SearchService {
     };
   }
 
-  // Fallback universities with mock IDs
+  // Fallback countries
+  static getFallbackCountries() {
+    return [
+      'United States',
+      'South Korea',
+      'United Kingdom',
+      'Canada',
+      'Germany'
+    ];
+  }
+
+  // Fallback universities with mock IDs and country
   static getFallbackUniversities() {
     return [
-      { id: 1, name: 'Purdue University' },
-      { id: 2, name: 'Stanford University' },
-      { id: 3, name: 'MIT' },
-      { id: 4, name: 'Carnegie Mellon University' },
-      { id: 5, name: 'UC Berkeley' }
+      { id: 1, name: 'Purdue University', country: 'United States', city: 'West Lafayette' },
+      { id: 2, name: 'Stanford University', country: 'United States', city: 'Stanford' },
+      { id: 3, name: 'MIT', country: 'United States', city: 'Cambridge' },
+      { id: 4, name: 'Carnegie Mellon University', country: 'United States', city: 'Pittsburgh' },
+      { id: 5, name: 'UC Berkeley', country: 'United States', city: 'Berkeley' }
     ];
   }
 

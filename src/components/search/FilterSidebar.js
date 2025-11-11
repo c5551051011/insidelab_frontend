@@ -11,6 +11,7 @@ const FilterSidebar = ({
   style = {}
 }) => {
   const [filterOptions, setFilterOptions] = useState({
+    countries: [],
     universities: [],
     departments: [],
     researchGroups: [],
@@ -18,6 +19,7 @@ const FilterSidebar = ({
     tags: [],
     sortOptions: []
   });
+  const [selectedCountry, setSelectedCountry] = useState('');
 
   // Load filter options
   useEffect(() => {
@@ -95,8 +97,19 @@ const FilterSidebar = ({
     });
   };
 
+  // Handle country selection
+  const handleCountryChange = (country) => {
+    setSelectedCountry(country);
+    // Reset university selection when country changes
+    onFiltersChange({
+      ...filters,
+      universities: []
+    });
+  };
+
   // Clear all filters
   const clearFilters = () => {
+    setSelectedCountry('');
     onFiltersChange({
       rating: 0,
       universities: [],
@@ -105,6 +118,14 @@ const FilterSidebar = ({
       sortBy: 'rating',
       recruitmentOnly: false
     });
+  };
+
+  // Get filtered universities based on selected country
+  const getFilteredUniversities = () => {
+    if (!selectedCountry) return filterOptions.universities;
+    return filterOptions.universities.filter(uni =>
+      uni.country === selectedCountry
+    );
   };
 
   // Check if any filters are active
@@ -274,6 +295,32 @@ const FilterSidebar = ({
         />
       </FilterSection>
 
+      {/* Countries */}
+      <FilterSection title="Country">
+        <select
+          value={selectedCountry}
+          onChange={(e) => handleCountryChange(e.target.value)}
+          style={{
+            width: '100%',
+            padding: spacing[2],
+            border: `1px solid ${colors.border}`,
+            borderRadius: '6px',
+            fontSize: '14px',
+            fontFamily: 'Inter',
+            backgroundColor: colors.background,
+            color: colors.textPrimary,
+            cursor: 'pointer'
+          }}
+        >
+          <option value="">All Countries</option>
+          {filterOptions.countries.map(country => (
+            <option key={country} value={country}>
+              {country}
+            </option>
+          ))}
+        </select>
+      </FilterSection>
+
       {/* Universities */}
       <FilterSection
         title="Universities"
@@ -281,7 +328,7 @@ const FilterSidebar = ({
         defaultExpanded={!isMobile}
       >
         <div style={{ maxHeight: isMobile ? '150px' : '200px', overflowY: 'auto' }}>
-          {filterOptions.universities.map(university => (
+          {getFilteredUniversities().map(university => (
             <CheckboxItem
               key={university.id || university.name}
               label={university.name || university}
@@ -289,6 +336,18 @@ const FilterSidebar = ({
               onChange={() => handleUniversityToggle(university.id || university)}
             />
           ))}
+          {selectedCountry && getFilteredUniversities().length === 0 && (
+            <div style={{
+              fontSize: '14px',
+              color: colors.textSecondary,
+              fontFamily: 'Inter',
+              padding: spacing[2],
+              textAlign: 'center',
+              fontStyle: 'italic'
+            }}>
+              No universities found in {selectedCountry}
+            </div>
+          )}
         </div>
       </FilterSection>
 
