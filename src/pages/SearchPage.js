@@ -79,7 +79,7 @@ const SearchPage = () => {
         setInitialLoad(false);
       }
     }
-  }, [initialLoad]);
+  }, [initialLoad, t]);
 
   // Handle search query change
   const handleSearchChange = (newQuery) => {
@@ -149,7 +149,7 @@ const SearchPage = () => {
     };
 
     loadInitialData();
-  }, [searchParams, filters, performSearch]);
+  }, [searchParams, filters, performSearch, t]);
 
   // Auto-search when filters change (debounced)
   useEffect(() => {
