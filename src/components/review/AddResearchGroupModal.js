@@ -3,9 +3,11 @@ import { X, AlertCircle, CheckCircle } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { FormInput } from '../FormInput';
 import { ReviewService } from '../../services/reviewService';
+import { useTranslation } from '../../i18n';
 import Modal from '../Modal';
 
 const AddResearchGroupModal = ({ departmentId, onClose, onAdd }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -25,7 +27,7 @@ const AddResearchGroupModal = ({ departmentId, onClose, onAdd }) => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Research group name is required';
+      newErrors.name = t('writeReview.modals.addResearchGroup.validation.nameRequired', 'Research group name is required');
     }
 
     setErrors(newErrors);
@@ -67,7 +69,7 @@ const AddResearchGroupModal = ({ departmentId, onClose, onAdd }) => {
             fontFamily: 'Inter',
             margin: 0
           }}>
-            Add New Research Group
+            {t('writeReview.modals.addResearchGroup.title', 'Add New Research Group')}
           </h2>
           <button
             onClick={onClose}
@@ -109,10 +111,10 @@ const AddResearchGroupModal = ({ departmentId, onClose, onAdd }) => {
         <form onSubmit={handleSubmit}>
           {/* Research Group Name */}
           <FormInput
-            label="Research Group Name"
+            label={t('writeReview.modals.addResearchGroup.fields.name', 'Research Group Name')}
             value={formData.name}
             onChange={(value) => updateField('name', value)}
-            placeholder="e.g., AI Research Lab"
+            placeholder={t('writeReview.modals.addResearchGroup.placeholders.name', 'e.g., AI Research Lab')}
             error={errors.name}
             required
             style={{ marginBottom: spacing[4] }}
@@ -120,10 +122,10 @@ const AddResearchGroupModal = ({ departmentId, onClose, onAdd }) => {
 
           {/* Website */}
           <FormInput
-            label="Website (Optional)"
+            label={t('writeReview.modals.addResearchGroup.fields.website', 'Website (Optional)')}
             value={formData.website}
             onChange={(value) => updateField('website', value)}
-            placeholder="e.g., https://ai.stanford.edu"
+            placeholder={t('writeReview.modals.addResearchGroup.placeholders.website', 'e.g., https://ai.stanford.edu')}
             error={errors.website}
             style={{ marginBottom: spacing[4] }}
           />
@@ -138,12 +140,12 @@ const AddResearchGroupModal = ({ departmentId, onClose, onAdd }) => {
               marginBottom: spacing[2],
               fontFamily: 'Inter'
             }}>
-              Description (Optional)
+              {t('writeReview.modals.addResearchGroup.fields.description', 'Description (Optional)')}
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => updateField('description', e.target.value)}
-              placeholder="Brief description of the research group"
+              placeholder={t('writeReview.modals.addResearchGroup.placeholders.description', 'Brief description of the research group')}
               rows={3}
               style={{
                 width: '100%',
@@ -182,7 +184,7 @@ const AddResearchGroupModal = ({ departmentId, onClose, onAdd }) => {
                 cursor: submitting ? 'not-allowed' : 'pointer'
               }}
             >
-              Cancel
+              {t('writeReview.modals.addResearchGroup.buttons.cancel', 'Cancel')}
             </button>
 
             <button
@@ -213,12 +215,12 @@ const AddResearchGroupModal = ({ departmentId, onClose, onAdd }) => {
                     borderRadius: '50%',
                     animation: 'spin 1s linear infinite'
                   }} />
-                  Adding...
+                  {t('writeReview.modals.addResearchGroup.buttons.adding', 'Adding...')}
                 </>
               ) : (
                 <>
                   <CheckCircle size={14} />
-                  Add Research Group
+                  {t('writeReview.modals.addResearchGroup.buttons.add', 'Add Research Group')}
                 </>
               )}
             </button>

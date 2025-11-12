@@ -5,6 +5,7 @@ import { ReviewService } from '../services/reviewService';
 import { DropdownField } from './Dropdown';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import Modal from './Modal';
+import { useTranslation } from '../i18n';
 
 const UniversityDepartmentSelector = ({
   selectedUniversityId,
@@ -16,6 +17,7 @@ const UniversityDepartmentSelector = ({
   layout = 'responsive' // 'responsive' (default), 'vertical', 'horizontal'
 }) => {
   const { isMobile } = useBreakpoint();
+  const { t } = useTranslation();
   const [universities, setUniversities] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loadingUniversities, setLoadingUniversities] = useState(false);
@@ -199,7 +201,7 @@ const UniversityDepartmentSelector = ({
     <div style={getLayoutStyle()}>
       {/* University Selection */}
       <DropdownField
-        label="University"
+        label={t('common.forms.university', 'University')}
         value={selectedUniversityId}
         onChange={handleUniversityChange}
         options={[
@@ -209,18 +211,18 @@ const UniversityDepartmentSelector = ({
           })),
           {
             value: "___ADD_NEW_UNIVERSITY___",
-            label: "+ Add New University",
+            label: t('common.forms.addNewUniversity', '+ Add New University'),
             style: { fontStyle: 'italic', color: colors.primary }
           }
         ]}
-        placeholder="Select your university or add new"
+        placeholder={t('common.forms.selectUniversity', 'Select a university')}
         loading={loadingUniversities}
         required={isRequired}
       />
 
       {/* Department Selection */}
       <DropdownField
-        label="Department"
+        label={t('common.forms.department', 'Department')}
         value={selectedUniversityDepartmentId}
         onChange={handleDepartmentChange}
         options={[
@@ -230,14 +232,14 @@ const UniversityDepartmentSelector = ({
           })),
           ...(selectedUniversityId ? [{
             value: "___ADD_NEW___",
-            label: "+ Add New Department",
+            label: t('common.forms.addNewDepartment', '+ Add New Department'),
             style: { fontStyle: 'italic', color: colors.primary }
           }] : [])
         ]}
         placeholder={
           !selectedUniversityId
-            ? 'Select a university first'
-            : 'Select your department or add new'
+            ? t('common.forms.selectUniversityFirst', 'Select a university first')
+            : t('common.forms.selectDepartment', 'Select a department')
         }
         disabled={!selectedUniversityId}
         loading={loadingDepartments}

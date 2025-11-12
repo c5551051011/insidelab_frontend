@@ -22,7 +22,14 @@
       "email": "Email",
       "password": "Password",
       "name": "Name",
-      "required": "Required"
+      "required": "Required",
+      "university": "University",
+      "department": "Department",
+      "selectUniversity": "Select a university",
+      "selectDepartment": "Select a department",
+      "selectUniversityFirst": "Select a university first",
+      "addNewUniversity": "+ Add New University",
+      "addNewDepartment": "+ Add New Department"
     }
   },
   "header": {
@@ -303,6 +310,269 @@
       "allowMessagesDesc": "Other users can send you messages",
       "emailNotifications": "Email notifications",
       "emailNotificationsDesc": "Receive updates via email"
+    }
+  },
+  "writeReview": {
+    "title": "Write a Review",
+    "subtitle": "Share your honest experience to help future graduate students",
+    "subtitlePrefilled": "Share your honest experience to help future graduate students (form pre-filled)",
+    "labInfoPrefilled": "Lab information pre-filled",
+    "anonymousNotice": "Your review will be anonymous. Only your position and duration will be shown publicly.",
+    "loading": {
+      "authentication": "Checking authentication...",
+      "categories": "Loading rating categories...",
+      "prefilling": "Pre-filling form data..."
+    },
+    "form": {
+      "researchGroup": "Research Group",
+      "noResearchGroup": "No Research Group",
+      "addNewResearchGroup": "+ Add New Research Group",
+      "selectDepartmentFirst": "Select a department first",
+      "selectResearchGroup": "Select a research group or add new (optional)",
+      "professorLab": "Professor/Lab",
+      "professorLabPlaceholder": "Search professor or lab name...",
+      "selectUniversityFirst": "Please select a university first",
+      "professorNotFound": "Professor/Lab not found",
+      "addNewProfessorLab": "Add New Professor/Lab",
+      "pleaseSelectProfessor": "Please select or add a professor/lab",
+      "position": "Your Position",
+      "duration": "Duration",
+      "positions": {
+        "phd": "PhD Student",
+        "ms": "MS Student",
+        "undergrad": "Undergraduate Student",
+        "postdoc": "PostDoc",
+        "researchAssistant": "Research Assistant"
+      },
+      "durations": {
+        "lessThan6Months": "Less than 6 months",
+        "6months": "6 months",
+        "1year": "1 year",
+        "2years": "2 years",
+        "3years": "3 years",
+        "4plusYears": "4+ years"
+      },
+      "overallRating": "Overall Rating",
+      "fineTuneRating": "Fine-tune your rating",
+      "categoryRatings": "Category Ratings",
+      "categoryDescription": "Rate different aspects of your experience",
+      "reviewText": "Your Review",
+      "reviewDescription": "Share your honest experience and insights",
+      "reviewPlaceholder": "Describe your experience in the lab, the research environment, mentorship quality, and any other relevant details...",
+      "pros": "Pros",
+      "prosPlaceholder": "List the positive aspects (one per line)",
+      "cons": "Cons",
+      "consPlaceholder": "List any drawbacks (one per line)",
+      "communityGuidelines": "Community Guidelines",
+      "guidelinesDescription": "Reviews must be honest, respectful, and based on personal experience. Inappropriate content will be removed.",
+      "submitButton": "Submit Review",
+      "submittingButton": "Submitting Review...",
+      "required": "*"
+    },
+    "validation": {
+      "fillAllFields": "Please fill in all required fields",
+      "reviewSubmitted": "Review submitted successfully!"
+    },
+    "categories": {
+      "mentorshipQuality": "Mentorship Quality",
+      "researchEnvironment": "Research Environment",
+      "workLifeBalance": "Work-Life Balance",
+      "careerSupport": "Career Support",
+      "fundingResources": "Funding & Resources",
+      "collaborationCulture": "Collaboration Culture"
+    },
+    "modals": {
+      "addResearchGroup": {
+        "title": "Add New Research Group",
+        "fields": {
+          "name": "Research Group Name",
+          "website": "Website (Optional)",
+          "description": "Description (Optional)"
+        },
+        "placeholders": {
+          "name": "e.g., AI Research Lab",
+          "website": "e.g., https://ai.stanford.edu",
+          "description": "Brief description of the research group"
+        },
+        "validation": {
+          "nameRequired": "Research group name is required"
+        },
+        "buttons": {
+          "cancel": "Cancel",
+          "add": "Add Research Group",
+          "adding": "Adding..."
+        }
+      },
+      "addProfessorLab": {
+        "title": "Add New Professor/Lab",
+        "sections": {
+          "professor": "Professor Information"
+        },
+        "fields": {
+          "professorName": "Professor Name",
+          "email": "Email",
+          "website": "Personal Website",
+          "researchInterests": "Research Interests",
+          "biography": "Biography",
+          "createLab": "Also create a lab for this professor",
+          "labName": "Lab Name",
+          "labWebsite": "Lab Website"
+        },
+        "placeholders": {
+          "professorName": "Enter professor name",
+          "email": "professor@university.edu",
+          "website": "https://professor.university.edu",
+          "researchInterest": "Enter research interest and press Enter",
+          "biography": "Brief biography of the professor",
+          "labName": "Enter lab name",
+          "labWebsite": "https://lab.university.edu"
+        },
+        "buttons": {
+          "add": "Add",
+          "cancel": "Cancel",
+          "addProfessor": "Add Professor",
+          "addProfessorLab": "Add Professor & Lab",
+          "addingProfessor": "Adding Professor...",
+          "addingProfessorLab": "Adding Professor & Lab..."
+        },
+        "validation": {
+          "professorNameRequired": "Professor name is required",
+          "validEmail": "Please enter a valid email address",
+          "validUrl": "Please enter a valid URL (including https://)",
+          "labNameRequired": "Lab name is required when creating a lab",
+          "submitError": "Failed to add professor/lab. Please try again."
+        }
+      }
+    }
+  },
+  "mockInterview": {
+    "title": "Book Mock Interview",
+    "subtitle": "Get matched with experienced graduate students or researchers for personalized interview prep",
+    "steps": {
+      "university": "University",
+      "type": "Type",
+      "research": "Research",
+      "labs": "Labs",
+      "schedule": "Schedule",
+      "review": "Review"
+    },
+    "step1": {
+      "title": "Choose University & Department",
+      "subtitle": "Select the university and department you're interested in for your mock interview"
+    },
+    "step2": {
+      "title": "Choose Session Type",
+      "subtitle": "Select the type of session that best fits your needs",
+      "mockInterview": {
+        "name": "Mock Interview",
+        "duration": "60 min",
+        "basePrice": 100,
+        "description": "Full interview simulation with detailed feedback",
+        "features": {
+          "realistic": "Realistic interview experience",
+          "feedback": "Detailed written feedback",
+          "recording": "Recorded session (optional)",
+          "followUp": "Follow-up resources"
+        }
+      },
+      "qaSession": {
+        "name": "Q&A Session",
+        "duration": "30 min",
+        "basePrice": 50,
+        "description": "Casual discussion and advice session",
+        "features": {
+          "askAnything": "Ask anything about grad school",
+          "insiderTips": "Get insider tips",
+          "labInsights": "Lab/program insights",
+          "applicationAdvice": "Application advice"
+        }
+      }
+    },
+    "step3": {
+      "title": "Select Research Areas",
+      "subtitle": "Choose 1-3 research areas of interest. Selected: {{count}}/3",
+      "researchArea": "Research Area",
+      "popularResearchAreas": "Popular Research Areas",
+      "allResearchAreas": "All Research Areas ({{count}})",
+      "addCustomArea": "+ Add Custom Research Area",
+      "addCustomAreaLimit": "+ Add Custom Research Area (Limit reached)",
+      "enterCustomArea": "Enter Custom Research Area",
+      "customAreaPlaceholder": "e.g., Quantum Machine Learning, Computational Biology...",
+      "addButton": "Add",
+      "cancelButton": "Cancel",
+      "searching": "Searching...",
+      "noExisting": "No existing research areas found. Click \"Add\" to create new one.",
+      "clickToSelect": "Click to select existing research area",
+      "focusAreasOptional": "Specific Focus Areas (Optional)",
+      "focusAreasPlaceholder": "e.g., Natural Language Processing, Computer Vision, Reinforcement Learning...",
+      "loading": "Loading research areas..."
+    },
+    "step4": {
+      "title": "Select Target Labs",
+      "subtitle": "Choose up to 2 labs you're interested in (helps us match you with the right interviewer)",
+      "selectedLabs": "Selected Labs ({{count}}/2)",
+      "searchPlaceholder": "Search by lab name, university, or field...",
+      "interestedLabs": "Your Interested Labs ({{count}})",
+      "popularLabs": "Popular Labs",
+      "noLabsFound": "No labs found matching your search",
+      "loadingLabs": "Loading labs...",
+      "interested": "★ Interested",
+      "reviews": "reviews",
+      "focusAreas": "Focus Areas (Optional)",
+      "focusAreasDescription": "What specific topics or aspects do you want to focus on during the interview?",
+      "focusAreasPlaceholder": "e.g., Research methodology, lab culture, funding opportunities, work-life balance..."
+    },
+    "step5": {
+      "title": "Schedule Your Session",
+      "subtitle": "Provide at least 1 preferred time slot (up to 3). The first slot is required, others are optional. We'll match you with an available interviewer.",
+      "firstChoice": "First Choice (Required)",
+      "secondChoice": "Second Choice (Optional)",
+      "thirdChoice": "Third Choice (Optional)",
+      "date": "Date",
+      "startTime": "Start Time",
+      "endTime": "End Time",
+      "startTimePrompt": "Start time...",
+      "endTimePrompt": "End time...",
+      "note": "Note:",
+      "noteDescription": "Providing multiple time slots increases your chances of finding an available interviewer. You'll receive confirmation within 24 hours.",
+      "additionalNotes": "Additional Notes (Optional)",
+      "additionalNotesPlaceholder": "Any specific requirements, questions, or information you'd like to share with your interviewer..."
+    },
+    "step6": {
+      "title": "Review Your Booking",
+      "subtitle": "Please review all details before confirming your booking",
+      "targetLabs": "Target Labs",
+      "researchArea": "Research Area",
+      "focusAreas": "Focus Areas",
+      "preferredTimeSlots": "Preferred Time Slots",
+      "noTimeSlots": "No time slots selected",
+      "additionalNotes": "Additional Notes",
+      "totalPrice": "Total Price",
+      "basePrice": "Base: ${{base}} + Lab Match: ${{labBonus}}",
+      "unavailable": "Professor Information Unavailable"
+    },
+    "navigation": {
+      "back": "Back",
+      "continue": "Continue",
+      "confirmBooking": "Confirm Booking",
+      "creatingSession": "Creating Session..."
+    },
+    "success": {
+      "title": "Interview session created successfully!",
+      "sessionId": "Session ID: {{id}}"
+    },
+    "timeFormat": {
+      "am": "AM",
+      "pm": "PM"
+    },
+    "days": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
     }
   },
   "footer": {

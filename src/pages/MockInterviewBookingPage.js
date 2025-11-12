@@ -22,10 +22,12 @@ import { InterviewService } from '../services/interviewService';
 import { SearchService } from '../services/searchService';
 import { BookmarkService } from '../services/bookmarkService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useTranslation } from '../i18n';
 
 const MockInterviewBookingPage = () => {
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
 
   // Form state
@@ -347,7 +349,7 @@ const MockInterviewBookingPage = () => {
             color: colors.textPrimary,
             marginBottom: spacing[3]
           }}>
-            Book Mock Interview
+            {t('mockInterview.title', 'Book Mock Interview')}
           </h1>
           <p style={{
             fontSize: isMobile ? '14px' : '16px',
@@ -355,7 +357,7 @@ const MockInterviewBookingPage = () => {
             maxWidth: '600px',
             margin: '0 auto'
           }}>
-            Get matched with experienced graduate students or researchers for personalized interview prep
+            {t('mockInterview.subtitle', 'Get matched with experienced graduate students or researchers for personalized interview prep')}
           </p>
         </div>
 
@@ -572,13 +574,14 @@ const MockInterviewBookingPage = () => {
 
 // Progress Steps Component
 const ProgressSteps = ({ currentStep, isMobile }) => {
+  const { t } = useTranslation();
   const steps = [
-    { number: 1, label: 'University' },
-    { number: 2, label: 'Type' },
-    { number: 3, label: 'Research' },
-    { number: 4, label: 'Labs' },
-    { number: 5, label: 'Schedule' },
-    { number: 6, label: 'Review' }
+    { number: 1, label: t('mockInterview.steps.university', 'University') },
+    { number: 2, label: t('mockInterview.steps.type', 'Type') },
+    { number: 3, label: t('mockInterview.steps.research', 'Research') },
+    { number: 4, label: t('mockInterview.steps.labs', 'Labs') },
+    { number: 5, label: t('mockInterview.steps.schedule', 'Schedule') },
+    { number: 6, label: t('mockInterview.steps.review', 'Review') }
   ];
 
   return (
@@ -1761,6 +1764,7 @@ const UniversityDepartmentStep = ({
   onDepartmentSelected,
   isMobile
 }) => {
+  const { t } = useTranslation();
   return (
     <div style={{ marginBottom: spacing[8] }}>
       <h2 style={{
@@ -1770,7 +1774,7 @@ const UniversityDepartmentStep = ({
         marginBottom: spacing[2],
         fontFamily: 'Inter'
       }}>
-        Choose University & Department
+        {t('mockInterview.step1.title', 'Choose University & Department')}
       </h2>
       <p style={{
         fontSize: isMobile ? '14px' : '16px',
@@ -1778,7 +1782,7 @@ const UniversityDepartmentStep = ({
         marginBottom: spacing[6],
         fontFamily: 'Inter'
       }}>
-        Select the university and department you're interested in for your mock interview
+        {t('mockInterview.step1.subtitle', 'Select the university and department you\'re interested in for your mock interview')}
       </p>
 
       <UniversityDepartmentSelector
