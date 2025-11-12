@@ -390,16 +390,16 @@
           "description": "설명 (선택사항)"
         },
         "placeholders": {
-          "name": "예: AI 연구실",
-          "website": "예: https://ai.stanford.edu",
-          "description": "연구 그룹에 대한 간단한 설명"
+          "name": "예: 머신러닝 연구실",
+          "website": "https://group.university.edu",
+          "description": "연구 그룹 초점에 대한 간단한 설명"
         },
         "validation": {
           "nameRequired": "연구 그룹 이름은 필수입니다"
         },
         "buttons": {
           "cancel": "취소",
-          "add": "연구 그룹 추가",
+          "add": "그룹 추가",
           "adding": "추가 중..."
         }
       },

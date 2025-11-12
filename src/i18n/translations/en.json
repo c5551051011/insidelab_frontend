@@ -390,16 +390,16 @@
           "description": "Description (Optional)"
         },
         "placeholders": {
-          "name": "e.g., AI Research Lab",
-          "website": "e.g., https://ai.stanford.edu",
-          "description": "Brief description of the research group"
+          "name": "e.g., Machine Learning Lab",
+          "website": "https://group.university.edu",
+          "description": "Brief description of the research group's focus"
         },
         "validation": {
           "nameRequired": "Research group name is required"
         },
         "buttons": {
           "cancel": "Cancel",
-          "add": "Add Research Group",
+          "add": "Add Group",
           "adding": "Adding..."
         }
       },

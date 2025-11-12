@@ -186,13 +186,13 @@ const AddResearchGroupModal = ({ isOpen, onClose, selectedUniversity, selectedDe
               color: colors.textPrimary,
               marginBottom: spacing[2]
             }}>
-              Research Group Name *
+{t('writeReview.modals.addResearchGroup.fields.name', 'Research Group Name')} *
             </label>
             <input
               type="text"
               value={formData.groupName}
               onChange={(e) => setFormData(prev => ({ ...prev, groupName: e.target.value }))}
-              placeholder="Enter research group name"
+              placeholder={t('writeReview.modals.addResearchGroup.placeholders.name', 'Enter research group name')}
               style={{
                 width: '100%',
                 padding: spacing[3],
@@ -223,12 +223,12 @@ const AddResearchGroupModal = ({ isOpen, onClose, selectedUniversity, selectedDe
               color: colors.textPrimary,
               marginBottom: spacing[2]
             }}>
-              Description
+{t('writeReview.modals.addResearchGroup.fields.description', 'Description')}
             </label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Brief description of the research group's focus"
+              placeholder={t('writeReview.modals.addResearchGroup.placeholders.description', 'Brief description of the research group\\'s focus')}
               rows={3}
               style={{
                 width: '100%',
@@ -253,14 +253,14 @@ const AddResearchGroupModal = ({ isOpen, onClose, selectedUniversity, selectedDe
               color: colors.textPrimary,
               marginBottom: spacing[2]
             }}>
-              Website
+{t('writeReview.modals.addResearchGroup.fields.website', 'Website')}
             </label>
             <div style={{ position: 'relative' }}>
               <input
                 type="url"
                 value={formData.website}
                 onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
-                placeholder="https://group.university.edu"
+                placeholder={t('writeReview.modals.addResearchGroup.placeholders.website', 'https://group.university.edu')}
                 style={{
                   width: '100%',
                   padding: spacing[3],
@@ -431,7 +431,7 @@ const AddResearchGroupModal = ({ isOpen, onClose, selectedUniversity, selectedDe
                 cursor: 'pointer'
               }}
             >
-              Cancel
+{t('writeReview.modals.addResearchGroup.buttons.cancel', 'Cancel')}
             </button>
             <button
               type="submit"
@@ -451,7 +451,7 @@ const AddResearchGroupModal = ({ isOpen, onClose, selectedUniversity, selectedDe
               }}
             >
               {isSubmitting && <Loader size={14} style={{ animation: 'spin 1s linear infinite' }} />}
-              {isSubmitting ? 'Adding...' : 'Add Group'}
+{isSubmitting ? t('writeReview.modals.addResearchGroup.buttons.adding', 'Adding...') : t('writeReview.modals.addResearchGroup.buttons.add', 'Add Group')}
             </button>
           </div>
         </form>
