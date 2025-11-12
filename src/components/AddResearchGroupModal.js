@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Globe, Loader } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import { UniversityService } from '../services/universityService';
+import { useTranslation } from '../i18n';
 
 const AddResearchGroupModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, onGroupAdded }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     groupName: '',
     description: '',
@@ -148,7 +150,7 @@ const AddResearchGroupModal = ({ isOpen, onClose, selectedUniversity, selectedDe
               margin: 0,
               marginBottom: spacing[1]
             }}>
-              Add New Research Group
+              {t('writeReview.modals.addResearchGroup.title', 'Add New Research Group')}
             </h2>
             <p style={{
               fontSize: '14px',
