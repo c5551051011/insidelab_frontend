@@ -23,8 +23,390 @@ import Footer from '../components/Footer';
 import { colors, spacing } from '../theme';
 import { SearchService } from '../services/searchService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useTranslation } from '../i18n';
+
+// Helper function to add mock publications based on lab/professor name and research areas
+const addMockPublications = (labData) => {
+  if (!labData) return labData;
+
+  // Generate publications based on lab/professor info
+  const professorName = labData.professorName || labData.name;
+  const researchAreas = labData.researchAreas || [];
+
+  // Sample publication templates based on common research areas
+  const publicationTemplates = {
+    'Machine Learning': [
+      {
+        title: 'Deep Learning Approaches for Complex Pattern Recognition',
+        journal: 'Nature Machine Intelligence',
+        year: 2024,
+        volume: '5',
+        issue: '3',
+        pages: '234-251',
+        citations: 127,
+        impact_factor: 15.508,
+        type: 'Journal Article',
+        abstract: 'We present novel deep learning architectures for complex pattern recognition tasks, demonstrating significant improvements over existing methods across multiple benchmarks.',
+        keywords: ['Deep Learning', 'Pattern Recognition', 'Neural Networks', 'Computer Vision'],
+        doi: '10.1038/s42256-024-00000-0',
+        url: 'https://doi.org/10.1038/s42256-024-00000-0',
+        pdf_url: 'https://arxiv.org/pdf/2024.00000.pdf',
+        code_url: 'https://github.com/lab/pattern-recognition',
+        dataset_url: 'https://dataset.example.com/pattern-data'
+      },
+      {
+        title: 'Federated Learning in Healthcare: Privacy and Performance',
+        journal: 'Journal of Medical Internet Research',
+        year: 2023,
+        volume: '25',
+        issue: '8',
+        pages: 'e45123',
+        citations: 89,
+        impact_factor: 7.076,
+        type: 'Journal Article',
+        abstract: 'A comprehensive study on federated learning applications in healthcare, addressing privacy concerns while maintaining model performance.',
+        keywords: ['Federated Learning', 'Healthcare', 'Privacy', 'Medical AI'],
+        doi: '10.2196/45000',
+        url: 'https://doi.org/10.2196/45000',
+        pdf_url: 'https://www.jmir.org/2023/8/e45123/PDF'
+      }
+    ],
+    'Computer Vision': [
+      {
+        title: 'Advanced Object Detection in Real-time Video Streams',
+        journal: 'IEEE Transactions on Pattern Analysis and Machine Intelligence',
+        year: 2024,
+        volume: '46',
+        issue: '7',
+        pages: '3421-3438',
+        citations: 156,
+        impact_factor: 24.314,
+        type: 'Journal Article',
+        abstract: 'Novel real-time object detection algorithms optimized for video stream processing with enhanced accuracy and reduced computational overhead.',
+        keywords: ['Object Detection', 'Real-time Processing', 'Video Analysis', 'Computer Vision'],
+        doi: '10.1109/TPAMI.2024.00000',
+        url: 'https://doi.org/10.1109/TPAMI.2024.00000',
+        pdf_url: 'https://arxiv.org/pdf/2024.cv001.pdf',
+        code_url: 'https://github.com/lab/realtime-detection'
+      },
+      {
+        title: 'Multi-modal Scene Understanding with Transformer Networks',
+        journal: 'Computer Vision and Image Understanding',
+        year: 2023,
+        volume: '231',
+        pages: '103695',
+        citations: 78,
+        impact_factor: 4.886,
+        type: 'Journal Article',
+        abstract: 'A comprehensive approach to scene understanding using multi-modal transformer architectures for enhanced visual reasoning.',
+        keywords: ['Scene Understanding', 'Transformers', 'Multi-modal', 'Visual Reasoning'],
+        doi: '10.1016/j.cviu.2023.00000',
+        url: 'https://doi.org/10.1016/j.cviu.2023.00000'
+      }
+    ],
+    'Artificial Intelligence': [
+      {
+        title: 'Explainable AI for Critical Decision Making Systems',
+        journal: 'Artificial Intelligence',
+        year: 2024,
+        volume: '328',
+        pages: '104078',
+        citations: 203,
+        impact_factor: 14.050,
+        type: 'Journal Article',
+        abstract: 'Developing interpretable AI systems for high-stakes decision making with focus on transparency and accountability.',
+        keywords: ['Explainable AI', 'Decision Making', 'Interpretability', 'AI Ethics'],
+        doi: '10.1016/j.artint.2024.00000',
+        url: 'https://doi.org/10.1016/j.artint.2024.00000',
+        pdf_url: 'https://arxiv.org/pdf/2024.ai001.pdf'
+      },
+      {
+        title: 'Reinforcement Learning in Complex Multi-Agent Environments',
+        journal: 'Journal of Artificial Intelligence Research',
+        year: 2023,
+        volume: '78',
+        pages: '445-482',
+        citations: 134,
+        impact_factor: 4.757,
+        type: 'Journal Article',
+        abstract: 'Advanced reinforcement learning techniques for complex multi-agent systems with emergent behaviors and coordination strategies.',
+        keywords: ['Reinforcement Learning', 'Multi-Agent Systems', 'Coordination', 'Emergent Behavior'],
+        doi: '10.1613/jair.1.00000',
+        url: 'https://doi.org/10.1613/jair.1.00000',
+        code_url: 'https://github.com/lab/multi-agent-rl'
+      }
+    ],
+    'Robotics': [
+      {
+        title: 'Autonomous Navigation in Dynamic Environments',
+        journal: 'IEEE Robotics and Automation Letters',
+        year: 2024,
+        volume: '9',
+        issue: '4',
+        pages: '3567-3574',
+        citations: 92,
+        impact_factor: 5.282,
+        type: 'Journal Article',
+        abstract: 'Novel algorithms for autonomous robot navigation in highly dynamic environments with real-time obstacle avoidance.',
+        keywords: ['Autonomous Navigation', 'Dynamic Environments', 'Robotics', 'Path Planning'],
+        doi: '10.1109/LRA.2024.00000',
+        url: 'https://doi.org/10.1109/LRA.2024.00000',
+        pdf_url: 'https://arxiv.org/pdf/2024.robotics001.pdf',
+        video_url: 'https://youtube.com/watch?v=demo123'
+      },
+      {
+        title: 'Human-Robot Collaboration in Manufacturing',
+        journal: 'International Journal of Robotics Research',
+        year: 2023,
+        volume: '42',
+        issue: '12',
+        pages: '823-841',
+        citations: 167,
+        impact_factor: 6.314,
+        type: 'Journal Article',
+        abstract: 'Investigating safe and efficient human-robot collaboration strategies in industrial manufacturing settings.',
+        keywords: ['Human-Robot Interaction', 'Manufacturing', 'Collaboration', 'Industrial Robotics'],
+        doi: '10.1177/00000000000000',
+        url: 'https://doi.org/10.1177/00000000000000'
+      }
+    ],
+    'Data Science': [
+      {
+        title: 'Large-Scale Data Processing with Distributed Computing',
+        journal: 'IEEE Transactions on Big Data',
+        year: 2024,
+        volume: '10',
+        issue: '2',
+        pages: '156-171',
+        citations: 145,
+        impact_factor: 7.901,
+        type: 'Journal Article',
+        abstract: 'Scalable algorithms and architectures for processing massive datasets using distributed computing frameworks.',
+        keywords: ['Big Data', 'Distributed Computing', 'Scalability', 'Data Processing'],
+        doi: '10.1109/TBDATA.2024.00000',
+        url: 'https://doi.org/10.1109/TBDATA.2024.00000',
+        code_url: 'https://github.com/lab/distributed-processing'
+      },
+      {
+        title: 'Predictive Analytics in Complex Systems',
+        journal: 'Data Mining and Knowledge Discovery',
+        year: 2023,
+        volume: '37',
+        issue: '8',
+        pages: '2134-2158',
+        citations: 98,
+        impact_factor: 3.306,
+        type: 'Journal Article',
+        abstract: 'Advanced predictive modeling techniques for complex systems with applications in various domains.',
+        keywords: ['Predictive Analytics', 'Complex Systems', 'Data Mining', 'Machine Learning'],
+        doi: '10.1007/s10618-023-00000-0',
+        url: 'https://doi.org/10.1007/s10618-023-00000-0',
+        dataset_url: 'https://data.example.com/complex-systems'
+      }
+    ]
+  };
+
+  // Default publications if no specific research areas match
+  const defaultPublications = [
+    {
+      title: 'Novel Computational Methods for Scientific Discovery',
+      journal: 'Science',
+      year: 2024,
+      volume: '384',
+      issue: '6692',
+      pages: '245-251',
+      citations: 342,
+      impact_factor: 63.714,
+      type: 'Journal Article',
+      abstract: 'We introduce novel computational methodologies that accelerate scientific discovery across multiple domains.',
+      keywords: ['Computational Methods', 'Scientific Discovery', 'Interdisciplinary Research'],
+      doi: '10.1126/science.00000',
+      url: 'https://doi.org/10.1126/science.00000',
+      pdf_url: 'https://science.sciencemag.org/content/384/6692/245.full.pdf'
+    },
+    {
+      title: 'Interdisciplinary Approaches to Complex Problem Solving',
+      journal: 'Proceedings of the National Academy of Sciences',
+      year: 2023,
+      volume: '120',
+      issue: '45',
+      pages: 'e2308456120',
+      citations: 198,
+      impact_factor: 12.779,
+      type: 'Journal Article',
+      abstract: 'A comprehensive framework for interdisciplinary collaboration in solving complex scientific and societal challenges.',
+      keywords: ['Interdisciplinary Research', 'Problem Solving', 'Collaboration'],
+      doi: '10.1073/pnas.00000',
+      url: 'https://doi.org/10.1073/pnas.00000'
+    },
+    {
+      title: 'Advancing Research Through Innovative Methodologies',
+      journal: 'Annual Review of Computer Science',
+      year: 2023,
+      volume: '7',
+      pages: '123-145',
+      citations: 156,
+      impact_factor: 8.234,
+      type: 'Review Article',
+      abstract: 'A review of cutting-edge research methodologies transforming computational science and their broader implications.',
+      keywords: ['Research Methodology', 'Innovation', 'Computer Science'],
+      doi: '10.1146/annurev-cs-00000-00000',
+      url: 'https://doi.org/10.1146/annurev-cs-00000-00000'
+    }
+  ];
+
+  // Select publications based on research areas
+  let selectedPublications = [];
+
+  for (const area of researchAreas) {
+    if (publicationTemplates[area]) {
+      selectedPublications = selectedPublications.concat(publicationTemplates[area]);
+    }
+  }
+
+  // If no specific matches, use default publications
+  if (selectedPublications.length === 0) {
+    selectedPublications = defaultPublications;
+  }
+
+  // Add author names and additional fields, limit to 6 publications
+  const publications = selectedPublications.slice(0, 6).map((pub, index) => ({
+    ...pub,
+    id: `pub_${index}`,
+    authors: generateAuthors(professorName),
+    primaryVenueTier: getRandomVenueTier(),
+    isAwardPaper: Math.random() < 0.15, // 15% chance of award paper
+    githubStars: Math.random() < 0.3 ? Math.floor(Math.random() * 500) + 10 : 0, // 30% chance of having GitHub stars
+    arxivId: Math.random() < 0.5 ? `2024.${String(Math.floor(Math.random() * 9999)).padStart(5, '0')}` : null,
+    isOpenAccess: Math.random() < 0.8, // 80% chance of open access
+    additionalNotes: Math.random() < 0.2 ? getRandomNote() : null // 20% chance of having notes
+  }));
+
+  // Add publication stats
+  const totalCitations = publications.reduce((sum, pub) => sum + (pub.citations || 0), 0);
+  const thisYearPubs = publications.filter(pub => pub.year >= new Date().getFullYear() - 1).length;
+  const avgCitations = publications.length > 0 ? (totalCitations / publications.length) : 0;
+  const hIndex = calculateHIndex(publications);
+
+  return {
+    ...labData,
+    publications,
+    publicationStats: {
+      totalPublications: publications.length,
+      totalCitations,
+      thisYearPublications: thisYearPubs,
+      averageCitationsPerPaper: avgCitations,
+      hIndex,
+      openAccessRate: Math.round((publications.filter(p => p.isOpenAccess).length / publications.length) * 100)
+    },
+    yearlyStats: generateYearlyStats()
+  };
+};
+
+// Helper function to get random venue tier
+const getRandomVenueTier = () => {
+  const tiers = ['Top', 'High', 'Medium', 'General'];
+  const weights = [0.2, 0.3, 0.35, 0.15]; // 20% top, 30% high, 35% medium, 15% general
+  const rand = Math.random();
+  let cumulative = 0;
+
+  for (let i = 0; i < tiers.length; i++) {
+    cumulative += weights[i];
+    if (rand <= cumulative) {
+      return tiers[i];
+    }
+  }
+  return 'Medium';
+};
+
+// Helper function to calculate H-index
+const calculateHIndex = (publications) => {
+  if (!publications || publications.length === 0) return 0;
+
+  // Sort publications by citation count in descending order
+  const sortedCitations = publications
+    .map(pub => pub.citations || 0)
+    .sort((a, b) => b - a);
+
+  let hIndex = 0;
+  for (let i = 0; i < sortedCitations.length; i++) {
+    if (sortedCitations[i] >= i + 1) {
+      hIndex = i + 1;
+    } else {
+      break;
+    }
+  }
+
+  return hIndex;
+};
+
+// Helper function to generate yearly publication statistics
+const generateYearlyStats = () => {
+  const currentYear = new Date().getFullYear();
+  const stats = [];
+
+  for (let year = currentYear - 4; year <= currentYear; year++) {
+    const publications = Math.floor(Math.random() * 8) + 1; // 1-8 publications per year
+    const totalCitations = Math.floor(Math.random() * 200) + 20; // 20-220 citations per year
+
+    stats.push({
+      year,
+      publications,
+      citations: totalCitations,
+      h_index: Math.floor(Math.random() * 10) + 1
+    });
+  }
+
+  return stats;
+};
+
+// Helper function to get random additional notes
+const getRandomNote = () => {
+  const notes = [
+    'Best paper award recipient',
+    'Featured in Nature News & Views',
+    'Highlighted in Science Magazine',
+    'Oral presentation at top-tier conference',
+    'Most downloaded paper of the month',
+    'Editor\'s choice article',
+    'Cover story feature',
+    'Invited keynote presentation',
+    'Featured in university press release',
+    'Collaborative work with industry partners'
+  ];
+
+  return notes[Math.floor(Math.random() * notes.length)];
+};
+
+// Helper function to generate realistic author lists
+const generateAuthors = (professorName) => {
+  const authorPools = [
+    'J. Smith', 'A. Johnson', 'M. Davis', 'S. Wilson', 'R. Brown', 'L. Miller',
+    'K. Garcia', 'T. Rodriguez', 'C. Martinez', 'D. Anderson', 'P. Taylor', 'N. Thomas'
+  ];
+
+  const numAuthors = Math.floor(Math.random() * 4) + 2; // 2-5 authors
+  const selectedAuthors = [];
+
+  // Always include the professor as first or last author
+  if (professorName) {
+    const professorInitials = professorName.split(' ')
+      .map(name => name.charAt(0).toUpperCase() + '.')
+      .join(' ') + ' ' + professorName.split(' ').pop();
+    selectedAuthors.push(professorInitials);
+  }
+
+  // Add random co-authors
+  const shuffledPool = [...authorPools].sort(() => 0.5 - Math.random());
+  for (let i = 0; i < numAuthors - 1 && i < shuffledPool.length; i++) {
+    selectedAuthors.push(shuffledPool[i]);
+  }
+
+  return selectedAuthors;
+};
 
 const LabDetailPage = () => {
+  const { t } = useTranslation();
   const { name } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -102,10 +484,11 @@ const LabDetailPage = () => {
           }
 
           // Use complete professor data if available, otherwise use original lab data
-          setLab(professorData || labData);
+          const finalLabData = professorData || labData;
+          setLab(addMockPublications(finalLabData));
         } else {
           // Data is already complete
-          setLab(labData);
+          setLab(addMockPublications(labData));
         }
       } catch (err) {
         console.error('Error loading lab details:', err);
@@ -282,22 +665,10 @@ const LabDetailPage = () => {
         padding: spacing[6]
       }}>
         {isMobile ? (
-          <MobileLayout lab={lab} onWebsiteClick={handleWebsiteClick} />
+          <MobileLayout lab={lab} onWebsiteClick={handleWebsiteClick} onWriteReview={handleWriteReview} />
         ) : (
-          <DesktopLayout lab={lab} onWebsiteClick={handleWebsiteClick} />
+          <DesktopLayout lab={lab} onWebsiteClick={handleWebsiteClick} onWriteReview={handleWriteReview} />
         )}
-
-        {/* Publications Section */}
-        {lab.publications && lab.publications.length > 0 && (
-          <div style={{ marginTop: spacing[8] }}>
-            <PublicationsSection publications={lab.publications} />
-          </div>
-        )}
-
-        {/* Reviews Section */}
-        <div style={{ marginTop: spacing[8] }}>
-          <ReviewsSection lab={lab} onWriteReview={handleWriteReview} />
-        </div>
       </div>
 
       <Footer />
@@ -460,7 +831,7 @@ const LabHeader = ({
 };
 
 // Desktop Layout Component
-const DesktopLayout = ({ lab, onWebsiteClick }) => {
+const DesktopLayout = ({ lab, onWebsiteClick, onWriteReview }) => {
   return (
     <div style={{
       display: 'flex',
@@ -469,7 +840,16 @@ const DesktopLayout = ({ lab, onWebsiteClick }) => {
     }}>
       {/* Left Column */}
       <div style={{ flex: 3 }}>
-        <LabInformation lab={lab} onWebsiteClick={onWebsiteClick} />
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: spacing[6]
+        }}>
+          <LabInformation lab={lab} onWebsiteClick={onWebsiteClick} />
+          {lab.publications && lab.publications.length > 0 && (
+            <PublicationsSection publications={lab.publications} lab={lab} />
+          )}
+        </div>
       </div>
 
       {/* Right Column */}
@@ -480,6 +860,7 @@ const DesktopLayout = ({ lab, onWebsiteClick }) => {
           gap: spacing[6]
         }}>
           <RatingBreakdown lab={lab} />
+          <ReviewsSection lab={lab} onWriteReview={onWriteReview} />
           <RecruitmentStatus lab={lab} />
         </div>
       </div>
@@ -488,7 +869,7 @@ const DesktopLayout = ({ lab, onWebsiteClick }) => {
 };
 
 // Mobile Layout Component
-const MobileLayout = ({ lab, onWebsiteClick }) => {
+const MobileLayout = ({ lab, onWebsiteClick, onWriteReview }) => {
   return (
     <div style={{
       display: 'flex',
@@ -496,7 +877,11 @@ const MobileLayout = ({ lab, onWebsiteClick }) => {
       gap: spacing[6]
     }}>
       <LabInformation lab={lab} onWebsiteClick={onWebsiteClick} />
+      {lab.publications && lab.publications.length > 0 && (
+        <PublicationsSection publications={lab.publications} lab={lab} />
+      )}
       <RatingBreakdown lab={lab} />
+      <ReviewsSection lab={lab} onWriteReview={onWriteReview} />
       <RecruitmentStatus lab={lab} />
     </div>
   );
@@ -696,6 +1081,7 @@ const InfoRow = ({ icon, label, value, isLink = false, onClick }) => {
 
 // Rating Breakdown Component
 const RatingBreakdown = ({ lab }) => {
+  const { t } = useTranslation();
   // Use actual rating breakdown from API, or fallback to mock data
   const getRatingBreakdown = () => {
     if (lab.ratingBreakdown) {
@@ -705,12 +1091,12 @@ const RatingBreakdown = ({ lab }) => {
     // Fallback to mock data if API doesn't provide rating breakdown
     const baseRating = lab.overallRating;
     return {
-      'Mentorship Quality': Math.min(5, Math.max(1, baseRating + 0.2)),
-      'Research Environment': Math.min(5, Math.max(1, baseRating - 0.1)),
-      'Work-Life Balance': Math.min(5, Math.max(1, baseRating - 0.3)),
-      'Career Support': Math.min(5, Math.max(1, baseRating + 0.1)),
-      'Funding & Resources': baseRating,
-      'Collaboration Culture': Math.min(5, Math.max(1, baseRating + 0.2))
+      [t('writeReview.categories.mentorshipQuality', 'Mentorship Quality')]: Math.min(5, Math.max(1, baseRating + 0.2)),
+      [t('writeReview.categories.researchEnvironment', 'Research Environment')]: Math.min(5, Math.max(1, baseRating - 0.1)),
+      [t('writeReview.categories.workLifeBalance', 'Work-Life Balance')]: Math.min(5, Math.max(1, baseRating - 0.3)),
+      [t('writeReview.categories.careerSupport', 'Career Support')]: Math.min(5, Math.max(1, baseRating + 0.1)),
+      [t('writeReview.categories.fundingResources', 'Funding & Resources')]: baseRating,
+      [t('writeReview.categories.collaborationCulture', 'Collaboration Culture')]: Math.min(5, Math.max(1, baseRating + 0.2))
     };
   };
 
@@ -942,10 +1328,10 @@ const RecruitmentStatus = ({ lab }) => {
   );
 };
 
-// Publications Section Component
-const PublicationsSection = ({ publications }) => {
+// Publications Section Component - Enhanced version
+const PublicationsSection = ({ publications, lab }) => {
   const [showAll, setShowAll] = useState(false);
-  const displayedPubs = showAll ? publications : publications.slice(0, 5);
+  const displayedPubs = showAll ? publications : publications.slice(0, 3);
 
   const formatAuthors = (authors) => {
     if (!authors || authors.length === 0) return 'Unknown Authors';
@@ -961,6 +1347,17 @@ const PublicationsSection = ({ publications }) => {
     }
   };
 
+  // Calculate publication stats
+  const stats = {
+    totalCitations: publications.reduce((sum, pub) => sum + (pub.citationCount || 0), 0),
+    averageCitations: Math.round(publications.reduce((sum, pub) => sum + (pub.citationCount || 0), 0) / publications.length) || 0,
+    recentPubs: publications.filter(pub => new Date(pub.publicationDate || pub.createdAt).getFullYear() >= new Date().getFullYear() - 2).length,
+    topVenuePubs: publications.filter(pub => pub.primaryVenueTier === 'Top').length
+  };
+
+  // Get unique research areas from publications
+  const researchAreas = [...new Set(publications.flatMap(pub => pub.researchAreaNames || []))].slice(0, 8);
+
   return (
     <div style={{
       backgroundColor: 'white',
@@ -969,27 +1366,21 @@ const PublicationsSection = ({ publications }) => {
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
       border: `1px solid ${colors.border}`
     }}>
+      {/* Header */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: spacing[5]
       }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing[2]
+        <h3 style={{
+          fontSize: '20px',
+          fontWeight: '700',
+          color: colors.textPrimary,
+          margin: 0
         }}>
-          <BookOpen size={24} color={colors.primary} />
-          <h3 style={{
-            fontSize: '20px',
-            fontWeight: '700',
-            color: colors.textPrimary,
-            margin: 0
-          }}>
-            Recent Publications
-          </h3>
-        </div>
+          Publications & Research
+        </h3>
         <span style={{
           backgroundColor: `${colors.primary}15`,
           color: colors.primary,
@@ -1002,124 +1393,315 @@ const PublicationsSection = ({ publications }) => {
         </span>
       </div>
 
-      {/* Publications List */}
+      {/* Publication Stats Overview */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+        gap: spacing[4],
+        marginBottom: spacing[5],
+        padding: spacing[4],
+        backgroundColor: colors.background,
+        borderRadius: '8px',
+        border: `1px solid ${colors.border}`
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            fontSize: '24px',
+            fontWeight: '700',
+            color: colors.primary,
+            marginBottom: spacing[1]
+          }}>
+            {stats.totalCitations}
+          </div>
+          <div style={{
+            fontSize: '12px',
+            color: colors.textSecondary,
+            fontWeight: '500'
+          }}>
+            Total Citations
+          </div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            fontSize: '24px',
+            fontWeight: '700',
+            color: colors.primary,
+            marginBottom: spacing[1]
+          }}>
+            {stats.averageCitations}
+          </div>
+          <div style={{
+            fontSize: '12px',
+            color: colors.textSecondary,
+            fontWeight: '500'
+          }}>
+            Avg Citations
+          </div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            fontSize: '24px',
+            fontWeight: '700',
+            color: colors.primary,
+            marginBottom: spacing[1]
+          }}>
+            {stats.recentPubs}
+          </div>
+          <div style={{
+            fontSize: '12px',
+            color: colors.textSecondary,
+            fontWeight: '500'
+          }}>
+            Recent (2Y)
+          </div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            fontSize: '24px',
+            fontWeight: '700',
+            color: colors.primary,
+            marginBottom: spacing[1]
+          }}>
+            {stats.topVenuePubs}
+          </div>
+          <div style={{
+            fontSize: '12px',
+            color: colors.textSecondary,
+            fontWeight: '500'
+          }}>
+            Top Venue
+          </div>
+        </div>
+      </div>
+
+      {/* Research Areas */}
+      {researchAreas.length > 0 && (
+        <div style={{ marginBottom: spacing[5] }}>
+          <h4 style={{
+            fontSize: '16px',
+            fontWeight: '600',
+            color: colors.textPrimary,
+            marginBottom: spacing[3],
+            margin: '0 0 16px 0'
+          }}>
+            Research Areas
+          </h4>
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: spacing[2]
+          }}>
+            {researchAreas.map((area, index) => (
+              <span
+                key={index}
+                style={{
+                  backgroundColor: `${colors.primary}10`,
+                  color: colors.primary,
+                  padding: `${spacing[1]} ${spacing[3]}`,
+                  borderRadius: '16px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  border: `1px solid ${colors.primary}20`
+                }}
+              >
+                {area}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Publications Header */}
+      <h4 style={{
+        fontSize: '16px',
+        fontWeight: '600',
+        color: colors.textPrimary,
+        marginBottom: spacing[4],
+        margin: '0 0 16px 0'
+      }}>
+        Recent Publications
+      </h4>
+
+      {/* Publications List - Pill Style */}
       <div style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: spacing[4]
+        gap: spacing[3]
       }}>
         {displayedPubs.map((pub, index) => (
           <div
             key={index}
             style={{
               padding: spacing[4],
-              backgroundColor: colors.background,
-              borderRadius: '8px',
+              backgroundColor: 'white',
+              borderRadius: '16px',
               border: `1px solid ${colors.border}`,
-              cursor: pub.url ? 'pointer' : 'default',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
               transition: 'all 0.2s ease',
-              ':hover': pub.url ? {
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                borderColor: colors.primary
-              } : {}
+              cursor: pub.url ? 'pointer' : 'default'
             }}
             onClick={() => handlePublicationClick(pub.url)}
           >
-            {/* Title */}
-            <h4 style={{
-              fontSize: '16px',
-              fontWeight: '600',
-              color: pub.url ? colors.primary : colors.textPrimary,
-              margin: 0,
-              marginBottom: spacing[2],
-              lineHeight: 1.4,
-              textDecoration: pub.url ? 'none' : 'none'
-            }}>
-              {pub.title || 'Untitled Publication'}
-              {pub.url && (
-                <ExternalLink
-                  size={14}
-                  style={{
-                    marginLeft: spacing[1],
-                    display: 'inline',
-                    verticalAlign: 'middle'
-                  }}
-                />
-              )}
-            </h4>
-
-            {/* Authors */}
-            {pub.authors && pub.authors.length > 0 && (
-              <p style={{
-                fontSize: '14px',
-                color: colors.textSecondary,
-                margin: 0,
-                marginBottom: spacing[2],
-                fontStyle: 'italic'
-              }}>
-                {formatAuthors(pub.authors)}
-              </p>
-            )}
-
-            {/* Publication Details */}
+            {/* Top Row - Venue and Award */}
             <div style={{
               display: 'flex',
-              flexWrap: 'wrap',
-              gap: spacing[3],
               alignItems: 'center',
-              fontSize: '14px',
-              color: colors.textTertiary
+              justifyContent: 'space-between',
+              marginBottom: spacing[2]
             }}>
-              {pub.journal && (
-                <span style={{ fontWeight: '500' }}>
-                  {pub.journal}
-                </span>
-              )}
-              {pub.year && (
-                <span>
-                  {pub.year}
-                </span>
-              )}
-              {pub.citation_count && pub.citation_count > 0 && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[2],
+                flexWrap: 'wrap'
+              }}>
+                {/* Venue Pill */}
+                {(pub.primaryVenueName || pub.journal) && (
+                  <span style={{
+                    backgroundColor: `${colors.primary}10`,
+                    color: colors.primary,
+                    padding: `${spacing[1]} ${spacing[3]}`,
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    border: `1px solid ${colors.primary}20`
+                  }}>
+                    {pub.primaryVenueName || pub.journal}
+                  </span>
+                )}
+
+                {/* Year Pill */}
+                {(pub.publicationYear || pub.year) && (
+                  <span style={{
+                    backgroundColor: colors.background,
+                    color: colors.textSecondary,
+                    padding: `${spacing[1]} ${spacing[3]}`,
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    border: `1px solid ${colors.border}`
+                  }}>
+                    {pub.publicationYear || pub.year}
+                  </span>
+                )}
+
+                {/* Top Venue Indicator */}
+                {pub.primaryVenueTier === 'Top' && (
+                  <span style={{
+                    backgroundColor: '#f59e0b10',
+                    color: '#f59e0b',
+                    padding: `${spacing[1]} ${spacing[2]}`,
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    border: '1px solid #f59e0b30'
+                  }}>
+                    TOP
+                  </span>
+                )}
+              </div>
+
+              {/* Award Badge */}
+              {pub.isAwardPaper && (
                 <span style={{
+                  backgroundColor: '#dc262620',
+                  color: '#dc2626',
+                  padding: `${spacing[1]} ${spacing[2]}`,
+                  borderRadius: '8px',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  border: '1px solid #dc262640',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: spacing[1],
-                  backgroundColor: `${colors.warning}15`,
-                  color: colors.warning,
-                  padding: `2px ${spacing[2]}`,
-                  borderRadius: '12px',
-                  fontSize: '12px',
-                  fontWeight: '600'
+                  gap: '4px'
                 }}>
-                  <Quote size={12} />
-                  {pub.citation_count} citations
+                  🏆 Award
                 </span>
               )}
             </div>
 
-            {/* Abstract (if available and not too long) */}
-            {pub.abstract && pub.abstract.length > 0 && pub.abstract.length < 200 && (
-              <p style={{
-                fontSize: '14px',
-                color: colors.textSecondary,
-                margin: 0,
-                marginTop: spacing[2],
-                lineHeight: 1.4
+            {/* Title */}
+            <h4 style={{
+              fontSize: '16px',
+              fontWeight: '600',
+              color: colors.textPrimary,
+              margin: 0,
+              marginBottom: spacing[2],
+              lineHeight: 1.3
+            }}>
+              {pub.title || 'Untitled Publication'}
+            </h4>
+
+            {/* Authors */}
+            <p style={{
+              fontSize: '14px',
+              color: colors.textSecondary,
+              margin: 0,
+              marginBottom: spacing[3],
+              fontStyle: 'italic'
+            }}>
+              {formatAuthors(pub.authors)}
+            </p>
+
+            {/* Bottom Row - Stats and Links */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: spacing[2]
+            }}>
+              {/* Citation Count */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[2]
               }}>
-                {pub.abstract}
-              </p>
-            )}
+                {(pub.citationCount > 0 || pub.citations > 0) && (
+                  <span style={{
+                    fontSize: '13px',
+                    color: colors.textTertiary,
+                    backgroundColor: colors.background,
+                    padding: `2px ${spacing[2]}`,
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.border}`
+                  }}>
+                    📈 {pub.citationCount || pub.citations} citations
+                  </span>
+                )}
+
+                {pub.isOpenAccess && (
+                  <span style={{
+                    fontSize: '12px',
+                    color: '#059669',
+                    backgroundColor: '#05966910',
+                    padding: `2px ${spacing[2]}`,
+                    borderRadius: '6px',
+                    fontWeight: '500'
+                  }}>
+                    Open Access
+                  </span>
+                )}
+              </div>
+
+              {/* External Link Indicator */}
+              {pub.url && (
+                <span style={{
+                  fontSize: '12px',
+                  color: colors.primary,
+                  fontWeight: '500'
+                }}>
+                  View Paper →
+                </span>
+              )}
+            </div>
           </div>
         ))}
       </div>
 
       {/* Show More/Less Button */}
-      {publications.length > 5 && (
-        <div style={{
-          textAlign: 'center',
-          marginTop: spacing[4]
-        }}>
+      {publications.length > 3 && (
+        <div style={{ textAlign: 'center', marginTop: spacing[4] }}>
           <button
             onClick={() => setShowAll(!showAll)}
             style={{
@@ -1130,8 +1712,7 @@ const PublicationsSection = ({ publications }) => {
               borderRadius: '8px',
               cursor: 'pointer',
               fontSize: '14px',
-              fontWeight: '600',
-              transition: 'all 0.2s ease'
+              fontWeight: '600'
             }}
           >
             {showAll ? 'Show Less' : `Show All ${publications.length} Publications`}
@@ -1146,15 +1727,474 @@ const PublicationsSection = ({ publications }) => {
           padding: spacing[6],
           color: colors.textTertiary
         }}>
-          <BookOpen size={48} color={colors.textTertiary} style={{ marginBottom: spacing[2] }} />
-          <p style={{
-            fontSize: '16px',
-            margin: 0
-          }}>
-            No publications available
+          <p style={{ fontSize: '16px', margin: 0 }}>
+            No publications available yet
           </p>
         </div>
       )}
+    </div>
+  );
+};
+
+// Publication Stats Component
+const PublicationStats = ({ stats }) => {
+  const formatNumber = (number) => {
+    if (number >= 1000) {
+      return `${(number / 1000).toFixed(1)}k`;
+    }
+    return number.toString();
+  };
+
+  const metrics = [
+    {
+      icon: '📚',
+      value: stats.totalPublications,
+      label: 'Total Publications',
+      trend: `↗ ${stats.thisYearPublications} in last 5 years`
+    },
+    {
+      icon: '📈',
+      value: formatNumber(stats.totalCitations),
+      label: 'Total Citations',
+      trend: 'Active research impact'
+    },
+    {
+      icon: '⭐',
+      value: stats.avgCitations,
+      label: 'Avg Citations/Paper',
+      trend: 'Research quality'
+    },
+    {
+      icon: '🔬',
+      value: stats.hIndex,
+      label: 'H-Index',
+      trend: 'Impact measure'
+    },
+    {
+      icon: '🔓',
+      value: `${stats.openAccessRate}%`,
+      label: 'Open Access',
+      trend: stats.openAccessRate >= 80 ? 'Excellent accessibility' : 'Good accessibility'
+    }
+  ];
+
+  return (
+    <div>
+      <h4 style={{
+        fontSize: '16px',
+        fontWeight: '600',
+        color: colors.textPrimary,
+        marginBottom: spacing[4],
+        margin: 0
+      }}>
+        Publication Overview
+      </h4>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: spacing[4],
+        marginTop: spacing[4]
+      }}>
+        {metrics.map((metric, index) => (
+          <div
+            key={index}
+            style={{
+              padding: spacing[4],
+              backgroundColor: colors.background,
+              borderRadius: '8px',
+              border: `1px solid ${colors.border}`,
+              textAlign: 'center'
+            }}
+          >
+            <div style={{
+              fontSize: '20px',
+              marginBottom: spacing[2]
+            }}>
+              {metric.icon}
+            </div>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              color: colors.textPrimary,
+              marginBottom: spacing[1]
+            }}>
+              {metric.value}
+            </div>
+            <div style={{
+              fontSize: '14px',
+              color: colors.textSecondary,
+              fontWeight: '500'
+            }}>
+              {metric.label}
+            </div>
+            {metric.trend && (
+              <div style={{
+                fontSize: '12px',
+                color: colors.textTertiary,
+                marginTop: spacing[1]
+              }}>
+                {metric.trend}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
+// Publication Timeline Component
+const PublicationTimeline = ({ yearlyStats }) => {
+  const years = Object.keys(yearlyStats).sort();
+  const values = years.map(year => yearlyStats[year]);
+  const maxValue = Math.max(...values, 1);
+
+  return (
+    <div>
+      <h4 style={{
+        fontSize: '16px',
+        fontWeight: '600',
+        color: colors.textPrimary,
+        marginBottom: spacing[4],
+        margin: 0
+      }}>
+        Publication Timeline
+      </h4>
+      <div style={{
+        padding: spacing[4],
+        backgroundColor: colors.background,
+        borderRadius: '8px',
+        border: `1px solid ${colors.border}`,
+        marginTop: spacing[4]
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'end',
+          justifyContent: 'space-between',
+          height: '80px',
+          gap: spacing[2]
+        }}>
+          {years.map((year, index) => {
+            const height = (values[index] / maxValue) * 60;
+            return (
+              <div
+                key={year}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  flex: 1
+                }}
+              >
+                <div style={{
+                  fontSize: '12px',
+                  color: colors.textSecondary,
+                  fontWeight: '600',
+                  marginBottom: spacing[1]
+                }}>
+                  {values[index]}
+                </div>
+                <div style={{
+                  width: '100%',
+                  height: `${Math.max(height, 2)}px`,
+                  backgroundColor: colors.primary,
+                  borderRadius: '2px',
+                  marginBottom: spacing[2]
+                }} />
+                <div style={{
+                  fontSize: '11px',
+                  color: colors.textTertiary,
+                  fontWeight: '500'
+                }}>
+                  {year}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Publication Item Component - Enhanced version based on Flutter implementation
+const PublicationItem = ({ publication, onPublicationClick }) => {
+  // Get venue tier styling (based on Flutter implementation)
+  const getVenueTierStyle = (venueTier) => {
+    switch (venueTier?.toLowerCase()) {
+      case 'top':
+        return {
+          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+          color: 'white'
+        };
+      case 'high':
+        return {
+          background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+          color: 'white'
+        };
+      case 'medium':
+        return {
+          background: 'linear-gradient(135deg, #10b981, #059669)',
+          color: 'white'
+        };
+      default:
+        return {
+          backgroundColor: '#6b7280',
+          color: 'white'
+        };
+    }
+  };
+
+  const formatAuthors = (authors) => {
+    if (!authors || authors.length === 0) return 'Unknown Authors';
+    if (authors.length <= 3) {
+      return authors.join(', ');
+    }
+    return `${authors.slice(0, 3).join(', ')} et al.`;
+  };
+
+  const venueTierStyle = getVenueTierStyle(publication.primaryVenueTier);
+
+  return (
+    <div style={{
+      padding: spacing[5],
+      border: `1px solid ${colors.border}`,
+      borderRadius: '8px',
+      backgroundColor: 'white',
+      marginBottom: spacing[4]
+    }}>
+      {/* Header with venue and badges */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: spacing[3]
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
+          {/* Venue Badge */}
+          <span style={{
+            padding: `${spacing[1]} ${spacing[2]}`,
+            borderRadius: '4px',
+            fontSize: '11px',
+            fontWeight: '600',
+            ...venueTierStyle
+          }}>
+            {publication.primaryVenueName || publication.journal || 'Journal'}
+          </span>
+
+          {/* Award Paper Badge */}
+          {publication.isAwardPaper && (
+            <span style={{
+              padding: `${spacing[1]} ${spacing[2]}`,
+              backgroundColor: '#fef3c7',
+              color: '#92400e',
+              borderRadius: '4px',
+              fontSize: '11px',
+              fontWeight: '600'
+            }}>
+              🏆 Best Paper
+            </span>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
+          <span style={{
+            color: colors.textSecondary,
+            fontSize: '14px',
+            fontWeight: '500'
+          }}>
+            {publication.year || publication.publicationYear}
+          </span>
+        </div>
+      </div>
+
+      {/* Title */}
+      <h4 style={{
+        fontSize: '16px',
+        fontWeight: '600',
+        color: colors.textPrimary,
+        margin: 0,
+        marginBottom: spacing[2],
+        lineHeight: 1.4,
+        cursor: publication.url || publication.paperUrl ? 'pointer' : 'default'
+      }}
+      onClick={() => onPublicationClick(publication.url || publication.paperUrl)}
+      >
+        {publication.title}
+      </h4>
+
+      {/* Authors */}
+      <p style={{
+        fontSize: '14px',
+        color: colors.textSecondary,
+        margin: 0,
+        marginBottom: spacing[3],
+        fontStyle: 'italic'
+      }}>
+        {formatAuthors(publication.authors)}
+      </p>
+
+      {/* Metrics */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: spacing[4],
+        marginBottom: spacing[3]
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[1] }}>
+          <span style={{ fontSize: '12px' }}>📈</span>
+          <span style={{ fontSize: '13px', color: colors.textSecondary }}>
+            {publication.citations || publication.citationCount || 0} citations
+          </span>
+        </div>
+
+        {publication.githubStars && publication.githubStars > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: spacing[1] }}>
+            <span style={{ fontSize: '12px' }}>⭐</span>
+            <span style={{ fontSize: '13px', color: colors.textSecondary }}>
+              {publication.githubStars} GitHub stars
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Abstract */}
+      {publication.abstract && (
+        <p style={{
+          fontSize: '14px',
+          color: colors.textSecondary,
+          margin: 0,
+          marginBottom: spacing[3],
+          lineHeight: 1.5,
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden'
+        }}>
+          {publication.abstract}
+        </p>
+      )}
+
+      {/* Additional Notes */}
+      {publication.additionalNotes && (
+        <div style={{
+          padding: spacing[2],
+          backgroundColor: '#f8fafc',
+          border: `1px solid #e2e8f0`,
+          borderRadius: '6px',
+          marginBottom: spacing[3]
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: spacing[1] }}>
+            <span style={{ fontSize: '12px' }}>💡</span>
+            <span style={{
+              fontSize: '12px',
+              color: '#475569',
+              fontStyle: 'italic',
+              lineHeight: 1.4
+            }}>
+              {publication.additionalNotes}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Keywords/Research Areas */}
+      {(publication.keywords || publication.researchAreaNames) && (
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: spacing[1],
+          marginBottom: spacing[3]
+        }}>
+          {(publication.keywords || publication.researchAreaNames || []).slice(0, 4).map((keyword, index) => (
+            <span
+              key={index}
+              style={{
+                backgroundColor: '#f3f4f6',
+                color: '#374151',
+                padding: `2px ${spacing[2]}`,
+                borderRadius: '12px',
+                fontSize: '11px',
+                fontWeight: '500'
+              }}
+            >
+              {keyword}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Links */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: spacing[2]
+      }}>
+        {(publication.url || publication.paperUrl) && (
+          <a
+            href={publication.url || publication.paperUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: colors.primary,
+              textDecoration: 'none',
+              fontSize: '12px',
+              fontWeight: '500'
+            }}
+          >
+            📄 Paper
+          </a>
+        )}
+
+        {publication.codeUrl && (
+          <a
+            href={publication.codeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: colors.primary,
+              textDecoration: 'none',
+              fontSize: '12px',
+              fontWeight: '500'
+            }}
+          >
+            💻 Code
+          </a>
+        )}
+
+        {publication.doi && (
+          <a
+            href={`https://doi.org/${publication.doi}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: colors.primary,
+              textDecoration: 'none',
+              fontSize: '12px',
+              fontWeight: '500'
+            }}
+          >
+            🔗 DOI
+          </a>
+        )}
+
+        {publication.arxivId && (
+          <a
+            href={`https://arxiv.org/abs/${publication.arxivId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: colors.primary,
+              textDecoration: 'none',
+              fontSize: '12px',
+              fontWeight: '500'
+            }}
+          >
+            🔗 ArXiv
+          </a>
+        )}
+      </div>
     </div>
   );
 };
@@ -1232,9 +2272,8 @@ const ReviewsSection = ({ lab, onWriteReview }) => {
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: spacing[2]
+          gap: spacing[3]
         }}>
-          <MessageCircle size={24} color={colors.primary} />
           <h3 style={{
             fontSize: '20px',
             fontWeight: '700',
@@ -1243,39 +2282,31 @@ const ReviewsSection = ({ lab, onWriteReview }) => {
           }}>
             Recent Reviews
           </h3>
-        </div>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing[3]
-        }}>
           <span style={{
-            backgroundColor: `${colors.primary}15`,
-            color: colors.primary,
-            padding: `${spacing[1]} ${spacing[3]}`,
-            borderRadius: '16px',
             fontSize: '14px',
-            fontWeight: '600'
+            color: colors.textSecondary,
+            fontWeight: '500'
           }}>
-            {reviews.length} reviews
+            ({reviews.length})
           </span>
-          <button
-            onClick={onWriteReview}
-            style={{
-              backgroundColor: colors.primary,
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              padding: `${spacing[2]} ${spacing[4]}`,
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            Write Review
-          </button>
         </div>
+        <button
+          onClick={onWriteReview}
+          style={{
+            backgroundColor: colors.primary,
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            padding: `${spacing[2]} ${spacing[4]}`,
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          Write Review
+        </button>
       </div>
 
       {loading ? (

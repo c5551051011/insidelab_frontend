@@ -108,12 +108,12 @@ const WriteReviewPage = () => {
 
       // Fallback categories
       const fallbackCategories = [
-        'Mentorship Quality',
-        'Research Environment',
-        'Work-Life Balance',
-        'Career Support',
-        'Funding & Resources',
-        'Collaboration Culture'
+        t('writeReview.categories.mentorshipQuality', 'Mentorship Quality'),
+        t('writeReview.categories.researchEnvironment', 'Research Environment'),
+        t('writeReview.categories.workLifeBalance', 'Work-Life Balance'),
+        t('writeReview.categories.careerSupport', 'Career Support'),
+        t('writeReview.categories.fundingResources', 'Funding & Resources'),
+        t('writeReview.categories.collaborationCulture', 'Collaboration Culture')
       ];
 
       setRatingCategories(fallbackCategories);
