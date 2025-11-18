@@ -41,8 +41,9 @@ const LabCard = ({
   const handleClick = (e) => {
     if (!onClick) return;
 
-    // Get the lab URL
-    const labUrl = `/lab/${encodeURIComponent(labInstance.professorName)}`;
+    // Get the lab URL - same format as SearchPage handleLabClick
+    const labNameUrl = labInstance.labName.toLowerCase().replace(/\s+/g, '-');
+    const labUrl = `/lab/${labNameUrl}`;
 
     // Ctrl/Cmd + Click = New tab
     if (e.ctrlKey || e.metaKey) {
