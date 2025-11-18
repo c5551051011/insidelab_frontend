@@ -10,6 +10,7 @@ import { SearchService } from '../services/searchService';
 import { SearchFilter } from '../models/Lab';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useTranslation } from '../i18n';
+import { trackSearch, trackFilterChange, trackPageView } from '../lib/analytics/trackEvent';
 
 const SearchPage = () => {
   const navigate = useNavigate();
@@ -86,12 +87,28 @@ const SearchPage = () => {
 
   // Handle search submit
   const handleSearchSubmit = (searchQuery) => {
+    // Track search event
+    trackSearch(searchQuery, filters.toJSON());
     performSearch(searchQuery, filters, 1, false);
   };
 
   // Handle filter changes
   const handleFiltersChange = (newFilters) => {
     const filterInstance = new SearchFilter(newFilters);
+
+    // Track filter change
+    const changedFilters = Object.keys(newFilters).filter(key => {
+      return JSON.stringify(newFilters[key]) !== JSON.stringify(filters.toJSON()[key]);
+    });
+
+    if (changedFilters.length > 0) {
+      trackFilterChange(
+        changedFilters.join(','),
+        changedFilters.map(key => newFilters[key]).join(','),
+        newFilters
+      );
+    }
+
     setFilters(filterInstance);
 
     // Perform search with new filters if there's a query or active filters
@@ -111,7 +128,7 @@ const SearchPage = () => {
   const handleLabClick = (lab) => {
     // Convert lab name to URL-friendly format but pass lab ID as state
     const labNameUrl = lab.labName.toLowerCase().replace(/\s+/g, '-');
-    navigate(`/lab/${labNameUrl}`, { state: { labId: lab.id } });
+    navigate(`/lab/${labNameUrl}`, { state: { labId: lab.id, from: 'search' } });
   };
 
   // Load initial data on mount - either from URL query or popular labs
@@ -175,6 +192,14 @@ const SearchPage = () => {
       return () => clearTimeout(timeoutId);
     }
   }, [query, filters, performSearch, initialLoad]);
+
+  // Track page view on mount
+  useEffect(() => {
+    trackPageView('/search', {
+      hasQuery: !!searchParams.get('q'),
+      query: searchParams.get('q') || undefined,
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.background }}>

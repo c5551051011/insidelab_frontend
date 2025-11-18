@@ -20,7 +20,6 @@ import Footer from '../components/Footer';
 import { colors, spacing } from '../theme';
 import { SearchService } from '../services/searchService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import { useTranslation } from '../i18n';
 
 // Helper function to add mock publications based on lab/professor name and research areas
 const addMockPublications = (labData) => {
@@ -403,7 +402,6 @@ const generateAuthors = (professorName) => {
 };
 
 const LabDetailPage = () => {
-  const { t } = useTranslation();
   const { name } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
