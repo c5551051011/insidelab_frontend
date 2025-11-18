@@ -21,6 +21,19 @@ const FilterSidebar = ({
   });
   const [selectedCountry, setSelectedCountry] = useState('');
 
+  // Initialize selectedCountry based on selected universities
+  useEffect(() => {
+    if (filters.universities.length > 0 && filterOptions.universities.length > 0) {
+      // Find the country of the first selected university
+      const selectedUni = filterOptions.universities.find(
+        uni => filters.universities.includes(uni.id || uni.name || uni)
+      );
+      if (selectedUni && selectedUni.country) {
+        setSelectedCountry(selectedUni.country);
+      }
+    }
+  }, [filters.universities, filterOptions.universities]);
+
   // Load filter options
   useEffect(() => {
     const loadFilterOptions = async () => {
