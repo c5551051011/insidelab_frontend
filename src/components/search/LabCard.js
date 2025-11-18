@@ -37,11 +37,29 @@ const LabCard = ({
     );
   };
 
-  // Handle card click
-  const handleClick = () => {
-    if (onClick) {
-      onClick(labInstance);
+  // Handle card click with modifier keys support
+  const handleClick = (e) => {
+    if (!onClick) return;
+
+    // Get the lab URL
+    const labUrl = `/lab/${encodeURIComponent(labInstance.professorName)}`;
+
+    // Ctrl/Cmd + Click = New tab
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      window.open(labUrl, '_blank', 'noopener,noreferrer');
+      return;
     }
+
+    // Shift + Click = New window
+    if (e.shiftKey) {
+      e.preventDefault();
+      window.open(labUrl, '_blank', 'width=1200,height=800,noopener,noreferrer');
+      return;
+    }
+
+    // Normal click = Navigate in same page
+    onClick(labInstance);
   };
 
   // Handle external link clicks (prevent event bubbling)
