@@ -97,7 +97,7 @@ const CtaSection = () => {
           </Link>
 
           <Link
-            to="/reviews"
+            to="/search"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -123,7 +123,7 @@ const CtaSection = () => {
               e.target.style.borderColor = 'white';
             }}
           >
-            {t('home.cta.browseReviews', 'Browse Reviews')}
+            {t('home.cta.browseLabs', 'Browse Labs')}
           </Link>
         </div>
 

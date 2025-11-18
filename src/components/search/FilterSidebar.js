@@ -82,7 +82,7 @@ const FilterSidebar = ({
   const handleRatingChange = (rating) => {
     onFiltersChange({
       ...filters,
-      rating: parseFloat(rating)
+      rating: rating === filters.rating ? 0 : rating // Toggle off if same rating selected
     });
   };
 
@@ -289,41 +289,44 @@ const FilterSidebar = ({
 
       {/* Minimum Rating */}
       <FilterSection title="Minimum Rating">
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
-          <input
-            type="range"
-            min="0"
-            max="5"
-            step="0.1"
-            value={filters.rating}
-            onChange={(e) => handleRatingChange(e.target.value)}
-            style={{
-              flex: 1,
-              height: '4px',
-              background: colors.border,
-              borderRadius: '2px',
-              outline: 'none',
-              cursor: 'pointer'
-            }}
-          />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Star
-              size={16}
-              fill={filters.rating > 0 ? colors.warning : 'none'}
-              color={colors.warning}
-            />
-            <span
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing[2] }}>
+          {[1, 2, 3, 4, 5].map(rating => (
+            <button
+              key={rating}
+              onClick={() => handleRatingChange(rating)}
               style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '36px',
+                height: '36px',
+                padding: 0,
+                border: `1px solid ${filters.rating === rating ? colors.primary : colors.border}`,
+                borderRadius: '50%',
+                backgroundColor: filters.rating === rating ? colors.primary + '10' : 'transparent',
+                color: filters.rating === rating ? colors.primary : colors.textSecondary,
                 fontSize: '14px',
-                fontWeight: '500',
-                minWidth: '30px',
+                fontWeight: '600',
                 fontFamily: 'Inter',
-                color: colors.textPrimary
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (filters.rating !== rating) {
+                  e.target.style.backgroundColor = colors.border + '50';
+                  e.target.style.color = colors.textPrimary;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (filters.rating !== rating) {
+                  e.target.style.backgroundColor = 'transparent';
+                  e.target.style.color = colors.textSecondary;
+                }
               }}
             >
-              {filters.rating.toFixed(1)}
-            </span>
-          </div>
+              {rating}
+            </button>
+          ))}
         </div>
       </FilterSection>
 

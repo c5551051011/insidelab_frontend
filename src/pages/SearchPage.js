@@ -172,10 +172,8 @@ const SearchPage = () => {
     // Update URL params with new filters
     updateURLParams(query, filterInstance);
 
-    // Perform search with new filters if there's a query or active filters
-    if (query.trim() || filterInstance.hasActiveFilters()) {
-      performSearch(query, filterInstance, 1, false);
-    }
+    // Always perform search when filters change to update results
+    performSearch(query, filterInstance, 1, false);
   };
 
   // Handle load more

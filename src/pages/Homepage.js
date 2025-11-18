@@ -2,7 +2,7 @@ import React from 'react';
 import Header from '../components/Header';
 import HeroSection from '../components/HeroSection';
 import TrustedMetricsSection from '../components/TrustedMetricsSection';
-import ServicesSection from '../components/ServicesSection';
+import MockInterviewSection from '../components/MockInterviewSection';
 import TestimonialsSection from '../components/TestimonialsSection';
 import CtaSection from '../components/CtaSection';
 import Footer from '../components/Footer';
@@ -14,7 +14,7 @@ const Homepage = () => {
       <main>
         <HeroSection />
         <TrustedMetricsSection />
-        <ServicesSection />
+        <MockInterviewSection />
         <TestimonialsSection />
         <CtaSection />
       </main>

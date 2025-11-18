@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, FileText, Video } from 'lucide-react';
-import { PrimaryButton, SecondaryButton } from './Button';
+import { Search } from 'lucide-react';
 import { colors, gradients, spacing, sectionSpacing } from '../theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useTranslation } from '../i18n';
@@ -162,42 +161,6 @@ const HeroSection = () => {
               />
             </form>
 
-          </div>
-
-          {/* Action Buttons - Fixed positioning */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: isMobile ? 'column' : 'row',
-              gap: isMobile ? spacing[3] : spacing[6],
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: isMobile ? '100%' : '100%',
-              maxWidth: isMobile ? '90%' : '500px',
-              position: 'relative',
-              opacity: 1,
-              transition: 'none',
-            }}
-          >
-            <PrimaryButton
-              to="/write-review"
-              icon={FileText}
-              size={isMobile ? 'small' : 'compact'}
-              variant="outline"
-              style={isMobile ? { width: '100%' } : {}}
-            >
-              {t('home.hero.writeReview', 'Write Review')}
-            </PrimaryButton>
-
-            <SecondaryButton
-              to="/services/mock-interview"
-              icon={Video}
-              size={isMobile ? 'small' : 'compact'}
-              variant="outline"
-              style={isMobile ? { width: '100%' } : {}}
-            >
-              {t('home.hero.mockInterview', 'Book Mock Interview')}
-            </SecondaryButton>
           </div>
         </div>
       </div>
