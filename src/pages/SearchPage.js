@@ -14,12 +14,61 @@ import { trackSearch, trackFilterChange, trackPageView } from '../lib/analytics/
 
 const SearchPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslation();
 
-  // State management
-  const [query, setQuery] = useState('');
-  const [filters, setFilters] = useState(new SearchFilter());
+  // Helper function to parse filters from URL params
+  const parseFiltersFromURL = useCallback(() => {
+    const filterData = {};
+
+    // Parse rating
+    const rating = searchParams.get('rating');
+    if (rating) filterData.rating = parseInt(rating, 10);
+
+    // Parse universities (comma-separated)
+    const universities = searchParams.get('universities');
+    if (universities) filterData.universities = universities.split(',').filter(Boolean);
+
+    // Parse research areas (comma-separated)
+    const researchAreas = searchParams.get('researchAreas');
+    if (researchAreas) filterData.researchAreas = researchAreas.split(',').filter(Boolean);
+
+    // Parse tags (comma-separated)
+    const tags = searchParams.get('tags');
+    if (tags) filterData.tags = tags.split(',').filter(Boolean);
+
+    // Parse sortBy
+    const sortBy = searchParams.get('sortBy');
+    if (sortBy) filterData.sortBy = sortBy;
+
+    // Parse recruitmentOnly
+    const recruitmentOnly = searchParams.get('recruitmentOnly');
+    if (recruitmentOnly === 'true') filterData.recruitmentOnly = true;
+
+    return new SearchFilter(filterData);
+  }, [searchParams]);
+
+  // Helper function to update URL params with filters
+  const updateURLParams = useCallback((query, filters) => {
+    const params = new URLSearchParams();
+
+    // Add query
+    if (query) params.set('q', query);
+
+    // Add filters
+    if (filters.rating > 0) params.set('rating', filters.rating.toString());
+    if (filters.universities.length > 0) params.set('universities', filters.universities.join(','));
+    if (filters.researchAreas.length > 0) params.set('researchAreas', filters.researchAreas.join(','));
+    if (filters.tags.length > 0) params.set('tags', filters.tags.join(','));
+    if (filters.sortBy !== 'rating') params.set('sortBy', filters.sortBy);
+    if (filters.recruitmentOnly) params.set('recruitmentOnly', 'true');
+
+    setSearchParams(params, { replace: true });
+  }, [setSearchParams]);
+
+  // State management - initialize from URL params
+  const [query, setQuery] = useState(() => searchParams.get('q') || '');
+  const [filters, setFilters] = useState(() => parseFiltersFromURL());
   const [searchResults, setSearchResults] = useState({
     results: [],
     total: 0,
@@ -89,6 +138,10 @@ const SearchPage = () => {
   const handleSearchSubmit = (searchQuery) => {
     // Track search event
     trackSearch(searchQuery, filters.toJSON());
+
+    // Update URL params
+    updateURLParams(searchQuery, filters);
+
     performSearch(searchQuery, filters, 1, false);
   };
 
@@ -110,6 +163,9 @@ const SearchPage = () => {
     }
 
     setFilters(filterInstance);
+
+    // Update URL params with new filters
+    updateURLParams(query, filterInstance);
 
     // Perform search with new filters if there's a query or active filters
     if (query.trim() || filterInstance.hasActiveFilters()) {
@@ -139,17 +195,15 @@ const SearchPage = () => {
       try {
         setLoading(true);
 
-        // Check if there's a query parameter in the URL
-        const urlQuery = searchParams.get('q');
+        // Parse query and filters from URL
+        const urlQuery = searchParams.get('q') || '';
+        const urlFilters = parseFiltersFromURL();
 
-        if (urlQuery) {
-          // If there's a query in URL, set it and search
-          setQuery(urlQuery);
-
-          // Perform search directly to avoid closure issues
+        if (urlQuery || urlFilters.hasActiveFilters()) {
+          // If there's a query or filters in URL, search with them
           const response = await SearchService.searchLabs(
             urlQuery,
-            new SearchFilter().toJSON(),
+            urlFilters.toJSON(),
             1,
             20
           );
@@ -180,7 +234,7 @@ const SearchPage = () => {
     };
 
     loadInitialData();
-  }, [initialLoad, searchParams, t]);
+  }, [initialLoad, searchParams, t, parseFiltersFromURL]);
 
   // Auto-search when filters change (debounced)
   useEffect(() => {
