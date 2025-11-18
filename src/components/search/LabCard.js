@@ -41,17 +41,8 @@ const LabCard = ({
   const handleClick = (e) => {
     if (!onClick) return;
 
-    // Get the lab URL - same format as SearchPage handleLabClick
-    const labNameUrl = labInstance.labName.toLowerCase().replace(/\s+/g, '-');
-    const labUrl = `/lab/${labNameUrl}`;
-
-    // Store lab ID in sessionStorage for LabDetailPage to use
-    // This is necessary because window.open cannot pass state
-    if (labInstance.id) {
-      const storageKey = `labId_${labNameUrl}`;
-      sessionStorage.setItem(storageKey, labInstance.id);
-      sessionStorage.setItem(`${storageKey}_timestamp`, Date.now().toString());
-    }
+    // Use lab ID directly in URL
+    const labUrl = `/lab/${labInstance.id}`;
 
     // Ctrl/Cmd + Click = New tab
     if (e.ctrlKey || e.metaKey) {

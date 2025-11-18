@@ -404,7 +404,7 @@ const generateAuthors = (professorName) => {
 };
 
 const LabDetailPage = () => {
-  const { name } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const [lab, setLab] = useState(null);
@@ -421,40 +421,9 @@ const LabDetailPage = () => {
         setLoading(true);
         setError(null);
 
-        // Try to get lab ID from multiple sources:
-        // 1. Navigation state (direct navigation)
-        // 2. SessionStorage (refresh case)
-        // 3. Fallback to name-based lookup
-        let labId = location.state?.labId;
-
-        if (!labId) {
-          // Check sessionStorage for labId using the lab name as key
-          const storageKey = `labId_${name}`;
-          labId = sessionStorage.getItem(storageKey);
-          console.log('Retrieved lab ID from sessionStorage:', labId);
-        }
-
-        let labData;
-        if (labId) {
-          console.log('Using lab ID:', labId);
-          labData = await SearchService.getLabById(labId);
-
-          // Store labId in sessionStorage for future refreshes
-          const storageKey = `labId_${name}`;
-          sessionStorage.setItem(storageKey, labId);
-          sessionStorage.setItem(`${storageKey}_timestamp`, Date.now().toString());
-        } else {
-          console.log('No lab ID available, falling back to name-based search:', name);
-          labData = await SearchService.getLabByName(name);
-
-          // If we successfully get lab data, store the labId for future use
-          if (labData?.id) {
-            const storageKey = `labId_${name}`;
-            sessionStorage.setItem(storageKey, labData.id);
-            sessionStorage.setItem(`${storageKey}_timestamp`, Date.now().toString());
-            console.log('Stored lab ID in sessionStorage:', labData.id);
-          }
-        }
+        // Use lab ID directly from URL
+        console.log('Loading lab with ID:', id);
+        const labData = await SearchService.getLabById(id);
 
         // Check if we have complete data with IDs for write review functionality
         if (labData && (!labData.professorId || !labData.universityId || !labData.departmentId)) {
@@ -495,10 +464,10 @@ const LabDetailPage = () => {
       }
     };
 
-    if (name) {
+    if (id) {
       loadLabDetails();
     }
-  }, [name, location.state]);
+  }, [id]);
 
   // Track lab view when lab data is loaded
   useEffect(() => {
@@ -512,37 +481,12 @@ const LabDetailPage = () => {
       });
 
       // Track page view
-      trackPageView(`/lab/${name}`, {
+      trackPageView(`/lab/${id}`, {
         labId: lab.id,
         labName: lab.labName,
       });
     }
-  }, [lab, name, location.state]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Cleanup old sessionStorage entries on component unmount
-  useEffect(() => {
-    return () => {
-      // Clean up sessionStorage entries older than 1 hour to prevent accumulation
-      const currentTime = Date.now();
-      const oneHour = 60 * 60 * 1000;
-
-      for (let i = sessionStorage.length - 1; i >= 0; i--) {
-        const key = sessionStorage.key(i);
-        if (key && key.startsWith('labId_')) {
-          try {
-            const timestamp = sessionStorage.getItem(`${key}_timestamp`);
-            if (timestamp && currentTime - parseInt(timestamp) > oneHour) {
-              sessionStorage.removeItem(key);
-              sessionStorage.removeItem(`${key}_timestamp`);
-            }
-          } catch (error) {
-            // If there's any error, just remove the key
-            sessionStorage.removeItem(key);
-          }
-        }
-      }
-    };
-  }, []);
+  }, [lab, id, location.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleBookmarkToggle = () => {
     const newBookmarkState = !isBookmarked;

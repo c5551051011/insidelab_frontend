@@ -23,7 +23,7 @@ function App() {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/write-review" element={<WriteReviewPage />} />
             <Route path="/profile" element={<MyProfilePage />} />
-            <Route path="/lab/:name" element={<LabDetailPage />} />
+            <Route path="/lab/:id" element={<LabDetailPage />} />
             <Route path="/services/mock-interview" element={<MockInterviewBookingPage />} />
             <Route path="/my-sessions" element={<MySessionsPage />} />
           </Routes>

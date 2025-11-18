@@ -182,9 +182,8 @@ const SearchPage = () => {
 
   // Handle lab card click
   const handleLabClick = (lab) => {
-    // Convert lab name to URL-friendly format but pass lab ID as state
-    const labNameUrl = lab.labName.toLowerCase().replace(/\s+/g, '-');
-    navigate(`/lab/${labNameUrl}`, { state: { labId: lab.id, from: 'search' } });
+    // Navigate using lab ID directly in URL
+    navigate(`/lab/${lab.id}`, { state: { from: 'search' } });
   };
 
   // Load initial data on mount - either from URL query or popular labs
