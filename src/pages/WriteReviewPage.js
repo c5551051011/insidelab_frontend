@@ -125,7 +125,7 @@ const WriteReviewPage = () => {
       );
       setIsLoadingCategories(false);
     }
-  }, []);
+  }, [t]);
 
   const checkAuthenticationStatus = useCallback(async () => {
     try {
