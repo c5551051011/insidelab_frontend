@@ -20,6 +20,8 @@ import Footer from '../components/Footer';
 import { colors, spacing } from '../theme';
 import { SearchService } from '../services/searchService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { useTranslation } from '../i18n';
+import { trackLabView, trackPageView, AnalyticsEvents, trackEvent } from '../lib/analytics/trackEvent';
 
 // Helper function to add mock publications based on lab/professor name and research areas
 const addMockPublications = (labData) => {
@@ -498,6 +500,25 @@ const LabDetailPage = () => {
     }
   }, [name, location.state]);
 
+  // Track lab view when lab data is loaded
+  useEffect(() => {
+    if (lab && lab.id) {
+      trackLabView(lab.id, {
+        labName: lab.labName,
+        professorName: lab.professorName,
+        universityName: lab.universityName,
+        univId: lab.universityId,
+        from: location.state?.from || 'direct',
+      });
+
+      // Track page view
+      trackPageView(`/lab/${name}`, {
+        labId: lab.id,
+        labName: lab.labName,
+      });
+    }
+  }, [lab, name, location.state]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Cleanup old sessionStorage entries on component unmount
   useEffect(() => {
     return () => {
@@ -524,7 +545,19 @@ const LabDetailPage = () => {
   }, []);
 
   const handleBookmarkToggle = () => {
-    setIsBookmarked(!isBookmarked);
+    const newBookmarkState = !isBookmarked;
+    setIsBookmarked(newBookmarkState);
+
+    // Track bookmark event
+    trackEvent(
+      newBookmarkState ? AnalyticsEvents.LAB_FAVORITE_ADDED : AnalyticsEvents.LAB_FAVORITE_REMOVED,
+      {
+        labId: lab?.id,
+        labName: lab?.labName,
+        professorName: lab?.professorName,
+      }
+    );
+
     // TODO: Add actual bookmark API call here
     console.log(`Lab ${isBookmarked ? 'unbookmarked' : 'bookmarked'}:`, lab?.id);
   };
@@ -541,6 +574,13 @@ const LabDetailPage = () => {
 
   const handleWriteReview = () => {
     console.log('DEBUG: Lab data for write review:', lab);
+
+    // Track review write started
+    trackEvent(AnalyticsEvents.REVIEW_WRITE_STARTED, {
+      labId: lab.id || lab.labId,
+      labName: lab.labName || lab.name,
+      professorName: lab.professorName,
+    });
 
     // Navigate to write review page with lab data in state
     navigate('/write-review', {
