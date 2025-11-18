@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { SearchService } from '../../services/searchService';
 

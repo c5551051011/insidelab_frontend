@@ -2,14 +2,12 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Video, Clock, Users, Award, Play } from 'lucide-react';
 import { PrimaryButton } from './Button';
-import { colors, shadows, textStyles, spacing, sectionSpacing, borderRadius, gradients } from '../theme';
+import { colors, shadows, spacing, sectionSpacing, borderRadius } from '../theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import { useTranslation } from '../i18n';
 
 const MockInterviewSection = () => {
   const navigate = useNavigate();
   const { isMobile, isTablet } = useBreakpoint();
-  const { t } = useTranslation();
 
   const handleBookInterview = () => {
     navigate('/services/mock-interview');
