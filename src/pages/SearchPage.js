@@ -25,9 +25,14 @@ const SearchPage = () => {
     const rating = searchParams.get('rating');
     if (rating) filterData.rating = parseInt(rating, 10);
 
-    // Parse universities (comma-separated)
+    // Parse universities (comma-separated, convert to numbers)
     const universities = searchParams.get('universities');
-    if (universities) filterData.universities = universities.split(',').filter(Boolean);
+    if (universities) {
+      filterData.universities = universities.split(',').filter(Boolean).map(u => {
+        const num = Number(u);
+        return isNaN(num) ? u : num; // Return number if valid, otherwise keep as string
+      });
+    }
 
     // Parse research areas (comma-separated)
     const researchAreas = searchParams.get('researchAreas');

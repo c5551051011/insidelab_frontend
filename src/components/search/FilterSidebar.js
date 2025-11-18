@@ -24,18 +24,32 @@ const FilterSidebar = ({
 
   // Convert university names/IDs from filters to IDs, and set selectedCountry
   useEffect(() => {
-    if (filterOptions.universities.length > 0) {
+    if (filterOptions.universities.length > 0 && filters.universities.length > 0) {
+      console.log('FilterSidebar - Original filters.universities:', filters.universities);
+      console.log('FilterSidebar - Available universities:', filterOptions.universities.slice(0, 3));
+
       const ids = filters.universities.map(uniValue => {
         // If it's already a number (ID), use it
-        if (typeof uniValue === 'number') return uniValue;
+        if (typeof uniValue === 'number') {
+          console.log(`University ${uniValue} is already a number`);
+          return uniValue;
+        }
 
         // Otherwise, try to find by name or convert string ID to number
         const matchingUni = filterOptions.universities.find(
           uni => uni.name === uniValue || String(uni.id) === uniValue || uni.id === Number(uniValue)
         );
+
+        if (matchingUni) {
+          console.log(`Matched university "${uniValue}" to ID ${matchingUni.id} (${matchingUni.name})`);
+        } else {
+          console.log(`Could not match university "${uniValue}"`);
+        }
+
         return matchingUni ? matchingUni.id : uniValue;
       });
 
+      console.log('FilterSidebar - Mapped university IDs:', ids);
       setMappedUniversityIds(ids);
 
       // Set country based on first selected university
