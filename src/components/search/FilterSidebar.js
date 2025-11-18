@@ -20,16 +20,30 @@ const FilterSidebar = ({
     sortOptions: []
   });
   const [selectedCountry, setSelectedCountry] = useState('');
+  const [mappedUniversityIds, setMappedUniversityIds] = useState([]);
 
-  // Initialize selectedCountry based on selected universities
+  // Convert university names/IDs from filters to IDs, and set selectedCountry
   useEffect(() => {
-    if (filters.universities.length > 0 && filterOptions.universities.length > 0) {
-      // Find the country of the first selected university
-      const selectedUni = filterOptions.universities.find(
-        uni => filters.universities.includes(uni.id || uni.name || uni)
-      );
-      if (selectedUni && selectedUni.country) {
-        setSelectedCountry(selectedUni.country);
+    if (filterOptions.universities.length > 0) {
+      const ids = filters.universities.map(uniValue => {
+        // If it's already a number (ID), use it
+        if (typeof uniValue === 'number') return uniValue;
+
+        // Otherwise, try to find by name or convert string ID to number
+        const matchingUni = filterOptions.universities.find(
+          uni => uni.name === uniValue || String(uni.id) === uniValue || uni.id === Number(uniValue)
+        );
+        return matchingUni ? matchingUni.id : uniValue;
+      });
+
+      setMappedUniversityIds(ids);
+
+      // Set country based on first selected university
+      if (ids.length > 0) {
+        const firstSelectedUni = filterOptions.universities.find(uni => ids.includes(uni.id));
+        if (firstSelectedUni && firstSelectedUni.country) {
+          setSelectedCountry(firstSelectedUni.country);
+        }
       }
     }
   }, [filters.universities, filterOptions.universities]);
@@ -345,7 +359,7 @@ const FilterSidebar = ({
             <CheckboxItem
               key={university.id || university.name}
               label={university.name || university}
-              checked={filters.universities.includes(university.id || university)}
+              checked={mappedUniversityIds.includes(university.id)}
               onChange={() => handleUniversityToggle(university.id || university)}
             />
           ))}
