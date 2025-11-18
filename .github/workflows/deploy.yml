@@ -1,14 +1,27 @@
-name: Deploy React App to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ react-version ]
+    branches:
+      - main
+      - react-version
+
+# Add permissions for GitHub Pages
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  # React 배포 (react-version 브랜치)
+  deploy-react:
+    if: github.ref == 'refs/heads/react-version'
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
     - name: Checkout
@@ -29,14 +42,61 @@ jobs:
       run: npm run build
 
     - name: Copy CNAME to build directory
-      run: cp CNAME build/
+      run: cp CNAME build/ || true
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
-      if: github.ref == 'refs/heads/react-version'
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./build
         publish_branch: gh-pages-react
         force_orphan: true
         enable_jekyll: false
+
+  # Flutter 배포 (main 브랜치)
+  deploy-flutter:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 저장소 가져오기
+      - name: 📦 Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Flutter 설치
+      - name: 🛠️ Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.4'
+          channel: 'stable'
+          cache: true
+
+      # 3. 의존성 설치
+      - name: 📚 Install dependencies
+        run: flutter pub get
+
+      # 4. Flutter 웹 빌드
+      - name: 🏗️ Build Flutter Web
+        run: flutter build web --release --web-renderer html --base-href "/"
+
+      # 5. SPA 라우팅 지원 (404.html 생성)
+      - name: 🔁 Copy 404.html for SPA routing
+        run: cp build/web/index.html build/web/404.html
+
+      # 6. 커스텀 도메인 (insidelab.io)
+      - name: 🌐 Add custom domain (CNAME)
+        run: echo "insidelab.io" > build/web/CNAME
+
+      # 7. Artifact 업로드
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'build/web'
+
+      # 8. GitHub Pages로 배포
+      - name: 🚀 Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+          publish_branch: gh-pages
