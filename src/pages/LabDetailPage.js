@@ -1781,7 +1781,7 @@ const ReviewsSection = ({ lab, onWriteReview }) => {
 
   useEffect(() => {
     const loadReviews = async () => {
-      if (!lab?.id) {
+      if (!lab?.professorId) {
         setLoading(false);
         return;
       }
@@ -1789,14 +1789,14 @@ const ReviewsSection = ({ lab, onWriteReview }) => {
       setLoading(true);
       try {
         const API_BASE_URL = 'https://insidelab.up.railway.app/api/v1';
-        const response = await fetch(`${API_BASE_URL}/reviews/?lab=${lab.id}`);
+        const response = await fetch(`${API_BASE_URL}/reviews/?professor=${lab.professorId}`);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch reviews: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('Loaded reviews for lab:', lab.id, data);
+        console.log('Loaded reviews for professor:', lab.professorId, data);
 
         // Transform API data to frontend format
         const transformedReviews = (data.results || data || []).map(review => ({
@@ -1824,7 +1824,7 @@ const ReviewsSection = ({ lab, onWriteReview }) => {
     };
 
     loadReviews();
-  }, [lab?.id]);
+  }, [lab?.professorId]);
 
   const displayedReviews = showAll ? reviews : reviews.slice(0, 3);
 
