@@ -358,7 +358,7 @@ const Header = () => {
                 text="Mock Interview"
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  window.location.href = '/mock-interview';
+                  window.location.href = '/services/mock-interview/';
                 }}
               />
 
@@ -367,7 +367,7 @@ const Header = () => {
                 text="Reviews"
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  window.location.href = '/search';
+                  window.location.href = '/write-review';
                 }}
               />
 
@@ -747,14 +747,14 @@ const ServicesMenu = ({ isOpen, onToggle, servicesMenuRef }) => {
           <ServiceMenuItem
             text="Mock Interview"
             onClick={() => {
-              window.location.href = '/mock-interview';
+              window.location.href = '/services/mock-interview/';
               onToggle();
             }}
           />
           <ServiceMenuItem
             text="Reviews"
             onClick={() => {
-              window.location.href = '/search';
+              window.location.href = '/write-review';
               onToggle();
             }}
           />
