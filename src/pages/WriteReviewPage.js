@@ -137,13 +137,12 @@ const WriteReviewPage = () => {
       }
 
       setIsCheckingAuth(false);
-      await loadRatingCategories();
 
     } catch (error) {
       console.error('Auth check failed:', error);
       navigate('/sign-in');
     }
-  }, [navigate, loadRatingCategories]);
+  }, [navigate]);
 
   // Pre-fill form from navigation state
   const prefillFormFromState = useCallback(async () => {
@@ -210,12 +209,19 @@ const WriteReviewPage = () => {
     }
   }, [location.state]);
 
-  // Check authentication on mount and prefill form
+  // Check authentication on mount
   useEffect(() => {
     checkAuthenticationStatus();
   }, [checkAuthenticationStatus]);
 
-  // Prefill form after authentication is checked
+  // Load rating categories once after auth check
+  useEffect(() => {
+    if (!isCheckingAuth) {
+      loadRatingCategories();
+    }
+  }, [isCheckingAuth]); // Only depends on isCheckingAuth, not loadRatingCategories
+
+  // Prefill form after authentication and categories are loaded
   useEffect(() => {
     if (!isCheckingAuth && !isLoadingCategories) {
       prefillFormFromState();
