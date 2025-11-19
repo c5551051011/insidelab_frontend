@@ -1058,9 +1058,12 @@ const InfoRow = ({ icon, label, value, isLink = false, onClick }) => {
   );
 };
 
-// Rating Breakdown Component
+// Rating Breakdown Component - Hexagon Radar Chart
 const RatingBreakdown = ({ lab }) => {
   const { t } = useTranslation();
+  const { width } = useBreakpoint();
+  const isMobile = width < 768;
+
   // Use actual rating breakdown from API, or fallback to mock data
   const getRatingBreakdown = () => {
     if (lab.ratingBreakdown) {
@@ -1070,16 +1073,18 @@ const RatingBreakdown = ({ lab }) => {
     // Fallback to mock data if API doesn't provide rating breakdown
     const baseRating = lab.overallRating;
     return {
-      [t('writeReview.categories.mentorshipQuality', 'Mentorship Quality')]: Math.min(5, Math.max(1, baseRating + 0.2)),
-      [t('writeReview.categories.researchEnvironment', 'Research Environment')]: Math.min(5, Math.max(1, baseRating - 0.1)),
-      [t('writeReview.categories.workLifeBalance', 'Work-Life Balance')]: Math.min(5, Math.max(1, baseRating - 0.3)),
-      [t('writeReview.categories.careerSupport', 'Career Support')]: Math.min(5, Math.max(1, baseRating + 0.1)),
-      [t('writeReview.categories.fundingResources', 'Funding & Resources')]: baseRating,
-      [t('writeReview.categories.collaborationCulture', 'Collaboration Culture')]: Math.min(5, Math.max(1, baseRating + 0.2))
+      [t('writeReview.categories.mentorshipQuality', 'Mentorship')]: Math.min(5, Math.max(1, baseRating + 0.2)),
+      [t('writeReview.categories.researchEnvironment', 'Research')]: Math.min(5, Math.max(1, baseRating - 0.1)),
+      [t('writeReview.categories.workLifeBalance', 'Work-Life')]: Math.min(5, Math.max(1, baseRating - 0.3)),
+      [t('writeReview.categories.careerSupport', 'Career')]: Math.min(5, Math.max(1, baseRating + 0.1)),
+      [t('writeReview.categories.fundingResources', 'Funding')]: baseRating,
+      [t('writeReview.categories.collaborationCulture', 'Collaboration')]: Math.min(5, Math.max(1, baseRating + 0.2))
     };
   };
 
   const ratings = getRatingBreakdown();
+  const categories = Object.keys(ratings);
+  const values = Object.values(ratings);
 
   return (
     <div style={{
@@ -1094,57 +1099,164 @@ const RatingBreakdown = ({ lab }) => {
         fontWeight: '700',
         color: colors.textPrimary,
         margin: 0,
-        marginBottom: spacing[4]
+        marginBottom: spacing[5]
       }}>
         Rating Breakdown
       </h3>
 
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: spacing[3]
-      }}>
-        {Object.entries(ratings).map(([category, rating]) => (
-          <div key={category}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: spacing[1]
-            }}>
-              <span style={{
-                fontSize: '14px',
-                fontWeight: '500',
-                color: colors.textPrimary
-              }}>
-                {category}
-              </span>
-              <span style={{
-                fontSize: '14px',
-                fontWeight: '600',
-                color: colors.primary
-              }}>
-                {rating.toFixed(1)}
-              </span>
-            </div>
+      <RadarChart
+        categories={categories}
+        values={values}
+        maxValue={5}
+        isMobile={isMobile}
+      />
+    </div>
+  );
+};
 
-            <div style={{
-              height: '6px',
-              backgroundColor: colors.backgroundLight,
-              borderRadius: '3px',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                height: '100%',
-                width: `${(rating / 5) * 100}%`,
-                backgroundColor: colors.primary,
-                borderRadius: '3px',
-                transition: 'width 0.3s ease'
-              }} />
-            </div>
-          </div>
-        ))}
-      </div>
+// Radar Chart Component
+const RadarChart = ({ categories, values, maxValue = 5, isMobile = false }) => {
+  const size = isMobile ? 280 : 320;
+  const center = size / 2;
+  const radius = (size / 2) - 80;
+  const levels = 5;
+
+  // Calculate polygon points
+  const getPoint = (value, index, total) => {
+    const angle = (Math.PI * 2 * index) / total - Math.PI / 2;
+    const distance = (value / maxValue) * radius;
+    return {
+      x: center + distance * Math.cos(angle),
+      y: center + distance * Math.sin(angle)
+    };
+  };
+
+  // Generate polygon points string for the data
+  const dataPoints = values.map((value, index) => {
+    const point = getPoint(value, index, values.length);
+    return `${point.x},${point.y}`;
+  }).join(' ');
+
+  // Generate level circles
+  const levelCircles = [];
+  for (let i = 1; i <= levels; i++) {
+    const levelRadius = (radius / levels) * i;
+    levelCircles.push(
+      <circle
+        key={`level-${i}`}
+        cx={center}
+        cy={center}
+        r={levelRadius}
+        fill="none"
+        stroke={colors.border}
+        strokeWidth="1"
+        opacity="0.3"
+      />
+    );
+  }
+
+  // Generate axis lines
+  const axisLines = categories.map((_, index) => {
+    const point = getPoint(maxValue, index, categories.length);
+    return (
+      <line
+        key={`axis-${index}`}
+        x1={center}
+        y1={center}
+        x2={point.x}
+        y2={point.y}
+        stroke={colors.border}
+        strokeWidth="1"
+        opacity="0.3"
+      />
+    );
+  });
+
+  // Generate labels
+  const labels = categories.map((category, index) => {
+    const point = getPoint(maxValue + 1.5, index, categories.length);
+    const angle = (Math.PI * 2 * index) / categories.length - Math.PI / 2;
+
+    // Adjust text anchor based on position
+    let textAnchor = 'middle';
+    if (point.x > center + 10) textAnchor = 'start';
+    if (point.x < center - 10) textAnchor = 'end';
+
+    return (
+      <g key={`label-${index}`}>
+        <text
+          x={point.x}
+          y={point.y}
+          textAnchor={textAnchor}
+          fontSize={isMobile ? '11px' : '12px'}
+          fontWeight="600"
+          fill={colors.textPrimary}
+          fontFamily="Inter"
+        >
+          {category}
+        </text>
+        <text
+          x={point.x}
+          y={point.y + (isMobile ? 14 : 16)}
+          textAnchor={textAnchor}
+          fontSize={isMobile ? '12px' : '14px'}
+          fontWeight="700"
+          fill={colors.primary}
+          fontFamily="Inter"
+        >
+          {values[index].toFixed(1)}
+        </text>
+      </g>
+    );
+  });
+
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center'
+    }}>
+      <svg width={size} height={size} style={{ overflow: 'visible' }}>
+        {/* Background grid */}
+        {levelCircles}
+        {axisLines}
+
+        {/* Data polygon - background */}
+        <polygon
+          points={dataPoints}
+          fill={colors.primary}
+          fillOpacity="0.1"
+          stroke="none"
+        />
+
+        {/* Data polygon - stroke */}
+        <polygon
+          points={dataPoints}
+          fill="none"
+          stroke={colors.primary}
+          strokeWidth="2"
+          strokeLinejoin="round"
+        />
+
+        {/* Data points */}
+        {values.map((value, index) => {
+          const point = getPoint(value, index, values.length);
+          return (
+            <circle
+              key={`point-${index}`}
+              cx={point.x}
+              cy={point.y}
+              r="4"
+              fill={colors.primary}
+              stroke="white"
+              strokeWidth="2"
+            />
+          );
+        })}
+
+        {/* Labels */}
+        {labels}
+      </svg>
     </div>
   );
 };
