@@ -219,7 +219,8 @@ const WriteReviewPage = () => {
     if (!isCheckingAuth) {
       loadRatingCategories();
     }
-  }, [isCheckingAuth]); // Only depends on isCheckingAuth, not loadRatingCategories
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCheckingAuth]); // Only depends on isCheckingAuth to prevent infinite loop
 
   // Prefill form after authentication and categories are loaded
   useEffect(() => {
