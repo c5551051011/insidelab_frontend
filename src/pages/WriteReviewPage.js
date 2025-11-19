@@ -971,7 +971,7 @@ const WriteReviewPage = () => {
                 {t('writeReview.form.overallRating', 'Overall Rating')} <span style={{ color: colors.error }}>{t('writeReview.form.required', '*')}</span>
               </label>
 
-              <div style={{ display: 'flex', gap: spacing[2] }}>
+              <div style={{ display: 'flex', gap: spacing[2], maxWidth: '400px' }}>
                 {[1, 2, 3, 4, 5].map(rating => (
                   <button
                     key={rating}
@@ -983,17 +983,18 @@ const WriteReviewPage = () => {
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      padding: spacing[3],
+                      padding: spacing[2],
                       border: `2px solid ${formData.overallRating === rating ? colors.primary : colors.border}`,
-                      borderRadius: '8px',
+                      borderRadius: '6px',
                       backgroundColor: formData.overallRating === rating ? colors.primary + '10' : colors.background,
                       color: formData.overallRating === rating ? colors.primary : colors.textSecondary,
-                      fontSize: '20px',
+                      fontSize: '16px',
                       fontWeight: '700',
                       fontFamily: 'Inter',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
-                      minHeight: '56px'
+                      minHeight: '44px',
+                      minWidth: '44px'
                     }}
                     onMouseEnter={(e) => {
                       if (formData.overallRating !== rating) {
