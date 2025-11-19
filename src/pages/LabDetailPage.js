@@ -818,7 +818,7 @@ const DesktopLayout = ({ lab, onWebsiteClick, onWriteReview }) => {
       alignItems: 'flex-start'
     }}>
       {/* Left Column */}
-      <div style={{ flex: 3 }}>
+      <div style={{ flex: 2.5 }}>
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -832,7 +832,7 @@ const DesktopLayout = ({ lab, onWebsiteClick, onWriteReview }) => {
       </div>
 
       {/* Right Column */}
-      <div style={{ flex: 2 }}>
+      <div style={{ flex: 1.5 }}>
         <div style={{
           display: 'flex',
           flexDirection: 'column',
