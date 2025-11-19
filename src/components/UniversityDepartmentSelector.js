@@ -205,15 +205,15 @@ const UniversityDepartmentSelector = ({
         value={selectedUniversityId}
         onChange={handleUniversityChange}
         options={[
-          ...universities.map(university => ({
-            value: university.id,
-            label: `${university.name} - ${university.city || university.country || ''}`
-          })),
           {
             value: "___ADD_NEW_UNIVERSITY___",
             label: t('common.forms.addNewUniversity', '+ Add New University'),
             style: { fontStyle: 'italic', color: colors.primary }
-          }
+          },
+          ...universities.map(university => ({
+            value: university.id,
+            label: `${university.name} - ${university.city || university.country || ''}`
+          }))
         ]}
         placeholder={t('common.forms.selectUniversity', 'Select a university')}
         loading={loadingUniversities}
@@ -226,15 +226,15 @@ const UniversityDepartmentSelector = ({
         value={selectedUniversityDepartmentId}
         onChange={handleDepartmentChange}
         options={[
-          ...departments.map(department => ({
-            value: department.id,
-            label: department.department_name || department.name
-          })),
           ...(selectedUniversityId ? [{
             value: "___ADD_NEW___",
             label: t('common.forms.addNewDepartment', '+ Add New Department'),
             style: { fontStyle: 'italic', color: colors.primary }
-          }] : [])
+          }] : []),
+          ...departments.map(department => ({
+            value: department.id,
+            label: department.department_name || department.name
+          }))
         ]}
         placeholder={
           !selectedUniversityId

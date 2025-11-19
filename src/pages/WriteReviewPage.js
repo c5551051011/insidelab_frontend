@@ -641,16 +641,16 @@ const WriteReviewPage = () => {
               value={formData.researchGroupId}
               onChange={handleResearchGroupChange}
               options={[
-                { value: "___NONE___", label: t('writeReview.form.noResearchGroup', 'No Research Group') },
-                ...researchGroups.map((group) => ({
-                  value: group.id,
-                  label: group.name
-                })),
                 ...(formData.departmentId && !isLoadingResearchGroups ? [{
                   value: "___ADD_NEW___",
                   label: t('writeReview.form.addNewResearchGroup', '+ Add New Research Group'),
                   style: { fontStyle: 'italic', color: colors.primary }
-                }] : [])
+                }] : []),
+                { value: "___NONE___", label: t('writeReview.form.noResearchGroup', 'No Research Group') },
+                ...researchGroups.map((group) => ({
+                  value: group.id,
+                  label: group.name
+                }))
               ]}
               placeholder={
                 !formData.departmentId
@@ -749,6 +749,34 @@ const WriteReviewPage = () => {
                     maxHeight: '200px',
                     overflowY: 'auto'
                   }}>
+                    {/* Add New Lab/Professor Option */}
+                    <div
+                      onClick={() => {
+                        setShowProfessorDropdown(false);
+                        setShowAddLabModal(true);
+                      }}
+                      style={{
+                        padding: spacing[3],
+                        cursor: 'pointer',
+                        borderBottom: `1px solid ${colors.border}`,
+                        backgroundColor: 'white',
+                        fontSize: '14px',
+                        fontFamily: 'Inter',
+                        color: colors.primary,
+                        fontStyle: 'italic',
+                        fontWeight: '600',
+                        transition: 'background-color 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = colors.background;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'white';
+                      }}
+                    >
+                      + Add New Professor/Lab
+                    </div>
+
                     {filteredProfessors.map((professor, index) => {
                       const displayName = professor.lab && professor.lab.name
                         ? `${professor.name} - ${professor.lab.name}`
