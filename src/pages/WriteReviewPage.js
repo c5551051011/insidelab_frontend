@@ -52,7 +52,7 @@ const WriteReviewPage = () => {
     labName: '',
     position: 'PhD Student',
     duration: '1 year',
-    overallRating: 4.0,
+    overallRating: 4,
     reviewText: '',
     pros: '',
     cons: ''
@@ -738,17 +738,17 @@ const WriteReviewPage = () => {
                 {showProfessorDropdown && filteredProfessors.length > 0 && (
                   <div style={{
                     position: 'absolute',
-                    top: 'calc(100% + 4px)',
+                    top: '100%',
                     left: 0,
                     right: 0,
-                    backgroundColor: '#E8E8E8',
+                    backgroundColor: 'white',
                     border: `2px solid ${colors.border}`,
                     borderRadius: '8px',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
                     zIndex: 1000,
                     maxHeight: '240px',
                     overflowY: 'auto',
-                    marginTop: spacing[1]
+                    marginTop: '2px'
                   }}>
                     {filteredProfessors.map((professor) => {
                       const displayName = professor.lab && professor.lab.name
@@ -762,17 +762,17 @@ const WriteReviewPage = () => {
                           style={{
                             padding: `${spacing[3]} ${spacing[4]}`,
                             cursor: 'pointer',
-                            backgroundColor: '#E8E8E8',
+                            backgroundColor: 'white',
                             fontSize: '14px',
                             fontFamily: 'Inter',
                             color: colors.textPrimary,
                             transition: 'background-color 0.15s ease'
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = 'white';
+                            e.currentTarget.style.backgroundColor = '#E8E8E8';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = '#E8E8E8';
+                            e.currentTarget.style.backgroundColor = 'white';
                           }}
                         >
                           <div style={{ fontWeight: '500', color: colors.textPrimary }}>
@@ -800,7 +800,7 @@ const WriteReviewPage = () => {
                       style={{
                         padding: `${spacing[3]} ${spacing[4]}`,
                         cursor: 'pointer',
-                        backgroundColor: '#E8E8E8',
+                        backgroundColor: 'white',
                         fontSize: '14px',
                         fontFamily: 'Inter',
                         color: colors.primary,
@@ -809,10 +809,10 @@ const WriteReviewPage = () => {
                         transition: 'background-color 0.15s ease'
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'white';
+                        e.currentTarget.style.backgroundColor = '#E8E8E8';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = '#E8E8E8';
+                        e.currentTarget.style.backgroundColor = 'white';
                       }}
                     >
                       + Add New Professor/Lab
@@ -971,64 +971,46 @@ const WriteReviewPage = () => {
                 {t('writeReview.form.overallRating', 'Overall Rating')} <span style={{ color: colors.error }}>{t('writeReview.form.required', '*')}</span>
               </label>
 
-              <div style={{
-                padding: spacing[3],
-                backgroundColor: colors.background,
-                borderRadius: '8px',
-                border: `1px solid ${colors.border}`
-              }}>
-                {/* Interactive Star Rating */}
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: spacing[2]
-                }}>
-                  <StarRating
-                    rating={formData.overallRating}
-                    onChange={handleRatingChange}
-                    size={28}
-                    interactive={true}
-                    showNumber={true}
-                  />
-                </div>
-
-                {/* Rating Slider */}
-                <div style={{ textAlign: 'center' }}>
-                  <input
-                    type="range"
-                    min="0.5"
-                    max="5.0"
-                    step="0.5"
-                    value={formData.overallRating}
-                    onChange={(e) => handleRatingChange(parseFloat(e.target.value))}
+              <div style={{ display: 'flex', gap: spacing[2] }}>
+                {[1, 2, 3, 4, 5].map(rating => (
+                  <button
+                    key={rating}
+                    type="button"
+                    onClick={() => handleRatingChange(rating)}
                     style={{
-                      width: '100%',
-                      height: '8px',
-                      borderRadius: '4px',
-                      background: `linear-gradient(to right, ${colors.primary} 0%, ${colors.primary} ${(formData.overallRating - 0.5) / 4.5 * 100}%, ${colors.border} ${(formData.overallRating - 0.5) / 4.5 * 100}%, ${colors.border} 100%)`,
-                      outline: 'none',
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: spacing[3],
+                      border: `2px solid ${formData.overallRating === rating ? colors.primary : colors.border}`,
+                      borderRadius: '8px',
+                      backgroundColor: formData.overallRating === rating ? colors.primary + '10' : colors.background,
+                      color: formData.overallRating === rating ? colors.primary : colors.textSecondary,
+                      fontSize: '20px',
+                      fontWeight: '700',
+                      fontFamily: 'Inter',
                       cursor: 'pointer',
-                      appearance: 'none'
+                      transition: 'all 0.2s ease',
+                      minHeight: '56px'
                     }}
-                  />
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginTop: spacing[1]
-                  }}>
-                    {['0.5', '1.0', '2.0', '3.0', '4.0', '5.0'].map(label => (
-                      <span key={label} style={{
-                        fontSize: '12px',
-                        color: colors.textTertiary,
-                        fontFamily: 'Inter'
-                      }}>
-                        {label}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
+                    onMouseEnter={(e) => {
+                      if (formData.overallRating !== rating) {
+                        e.currentTarget.style.backgroundColor = colors.border + '50';
+                        e.currentTarget.style.borderColor = colors.textSecondary;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (formData.overallRating !== rating) {
+                        e.currentTarget.style.backgroundColor = colors.background;
+                        e.currentTarget.style.borderColor = colors.border;
+                      }
+                    }}
+                  >
+                    {rating}
+                  </button>
+                ))}
               </div>
             </div>
 
