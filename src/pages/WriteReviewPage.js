@@ -738,16 +738,17 @@ const WriteReviewPage = () => {
                 {showProfessorDropdown && filteredProfessors.length > 0 && (
                   <div style={{
                     position: 'absolute',
-                    top: '100%',
+                    top: 'calc(100% + 4px)',
                     left: 0,
                     right: 0,
-                    backgroundColor: 'white',
-                    border: `1px solid ${colors.border}`,
+                    backgroundColor: colors.background,
+                    border: `2px solid ${colors.border}`,
                     borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
                     zIndex: 1000,
-                    maxHeight: '200px',
-                    overflowY: 'auto'
+                    maxHeight: '240px',
+                    overflowY: 'auto',
+                    marginTop: spacing[1]
                   }}>
                     {filteredProfessors.map((professor, index) => {
                       const displayName = professor.lab && professor.lab.name
@@ -759,23 +760,23 @@ const WriteReviewPage = () => {
                           key={professor.id}
                           onClick={() => handleProfessorSelect(professor)}
                           style={{
-                            padding: spacing[3],
+                            padding: `${spacing[3]} ${spacing[4]}`,
                             cursor: 'pointer',
-                            borderBottom: `1px solid ${colors.border}`,
-                            backgroundColor: 'white',
+                            borderBottom: index < filteredProfessors.length - 1 ? `1px solid ${colors.border}` : 'none',
+                            backgroundColor: colors.background,
                             fontSize: '14px',
                             fontFamily: 'Inter',
                             color: colors.textPrimary,
-                            transition: 'background-color 0.2s ease'
+                            transition: 'background-color 0.15s ease'
                           }}
                           onMouseEnter={(e) => {
-                            e.target.style.backgroundColor = colors.background;
+                            e.currentTarget.style.backgroundColor = 'white';
                           }}
                           onMouseLeave={(e) => {
-                            e.target.style.backgroundColor = 'white';
+                            e.currentTarget.style.backgroundColor = colors.background;
                           }}
                         >
-                          <div style={{ fontWeight: '500' }}>
+                          <div style={{ fontWeight: '500', color: colors.textPrimary }}>
                             {displayName}
                           </div>
                           {professor.university_department_name && (
@@ -798,21 +799,22 @@ const WriteReviewPage = () => {
                         setShowAddLabModal(true);
                       }}
                       style={{
-                        padding: spacing[3],
+                        padding: `${spacing[3]} ${spacing[4]}`,
                         cursor: 'pointer',
-                        backgroundColor: 'white',
+                        backgroundColor: colors.background,
                         fontSize: '14px',
                         fontFamily: 'Inter',
                         color: colors.primary,
                         fontStyle: 'italic',
                         fontWeight: '600',
-                        transition: 'background-color 0.2s ease'
+                        transition: 'background-color 0.15s ease',
+                        borderTop: `1px solid ${colors.border}`
                       }}
                       onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = colors.background;
+                        e.currentTarget.style.backgroundColor = 'white';
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = 'white';
+                        e.currentTarget.style.backgroundColor = colors.background;
                       }}
                     >
                       + Add New Professor/Lab
