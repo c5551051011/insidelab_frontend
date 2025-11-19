@@ -741,7 +741,7 @@ const WriteReviewPage = () => {
                     top: 'calc(100% + 4px)',
                     left: 0,
                     right: 0,
-                    backgroundColor: colors.background,
+                    backgroundColor: '#E8E8E8',
                     border: `2px solid ${colors.border}`,
                     borderRadius: '8px',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
@@ -750,7 +750,7 @@ const WriteReviewPage = () => {
                     overflowY: 'auto',
                     marginTop: spacing[1]
                   }}>
-                    {filteredProfessors.map((professor, index) => {
+                    {filteredProfessors.map((professor) => {
                       const displayName = professor.lab && professor.lab.name
                         ? `${professor.name} - ${professor.lab.name}`
                         : professor.name;
@@ -762,8 +762,7 @@ const WriteReviewPage = () => {
                           style={{
                             padding: `${spacing[3]} ${spacing[4]}`,
                             cursor: 'pointer',
-                            borderBottom: index < filteredProfessors.length - 1 ? `1px solid ${colors.border}` : 'none',
-                            backgroundColor: colors.background,
+                            backgroundColor: '#E8E8E8',
                             fontSize: '14px',
                             fontFamily: 'Inter',
                             color: colors.textPrimary,
@@ -773,7 +772,7 @@ const WriteReviewPage = () => {
                             e.currentTarget.style.backgroundColor = 'white';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = colors.background;
+                            e.currentTarget.style.backgroundColor = '#E8E8E8';
                           }}
                         >
                           <div style={{ fontWeight: '500', color: colors.textPrimary }}>
@@ -801,20 +800,19 @@ const WriteReviewPage = () => {
                       style={{
                         padding: `${spacing[3]} ${spacing[4]}`,
                         cursor: 'pointer',
-                        backgroundColor: colors.background,
+                        backgroundColor: '#E8E8E8',
                         fontSize: '14px',
                         fontFamily: 'Inter',
                         color: colors.primary,
                         fontStyle: 'italic',
                         fontWeight: '600',
-                        transition: 'background-color 0.15s ease',
-                        borderTop: `1px solid ${colors.border}`
+                        transition: 'background-color 0.15s ease'
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = 'white';
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = colors.background;
+                        e.currentTarget.style.backgroundColor = '#E8E8E8';
                       }}
                     >
                       + Add New Professor/Lab
@@ -974,39 +972,29 @@ const WriteReviewPage = () => {
               </label>
 
               <div style={{
-                padding: spacing[5],
+                padding: spacing[3],
                 backgroundColor: colors.background,
-                borderRadius: '12px',
-                border: `1px solid ${colors.border}`,
-                boxShadow: `0 2px 8px ${colors.primary}1A`
+                borderRadius: '8px',
+                border: `1px solid ${colors.border}`
               }}>
                 {/* Interactive Star Rating */}
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginBottom: spacing[4]
+                  marginBottom: spacing[2]
                 }}>
                   <StarRating
                     rating={formData.overallRating}
                     onChange={handleRatingChange}
-                    size={36}
+                    size={28}
                     interactive={true}
                     showNumber={true}
                   />
                 </div>
 
                 {/* Rating Slider */}
-                <div style={{ textAlign: 'center', marginBottom: spacing[3] }}>
-                  <p style={{
-                    fontSize: '12px',
-                    color: colors.textSecondary,
-                    margin: 0,
-                    marginBottom: spacing[2],
-                    fontFamily: 'Inter'
-                  }}>
-                    {t('writeReview.form.fineTuneRating', 'Fine-tune your rating')}
-                  </p>
+                <div style={{ textAlign: 'center' }}>
                   <input
                     type="range"
                     min="0.5"
@@ -1016,8 +1004,8 @@ const WriteReviewPage = () => {
                     onChange={(e) => handleRatingChange(parseFloat(e.target.value))}
                     style={{
                       width: '100%',
-                      height: '4px',
-                      borderRadius: '2px',
+                      height: '8px',
+                      borderRadius: '4px',
                       background: `linear-gradient(to right, ${colors.primary} 0%, ${colors.primary} ${(formData.overallRating - 0.5) / 4.5 * 100}%, ${colors.border} ${(formData.overallRating - 0.5) / 4.5 * 100}%, ${colors.border} 100%)`,
                       outline: 'none',
                       cursor: 'pointer',
