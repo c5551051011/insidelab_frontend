@@ -553,12 +553,12 @@ const MockInterviewBookingPage = () => {
                       borderRadius: '50%',
                       animation: 'spin 1s linear infinite'
                     }} />
-                    Creating Session...
+                    Submitting...
                   </>
                 ) : (
                   <>
                     <CheckCircle size={20} />
-                    Confirm Booking
+                    Submit
                   </>
                 )}
               </button>
