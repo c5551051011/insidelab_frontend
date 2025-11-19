@@ -1175,7 +1175,6 @@ const RadarChart = ({ categories, values, maxValue = 5, isMobile = false }) => {
   // Generate labels
   const labels = categories.map((category, index) => {
     const point = getPoint(maxValue + 1.5, index, categories.length);
-    const angle = (Math.PI * 2 * index) / categories.length - Math.PI / 2;
 
     // Adjust text anchor based on position
     let textAnchor = 'middle';
