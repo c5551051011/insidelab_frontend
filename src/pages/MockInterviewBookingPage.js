@@ -362,7 +362,7 @@ const MockInterviewBookingPage = () => {
         </div>
 
         {/* Progress Steps */}
-        <ProgressSteps currentStep={currentStep} isMobile={isMobile} />
+        <ProgressSteps currentStep={currentStep} isMobile={isMobile} setCurrentStep={setCurrentStep} />
 
         {/* Error Message */}
         {submitError && (
@@ -573,7 +573,7 @@ const MockInterviewBookingPage = () => {
 };
 
 // Progress Steps Component
-const ProgressSteps = ({ currentStep, isMobile }) => {
+const ProgressSteps = ({ currentStep, isMobile, setCurrentStep }) => {
   const { t } = useTranslation();
   const steps = [
     { number: 1, label: t('mockInterview.steps.university', 'University') },
@@ -614,12 +614,14 @@ const ProgressSteps = ({ currentStep, isMobile }) => {
       {steps.map((step) => (
         <div
           key={step.number}
+          onClick={() => setCurrentStep(step.number)}
           style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             zIndex: 1,
-            flex: 1
+            flex: 1,
+            cursor: 'pointer'
           }}
         >
           <div style={{
@@ -1073,17 +1075,20 @@ const LabSelectionStep = ({
 
 // Lab List Item Component
 const LabListItem = ({ lab, selectedLabs, handleLabSelect, isInterested }) => {
+  const [isHovered, setIsHovered] = React.useState(false);
   const isSelected = selectedLabs.find(l => l.id === lab.id);
   const canSelect = selectedLabs.length < 2 || isSelected;
 
   return (
     <div
       onClick={() => canSelect && handleLabSelect(lab)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         padding: spacing[4],
         borderBottom: `1px solid ${colors.border}`,
         cursor: canSelect ? 'pointer' : 'not-allowed',
-        backgroundColor: isSelected ? `${colors.primary}08` : 'white',
+        backgroundColor: isSelected ? `${colors.primary}08` : (isHovered && canSelect ? colors.backgroundLight : 'white'),
         opacity: canSelect ? 1 : 0.5,
         transition: 'background-color 0.2s ease',
         position: 'relative'
@@ -1115,9 +1120,22 @@ const LabListItem = ({ lab, selectedLabs, handleLabSelect, isInterested }) => {
             marginBottom: spacing[1],
             display: 'flex',
             alignItems: 'center',
-            gap: spacing[2]
+            gap: spacing[2],
+            flexWrap: 'wrap'
           }}>
-            {lab.professor || 'Professor Information Unavailable'}
+            <span>{lab.professor || 'Professor Information Unavailable'}</span>
+            {lab.rating && lab.reviewCount > 0 && (
+              <span style={{
+                fontSize: '12px',
+                color: colors.textSecondary,
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                ⭐ {(parseFloat(lab.rating) || 0).toFixed(1)}
+              </span>
+            )}
             {isInterested && (
               <span style={{
                 fontSize: '10px',
@@ -1133,22 +1151,10 @@ const LabListItem = ({ lab, selectedLabs, handleLabSelect, isInterested }) => {
           </div>
           <div style={{
             fontSize: '12px',
-            color: colors.textSecondary,
-            marginBottom: spacing[1]
+            color: colors.textSecondary
           }}>
             {lab.university} • {lab.department} • {lab.name}
           </div>
-          {lab.rating && lab.reviewCount > 0 && (
-            <div style={{
-              fontSize: '11px',
-              color: colors.textTertiary,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}>
-              ⭐ {(parseFloat(lab.rating) || 0).toFixed(1)} ({lab.reviewCount || 0} reviews)
-            </div>
-          )}
         </div>
         {isSelected && (
           <CheckCircle size={20} color={colors.primary} />
