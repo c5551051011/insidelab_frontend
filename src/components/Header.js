@@ -15,9 +15,11 @@ const Header = () => {
   const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [servicesMenuOpen, setServicesMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const userMenuRef = useRef(null);
+  const servicesMenuRef = useRef(null);
 
   // Check authentication status
   useEffect(() => {
@@ -62,11 +64,14 @@ const Header = () => {
     };
   }, []);
 
-  // Close user menu when clicking outside
+  // Close user menu and services menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setUserMenuOpen(false);
+      }
+      if (servicesMenuRef.current && !servicesMenuRef.current.contains(event.target)) {
+        setServicesMenuOpen(false);
       }
     };
 
@@ -127,6 +132,11 @@ const Header = () => {
             gap: spacing[3]
           }}>
             <NavLink to="/search">{t('header.menu.search')}</NavLink>
+            <ServicesMenu
+              isOpen={servicesMenuOpen}
+              onToggle={() => setServicesMenuOpen(!servicesMenuOpen)}
+              servicesMenuRef={servicesMenuRef}
+            />
             <LanguageSelector />
           </div>
         )}
@@ -337,6 +347,24 @@ const Header = () => {
               <MobileMenuItem
                 icon={<span style={{ fontSize: '18px' }}>🔍</span>}
                 text={t('header.menu.search')}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  window.location.href = '/search';
+                }}
+              />
+
+              <MobileMenuItem
+                icon={<span style={{ fontSize: '18px' }}>💬</span>}
+                text="Mock Interview"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  window.location.href = '/mock-interview';
+                }}
+              />
+
+              <MobileMenuItem
+                icon={<span style={{ fontSize: '18px' }}>⭐</span>}
+                text="Reviews"
                 onClick={() => {
                   setMobileMenuOpen(false);
                   window.location.href = '/search';
@@ -661,6 +689,107 @@ const UserMenuItem = ({ icon, text, onClick, style = {} }) => {
       }}
     >
       {icon}
+      {text}
+    </button>
+  );
+};
+
+const ServicesMenu = ({ isOpen, onToggle, servicesMenuRef }) => {
+  return (
+    <div style={{ position: 'relative' }} ref={servicesMenuRef}>
+      <button
+        onClick={onToggle}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: spacing[1],
+          padding: `${spacing[2]} ${spacing[3]}`,
+          fontSize: '14px',
+          fontWeight: '500',
+          color: colors.textSecondary,
+          backgroundColor: 'transparent',
+          border: 'none',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontFamily: 'Inter',
+          transition: 'all 0.2s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = colors.primary;
+          e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.05)';
+        }}
+        onMouseLeave={(e) => {
+          if (!isOpen) {
+            e.currentTarget.style.color = colors.textSecondary;
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }
+        }}
+      >
+        Services
+        <ChevronDown size={16} color={isOpen ? colors.primary : colors.textSecondary} />
+      </button>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          marginTop: '8px',
+          backgroundColor: colors.background,
+          border: `1px solid ${colors.border}`,
+          borderRadius: '12px',
+          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+          zIndex: 1000,
+          minWidth: '200px',
+          overflow: 'hidden'
+        }}>
+          <ServiceMenuItem
+            text="Mock Interview"
+            onClick={() => {
+              window.location.href = '/mock-interview';
+              onToggle();
+            }}
+          />
+          <ServiceMenuItem
+            text="Reviews"
+            onClick={() => {
+              window.location.href = '/search';
+              onToggle();
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+const ServiceMenuItem = ({ text, onClick }) => {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        padding: `${spacing[3]} ${spacing[4]}`,
+        backgroundColor: 'transparent',
+        border: 'none',
+        cursor: 'pointer',
+        fontSize: '14px',
+        fontWeight: '500',
+        color: colors.textPrimary,
+        fontFamily: 'Inter',
+        textAlign: 'left',
+        transition: 'background-color 0.2s ease'
+      }}
+      onMouseEnter={(e) => {
+        e.target.style.backgroundColor = colors.backgroundLight;
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.backgroundColor = 'transparent';
+      }}
+    >
       {text}
     </button>
   );
