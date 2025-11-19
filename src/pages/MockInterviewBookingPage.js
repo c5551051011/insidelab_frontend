@@ -611,19 +611,22 @@ const ProgressSteps = ({ currentStep, isMobile, setCurrentStep }) => {
       </div>
 
       {/* Steps */}
-      {steps.map((step) => (
-        <div
-          key={step.number}
-          onClick={() => setCurrentStep(step.number)}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            zIndex: 1,
-            flex: 1,
-            cursor: 'pointer'
-          }}
-        >
+      {steps.map((step) => {
+        const canNavigate = step.number < currentStep; // Only allow clicking on previous steps
+        return (
+          <div
+            key={step.number}
+            onClick={() => canNavigate && setCurrentStep(step.number)}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              zIndex: 1,
+              flex: 1,
+              cursor: canNavigate ? 'pointer' : 'default'
+            }}
+          >
+
           <div style={{
             width: '40px',
             height: '40px',
@@ -654,8 +657,9 @@ const ProgressSteps = ({ currentStep, isMobile, setCurrentStep }) => {
               {step.label}
             </span>
           )}
-        </div>
-      ))}
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -1079,6 +1083,9 @@ const LabListItem = ({ lab, selectedLabs, handleLabSelect, isInterested }) => {
   const isSelected = selectedLabs.find(l => l.id === lab.id);
   const canSelect = selectedLabs.length < 2 || isSelected;
 
+  // Only show rating if it exists and is greater than 0, and there are reviews
+  const hasRating = lab.rating && parseFloat(lab.rating) > 0 && lab.reviewCount > 0;
+
   return (
     <div
       onClick={() => canSelect && handleLabSelect(lab)}
@@ -1113,6 +1120,7 @@ const LabListItem = ({ lab, selectedLabs, handleLabSelect, isInterested }) => {
         justifyContent: 'space-between'
       }}>
         <div style={{ flex: 1 }}>
+          {/* First line: Professor - Lab name Rating */}
           <div style={{
             fontSize: '14px',
             fontWeight: '600',
@@ -1123,8 +1131,8 @@ const LabListItem = ({ lab, selectedLabs, handleLabSelect, isInterested }) => {
             gap: spacing[2],
             flexWrap: 'wrap'
           }}>
-            <span>{lab.professor || 'Professor Information Unavailable'}</span>
-            {lab.rating && lab.reviewCount > 0 && (
+            <span>{lab.professor || 'Professor Information Unavailable'} - {lab.name}</span>
+            {hasRating && (
               <span style={{
                 fontSize: '12px',
                 color: colors.textSecondary,
@@ -1133,7 +1141,7 @@ const LabListItem = ({ lab, selectedLabs, handleLabSelect, isInterested }) => {
                 alignItems: 'center',
                 gap: '4px'
               }}>
-                ⭐ {(parseFloat(lab.rating) || 0).toFixed(1)}
+                ⭐ {parseFloat(lab.rating).toFixed(1)}
               </span>
             )}
             {isInterested && (
@@ -1149,11 +1157,12 @@ const LabListItem = ({ lab, selectedLabs, handleLabSelect, isInterested }) => {
               </span>
             )}
           </div>
+          {/* Second line: University - Department */}
           <div style={{
             fontSize: '12px',
             color: colors.textSecondary
           }}>
-            {lab.university} • {lab.department} • {lab.name}
+            {lab.university} - {lab.department}
           </div>
         </div>
         {isSelected && (
