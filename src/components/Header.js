@@ -480,7 +480,7 @@ const Header = () => {
                       style={{
                         display: 'block',
                         flex: 1,
-                        padding: '16px',
+                        padding: '12px 16px',
                         fontSize: '16px',
                         fontWeight: '500',
                         color: colors.textPrimary,
@@ -508,7 +508,7 @@ const Header = () => {
                       style={{
                         display: 'block',
                         flex: 1,
-                        padding: '16px',
+                        padding: '12px 16px',
                         fontSize: '16px',
                         fontWeight: '600',
                         color: 'white',
