@@ -410,7 +410,7 @@ const AddLabModal = ({
         <form onSubmit={handleSubmit} style={{ padding: spacing[6] }}>
           {/* University/Department Selection (only for search page) */}
           {showUniversitySelector && (
-            <div style={{ marginBottom: spacing[6] }} className="compact-dropdowns">
+            <div style={{ marginBottom: spacing[3] }} className="compact-dropdowns university-department-section">
               <UniversityDepartmentSelector
                 selectedUniversityId={selectedUniversityId}
                 selectedUniversityName={selectedUniversityName}
@@ -443,7 +443,7 @@ const AddLabModal = ({
 
           {/* Research Group Selection */}
           {(showUniversitySelector && selectedUniversityDepartmentId) && (
-            <div style={{ marginBottom: spacing[6] }} className="compact-dropdowns">
+            <div style={{ marginBottom: spacing[8] }} className="compact-dropdowns research-group-section">
               <DropdownField
                 label="Research Group (Optional)"
                 value={selectedResearchGroupId}
@@ -1256,6 +1256,18 @@ const AddLabModal = ({
 
         .compact-dropdowns > div {
           margin-bottom: ${spacing[4]}px !important;
+        }
+
+        .research-group-section {
+          margin-top: 0px !important;
+        }
+
+        .university-department-section {
+          margin-bottom: 0px !important;
+        }
+
+        .compact-dropdowns:last-of-type {
+          margin-bottom: ${spacing[2]}px !important;
         }
       `}</style>
     </div>
