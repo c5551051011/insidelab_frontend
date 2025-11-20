@@ -470,7 +470,7 @@ const Header = () => {
 
                   <div style={{
                     marginTop: spacing[4],
-                    padding: `0 ${spacing[6]}`,
+                    padding: `0 ${spacing[8]}`,
                     display: 'flex',
                     gap: spacing[3]
                   }}>
