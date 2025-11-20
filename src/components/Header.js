@@ -470,9 +470,9 @@ const Header = () => {
 
                   <div style={{
                     marginTop: spacing[4],
-                    padding: `0 ${spacing[12]}`,
+                    padding: `0 ${spacing[8]}`,
                     display: 'flex',
-                    gap: spacing[4]
+                    gap: spacing[3]
                   }}>
                     <Link
                       to="/sign-in"
