@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, Clock, MapPin, Search, Filter, ExternalLink, Users } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -14,7 +14,7 @@ const NewsPage = () => {
   const [newsItems, setNewsItems] = useState([]);
 
   // Mock data - 실제로는 API에서 가져올 데이터
-  const mockNewsData = [
+  const mockNewsData = useMemo(() => [
     {
       id: 1,
       title: "Stanford AI Lab Open House 2024",
@@ -86,7 +86,7 @@ const NewsPage = () => {
       imageUrl: "/api/placeholder/400/200",
       tags: ["Partnership", "Universities", "Expansion"]
     }
-  ];
+  ], []);
 
   useEffect(() => {
     setNewsItems(mockNewsData);

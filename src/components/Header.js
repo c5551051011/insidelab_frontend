@@ -132,12 +132,12 @@ const Header = () => {
             gap: spacing[3]
           }}>
             <NavLink to="/search">{t('header.menu.search')}</NavLink>
-            <NavLink to="/news">News & Events</NavLink>
             <ServicesMenu
               isOpen={servicesMenuOpen}
               onToggle={() => setServicesMenuOpen(!servicesMenuOpen)}
               servicesMenuRef={servicesMenuRef}
             />
+            <NavLink to="/news">News & Events</NavLink>
             <LanguageSelector />
           </div>
         )}
@@ -355,15 +355,6 @@ const Header = () => {
               />
 
               <MobileMenuItem
-                icon={<span style={{ fontSize: '18px' }}>📢</span>}
-                text="News & Events"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  window.location.href = '/news';
-                }}
-              />
-
-              <MobileMenuItem
                 icon={<span style={{ fontSize: '18px' }}>💬</span>}
                 text="Mock Interview"
                 onClick={() => {
@@ -378,6 +369,15 @@ const Header = () => {
                 onClick={() => {
                   setMobileMenuOpen(false);
                   window.location.href = '/write-review';
+                }}
+              />
+
+              <MobileMenuItem
+                icon={<span style={{ fontSize: '18px' }}>📢</span>}
+                text="News & Events"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  window.location.href = '/news';
                 }}
               />
 
