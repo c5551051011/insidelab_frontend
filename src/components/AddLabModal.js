@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { X, Loader } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import { UniversityService } from '../services/universityService';
+import { useTranslation } from '../i18n';
 
 const AddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, selectedResearchGroup, onLabAdded }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     // Professor fields
     professorName: '',

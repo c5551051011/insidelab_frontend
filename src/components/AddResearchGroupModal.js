@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Globe, Loader } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import { UniversityService } from '../services/universityService';
+import { useTranslation } from '../i18n';
 
 const AddResearchGroupModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, onGroupAdded }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     groupName: '',
     description: '',
