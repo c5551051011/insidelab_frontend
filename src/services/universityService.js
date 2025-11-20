@@ -253,6 +253,19 @@ class UniversityService {
       throw new Error(`Failed to add lab and professor: ${error.message}`);
     }
   }
+
+  // Update professor
+  static async updateProfessor(professorId, updateData) {
+    try {
+      console.log('🔥 Updating professor with ID:', professorId, 'Data:', updateData);
+      const response = await ApiService.patch(`/professors/${professorId}/`, updateData, true);
+      console.log('✅ Professor updated successfully:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ Error updating professor:', error);
+      throw new Error(`Failed to update professor: ${error.message}`);
+    }
+  }
 }
 
 export { UniversityService };

@@ -189,6 +189,14 @@ const SearchPage = () => {
     navigate(`/lab/${lab.id}`, { state: { from: 'search' } });
   };
 
+  // Handle lab added
+  const handleLabAdded = (newLab) => {
+    // Optionally refresh search results or add the new lab to results
+    console.log('New lab added:', newLab);
+    // You could trigger a fresh search here if needed
+    // performSearch(query, filters, 1, false);
+  };
+
   // Load initial data on mount - either from URL query or popular labs
   useEffect(() => {
     if (!initialLoad) return; // Only run once on initial load
@@ -389,6 +397,7 @@ const SearchPage = () => {
             hasMore={searchResults.hasMore}
             onLoadMore={handleLoadMore}
             onLabClick={handleLabClick}
+            onLabAdded={handleLabAdded}
           />
 
           {/* Search Tips (shown when no results and no query) */}

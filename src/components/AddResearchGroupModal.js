@@ -228,7 +228,7 @@ const AddResearchGroupModal = ({ isOpen, onClose, selectedUniversity, selectedDe
             <textarea
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder={t('writeReview.modals.addResearchGroup.placeholders.description', 'Brief description of the research group focus')}
+              placeholder="Brief description of the research group focus"
               rows={3}
               style={{
                 width: '100%',

@@ -1,8 +1,9 @@
-import React from 'react';
-import { Search, AlertCircle, ChevronDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, AlertCircle, ChevronDown, Plus } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import LabCard, { LabCardSkeleton } from './LabCard';
 import { Lab } from '../../models/Lab';
+import AddLabModal from '../AddLabModal';
 
 const SearchResults = ({
   results = [],
@@ -14,8 +15,11 @@ const SearchResults = ({
   onLoadMore,
   onLabClick,
   className = '',
-  style = {}
+  style = {},
+  onLabAdded
 }) => {
+  const [showAddLabModal, setShowAddLabModal] = useState(false);
+
   // Convert raw data to Lab instances if needed
   const labInstances = results.map(result =>
     result instanceof Lab ? result : new Lab(result)
@@ -63,7 +67,25 @@ const SearchResults = ({
   if (labInstances.length === 0 && !loading) {
     return (
       <div className={className} style={style}>
-        <EmptyState query={query} />
+        <EmptyState
+          query={query}
+          onAddNewLab={() => setShowAddLabModal(true)}
+        />
+
+        {/* Add Lab Modal for Empty State */}
+        {showAddLabModal && (
+          <AddLabModal
+            isOpen={showAddLabModal}
+            onClose={() => setShowAddLabModal(false)}
+            onLabAdded={(newLab) => {
+              setShowAddLabModal(false);
+              if (onLabAdded) {
+                onLabAdded(newLab);
+              }
+            }}
+            showUniversitySelector={true}
+          />
+        )}
       </div>
     );
   }
@@ -165,6 +187,21 @@ const SearchResults = ({
           ))}
         </div>
       )}
+
+      {/* Add Lab Modal */}
+      {showAddLabModal && (
+        <AddLabModal
+          isOpen={showAddLabModal}
+          onClose={() => setShowAddLabModal(false)}
+          onLabAdded={(newLab) => {
+            setShowAddLabModal(false);
+            if (onLabAdded) {
+              onLabAdded(newLab);
+            }
+          }}
+          showUniversitySelector={true}
+        />
+      )}
     </div>
   );
 };
@@ -241,7 +278,7 @@ const ResultsHeader = ({ count, query, loading }) => {
 };
 
 // Empty State Component
-const EmptyState = ({ query }) => {
+const EmptyState = ({ query, onAddNewLab }) => {
   const suggestions = [
     'Try searching for specific universities like "Stanford" or "MIT"',
     'Search for research areas like "Machine Learning" or "Computer Vision"',
@@ -326,6 +363,55 @@ const EmptyState = ({ query }) => {
           </ul>
         </div>
       )}
+
+      {/* Add New Professor/Lab Button */}
+      <div style={{
+        textAlign: 'center',
+        marginTop: spacing[6],
+        paddingTop: spacing[6],
+        borderTop: `1px solid ${colors.border}`
+      }}>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onAddNewLab();
+          }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing[2],
+            padding: `${spacing[3]} ${spacing[6]}`,
+            backgroundColor: colors.primary,
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '600',
+            fontFamily: 'Inter',
+            transition: 'all 0.2s ease',
+            margin: '0 auto'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = colors.primaryDark || '#1d4ed8';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = colors.primary;
+          }}
+        >
+          <Plus size={16} />
+          Add New Professor/Lab
+        </button>
+        <p style={{
+          fontSize: '12px',
+          color: colors.textSecondary,
+          marginTop: spacing[2],
+          fontFamily: 'Inter'
+        }}>
+          Can't find the lab you're looking for? Add it to our database.
+        </p>
+      </div>
     </div>
   );
 };
