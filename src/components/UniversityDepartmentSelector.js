@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { colors, spacing } from '../theme';
 import { UniversityService } from '../services/universityService';
 import { ReviewService } from '../services/reviewService';
-import { DropdownField } from './Dropdown';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import Modal from './Modal';
-import { useTranslation } from '../i18n';
 
 const UniversityDepartmentSelector = ({
   selectedUniversityId,
@@ -17,7 +15,6 @@ const UniversityDepartmentSelector = ({
   layout = 'responsive' // 'responsive' (default), 'vertical', 'horizontal'
 }) => {
   const { isMobile } = useBreakpoint();
-  const { t } = useTranslation();
   const [universities, setUniversities] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loadingUniversities, setLoadingUniversities] = useState(false);

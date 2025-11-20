@@ -35,8 +35,8 @@ import EditProfileModal from '../components/EditProfileModal';
 import ResearchInterestsModal from '../components/ResearchInterestsModal';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
-import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useTranslation } from '../i18n';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const MyProfilePage = () => {
   const navigate = useNavigate();
@@ -1331,7 +1331,7 @@ const InfoRow = ({ info }) => {
           color: colors.textPrimary,
           fontWeight: '500'
         }}>
-          {info.value || t('profile.academic.notSpecified', 'Not specified')}
+          {info.value || 'Not specified'}
         </div>
       </div>
     </div>

@@ -387,7 +387,15 @@ const MockInterviewBookingPage = () => {
         )}
 
         {/* Main Form */}
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={handleSubmit}
+          onKeyDown={(e) => {
+            // Prevent form submission on Enter key (except for textareas)
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+              e.preventDefault();
+            }
+          }}
+        >
           {/* Step 1: University & Department Selection */}
           {currentStep === 1 && (
             <UniversityDepartmentStep
