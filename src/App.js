@@ -10,6 +10,7 @@ import MyProfilePage from './pages/MyProfilePage';
 import LabDetailPage from './pages/LabDetailPage';
 import MockInterviewBookingPage from './pages/MockInterviewBookingPage';
 import MySessionsPage from './pages/MySessionsPage';
+import NewsPage from './pages/NewsPage';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
             <Route path="/lab/:id" element={<LabDetailPage />} />
             <Route path="/services/mock-interview" element={<MockInterviewBookingPage />} />
             <Route path="/my-sessions" element={<MySessionsPage />} />
+            <Route path="/news" element={<NewsPage />} />
           </Routes>
         </div>
       </Router>
