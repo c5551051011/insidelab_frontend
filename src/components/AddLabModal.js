@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Loader, Plus } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import { UniversityService } from '../services/universityService';
@@ -106,7 +106,7 @@ const AddLabModal = ({
     setShowAddResearchGroupModal(false);
   };
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setFormData({
       professorName: '',
       professorEmail: '',
@@ -143,13 +143,13 @@ const AddLabModal = ({
       setResearchGroups([]);
       setSelectedResearchGroupId('');
     }
-  };
+  }, [showUniversitySelector]);
 
   useEffect(() => {
     if (!isOpen) {
       resetForm();
     }
-  }, [isOpen]);
+  }, [isOpen, resetForm]);
 
   const addResearchInterest = () => {
     const interest = newResearchInterest.trim();
