@@ -472,7 +472,7 @@ const Header = () => {
                     marginTop: spacing[4],
                     padding: `0 ${spacing[8]}`,
                     display: 'flex',
-                    gap: spacing[3]
+                    gap: spacing[4]
                   }}>
                     <Link
                       to="/sign-in"
