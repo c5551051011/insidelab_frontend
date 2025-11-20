@@ -412,9 +412,27 @@ const Header = () => {
 
               {isAuthenticated ? (
                 <>
+                  {/* Separator */}
+                  <div style={{
+                    height: '1px',
+                    backgroundColor: colors.border,
+                    margin: `${spacing[2]} ${spacing[6]}`
+                  }} />
+
+                  {/* Account Section */}
+                  <div style={{
+                    padding: `${spacing[2]} ${spacing[6]}`,
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    color: colors.textTertiary,
+                    fontFamily: 'Inter',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
+                  }}>
+                    Account
+                  </div>
 
                   <MobileMenuItem
-                    icon={<User size={20} color={colors.textSecondary} />}
                     text={t('header.menu.profile')}
                     onClick={() => {
                       setMobileMenuOpen(false);
@@ -422,9 +440,7 @@ const Header = () => {
                     }}
                   />
 
-
                   <MobileMenuItem
-                    icon={<Video size={20} color={colors.textSecondary} />}
                     text={t('header.menu.sessions')}
                     onClick={() => {
                       setMobileMenuOpen(false);
@@ -454,14 +470,16 @@ const Header = () => {
 
                   <div style={{
                     marginTop: spacing[4],
-                    padding: `0 ${spacing[6]}`
+                    padding: `0 ${spacing[6]}`,
+                    display: 'flex',
+                    gap: spacing[3]
                   }}>
                     <Link
                       to="/sign-in"
                       onClick={() => setMobileMenuOpen(false)}
                       style={{
                         display: 'block',
-                        width: '100%',
+                        flex: 1,
                         padding: '16px',
                         fontSize: '16px',
                         fontWeight: '500',
@@ -471,7 +489,6 @@ const Header = () => {
                         border: `1px solid ${colors.border}`,
                         textAlign: 'center',
                         fontFamily: 'Inter',
-                        marginBottom: spacing[2],
                         transition: 'all 0.2s ease',
                         boxSizing: 'border-box'
                       }}
@@ -490,7 +507,7 @@ const Header = () => {
                       onClick={() => setMobileMenuOpen(false)}
                       style={{
                         display: 'block',
-                        width: '100%',
+                        flex: 1,
                         padding: '16px',
                         fontSize: '16px',
                         fontWeight: '600',
