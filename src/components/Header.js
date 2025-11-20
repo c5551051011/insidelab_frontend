@@ -258,12 +258,19 @@ const Header = () => {
               backgroundColor: colors.background,
               flexShrink: 0
             }}>
-              <span style={{
-                fontSize: '22px',
-                fontWeight: '700',
-                color: colors.primary,
-                fontFamily: 'Inter'
-              }}>
+              <span
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  window.location.href = '/';
+                }}
+                style={{
+                  fontSize: '22px',
+                  fontWeight: '700',
+                  color: colors.primary,
+                  fontFamily: 'Inter',
+                  cursor: 'pointer'
+                }}
+              >
                 Insidelab
               </span>
               <button
@@ -338,15 +345,13 @@ const Header = () => {
 
             {/* Mobile Menu Items */}
             <div style={{
-              padding: '20px 24px',
+              padding: '16px 0',
               display: 'flex',
               flexDirection: 'column',
-              gap: spacing[1],
               backgroundColor: colors.background
             }}>
-              {/* Navigation Links */}
+              {/* Search */}
               <MobileMenuItem
-                icon={<span style={{ fontSize: '18px' }}>🔍</span>}
                 text={t('header.menu.search')}
                 onClick={() => {
                   setMobileMenuOpen(false);
@@ -354,8 +359,27 @@ const Header = () => {
                 }}
               />
 
+              {/* Separator */}
+              <div style={{
+                height: '1px',
+                backgroundColor: colors.border,
+                margin: `${spacing[2]} ${spacing[6]}`
+              }} />
+
+              {/* Services Section */}
+              <div style={{
+                padding: `${spacing[2]} ${spacing[6]}`,
+                fontSize: '12px',
+                fontWeight: '600',
+                color: colors.textTertiary,
+                fontFamily: 'Inter',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                Services
+              </div>
+
               <MobileMenuItem
-                icon={<span style={{ fontSize: '18px' }}>💬</span>}
                 text="Mock Interview"
                 onClick={() => {
                   setMobileMenuOpen(false);
@@ -364,7 +388,6 @@ const Header = () => {
               />
 
               <MobileMenuItem
-                icon={<span style={{ fontSize: '18px' }}>⭐</span>}
                 text="Reviews"
                 onClick={() => {
                   setMobileMenuOpen(false);
@@ -372,8 +395,14 @@ const Header = () => {
                 }}
               />
 
+              {/* Separator */}
+              <div style={{
+                height: '1px',
+                backgroundColor: colors.border,
+                margin: `${spacing[2]} ${spacing[6]}`
+              }} />
+
               <MobileMenuItem
-                icon={<span style={{ fontSize: '18px' }}>📢</span>}
                 text="News & Events"
                 onClick={() => {
                   setMobileMenuOpen(false);
@@ -423,7 +452,10 @@ const Header = () => {
               ) : (
                 <>
 
-                  <div style={{ marginTop: spacing[4] }}>
+                  <div style={{
+                    marginTop: spacing[4],
+                    padding: `0 ${spacing[6]}`
+                  }}>
                     <Link
                       to="/sign-in"
                       onClick={() => setMobileMenuOpen(false)}
@@ -440,7 +472,8 @@ const Header = () => {
                         textAlign: 'center',
                         fontFamily: 'Inter',
                         marginBottom: spacing[2],
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.2s ease',
+                        boxSizing: 'border-box'
                       }}
                       onMouseEnter={(e) => {
                         e.target.style.backgroundColor = colors.backgroundLight;
@@ -467,7 +500,8 @@ const Header = () => {
                         backgroundColor: colors.primary,
                         textAlign: 'center',
                         fontFamily: 'Inter',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.2s ease',
+                        boxSizing: 'border-box'
                       }}
                       onMouseEnter={(e) => {
                         e.target.style.backgroundColor = colors.primaryDark || '#2563eb';
@@ -524,8 +558,8 @@ const MobileMenuItem = ({ icon, text, onClick, style = {} }) => {
         width: '100%',
         display: 'flex',
         alignItems: 'center',
-        gap: spacing[3],
-        padding: '16px 24px',
+        gap: icon ? spacing[3] : 0,
+        padding: '12px 24px',
         backgroundColor: 'transparent',
         border: 'none',
         cursor: 'pointer',
@@ -544,7 +578,7 @@ const MobileMenuItem = ({ icon, text, onClick, style = {} }) => {
         e.target.style.backgroundColor = 'transparent';
       }}
     >
-      {icon}
+      {icon && icon}
       {text}
     </button>
   );
