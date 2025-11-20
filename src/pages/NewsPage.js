@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, Tag, Search, Filter, ChevronDown, ExternalLink, Users } from 'lucide-react';
+import { Calendar, Clock, MapPin, Search, Filter, ExternalLink, Users } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { colors, spacing } from '../theme';
@@ -90,7 +90,7 @@ const NewsPage = () => {
 
   useEffect(() => {
     setNewsItems(mockNewsData);
-  }, []);
+  }, [mockNewsData]);
 
   const categories = [
     { value: 'all', label: 'All', icon: '📋' },
@@ -117,20 +117,6 @@ const NewsPage = () => {
     return matchesCategory && matchesType && matchesSearch;
   });
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  const isUpcoming = (dateString) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    return date >= today;
-  };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: colors.background }}>
