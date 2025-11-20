@@ -1305,7 +1305,6 @@ const AcademicProfile = ({ user, isMobile }) => {
 };
 
 const InfoRow = ({ info }) => {
-  const { t } = useTranslation();
   const Icon = info.icon;
 
   return (
