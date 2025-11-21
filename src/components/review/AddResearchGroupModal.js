@@ -3,11 +3,9 @@ import { X, AlertCircle, CheckCircle } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { FormInput } from '../FormInput';
 import { ReviewService } from '../../services/reviewService';
-import { useTranslation } from '../../i18n';
 import Modal from '../Modal';
 
 const AddResearchGroupModal = ({ departmentId, onClose, onAdd }) => {
-  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     description: '',

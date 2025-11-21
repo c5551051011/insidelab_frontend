@@ -2,11 +2,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { colors, spacing, sectionSpacing } from '../theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import { useTranslation } from '../i18n';
 
 const CtaSection = () => {
   const { isMobile } = useBreakpoint();
-  const { t } = useTranslation();
 
   return (
     <section
@@ -36,7 +34,7 @@ const CtaSection = () => {
               marginBottom: isMobile ? spacing[4] : spacing[5],
             }}
           >
-            {t('home.cta.title', 'Ready to Start Your Graduate School Journey?')}
+            Ready to Start Your Graduate School Journey?
           </h2>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <p
@@ -48,7 +46,7 @@ const CtaSection = () => {
                 margin: 0,
               }}
             >
-              {t('home.cta.subtitle', 'Join thousands of students who have successfully navigated their graduate school applications with our expert guidance and insider insights.')}
+              Join thousands of students who have successfully navigated their graduate school applications with our expert guidance and insider insights.
             </p>
           </div>
         </div>
@@ -93,7 +91,7 @@ const CtaSection = () => {
               e.target.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.1)';
             }}
           >
-            {t('home.cta.startButton', 'Get Started Free')}
+            Get Started Free
           </Link>
 
           <Link
@@ -123,7 +121,7 @@ const CtaSection = () => {
               e.target.style.borderColor = 'white';
             }}
           >
-            {t('home.cta.browseLabs', 'Browse Labs')}
+            Browse Labs
           </Link>
         </div>
 
