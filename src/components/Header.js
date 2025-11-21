@@ -138,18 +138,16 @@ const Header = () => {
               servicesMenuRef={servicesMenuRef}
             />
             <NavLink to="/news">News & Events</NavLink>
-            <LanguageSelector />
           </div>
         )}
 
-        {/* Mobile Menu Button and Language Selector */}
+        {/* Mobile Menu Button */}
         {isMobile && (
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: spacing[2]
           }}>
-            <LanguageSelector compact={true} />
             <button
               onClick={() => setMobileMenuOpen(true)}
               style={{
