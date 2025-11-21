@@ -245,4 +245,253 @@ export class InterviewService {
 
     return apiData;
   }
+
+  // Provider Dashboard APIs
+  /**
+   * Get provider dashboard data
+   */
+  static async getProviderDashboard() {
+    try {
+      const token = ApiService.getAuthToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/interviews/provider_dashboard/`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching provider dashboard:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get provider earnings
+   */
+  static async getProviderEarnings(startDate, endDate) {
+    try {
+      const token = ApiService.getAuthToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const queryParams = new URLSearchParams();
+      if (startDate) queryParams.append('start_date', startDate);
+      if (endDate) queryParams.append('end_date', endDate);
+
+      const response = await fetch(`${API_BASE_URL}/interviews/provider_earnings/?${queryParams.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching provider earnings:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get provider sessions
+   */
+  static async getProviderSessions(status = null) {
+    try {
+      const token = ApiService.getAuthToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const queryParams = new URLSearchParams();
+      if (status) queryParams.append('status', status);
+
+      const response = await fetch(`${API_BASE_URL}/interviews/provider_sessions/?${queryParams.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching provider sessions:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Accept session request
+   */
+  static async acceptSessionRequest(sessionId, requestData) {
+    try {
+      const token = ApiService.getAuthToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/interviews/${sessionId}/accept_request/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `API request failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error accepting session request:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Decline session request
+   */
+  static async declineSessionRequest(sessionId, reason) {
+    try {
+      const token = ApiService.getAuthToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/interviews/${sessionId}/decline_request/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `API request failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error declining session request:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get provider reviews
+   */
+  static async getProviderReviews(recent = false) {
+    try {
+      const token = ApiService.getAuthToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const queryParams = new URLSearchParams();
+      if (recent) queryParams.append('recent', 'true');
+
+      const response = await fetch(`${API_BASE_URL}/interviews/provider_reviews/?${queryParams.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching provider reviews:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create session review
+   */
+  static async createSessionReview(sessionId, reviewData) {
+    try {
+      const token = ApiService.getAuthToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/interviews/${sessionId}/create_review/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(reviewData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `API request failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating session review:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get session reviews
+   */
+  static async getSessionReviews(sessionId) {
+    try {
+      const token = ApiService.getAuthToken();
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await fetch(`${API_BASE_URL}/interviews/${sessionId}/reviews/`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching session reviews:', error);
+      throw error;
+    }
+  }
 }

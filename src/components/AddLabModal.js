@@ -3,7 +3,6 @@ import { X, Loader, Plus } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import { UniversityService } from '../services/universityService';
 import { ReviewService } from '../services/reviewService';
-import { useTranslation } from '../i18n';
 import UniversityDepartmentSelector from './UniversityDepartmentSelector';
 import { DropdownField } from './Dropdown';
 import AddResearchGroupModal from './AddResearchGroupModal';
@@ -17,7 +16,6 @@ const AddLabModal = ({
   onLabAdded,
   showUniversitySelector = false  // New prop for search page
 }) => {
-  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     // Professor fields
     professorName: '',

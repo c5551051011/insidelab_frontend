@@ -20,7 +20,6 @@ import Footer from '../components/Footer';
 import { colors, spacing } from '../theme';
 import { SearchService } from '../services/searchService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import { useTranslation } from '../i18n';
 import { trackLabView, trackPageView, AnalyticsEvents, trackEvent } from '../lib/analytics/trackEvent';
 
 // Helper function to add mock publications based on lab/professor name and research areas
@@ -1060,7 +1059,6 @@ const InfoRow = ({ icon, label, value, isLink = false, onClick }) => {
 
 // Rating Breakdown Component - Hexagon Radar Chart
 const RatingBreakdown = ({ lab }) => {
-  const { t } = useTranslation();
   const { width } = useBreakpoint();
   const isMobile = width < 768;
 

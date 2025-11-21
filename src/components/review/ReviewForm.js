@@ -10,7 +10,6 @@ import { ReviewService } from '../../services/reviewService';
 import { UniversityService } from '../../services/universityService';
 import { ReviewFormData, POSITION_OPTIONS, DURATION_OPTIONS, VALIDATION_RULES } from '../../models/Review';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
-import { useTranslation } from '../../i18n';
 
 const ReviewForm = ({
   initialData = {},
@@ -19,7 +18,6 @@ const ReviewForm = ({
   className = '',
   style = {}
 }) => {
-  const { t } = useTranslation();
 
   // Form state
   const [formData, setFormData] = useState(new ReviewFormData(initialData));

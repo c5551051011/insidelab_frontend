@@ -9,13 +9,11 @@ import { colors, spacing } from '../theme';
 import { SearchService } from '../services/searchService';
 import { SearchFilter } from '../models/Lab';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import { useTranslation } from '../i18n';
 import { trackSearch, trackFilterChange, trackPageView } from '../lib/analytics/trackEvent';
 
 const SearchPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { t } = useTranslation();
 
   // Helper function to parse filters from URL params
   const parseFiltersFromURL = useCallback(() => {
@@ -412,7 +410,6 @@ const SearchPage = () => {
 
 // Search Tips Component
 const SearchTips = () => {
-  const { t } = useTranslation();
 
   const tips = [
     {

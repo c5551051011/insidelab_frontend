@@ -13,12 +13,10 @@ import { AuthService } from '../services/authService';
 import { ApiService } from '../services/apiService';
 import { DropdownField } from '../components/Dropdown';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import { useTranslation } from '../i18n';
 
 const WriteReviewPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useTranslation();
   const { width } = useBreakpoint();
   const isCompact600 = width < 600;
   const isCompact640 = width < 640;

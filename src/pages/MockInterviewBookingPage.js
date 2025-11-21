@@ -22,12 +22,10 @@ import { InterviewService } from '../services/interviewService';
 import { SearchService } from '../services/searchService';
 import { BookmarkService } from '../services/bookmarkService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import { useTranslation } from '../i18n';
 
 const MockInterviewBookingPage = () => {
   const navigate = useNavigate();
   const { isMobile } = useBreakpoint();
-  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
 
   // Form state
@@ -582,7 +580,6 @@ const MockInterviewBookingPage = () => {
 
 // Progress Steps Component
 const ProgressSteps = ({ currentStep, isMobile, setCurrentStep }) => {
-  const { t } = useTranslation();
   const steps = [
     { number: 1, label: t('mockInterview.steps.university', 'University') },
     { number: 2, label: t('mockInterview.steps.type', 'Type') },
@@ -1787,7 +1784,6 @@ const UniversityDepartmentStep = ({
   onDepartmentSelected,
   isMobile
 }) => {
-  const { t } = useTranslation();
   return (
     <div style={{ marginBottom: spacing[8] }}>
       <h2 style={{

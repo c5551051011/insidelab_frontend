@@ -3,10 +3,8 @@ import { X, Loader, Plus } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import { UniversityService } from '../services/universityService';
 import { ReviewService } from '../services/reviewService';
-import { useTranslation } from '../i18n';
 
 const ExtendedAddLabModal = ({ isOpen, onClose, selectedUniversity, selectedDepartment, selectedResearchGroup, onLabAdded }) => {
-  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     // Professor fields
     professorName: '',
