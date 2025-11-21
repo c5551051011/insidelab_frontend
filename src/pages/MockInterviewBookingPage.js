@@ -347,7 +347,7 @@ const MockInterviewBookingPage = () => {
             color: colors.textPrimary,
             marginBottom: spacing[3]
           }}>
-            {t('mockInterview.title', 'Book Mock Interview')}
+            Book Mock Interview
           </h1>
           <p style={{
             fontSize: isMobile ? '14px' : '16px',
@@ -355,7 +355,7 @@ const MockInterviewBookingPage = () => {
             maxWidth: '600px',
             margin: '0 auto'
           }}>
-            {t('mockInterview.subtitle', 'Get matched with experienced graduate students or researchers for personalized interview prep')}
+            Get matched with experienced graduate students or researchers for personalized interview prep
           </p>
         </div>
 
@@ -581,12 +581,12 @@ const MockInterviewBookingPage = () => {
 // Progress Steps Component
 const ProgressSteps = ({ currentStep, isMobile, setCurrentStep }) => {
   const steps = [
-    { number: 1, label: t('mockInterview.steps.university', 'University') },
-    { number: 2, label: t('mockInterview.steps.type', 'Type') },
-    { number: 3, label: t('mockInterview.steps.research', 'Research') },
-    { number: 4, label: t('mockInterview.steps.labs', 'Labs') },
-    { number: 5, label: t('mockInterview.steps.schedule', 'Schedule') },
-    { number: 6, label: t('mockInterview.steps.review', 'Review') }
+    { number: 1, label: 'University' },
+    { number: 2, label: 'Type' },
+    { number: 3, label: 'Research' },
+    { number: 4, label: 'Labs' },
+    { number: 5, label: 'Schedule' },
+    { number: 6, label: 'Review' }
   ];
 
   return (
@@ -1793,7 +1793,7 @@ const UniversityDepartmentStep = ({
         marginBottom: spacing[2],
         fontFamily: 'Inter'
       }}>
-        {t('mockInterview.step1.title', 'Choose University & Department')}
+        Choose University & Department
       </h2>
       <p style={{
         fontSize: isMobile ? '14px' : '16px',
@@ -1801,7 +1801,7 @@ const UniversityDepartmentStep = ({
         marginBottom: spacing[6],
         fontFamily: 'Inter'
       }}>
-        {t('mockInterview.step1.subtitle', 'Select the university and department you\'re interested in for your mock interview')}
+        Select the university and department you're interested in for your mock interview
       </p>
 
       <UniversityDepartmentSelector

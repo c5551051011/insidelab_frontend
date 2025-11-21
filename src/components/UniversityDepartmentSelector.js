@@ -199,7 +199,7 @@ const UniversityDepartmentSelector = ({
     <div style={getLayoutStyle()}>
       {/* University Selection */}
       <DropdownField
-        label={t('common.forms.university', 'University')}
+        label="University"
         value={selectedUniversityId}
         onChange={handleUniversityChange}
         options={[
@@ -209,18 +209,18 @@ const UniversityDepartmentSelector = ({
           })),
           {
             value: "___ADD_NEW_UNIVERSITY___",
-            label: t('common.forms.addNewUniversity', '+ Add New University'),
+            label: '+ Add New University',
             style: { fontStyle: 'italic', color: colors.primary }
           }
         ]}
-        placeholder={t('common.forms.selectUniversity', 'Select a university')}
+        placeholder="Select a university"
         loading={loadingUniversities}
         required={isRequired}
       />
 
       {/* Department Selection */}
       <DropdownField
-        label={t('common.forms.department', 'Department')}
+        label="Department"
         value={selectedUniversityDepartmentId}
         onChange={handleDepartmentChange}
         options={[
@@ -230,14 +230,14 @@ const UniversityDepartmentSelector = ({
           })),
           ...(selectedUniversityId ? [{
             value: "___ADD_NEW___",
-            label: t('common.forms.addNewDepartment', '+ Add New Department'),
+            label: '+ Add New Department',
             style: { fontStyle: 'italic', color: colors.primary }
           }] : [])
         ]}
         placeholder={
           !selectedUniversityId
-            ? t('common.forms.selectUniversityFirst', 'Select a university first')
-            : t('common.forms.selectDepartment', 'Select a department')
+            ? 'Select a university first'
+            : 'Select a department'
         }
         disabled={!selectedUniversityId}
         loading={loadingDepartments}

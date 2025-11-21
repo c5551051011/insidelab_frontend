@@ -118,7 +118,7 @@ const SearchPage = () => {
         // Don't set error state for load more failures to avoid disrupting user experience
       } else {
         // For initial search errors, clear results and show error
-        setError(err.message || t('search.results.error', 'Failed to search labs'));
+        setError(err.message || 'Failed to search labs');
         setSearchResults({
           results: [],
           total: 0,
@@ -130,7 +130,7 @@ const SearchPage = () => {
       setLoading(false);
       setInitialLoad(false);
     }
-  }, [t]);
+  }, []);
 
   // Handle search query change
   const handleSearchChange = (newQuery) => {
@@ -234,7 +234,7 @@ const SearchPage = () => {
         }
       } catch (err) {
         console.error('Error loading initial data:', err);
-        setError(t('search.results.error', 'Failed to search labs'));
+        setError('Failed to search labs');
       } finally {
         setLoading(false);
         setInitialLoad(false);
@@ -242,7 +242,7 @@ const SearchPage = () => {
     };
 
     loadInitialData();
-  }, [initialLoad, searchParams, t, parseFiltersFromURL]);
+  }, [initialLoad, searchParams, parseFiltersFromURL]);
 
   // Auto-search when filters change (debounced)
   useEffect(() => {
@@ -295,7 +295,7 @@ const SearchPage = () => {
               marginBottom: spacing[2],
               fontFamily: 'Inter'
             }}>
-              {t('search.pageTitle', 'Search Research Labs')}
+              Search Research Labs
             </h1>
 
             <p style={{
@@ -305,7 +305,7 @@ const SearchPage = () => {
               fontFamily: 'Inter',
               lineHeight: 1.5
             }}>
-              {t('search.pageDescription', 'Find the perfect research lab with detailed reviews and ratings from current students')}
+              Find the perfect research lab with detailed reviews and ratings from current students
             </p>
 
             {/* Search Bar */}
@@ -348,7 +348,7 @@ const SearchPage = () => {
                   }}
                 >
                   <Filter size={16} />
-                  {t('search.filters', 'Filters')}
+                  Filters
                   {filters.hasActiveFilters() && (
                     <span style={{
                       backgroundColor: colors.primary,
@@ -413,24 +413,24 @@ const SearchTips = () => {
 
   const tips = [
     {
-      title: t('search.tips.university.title', 'Search by University'),
-      description: t('search.tips.university.description', 'Try "Stanford", "MIT", "Carnegie Mellon"'),
-      example: t('search.tips.university.example', 'Stanford University')
+      title: 'Search by University',
+      description: 'Try "Stanford", "MIT", "Carnegie Mellon"',
+      example: 'Stanford University'
     },
     {
-      title: t('search.tips.research.title', 'Search by Research Area'),
-      description: t('search.tips.research.description', 'Try "Machine Learning", "Computer Vision", "NLP"'),
-      example: t('search.tips.research.example', 'Machine Learning')
+      title: 'Search by Research Area',
+      description: 'Try "Machine Learning", "Computer Vision", "NLP"',
+      example: 'Machine Learning'
     },
     {
-      title: t('search.tips.professor.title', 'Search by Professor'),
-      description: t('search.tips.professor.description', 'Try "Dr. Sarah Chen", "Prof. Johnson"'),
-      example: t('search.tips.professor.example', 'Dr. Sarah Chen')
+      title: 'Search by Professor',
+      description: 'Try "Dr. Sarah Chen", "Prof. Johnson"',
+      example: 'Dr. Sarah Chen'
     },
     {
-      title: t('search.tips.lab.title', 'Search by Lab Name'),
-      description: t('search.tips.lab.description', 'Try "Computer Vision Lab", "AI Research"'),
-      example: t('search.tips.lab.example', 'Computer Vision Lab')
+      title: 'Search by Lab Name',
+      description: 'Try "Computer Vision Lab", "AI Research"',
+      example: 'Computer Vision Lab'
     }
   ];
 
@@ -450,7 +450,7 @@ const SearchTips = () => {
         fontFamily: 'Inter',
         textAlign: 'center'
       }}>
-        {t('search.tips.title', 'Search Tips')}
+        Search Tips
       </h3>
 
       <div style={{

@@ -30,18 +30,18 @@ const UserProfileCard = ({
   onTabChange
 }) => {
 
-  const verification = getVerificationStatus(user.verificationStatus, t);
+  const verification = getVerificationStatus(user.verificationStatus);
   const VerificationIcon = verification.icon === 'CheckCircle' ? CheckCircle : Clock;
 
   // Navigation menu items for sidebar
   const menuItems = showNavigation ? [
-    { id: 'overview', label: t('profile.tabs.overview', 'Overview'), icon: 'User' },
-    { id: 'academic', label: t('profile.tabs.academicProfile', 'Academic Profile'), icon: 'GraduationCap' },
-    { id: 'research', label: t('profile.tabs.researchInterests', 'Research Interests'), icon: 'BookOpen' },
-    { id: 'reviews', label: t('profile.tabs.myReviews', 'My Reviews'), icon: 'FileText' },
-    { id: 'services', label: t('profile.tabs.serviceProvider', 'Service Provider'), icon: 'Briefcase' },
-    { id: 'settings', label: t('profile.tabs.accountSettings', 'Account Settings'), icon: 'Settings' },
-    { id: 'privacy', label: t('profile.tabs.privacySecurity', 'Privacy & Security'), icon: 'Shield' }
+    { id: 'overview', label: 'Overview', icon: 'User' },
+    { id: 'academic', label: 'Academic Profile', icon: 'GraduationCap' },
+    { id: 'research', label: 'Research Interests', icon: 'BookOpen' },
+    { id: 'reviews', label: 'My Reviews', icon: 'FileText' },
+    { id: 'services', label: 'Service Provider', icon: 'Briefcase' },
+    { id: 'settings', label: 'Account Settings', icon: 'Settings' },
+    { id: 'privacy', label: 'Privacy & Security', icon: 'Shield' }
   ] : [];
 
   // Card styles
@@ -102,7 +102,7 @@ const UserProfileCard = ({
             fontSize: '12px',
             color: colors.textSecondary
           }}>
-            {t('profile.stats.reviews', 'Reviews')}
+            Reviews
           </div>
         </div>
         <div style={{ textAlign: 'center' }}>
@@ -118,7 +118,7 @@ const UserProfileCard = ({
             fontSize: '12px',
             color: colors.textSecondary
           }}>
-            {t('profile.stats.helpful', 'Helpful')}
+            Helpful
           </div>
         </div>
       </div>
@@ -154,7 +154,7 @@ const UserProfileCard = ({
             }}
           >
             <Edit3 size={16} />
-            {t('profile.editProfile', 'Edit Profile')}
+            Edit Profile
           </button>
 
           <button
@@ -203,7 +203,7 @@ const UserProfileCard = ({
           }}
         >
           <Edit3 size={16} />
-          {t('profile.editProfile', 'Edit Profile')}
+          Edit Profile
         </button>
 
         <button
@@ -226,7 +226,7 @@ const UserProfileCard = ({
           }}
         >
           <LogOut size={16} />
-          {t('profile.signOut', 'Sign Out')}
+          Sign Out
         </button>
       </>
     );

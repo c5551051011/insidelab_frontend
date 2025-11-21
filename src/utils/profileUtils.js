@@ -63,24 +63,24 @@ export const getSessionTypeLabel = (type) => {
  * @param {function} t - Translation function
  * @returns {object} Status text and color information
  */
-export const getVerificationStatus = (status, t) => {
+export const getVerificationStatus = (status) => {
   switch (status || 'unverified') {
     case 'verified':
       return {
-        text: t('profile.verification.verified', 'Verified'),
+        text: 'Verified',
         color: '#10B981',
         icon: 'CheckCircle'
       };
     case 'pending':
       return {
-        text: t('profile.verification.pending', 'Verification Pending'),
+        text: 'Verification Pending',
         color: '#F59E0B',
         icon: 'Clock'
       };
     case 'unverified':
     default:
       return {
-        text: t('profile.verification.unverified', 'Unverified'),
+        text: 'Unverified',
         color: '#6B7280',
         icon: 'Shield'
       };

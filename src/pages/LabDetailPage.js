@@ -1071,12 +1071,12 @@ const RatingBreakdown = ({ lab }) => {
     // Fallback to mock data if API doesn't provide rating breakdown
     const baseRating = lab.overallRating;
     return {
-      [t('writeReview.categories.mentorshipQuality', 'Mentorship')]: Math.min(5, Math.max(1, baseRating + 0.2)),
-      [t('writeReview.categories.researchEnvironment', 'Research')]: Math.min(5, Math.max(1, baseRating - 0.1)),
-      [t('writeReview.categories.workLifeBalance', 'Work-Life')]: Math.min(5, Math.max(1, baseRating - 0.3)),
-      [t('writeReview.categories.careerSupport', 'Career')]: Math.min(5, Math.max(1, baseRating + 0.1)),
-      [t('writeReview.categories.fundingResources', 'Funding')]: baseRating,
-      [t('writeReview.categories.collaborationCulture', 'Collaboration')]: Math.min(5, Math.max(1, baseRating + 0.2))
+      'Mentorship': Math.min(5, Math.max(1, baseRating + 0.2)),
+      'Research': Math.min(5, Math.max(1, baseRating - 0.1)),
+      'Work-Life': Math.min(5, Math.max(1, baseRating - 0.3)),
+      'Career': Math.min(5, Math.max(1, baseRating + 0.1)),
+      'Funding': baseRating,
+      'Collaboration': Math.min(5, Math.max(1, baseRating + 0.2))
     };
   };
 

@@ -34,7 +34,7 @@ const WriteReviewPage = () => {
     };
 
     const mappedKey = categoryKeyMap[categoryKey] || categoryKey;
-    return t(`writeReview.categories.${mappedKey}`, category);
+    return category;
   };
 
   // Form state
@@ -106,12 +106,12 @@ const WriteReviewPage = () => {
 
       // Fallback categories
       const fallbackCategories = [
-        t('writeReview.categories.mentorshipQuality', 'Mentorship Quality'),
-        t('writeReview.categories.researchEnvironment', 'Research Environment'),
-        t('writeReview.categories.workLifeBalance', 'Work-Life Balance'),
-        t('writeReview.categories.careerSupport', 'Career Support'),
-        t('writeReview.categories.fundingResources', 'Funding & Resources'),
-        t('writeReview.categories.collaborationCulture', 'Collaboration Culture')
+        'Mentorship Quality',
+        'Research Environment',
+        'Work-Life Balance',
+        'Career Support',
+        'Funding & Resources',
+        'Collaboration Culture'
       ];
 
       setRatingCategories(fallbackCategories);
@@ -123,7 +123,7 @@ const WriteReviewPage = () => {
       );
       setIsLoadingCategories(false);
     }
-  }, [t]);
+  }, []);
 
   const checkAuthenticationStatus = useCallback(async () => {
     try {
@@ -459,7 +459,7 @@ const WriteReviewPage = () => {
     // Validation
     if (!formData.universityId || !formData.departmentId || !formData.professorId ||
         !formData.reviewText.trim() || formData.overallRating === 0) {
-      alert(t('writeReview.validation.fillAllFields', 'Please fill in all required fields'));
+      alert('Please fill in all required fields');
       return;
     }
 
@@ -482,7 +482,7 @@ const WriteReviewPage = () => {
       await ApiService.post('/reviews/', reviewData, true);
 
       // Show success and navigate
-      alert(t('writeReview.validation.reviewSubmitted', 'Review submitted successfully!'));
+      alert('Review submitted successfully!');
       navigate('/');
 
     } catch (error) {
@@ -528,7 +528,7 @@ const WriteReviewPage = () => {
               fontSize: '16px',
               fontFamily: 'Inter'
             }}>
-              {isCheckingAuth ? t('writeReview.loading.authentication', 'Checking authentication...') : isLoadingCategories ? t('writeReview.loading.categories', 'Loading rating categories...') : t('writeReview.loading.prefilling', 'Pre-filling form data...')}
+              {isCheckingAuth ? 'Checking authentication...' : isLoadingCategories ? 'Loading rating categories...' : 'Pre-filling form data...'}
             </p>
           </div>
         </div>
@@ -562,7 +562,7 @@ const WriteReviewPage = () => {
               marginBottom: spacing[2],
               fontFamily: 'Inter'
             }}>
-              {t('writeReview.title', 'Write a Review')}
+              Write a Review
             </h1>
 
             <p style={{
@@ -573,8 +573,8 @@ const WriteReviewPage = () => {
               fontFamily: 'Inter'
             }}>
               {isFormPreFilled
-                ? t('writeReview.subtitlePrefilled', 'Share your honest experience to help future graduate students (form pre-filled)')
-                : t('writeReview.subtitle', 'Share your honest experience to help future graduate students')
+                ? 'Share your honest experience to help future graduate students (form pre-filled)'
+                : 'Share your honest experience to help future graduate students'
               }
             </p>
 
@@ -595,7 +595,7 @@ const WriteReviewPage = () => {
                   fontWeight: '500',
                   fontFamily: 'Inter'
                 }}>
-                  {t('writeReview.labInfoPrefilled', 'Lab information pre-filled')}
+                  Lab information pre-filled
                 </span>
               </div>
             )}
@@ -616,7 +616,7 @@ const WriteReviewPage = () => {
                 margin: 0,
                 fontFamily: 'Inter'
               }}>
-                {t('writeReview.anonymousNotice', 'Your review will be anonymous. Only your position and duration will be shown publicly.')}
+                Your review will be anonymous. Only your position and duration will be shown publicly.
               </p>
             </div>
           </div>
@@ -642,25 +642,25 @@ const WriteReviewPage = () => {
 
             {/* Research Group Selection */}
             <DropdownField
-              label={t('writeReview.form.researchGroup', 'Research Group')}
+              label="Research Group"
               value={formData.researchGroupId}
               onChange={handleResearchGroupChange}
               options={[
-                { value: "___NONE___", label: t('writeReview.form.noResearchGroup', 'No Research Group') },
+                { value: "___NONE___", label: 'No Research Group' },
                 ...researchGroups.map((group) => ({
                   value: group.id,
                   label: group.name
                 })),
                 ...(formData.departmentId && !isLoadingResearchGroups ? [{
                   value: "___ADD_NEW___",
-                  label: t('writeReview.form.addNewResearchGroup', '+ Add New Research Group'),
+                  label: '+ Add New Research Group',
                   style: { fontStyle: 'italic', color: colors.primary }
                 }] : [])
               ]}
               placeholder={
                 !formData.departmentId
-                  ? t('writeReview.form.selectDepartmentFirst', 'Select a department first')
-                  : t('writeReview.form.selectResearchGroup', 'Select a research group or add new (optional)')
+                  ? 'Select a department first'
+                  : 'Select a research group or add new (optional)'
               }
               disabled={!formData.departmentId}
               loading={isLoadingResearchGroups}
@@ -677,7 +677,7 @@ const WriteReviewPage = () => {
                 marginBottom: spacing[2],
                 fontFamily: 'Inter'
               }}>
-                {t('writeReview.form.professorLab', 'Professor/Lab')} <span style={{ color: colors.error }}>{t('writeReview.form.required', '*')}</span>
+                Professor/Lab <span style={{ color: colors.error }}>*</span>
               </label>
 
               <div style={{ position: 'relative' }}>
@@ -688,8 +688,8 @@ const WriteReviewPage = () => {
                   onFocus={handleProfessorInputFocus}
                   onBlur={handleProfessorInputBlur}
                   placeholder={formData.universityId
-                    ? t('writeReview.form.professorLabPlaceholder', 'Search professor or lab name...')
-                    : t('writeReview.form.selectUniversityFirst', 'Please select a university first')
+                    ? 'Search professor or lab name...'
+                    : 'Please select a university first'
                   }
                   disabled={!formData.universityId}
                   style={{
@@ -843,7 +843,7 @@ const WriteReviewPage = () => {
                     marginBottom: spacing[2],
                     fontFamily: 'Inter'
                   }}>
-                    {t('writeReview.form.professorNotFound', 'Professor/Lab not found')}
+                    Professor/Lab not found
                   </p>
                   <button
                     type="button"
@@ -860,7 +860,7 @@ const WriteReviewPage = () => {
                       cursor: 'pointer'
                     }}
                   >
-                    {t('writeReview.form.addNewProfessorLab', 'Add New Professor/Lab')}
+                    Add New Professor/Lab
                   </button>
                 </div>
               )}
@@ -873,7 +873,7 @@ const WriteReviewPage = () => {
                   marginTop: spacing[1],
                   fontFamily: 'Inter'
                 }}>
-                  {t('writeReview.form.pleaseSelectProfessor', 'Please select or add a professor/lab')}
+                  Please select or add a professor/lab
                 </p>
               )}
             </div>
@@ -897,7 +897,7 @@ const WriteReviewPage = () => {
                   marginBottom: spacing[2],
                   fontFamily: 'Inter'
                 }}>
-                  {t('writeReview.form.position', 'Your Position')} <span style={{ color: colors.error }}>{t('writeReview.form.required', '*')}</span>
+                  Your Position <span style={{ color: colors.error }}>*</span>
                 </label>
                 <select
                   value={formData.position}
@@ -916,11 +916,11 @@ const WriteReviewPage = () => {
                     cursor: 'pointer'
                   }}
                 >
-                  <option value="PhD Student">{t('writeReview.form.positions.phd', 'PhD Student')}</option>
-                  <option value="MS Student">{t('writeReview.form.positions.ms', 'MS Student')}</option>
-                  <option value="Undergrad">{t('writeReview.form.positions.undergrad', 'Undergraduate Student')}</option>
-                  <option value="PostDoc">{t('writeReview.form.positions.postdoc', 'PostDoc')}</option>
-                  <option value="Research Assistant">{t('writeReview.form.positions.researchAssistant', 'Research Assistant')}</option>
+                  <option value="PhD Student">PhD Student</option>
+                  <option value="MS Student">MS Student</option>
+                  <option value="Undergrad">Undergraduate Student</option>
+                  <option value="PostDoc">PostDoc</option>
+                  <option value="Research Assistant">Research Assistant</option>
                 </select>
               </div>
 
@@ -934,7 +934,7 @@ const WriteReviewPage = () => {
                   marginBottom: spacing[2],
                   fontFamily: 'Inter'
                 }}>
-                  {t('writeReview.form.duration', 'Duration')} <span style={{ color: colors.error }}>{t('writeReview.form.required', '*')}</span>
+                  Duration <span style={{ color: colors.error }}>*</span>
                 </label>
                 <select
                   value={formData.duration}
@@ -953,12 +953,12 @@ const WriteReviewPage = () => {
                     cursor: 'pointer'
                   }}
                 >
-                  <option value="< 6 months">{t('writeReview.form.durations.lessThan6Months', 'Less than 6 months')}</option>
-                  <option value="6 months">{t('writeReview.form.durations.6months', '6 months')}</option>
-                  <option value="1 year">{t('writeReview.form.durations.1year', '1 year')}</option>
-                  <option value="2 years">{t('writeReview.form.durations.2years', '2 years')}</option>
-                  <option value="3 years">{t('writeReview.form.durations.3years', '3 years')}</option>
-                  <option value="4+ years">{t('writeReview.form.durations.4plusYears', '4+ years')}</option>
+                  <option value="< 6 months">Less than 6 months</option>
+                  <option value="6 months">6 months</option>
+                  <option value="1 year">1 year</option>
+                  <option value="2 years">2 years</option>
+                  <option value="3 years">3 years</option>
+                  <option value="4+ years">4+ years</option>
                 </select>
               </div>
             </div>
@@ -973,7 +973,7 @@ const WriteReviewPage = () => {
                 marginBottom: spacing[2],
                 fontFamily: 'Inter'
               }}>
-                {t('writeReview.form.overallRating', 'Overall Rating')} <span style={{ color: colors.error }}>{t('writeReview.form.required', '*')}</span>
+                Overall Rating <span style={{ color: colors.error }}>*</span>
               </label>
 
               <div style={{
@@ -1033,7 +1033,7 @@ const WriteReviewPage = () => {
                 marginBottom: spacing[2],
                 fontFamily: 'Inter'
               }}>
-                {t('writeReview.form.categoryRatings', 'Category Ratings')}
+                Category Ratings
               </h3>
               <p style={{
                 fontSize: '14px',
@@ -1041,7 +1041,7 @@ const WriteReviewPage = () => {
                 marginBottom: spacing[4],
                 fontFamily: 'Inter'
               }}>
-                {t('writeReview.form.categoryDescription', 'Rate different aspects of your experience')}
+                Rate different aspects of your experience
               </p>
 
               {ratingCategories.map((category, index) => {
@@ -1137,7 +1137,7 @@ const WriteReviewPage = () => {
                 marginBottom: spacing[2],
                 fontFamily: 'Inter'
               }}>
-                {t('writeReview.form.reviewText', 'Your Review')} <span style={{ color: colors.error }}>{t('writeReview.form.required', '*')}</span>
+                Your Review <span style={{ color: colors.error }}>*</span>
               </label>
 
               <p style={{
@@ -1146,13 +1146,13 @@ const WriteReviewPage = () => {
                 marginBottom: spacing[2],
                 fontFamily: 'Inter'
               }}>
-                {t('writeReview.form.reviewDescription', 'Share your honest experience and insights')}
+                Share your honest experience and insights
               </p>
 
               <textarea
                 value={formData.reviewText}
                 onChange={handleInputChange('reviewText')}
-                placeholder={t('writeReview.form.reviewPlaceholder', 'Describe your experience in the lab, the research environment, mentorship quality, and any other relevant details...')}
+                placeholder="Describe your experience in the lab, the research environment, mentorship quality, and any other relevant details..."
                 rows={6}
                 style={{
                   width: '100%',
@@ -1189,12 +1189,12 @@ const WriteReviewPage = () => {
                   marginBottom: spacing[2],
                   fontFamily: 'Inter'
                 }}>
-                  {t('writeReview.form.pros', 'Pros')}
+                  Pros
                 </label>
                 <textarea
                   value={formData.pros}
                   onChange={handleInputChange('pros')}
-                  placeholder={t('writeReview.form.prosPlaceholder', 'List the positive aspects (one per line)')}
+                  placeholder="List the positive aspects (one per line)"
                   rows={4}
                   style={{
                     width: '100%',
@@ -1221,12 +1221,12 @@ const WriteReviewPage = () => {
                   marginBottom: spacing[2],
                   fontFamily: 'Inter'
                 }}>
-                  {t('writeReview.form.cons', 'Cons')}
+                  Cons
                 </label>
                 <textarea
                   value={formData.cons}
                   onChange={handleInputChange('cons')}
-                  placeholder={t('writeReview.form.consPlaceholder', 'List any drawbacks (one per line)')}
+                  placeholder="List any drawbacks (one per line)"
                   rows={4}
                   style={{
                     width: '100%',
@@ -1264,7 +1264,7 @@ const WriteReviewPage = () => {
                   marginBottom: spacing[1],
                   fontFamily: 'Inter'
                 }}>
-                  {t('writeReview.form.communityGuidelines', 'Community Guidelines')}
+                  Community Guidelines
                 </h4>
                 <p style={{
                   fontSize: '12px',
@@ -1273,7 +1273,7 @@ const WriteReviewPage = () => {
                   fontFamily: 'Inter',
                   lineHeight: '1.4'
                 }}>
-                  {t('writeReview.form.guidelinesDescription', 'Reviews must be honest, respectful, and based on personal experience. Inappropriate content will be removed.')}
+                  Reviews must be honest, respectful, and based on personal experience. Inappropriate content will be removed.
                 </p>
               </div>
             </div>
@@ -1311,10 +1311,10 @@ const WriteReviewPage = () => {
                     borderRadius: '50%',
                     animation: 'spin 1s linear infinite'
                   }} />
-                  {t('writeReview.form.submittingButton', 'Submitting Review...')}
+                  Submitting Review...
                 </>
               ) : (
-                t('writeReview.form.submitButton', 'Submit Review')
+                "Submit Review"
               )}
             </button>
           </form>
