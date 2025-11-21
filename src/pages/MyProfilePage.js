@@ -7,7 +7,6 @@ import EditProfileModal from '../components/EditProfileModal';
 import ResearchInterestsModal from '../components/ResearchInterestsModal';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
-import { useTranslation } from '../i18n';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 // Import the new refactored components

@@ -214,33 +214,33 @@ const AddLabModal = ({
 
     // Professor validation
     if (!formData.professorName.trim()) {
-      newErrors.professorName = t('writeReview.modals.addProfessorLab.validation.professorNameRequired', 'Professor name is required');
+      newErrors.professorName = 'Professor name is required';
     }
 
     if (formData.professorEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.professorEmail)) {
-      newErrors.professorEmail = t('writeReview.modals.addProfessorLab.validation.validEmail', 'Please enter a valid email address');
+      newErrors.professorEmail = 'Please enter a valid email address';
     }
 
     // URL validations
     const urlFields = ['professorWebsite', 'profileUrl', 'googleScholarUrl', 'labWebsite'];
     urlFields.forEach(field => {
       if (formData[field].trim() && !validateUrl(formData[field])) {
-        newErrors[field] = t('writeReview.modals.addProfessorLab.validation.validUrl', 'Please enter a valid URL (including https://)');
+        newErrors[field] = 'Please enter a valid URL (including https://)';
       }
     });
 
     // Lab validation (if creating lab)
     if (formData.createLab && !formData.labName.trim()) {
-      newErrors.labName = t('writeReview.modals.addProfessorLab.validation.labNameRequired', 'Lab name is required when creating a lab');
+      newErrors.labName = 'Lab name is required when creating a lab';
     }
 
     // University/Department validation (if in search mode)
     if (showUniversitySelector) {
       if (!selectedUniversityId) {
-        newErrors.university = t('writeReview.modals.addProfessorLab.validation.universityRequired', 'Please select a university');
+        newErrors.university = 'Please select a university';
       }
       if (!selectedUniversityDepartmentId) {
-        newErrors.department = t('writeReview.modals.addProfessorLab.validation.departmentRequired', 'Please select a department');
+        newErrors.department = 'Please select a department';
       }
     }
 
@@ -282,7 +282,7 @@ const AddLabModal = ({
           newProfessor = await UniversityService.addProfessor(professorData);
         } catch (professorError) {
           console.error('Error saving professor:', professorError);
-          throw new Error(t('writeReview.modals.addProfessorLab.validation.professorSaveError', 'Failed to save professor information. Please try again.'));
+          throw new Error('Failed to save professor information. Please try again.');
         }
 
         // Step 2: Then save lab with head_professor_id set to the saved professor's ID
@@ -318,7 +318,7 @@ const AddLabModal = ({
           });
         } catch (labError) {
           console.error('Error saving lab:', labError);
-          throw new Error(t('writeReview.modals.addProfessorLab.validation.labSaveError', 'Professor saved successfully, but failed to create lab. Please try creating the lab again.'));
+          throw new Error('Professor saved successfully, but failed to create lab. Please try creating the lab again.');
         }
       } else {
         // Create professor only
@@ -329,7 +329,7 @@ const AddLabModal = ({
       onClose();
     } catch (error) {
       console.error('Error adding professor/lab:', error);
-      setErrors({ submit: error.message || t('writeReview.modals.addProfessorLab.validation.submitError', 'Failed to add professor/lab. Please try again.') });
+      setErrors({ submit: error.message || 'Failed to add professor/lab. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -377,7 +377,7 @@ const AddLabModal = ({
               margin: 0,
               marginBottom: spacing[1]
             }}>
-              {t('writeReview.modals.addProfessorLab.title', 'Add New Professor/Lab')}
+              Add New Professor/Lab
             </h2>
             {!showUniversitySelector && (
               <p style={{
@@ -478,7 +478,7 @@ const AddLabModal = ({
               marginBottom: spacing[4],
               fontFamily: 'Inter'
             }}>
-              {t('writeReview.modals.addProfessorLab.sections.professor', 'Professor Information')}
+              Professor Information
             </h3>
 
             {/* Professor Name */}
@@ -490,13 +490,13 @@ const AddLabModal = ({
                 color: colors.textPrimary,
                 marginBottom: spacing[2]
               }}>
-{t('writeReview.modals.addProfessorLab.fields.professorName', 'Professor Name')} *
+Professor Name *
               </label>
               <input
                 type="text"
                 value={formData.professorName}
                 onChange={(e) => setFormData(prev => ({ ...prev, professorName: e.target.value }))}
-                placeholder={t('writeReview.modals.addProfessorLab.placeholders.professorName', 'Enter professor name')}
+                placeholder="Enter professor name"
                 style={{
                   width: '100%',
                   padding: spacing[3],
@@ -527,13 +527,13 @@ const AddLabModal = ({
                 color: colors.textPrimary,
                 marginBottom: spacing[2]
               }}>
-{t('writeReview.modals.addProfessorLab.fields.email', 'Email')}
+Email
               </label>
               <input
                 type="email"
                 value={formData.professorEmail}
                 onChange={(e) => setFormData(prev => ({ ...prev, professorEmail: e.target.value }))}
-                placeholder={t('writeReview.modals.addProfessorLab.placeholders.email', 'professor@university.edu')}
+                placeholder="professor@university.edu"
                 style={{
                   width: '100%',
                   padding: spacing[3],
@@ -564,13 +564,13 @@ const AddLabModal = ({
                 color: colors.textPrimary,
                 marginBottom: spacing[2]
               }}>
-{t('writeReview.modals.addProfessorLab.fields.website', 'Personal Website')}
+Personal Website
               </label>
               <input
                 type="url"
                 value={formData.professorWebsite}
                 onChange={(e) => setFormData(prev => ({ ...prev, professorWebsite: e.target.value }))}
-                placeholder={t('writeReview.modals.addProfessorLab.placeholders.website', 'https://professor.university.edu')}
+                placeholder="https://professor.university.edu"
                 style={{
                   width: '100%',
                   padding: spacing[3],
@@ -601,13 +601,13 @@ const AddLabModal = ({
                 color: colors.textPrimary,
                 marginBottom: spacing[2]
               }}>
-{t('writeReview.modals.addProfessorLab.fields.googleScholar', 'Google Scholar URL')}
+Google Scholar URL
               </label>
               <input
                 type="url"
                 value={formData.googleScholarUrl}
                 onChange={(e) => setFormData(prev => ({ ...prev, googleScholarUrl: e.target.value }))}
-                placeholder={t('writeReview.modals.addProfessorLab.placeholders.googleScholar', 'https://scholar.google.com/citations?user=...')}
+                placeholder="https://scholar.google.com/citations?user=..."
                 style={{
                   width: '100%',
                   padding: spacing[3],
@@ -638,7 +638,7 @@ const AddLabModal = ({
                 color: colors.textPrimary,
                 marginBottom: spacing[2]
               }}>
-{t('writeReview.modals.addProfessorLab.fields.researchInterests', 'Research Interests')}
+Research Interests
               </label>
               <div style={{
                 display: 'flex',
@@ -650,7 +650,7 @@ const AddLabModal = ({
                   value={newResearchInterest}
                   onChange={(e) => setNewResearchInterest(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder={t('writeReview.modals.addProfessorLab.placeholders.researchInterest', 'Enter research interest and press Enter')}
+                  placeholder="Enter research interest and press Enter"
                   style={{
                     flex: 1,
                     padding: spacing[3],
@@ -674,7 +674,7 @@ const AddLabModal = ({
                     cursor: newResearchInterest.trim() ? 'pointer' : 'not-allowed'
                   }}
                 >
-{t('writeReview.modals.addProfessorLab.buttons.add', 'Add')}
+Add
                 </button>
               </div>
               {formData.researchInterests.length > 0 && (
@@ -729,12 +729,12 @@ const AddLabModal = ({
                 color: colors.textPrimary,
                 marginBottom: spacing[2]
               }}>
-{t('writeReview.modals.addProfessorLab.fields.biography', 'Biography')}
+Biography
               </label>
               <textarea
                 value={formData.bio}
                 onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-                placeholder={t('writeReview.modals.addProfessorLab.placeholders.biography', 'Brief biography of the professor')}
+                placeholder="Brief biography of the professor"
                 rows={3}
                 style={{
                   width: '100%',
@@ -780,7 +780,7 @@ const AddLabModal = ({
                   cursor: 'pointer'
                 }}
               >
-{t('writeReview.modals.addProfessorLab.fields.createLab', 'Also create a lab for this professor')}
+Also create a lab for this professor
               </label>
             </div>
 
@@ -795,13 +795,13 @@ const AddLabModal = ({
                     color: colors.textPrimary,
                     marginBottom: spacing[2]
                   }}>
-                    {t('writeReview.modals.addProfessorLab.fields.labName', 'Lab Name')} *
+                    Lab Name *
                   </label>
                   <input
                     type="text"
                     value={formData.labName}
                     onChange={(e) => setFormData(prev => ({ ...prev, labName: e.target.value }))}
-                    placeholder={t('writeReview.modals.addProfessorLab.placeholders.labName', 'Enter lab name')}
+                    placeholder="Enter lab name"
                     style={{
                       width: '100%',
                       padding: spacing[3],
@@ -832,13 +832,13 @@ const AddLabModal = ({
                     color: colors.textPrimary,
                     marginBottom: spacing[2]
                   }}>
-                    {t('writeReview.modals.addProfessorLab.fields.labWebsite', 'Lab Website')}
+                    Lab Website
                   </label>
                   <input
                     type="url"
                     value={formData.labWebsite}
                     onChange={(e) => setFormData(prev => ({ ...prev, labWebsite: e.target.value }))}
-                    placeholder={t('writeReview.modals.addProfessorLab.placeholders.labWebsite', 'https://lab.university.edu')}
+                    placeholder="https://lab.university.edu"
                     style={{
                       width: '100%',
                       padding: spacing[3],
@@ -1190,7 +1190,7 @@ const AddLabModal = ({
                 cursor: 'pointer'
               }}
             >
-{t('writeReview.modals.addProfessorLab.buttons.cancel', 'Cancel')}
+Cancel
             </button>
             <button
               type="submit"
@@ -1211,8 +1211,8 @@ const AddLabModal = ({
             >
               {isSubmitting && <Loader size={14} style={{ animation: 'spin 1s linear infinite' }} />}
 {isSubmitting
-                ? (formData.createLab ? t('writeReview.modals.addProfessorLab.buttons.addingProfessorLab', 'Adding Professor & Lab...') : t('writeReview.modals.addProfessorLab.buttons.addingProfessor', 'Adding Professor...'))
-                : (formData.createLab ? t('writeReview.modals.addProfessorLab.buttons.addProfessorLab', 'Add Professor & Lab') : t('writeReview.modals.addProfessorLab.buttons.addProfessor', 'Add Professor'))
+                ? (formData.createLab ? 'Adding Professor & Lab...' : 'Adding Professor...')
+                : (formData.createLab ? 'Add Professor & Lab' : 'Add Professor')
               }
             </button>
           </div>
