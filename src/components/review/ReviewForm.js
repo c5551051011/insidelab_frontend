@@ -488,7 +488,7 @@ const ReviewForm = ({
             ))}
             {researchGroups.length > 0 && (
               <option value="add_new" style={{ fontStyle: 'italic', color: colors.primary }}>
-                {t('writeReview.form.addNewResearchGroup', '+ Add New Research Group')}
+                + Add New Research Group
               </option>
             )}
           </select>

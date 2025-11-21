@@ -1,7 +1,7 @@
 import React from 'react';
 import { Clock3, ChevronRight, Calendar } from 'lucide-react';
 import { colors, spacing } from '../../theme';
-import { formatDate, getSessionTypeLabel, getStatusColor } from '../../utils/profileUtils';
+import { formatDate, getSessionTypeLabel } from '../../utils/profileUtils';
 
 /**
  * UpcomingSessions Component

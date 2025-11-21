@@ -156,7 +156,7 @@ const ProviderDashboard = ({ user, isMobile = false }) => {
   // Load data on mount
   useEffect(() => {
     fetchProviderData();
-  }, [userIsProvider]);
+  }, [userIsProvider, fetchProviderData]);
 
   /**
    * Handle session request acceptance

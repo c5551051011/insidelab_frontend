@@ -78,7 +78,7 @@ const InterviewSessionsList = ({ user, isMobile = false }) => {
   // Load sessions on mount
   useEffect(() => {
     fetchSessions();
-  }, [user]);
+  }, [user, fetchSessions]);
 
   /**
    * Handle manual refresh
@@ -292,15 +292,6 @@ const InterviewSessionsList = ({ user, isMobile = false }) => {
     </div>
   );
 
-  // Group sessions by status
-  const groupedSessions = sessions.reduce((groups, session) => {
-    const status = session.status;
-    if (!groups[status]) {
-      groups[status] = [];
-    }
-    groups[status].push(session);
-    return groups;
-  }, {});
 
   if (loading) return <LoadingComponent />;
   if (error && sessions.length === 0) return <ErrorComponent />;

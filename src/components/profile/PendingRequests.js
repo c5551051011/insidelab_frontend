@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageSquare, Check, X, User } from 'lucide-react';
+import { MessageSquare, Check, X } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { formatSimpleDate, getSessionTypeLabel, getInitials } from '../../utils/profileUtils';
 import DeclineModal from './DeclineModal';

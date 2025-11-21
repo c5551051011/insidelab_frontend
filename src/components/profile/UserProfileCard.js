@@ -33,16 +33,6 @@ const UserProfileCard = ({
   const verification = getVerificationStatus(user.verificationStatus);
   const VerificationIcon = verification.icon === 'CheckCircle' ? CheckCircle : Clock;
 
-  // Navigation menu items for sidebar
-  const menuItems = showNavigation ? [
-    { id: 'overview', label: 'Overview', icon: 'User' },
-    { id: 'academic', label: 'Academic Profile', icon: 'GraduationCap' },
-    { id: 'research', label: 'Research Interests', icon: 'BookOpen' },
-    { id: 'reviews', label: 'My Reviews', icon: 'FileText' },
-    { id: 'services', label: 'Service Provider', icon: 'Briefcase' },
-    { id: 'settings', label: 'Account Settings', icon: 'Settings' },
-    { id: 'privacy', label: 'Privacy & Security', icon: 'Shield' }
-  ] : [];
 
   // Card styles
   const cardStyle = {

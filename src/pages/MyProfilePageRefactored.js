@@ -7,7 +7,6 @@ import EditProfileModal from '../components/EditProfileModal';
 import ResearchInterestsModal from '../components/ResearchInterestsModal';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
-import { useTranslation } from '../i18n';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 // Import the new refactored components
@@ -28,7 +27,6 @@ import {
  */
 const MyProfilePageRefactored = () => {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -63,7 +61,7 @@ const MyProfilePageRefactored = () => {
    * Handle user sign out
    */
   const handleSignOut = () => {
-    if (window.confirm(t('profile.signOutConfirm', 'Are you sure you want to sign out?'))) {
+    if (window.confirm('Are you sure you want to sign out?')) {
       AuthService.logout();
     }
   };
@@ -92,13 +90,13 @@ const MyProfilePageRefactored = () => {
    * Navigation menu items
    */
   const getMenuItems = () => [
-    { id: 'overview', label: t('profile.tabs.overview', 'Overview'), icon: User },
-    { id: 'academic', label: t('profile.tabs.academicProfile', 'Academic Profile'), icon: GraduationCap },
-    { id: 'research', label: t('profile.tabs.researchInterests', 'Research Interests'), icon: BookOpen },
-    { id: 'reviews', label: t('profile.tabs.myReviews', 'My Reviews'), icon: FileText },
-    { id: 'services', label: t('profile.tabs.serviceProvider', 'Service Provider'), icon: Briefcase },
-    { id: 'settings', label: t('profile.tabs.accountSettings', 'Account Settings'), icon: Settings },
-    { id: 'privacy', label: t('profile.tabs.privacySecurity', 'Privacy & Security'), icon: Shield }
+    { id: 'overview', label: 'Overview', icon: User },
+    { id: 'academic', label: 'Academic Profile', icon: GraduationCap },
+    { id: 'research', label: 'Research Interests', icon: BookOpen },
+    { id: 'reviews', label: 'My Reviews', icon: FileText },
+    { id: 'services', label: 'Service Provider', icon: Briefcase },
+    { id: 'settings', label: 'Account Settings', icon: Settings },
+    { id: 'privacy', label: 'Privacy & Security', icon: Shield }
   ];
 
   /**
@@ -246,7 +244,7 @@ const MyProfilePageRefactored = () => {
           fontSize: '18px',
           color: colors.textSecondary
         }}>
-          {t('profile.loading', 'Loading profile...')}
+          Loading profile...
         </div>
         <Footer />
       </div>
@@ -266,7 +264,7 @@ const MyProfilePageRefactored = () => {
           fontSize: '18px',
           color: colors.textSecondary
         }}>
-          {t('profile.loginRequired', 'Please log in to view your profile.')}
+          Please log in to view your profile.
         </div>
         <Footer />
       </div>

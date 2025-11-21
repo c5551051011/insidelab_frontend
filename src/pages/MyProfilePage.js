@@ -11,7 +11,6 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 
 // Import the new refactored components
 import {
-  UserProfileCard,
   MobileProfileCard,
   DesktopProfileCard,
   InterviewSessionsList,

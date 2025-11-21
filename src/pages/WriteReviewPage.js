@@ -33,7 +33,6 @@ const WriteReviewPage = () => {
       'collaborationculture': 'collaborationCulture'
     };
 
-    const mappedKey = categoryKeyMap[categoryKey] || categoryKey;
     return category;
   };
 

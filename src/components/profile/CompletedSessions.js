@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle, Star, MessageSquare } from 'lucide-react';
+import { CheckCircle, Star } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { formatDate, getSessionTypeLabel, getInitials } from '../../utils/profileUtils';
 
