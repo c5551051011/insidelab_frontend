@@ -92,7 +92,7 @@ const MyProfilePageRefactored = () => {
     { id: 'overview', label: 'Overview', icon: User },
     { id: 'academic', label: 'Academic Profile', icon: GraduationCap },
     { id: 'research', label: 'Research Interests', icon: BookOpen },
-    { id: 'reviews', label: 'My Reviews', icon: FileText },
+    { id: 'reviews', label: 'Activities', icon: FileText },
     { id: 'services', label: 'Service Provider', icon: Briefcase },
     { id: 'settings', label: 'Account Settings', icon: Settings },
     { id: 'privacy', label: 'Privacy & Security', icon: Shield }
@@ -192,19 +192,140 @@ const MyProfilePageRefactored = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
-        // Show appropriate overview based on user type
-        if (isServiceProvider(user)) {
-          return <ProviderDashboard user={user} isMobile={isMobile} />;
-        } else {
-          return <InterviewSessionsList user={user} isMobile={isMobile} />;
-        }
+        // Show basic user information overview
+        return (
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            padding: spacing[6],
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+            border: '1px solid rgba(0, 0, 0, 0.05)'
+          }}>
+            <h2 style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              color: colors.textPrimary,
+              marginBottom: spacing[6],
+              fontFamily: 'Inter'
+            }}>
+              Profile Overview
+            </h2>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+              gap: spacing[4]
+            }}>
+              <div>
+                <h3 style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  marginBottom: spacing[2],
+                  fontFamily: 'Inter'
+                }}>
+                  Account Information
+                </h3>
+                <p style={{
+                  fontSize: '14px',
+                  color: colors.textSecondary,
+                  marginBottom: spacing[3],
+                  fontFamily: 'Inter'
+                }}>
+                  Name: {user?.name || 'Not provided'}
+                </p>
+                <p style={{
+                  fontSize: '14px',
+                  color: colors.textSecondary,
+                  marginBottom: spacing[3],
+                  fontFamily: 'Inter'
+                }}>
+                  Email: {user?.email || 'Not provided'}
+                </p>
+                <p style={{
+                  fontSize: '14px',
+                  color: colors.textSecondary,
+                  fontFamily: 'Inter'
+                }}>
+                  Member since: {user?.createdAt ? new Date(user.createdAt).getFullYear() : 'N/A'}
+                </p>
+              </div>
+
+              <div>
+                <h3 style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  marginBottom: spacing[2],
+                  fontFamily: 'Inter'
+                }}>
+                  Profile Status
+                </h3>
+                <p style={{
+                  fontSize: '14px',
+                  color: colors.textSecondary,
+                  marginBottom: spacing[3],
+                  fontFamily: 'Inter'
+                }}>
+                  Verification: {user?.verificationStatus || 'Unverified'}
+                </p>
+                <p style={{
+                  fontSize: '14px',
+                  color: colors.textSecondary,
+                  marginBottom: spacing[3],
+                  fontFamily: 'Inter'
+                }}>
+                  Service Provider: {isServiceProvider(user) ? 'Yes' : 'No'}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
 
       case 'services':
         return <ProviderDashboard user={user} isMobile={isMobile} />;
 
+      case 'reviews':
+        // Activities tab - shows interview sessions and reviews
+        return (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: spacing[6]
+          }}>
+            {/* Interview Sessions */}
+            <InterviewSessionsList user={user} isMobile={isMobile} />
+
+            {/* Reviews Section - Placeholder for now */}
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: spacing[6],
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(0, 0, 0, 0.05)'
+            }}>
+              <h3 style={{
+                fontSize: isMobile ? '18px' : '20px',
+                fontWeight: '700',
+                color: colors.textPrimary,
+                marginBottom: spacing[4]
+              }}>
+                My Reviews
+              </h3>
+              <p style={{
+                fontSize: '14px',
+                color: colors.textSecondary,
+                textAlign: 'center',
+                padding: spacing[4]
+              }}>
+                Review functionality coming soon
+              </p>
+            </div>
+          </div>
+        );
+
       case 'academic':
       case 'research':
-      case 'reviews':
       case 'settings':
       case 'privacy':
       default:

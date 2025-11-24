@@ -151,7 +151,7 @@ const ProviderDashboard = ({ user, isMobile = false }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [userIsProvider]);
+  }, [userIsProvider, mockDashboardData, mockPendingRequests, mockUpcomingSessions, mockCompletedSessions]);
 
   // Load data on mount
   useEffect(() => {

@@ -73,7 +73,7 @@ const InterviewSessionsList = ({ user, isMobile = false }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [mockSessions]);
 
   // Load sessions on mount
   useEffect(() => {
