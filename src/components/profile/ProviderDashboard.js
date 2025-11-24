@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { InterviewService } from '../../services/interviewService';
@@ -102,7 +102,7 @@ const ProviderDashboard = ({ user, isMobile = false }) => {
   /**
    * Fetch provider data from API with fallback to mock data
    */
-  const fetchProviderData = async (isRefresh = false) => {
+  const fetchProviderData = useCallback(async (isRefresh = false) => {
     if (!userIsProvider) {
       setLoading(false);
       return;
@@ -151,7 +151,7 @@ const ProviderDashboard = ({ user, isMobile = false }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [userIsProvider]);
 
   // Load data on mount
   useEffect(() => {

@@ -21,18 +21,8 @@ const WriteReviewPage = () => {
   const isCompact600 = width < 600;
   const isCompact640 = width < 640;
 
-  // Helper function to get translated category names
+  // Helper function to get category display name
   const getCategoryDisplayName = (category) => {
-    const categoryKey = category.toLowerCase().replace(/\s+/g, '');
-    const categoryKeyMap = {
-      'mentorshipquality': 'mentorshipQuality',
-      'researchenvironment': 'researchEnvironment',
-      'worklifebalance': 'workLifeBalance',
-      'careersupport': 'careerSupport',
-      'fundingresources': 'fundingResources',
-      'collaborationculture': 'collaborationCulture'
-    };
-
     return category;
   };
 

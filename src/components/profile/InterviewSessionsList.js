@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, Clock, User, AlertCircle, RefreshCw } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { InterviewService } from '../../services/interviewService';
@@ -51,7 +51,7 @@ const InterviewSessionsList = ({ user, isMobile = false }) => {
   /**
    * Fetch user's interview sessions
    */
-  const fetchSessions = async (isRefresh = false) => {
+  const fetchSessions = useCallback(async (isRefresh = false) => {
     try {
       if (isRefresh) {
         setRefreshing(true);
@@ -73,7 +73,7 @@ const InterviewSessionsList = ({ user, isMobile = false }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   // Load sessions on mount
   useEffect(() => {
