@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Calendar, Clock, User, AlertCircle, RefreshCw } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { InterviewService } from '../../services/interviewService';
@@ -20,8 +20,8 @@ const InterviewSessionsList = ({ user, isMobile = false }) => {
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Mock data for development/demo
-  const mockSessions = [
+  // Mock data for development/demo - using useMemo to fix ESLint warning
+  const mockSessions = useMemo(() => [
     {
       id: 1,
       scheduled_time: '2025-11-25T15:00:00Z',
@@ -46,7 +46,7 @@ const InterviewSessionsList = ({ user, isMobile = false }) => {
       status: 'completed',
       focus_areas: 'Research methodology discussion'
     }
-  ];
+  ], []);
 
   /**
    * Fetch user's interview sessions
@@ -62,12 +62,12 @@ const InterviewSessionsList = ({ user, isMobile = false }) => {
 
       // Fetch user's sessions from API
       const response = await InterviewService.getUserSessions();
-      setSessions(response.results || mockSessions);
+      setSessions(response.results || []);
 
     } catch (error) {
       console.error('Error fetching sessions:', error);
       setError(error.message);
-      // Use mock data on error
+      // Show structure even on error
       setSessions(mockSessions);
     } finally {
       setLoading(false);

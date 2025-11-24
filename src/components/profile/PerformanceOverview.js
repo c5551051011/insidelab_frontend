@@ -132,6 +132,7 @@ const PerformanceOverview = ({
   /**
    * Overview Stat Card (alternative layout for key metrics)
    */
+  // eslint-disable-next-line no-unused-vars
   const OverviewStatCard = ({ icon: Icon, label, value, trend, color }) => {
     return (
       <div style={{

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { InterviewService } from '../../services/interviewService';
@@ -33,8 +33,8 @@ const ProviderDashboard = ({ user, isMobile = false }) => {
 
   const userIsProvider = isServiceProvider(user);
 
-  // Mock data fallback for development/demo
-  const mockDashboardData = {
+  // Mock data fallback for development/demo - using useMemo to fix ESLint warning
+  const mockDashboardData = useMemo(() => ({
     this_month_bookings: 12,
     average_rating: 4.8,
     total_earnings: 2400,
@@ -43,9 +43,9 @@ const ProviderDashboard = ({ user, isMobile = false }) => {
     rating_trend: '+0.2',
     earnings_trend: '+15%',
     completion_trend: '+12%'
-  };
+  }), []);
 
-  const mockUpcomingSessions = [
+  const mockUpcomingSessions = useMemo(() => [
     {
       id: 1,
       scheduled_time: '2025-11-25T14:00:00Z',
@@ -64,9 +64,9 @@ const ProviderDashboard = ({ user, isMobile = false }) => {
       focus_areas: 'Resume optimization',
       duration: 45
     }
-  ];
+  ], []);
 
-  const mockPendingRequests = [
+  const mockPendingRequests = useMemo(() => [
     {
       id: 3,
       student_name: 'Student A',
@@ -76,9 +76,9 @@ const ProviderDashboard = ({ user, isMobile = false }) => {
       additional_notes: 'Need help with algorithm questions',
       created_at: '2025-11-21T10:00:00Z'
     }
-  ];
+  ], []);
 
-  const mockCompletedSessions = [
+  const mockCompletedSessions = useMemo(() => [
     {
       id: 4,
       scheduled_time: '2025-11-18T14:00:00Z',
@@ -97,7 +97,7 @@ const ProviderDashboard = ({ user, isMobile = false }) => {
       has_review: true,
       completion_date: '2025-11-15T16:45:00Z'
     }
-  ];
+  ], []);
 
   /**
    * Fetch provider data from API with fallback to mock data
@@ -124,7 +124,7 @@ const ProviderDashboard = ({ user, isMobile = false }) => {
         InterviewService.getProviderSessions('completed')
       ]);
 
-      // Use API data if available, otherwise fall back to mock data
+      // Use API data if available, otherwise fall back to mock data to show structure
       setDashboardData(
         dashboard.status === 'fulfilled' ? dashboard.value : mockDashboardData
       );
@@ -142,7 +142,7 @@ const ProviderDashboard = ({ user, isMobile = false }) => {
       console.error('Error fetching provider data:', error);
       setError(error.message);
 
-      // Use mock data on error
+      // Use mock data on error to show structure
       setDashboardData(mockDashboardData);
       setPendingRequests(mockPendingRequests);
       setUpcomingSessions(mockUpcomingSessions);
