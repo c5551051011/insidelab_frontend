@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, GraduationCap, BookOpen, FileText, Briefcase, Settings, Shield } from 'lucide-react';
+import { User, GraduationCap, BookOpen, FileText, Briefcase, Settings, Shield, Heart, Plus, Edit2, Trash2 } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import EditProfileModal from '../components/EditProfileModal';
 import ResearchInterestsModal from '../components/ResearchInterestsModal';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
+import { ApiService } from '../services/apiService';
+import { ResearchProfileService } from '../services/researchProfileService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import LabCard from '../components/search/LabCard';
 
 // Import the new refactored components
 import {
@@ -31,6 +34,9 @@ const MyProfilePageRefactored = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isResearchModalOpen, setIsResearchModalOpen] = useState(false);
+  const [researchProfile, setResearchProfile] = useState(null);
+  const [interestedLabs, setInterestedLabs] = useState([]);
+  const [labsLoading, setLabsLoading] = useState(false);
   const { isMobile } = useBreakpoint();
 
   // Authentication and user data loading
@@ -44,6 +50,11 @@ const MyProfilePageRefactored = () => {
       try {
         const currentUser = await AuthService.getCurrentUser();
         setUser(currentUser);
+
+        // Load research profile
+        if (currentUser.research_profile) {
+          setResearchProfile(ResearchProfileService.transformFromApiFormat(currentUser.research_profile));
+        }
       } catch (error) {
         console.error('Error fetching user data:', error);
         AuthService.logout();
@@ -55,6 +66,27 @@ const MyProfilePageRefactored = () => {
 
     checkAuth();
   }, [navigate]);
+
+  // Load interested labs
+  useEffect(() => {
+    const loadInterestedLabs = async () => {
+      if (!user) return;
+
+      setLabsLoading(true);
+      try {
+        const response = await ApiService.getLabInterests();
+        const labs = response.results || response || [];
+        setInterestedLabs(labs);
+      } catch (error) {
+        console.error('Error loading interested labs:', error);
+        setInterestedLabs([]);
+      } finally {
+        setLabsLoading(false);
+      }
+    };
+
+    loadInterestedLabs();
+  }, [user]);
 
   /**
    * Handle user sign out
@@ -79,6 +111,13 @@ const MyProfilePageRefactored = () => {
     try {
       const latestUser = await AuthService.getCurrentUser();
       setUser(latestUser);
+
+      // Update research profile if it exists
+      if (latestUser.research_profile) {
+        setResearchProfile(ResearchProfileService.transformFromApiFormat(latestUser.research_profile));
+      } else {
+        setResearchProfile(null);
+      }
     } catch (error) {
       console.error('Error fetching updated user data:', error);
       setUser(updatedUser);
@@ -324,8 +363,373 @@ const MyProfilePageRefactored = () => {
           </div>
         );
 
-      case 'academic':
       case 'research':
+        return (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: spacing[6]
+          }}>
+            {/* Research Interests Section */}
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: spacing[6],
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(0, 0, 0, 0.05)'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: spacing[5]
+              }}>
+                <h3 style={{
+                  fontSize: isMobile ? '18px' : '20px',
+                  fontWeight: '700',
+                  color: colors.textPrimary,
+                  margin: 0
+                }}>
+                  Research Interests
+                </h3>
+                <button
+                  onClick={() => setIsResearchModalOpen(true)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: spacing[2],
+                    padding: `${spacing[2]} ${spacing[4]}`,
+                    backgroundColor: colors.primary,
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {researchProfile ? <Edit2 size={16} /> : <Plus size={16} />}
+                  {researchProfile ? 'Edit' : 'Add'}
+                </button>
+              </div>
+
+              {researchProfile ? (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: spacing[4]
+                }}>
+                  {/* Primary Research Area */}
+                  {researchProfile.researchArea && (
+                    <div>
+                      <h4 style={{
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: colors.textSecondary,
+                        marginBottom: spacing[2],
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        Primary Research Area
+                      </h4>
+                      <p style={{
+                        fontSize: '16px',
+                        color: colors.textPrimary,
+                        margin: 0
+                      }}>
+                        {researchProfile.researchArea}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Specialties */}
+                  {researchProfile.specialties && researchProfile.specialties.length > 0 && (
+                    <div>
+                      <h4 style={{
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: colors.textSecondary,
+                        marginBottom: spacing[2],
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        Specialties & Interests
+                      </h4>
+                      <div style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: spacing[2]
+                      }}>
+                        {researchProfile.specialties.map((specialty, index) => (
+                          <span
+                            key={index}
+                            style={{
+                              padding: `${spacing[1]} ${spacing[3]}`,
+                              backgroundColor: `${colors.primary}10`,
+                              color: colors.primary,
+                              borderRadius: '16px',
+                              fontSize: '14px',
+                              fontWeight: '500'
+                            }}
+                          >
+                            {specialty}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Keywords */}
+                  {researchProfile.keywords && researchProfile.keywords.length > 0 && (
+                    <div>
+                      <h4 style={{
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: colors.textSecondary,
+                        marginBottom: spacing[2],
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        Research Keywords
+                      </h4>
+                      <div style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: spacing[2]
+                      }}>
+                        {researchProfile.keywords.map((keyword, index) => (
+                          <span
+                            key={index}
+                            style={{
+                              padding: `${spacing[1]} ${spacing[3]}`,
+                              backgroundColor: colors.background,
+                              color: colors.textPrimary,
+                              borderRadius: '16px',
+                              fontSize: '13px',
+                              fontWeight: '500',
+                              border: `1px solid ${colors.border}`
+                            }}
+                          >
+                            {keyword}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Academic Background */}
+                  {researchProfile.academicBackground && (
+                    <div>
+                      <h4 style={{
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: colors.textSecondary,
+                        marginBottom: spacing[2],
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        Academic Background
+                      </h4>
+                      <p style={{
+                        fontSize: '14px',
+                        color: colors.textPrimary,
+                        margin: 0,
+                        lineHeight: 1.6
+                      }}>
+                        {researchProfile.academicBackground}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Research Goals */}
+                  {researchProfile.researchGoals && (
+                    <div>
+                      <h4 style={{
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: colors.textSecondary,
+                        marginBottom: spacing[2],
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px'
+                      }}>
+                        Research Goals
+                      </h4>
+                      <p style={{
+                        fontSize: '14px',
+                        color: colors.textPrimary,
+                        margin: 0,
+                        lineHeight: 1.6
+                      }}>
+                        {researchProfile.researchGoals}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{
+                  textAlign: 'center',
+                  padding: spacing[8],
+                  color: colors.textSecondary
+                }}>
+                  <BookOpen
+                    size={48}
+                    color={colors.textTertiary}
+                    style={{ marginBottom: spacing[3] }}
+                  />
+                  <p style={{
+                    fontSize: '16px',
+                    marginBottom: spacing[2]
+                  }}>
+                    No research interests added yet
+                  </p>
+                  <p style={{
+                    fontSize: '14px',
+                    color: colors.textTertiary
+                  }}>
+                    Add your research interests to help us recommend relevant labs
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Interested Labs Section */}
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: spacing[6],
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(0, 0, 0, 0.05)'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: spacing[5]
+              }}>
+                <h3 style={{
+                  fontSize: isMobile ? '18px' : '20px',
+                  fontWeight: '700',
+                  color: colors.textPrimary,
+                  margin: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing[2]
+                }}>
+                  <Heart size={20} color={colors.primary} />
+                  Interested Labs
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: colors.textSecondary,
+                    marginLeft: spacing[2]
+                  }}>
+                    ({interestedLabs.length})
+                  </span>
+                </h3>
+                <button
+                  onClick={() => navigate('/search')}
+                  style={{
+                    padding: `${spacing[2]} ${spacing[4]}`,
+                    backgroundColor: 'transparent',
+                    color: colors.primary,
+                    border: `2px solid ${colors.primary}`,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Browse Labs
+                </button>
+              </div>
+
+              {labsLoading ? (
+                <div style={{
+                  textAlign: 'center',
+                  padding: spacing[8],
+                  color: colors.textSecondary
+                }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    border: `3px solid ${colors.border}`,
+                    borderTop: `3px solid ${colors.primary}`,
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    margin: '0 auto',
+                    marginBottom: spacing[3]
+                  }} />
+                  Loading interested labs...
+                </div>
+              ) : interestedLabs.length > 0 ? (
+                <div style={{
+                  display: 'grid',
+                  gap: spacing[4],
+                  gridTemplateColumns: '1fr'
+                }}>
+                  {interestedLabs.map((item, index) => (
+                    <LabCard
+                      key={item.id || index}
+                      lab={item.lab}
+                      onClick={(lab) => navigate(`/lab/${lab.id}`)}
+                      isInterested={true}
+                      onInterestChange={async (labId, isInterested) => {
+                        if (!isInterested) {
+                          setInterestedLabs(prev => prev.filter(l => l.lab?.id !== labId));
+                        }
+                      }}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div style={{
+                  textAlign: 'center',
+                  padding: spacing[8],
+                  color: colors.textSecondary
+                }}>
+                  <Heart
+                    size={48}
+                    color={colors.textTertiary}
+                    style={{ marginBottom: spacing[3] }}
+                  />
+                  <p style={{
+                    fontSize: '16px',
+                    marginBottom: spacing[2]
+                  }}>
+                    No interested labs yet
+                  </p>
+                  <p style={{
+                    fontSize: '14px',
+                    color: colors.textTertiary,
+                    marginBottom: spacing[4]
+                  }}>
+                    Browse labs and bookmark the ones you're interested in
+                  </p>
+                  <button
+                    onClick={() => navigate('/search')}
+                    style={{
+                      padding: `${spacing[3]} ${spacing[5]}`,
+                      backgroundColor: colors.primary,
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Explore Labs
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'academic':
       case 'settings':
       case 'privacy':
       default:
@@ -343,8 +747,7 @@ const MyProfilePageRefactored = () => {
             </h3>
             <p>This section would contain the {activeTab} content.</p>
             <p style={{ fontSize: '14px', marginTop: spacing[4] }}>
-              Additional components like AcademicProfile, ResearchInterests, ReviewsTab,
-              SettingsTab, and PrivacyTab would be extracted and placed here.
+              Additional components like AcademicProfile, SettingsTab, and PrivacyTab would be extracted and placed here.
             </p>
           </div>
         );

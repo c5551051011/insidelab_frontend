@@ -234,6 +234,37 @@ class ApiService {
     const text = await response.text();
     return text ? JSON.parse(text) : {};
   }
+
+  // Lab Interest API methods
+  static async addLabInterest(labId) {
+    try {
+      const response = await this.post('/auth/lab-interest/', { lab_id: labId }, true);
+      return response;
+    } catch (error) {
+      console.error('Error adding lab interest:', error);
+      throw error;
+    }
+  }
+
+  static async removeLabInterest(labId) {
+    try {
+      const response = await this.post('/auth/lab-interest/remove_interest/', { lab_id: labId }, true);
+      return response;
+    } catch (error) {
+      console.error('Error removing lab interest:', error);
+      throw error;
+    }
+  }
+
+  static async getLabInterests() {
+    try {
+      const response = await this.get('/auth/lab-interest/', true);
+      return response;
+    } catch (error) {
+      console.error('Error fetching lab interests:', error);
+      throw error;
+    }
+  }
 }
 
 // Custom exception for API errors

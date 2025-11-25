@@ -19,6 +19,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { colors, spacing } from '../theme';
 import { SearchService } from '../services/searchService';
+import { ApiService } from '../services/apiService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { trackLabView, trackPageView, AnalyticsEvents, trackEvent } from '../lib/analytics/trackEvent';
 
@@ -487,8 +488,11 @@ const LabDetailPage = () => {
     }
   }, [lab, id, location.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleBookmarkToggle = () => {
+  const handleBookmarkToggle = async () => {
     const newBookmarkState = !isBookmarked;
+    const previousState = isBookmarked;
+
+    // Optimistic update
     setIsBookmarked(newBookmarkState);
 
     // Track bookmark event
@@ -501,8 +505,26 @@ const LabDetailPage = () => {
       }
     );
 
-    // TODO: Add actual bookmark API call here
-    console.log(`Lab ${isBookmarked ? 'unbookmarked' : 'bookmarked'}:`, lab?.id);
+    try {
+      if (newBookmarkState) {
+        await ApiService.addLabInterest(lab?.id);
+        console.log('Lab bookmarked successfully:', lab?.id);
+      } else {
+        await ApiService.removeLabInterest(lab?.id);
+        console.log('Lab unbookmarked successfully:', lab?.id);
+      }
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+      // Revert on error
+      setIsBookmarked(previousState);
+
+      // Show error message to user
+      if (error.statusCode === 401) {
+        alert('Please log in to bookmark labs');
+      } else {
+        alert('Failed to update bookmark. Please try again.');
+      }
+    }
   };
 
   const handleWebsiteClick = (url) => {

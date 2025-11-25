@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, AlertCircle, ChevronDown, Plus } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import LabCard, { LabCardSkeleton } from './LabCard';
 import { Lab } from '../../models/Lab';
 import AddLabModal from '../AddLabModal';
+import { ApiService } from '../../services/apiService';
 
 const SearchResults = ({
   results = [],
@@ -19,6 +20,36 @@ const SearchResults = ({
   onLabAdded
 }) => {
   const [showAddLabModal, setShowAddLabModal] = useState(false);
+  const [interestedLabIds, setInterestedLabIds] = useState(new Set());
+
+  // Fetch user's interested labs on mount
+  useEffect(() => {
+    const fetchInterestedLabs = async () => {
+      try {
+        const response = await ApiService.getLabInterests();
+        const labIds = new Set((response.results || response || []).map(item => item.lab_id || item.lab?.id));
+        setInterestedLabIds(labIds);
+      } catch (error) {
+        // Silent fail - user might not be logged in
+        console.log('Could not fetch lab interests:', error.message);
+      }
+    };
+
+    fetchInterestedLabs();
+  }, []);
+
+  // Handle interest change from LabCard
+  const handleInterestChange = (labId, isInterested) => {
+    setInterestedLabIds(prev => {
+      const newSet = new Set(prev);
+      if (isInterested) {
+        newSet.add(labId);
+      } else {
+        newSet.delete(labId);
+      }
+      return newSet;
+    });
+  };
 
   // Convert raw data to Lab instances if needed
   const labInstances = results.map(result =>
@@ -110,6 +141,8 @@ const SearchResults = ({
             lab={lab}
             searchQuery={query}
             onClick={onLabClick}
+            isInterested={interestedLabIds.has(lab.id)}
+            onInterestChange={handleInterestChange}
           />
         ))}
       </div>

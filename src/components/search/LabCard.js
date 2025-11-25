@@ -2,15 +2,19 @@ import React, { useState } from 'react';
 import { Star, ExternalLink, MapPin, Users, Bookmark } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { Lab } from '../../models/Lab';
+import { ApiService } from '../../services/apiService';
 
 const LabCard = ({
   lab,
   searchQuery = '',
   onClick,
   className = '',
-  style = {}
+  style = {},
+  isInterested = false,
+  onInterestChange
 }) => {
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(isInterested);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // Ensure lab is a Lab instance
   const labInstance = lab instanceof Lab ? lab : new Lab(lab);
@@ -71,11 +75,45 @@ const LabCard = ({
   };
 
   // Handle bookmark toggle
-  const handleBookmarkToggle = (e) => {
+  const handleBookmarkToggle = async (e) => {
     e.stopPropagation();
-    setIsBookmarked(!isBookmarked);
-    // TODO: Add actual bookmark API call here
-    console.log(`Lab ${isBookmarked ? 'unbookmarked' : 'bookmarked'}:`, labInstance.id);
+
+    if (isProcessing) return;
+
+    const newBookmarkState = !isBookmarked;
+    const previousState = isBookmarked;
+
+    // Optimistic update
+    setIsBookmarked(newBookmarkState);
+    setIsProcessing(true);
+
+    try {
+      if (newBookmarkState) {
+        await ApiService.addLabInterest(labInstance.id);
+        console.log('Lab bookmarked successfully:', labInstance.id);
+      } else {
+        await ApiService.removeLabInterest(labInstance.id);
+        console.log('Lab unbookmarked successfully:', labInstance.id);
+      }
+
+      // Notify parent component if callback exists
+      if (onInterestChange) {
+        onInterestChange(labInstance.id, newBookmarkState);
+      }
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+      // Revert on error
+      setIsBookmarked(previousState);
+
+      // Show error message to user
+      if (error.statusCode === 401) {
+        alert('Please log in to bookmark labs');
+      } else {
+        alert('Failed to update bookmark. Please try again.');
+      }
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -110,6 +148,7 @@ const LabCard = ({
       {/* Bookmark Button - Top Right */}
       <button
         onClick={handleBookmarkToggle}
+        disabled={isProcessing}
         style={{
           position: 'absolute',
           top: spacing[3],
@@ -122,18 +161,23 @@ const LabCard = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          cursor: 'pointer',
+          cursor: isProcessing ? 'not-allowed' : 'pointer',
           color: isBookmarked ? colors.primary : colors.textSecondary,
           transition: 'all 0.2s ease',
-          zIndex: 2
+          zIndex: 2,
+          opacity: isProcessing ? 0.6 : 1
         }}
         onMouseEnter={(e) => {
-          e.target.style.backgroundColor = colors.background;
-          e.target.style.transform = 'scale(1.1)';
+          if (!isProcessing) {
+            e.currentTarget.style.backgroundColor = colors.background;
+            e.currentTarget.style.transform = 'scale(1.1)';
+          }
         }}
         onMouseLeave={(e) => {
-          e.target.style.backgroundColor = 'transparent';
-          e.target.style.transform = 'scale(1)';
+          if (!isProcessing) {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.transform = 'scale(1)';
+          }
         }}
         title={isBookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
       >
