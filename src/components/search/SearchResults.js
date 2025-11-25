@@ -17,18 +17,25 @@ const SearchResults = ({
   onLabClick,
   className = '',
   style = {},
-  onLabAdded
+  onLabAdded,
+  interestedLabIds = new Set(),
+  onInterestChange,
+  isAuthenticated = false
 }) => {
   const [showAddLabModal, setShowAddLabModal] = useState(false);
-  const [interestedLabIds, setInterestedLabIds] = useState(new Set());
+  // Use interestedLabIds from props if provided, otherwise use local state
+  const [localInterestedLabIds, setLocalInterestedLabIds] = useState(new Set());
+  const effectiveInterestedLabIds = interestedLabIds.size > 0 ? interestedLabIds : localInterestedLabIds;
 
-  // Fetch user's interested labs on mount
+  // Fetch user's interested labs on mount (only if not provided from parent)
   useEffect(() => {
+    if (interestedLabIds.size > 0) return; // Skip if provided from parent
+
     const fetchInterestedLabs = async () => {
       try {
-        const response = await ApiService.getLabInterests();
-        const labIds = new Set((response.results || response || []).map(item => item.lab_id || item.lab?.id));
-        setInterestedLabIds(labIds);
+        const response = await ApiService.getLabInterests(true); // Use minimal fields
+        const labIds = new Set((response.results || response || []).map(item => item.lab));
+        setLocalInterestedLabIds(labIds);
       } catch (error) {
         // Silent fail - user might not be logged in
         console.log('Could not fetch lab interests:', error.message);
@@ -36,19 +43,24 @@ const SearchResults = ({
     };
 
     fetchInterestedLabs();
-  }, []);
+  }, [interestedLabIds.size]);
 
   // Handle interest change from LabCard
   const handleInterestChange = (labId, isInterested) => {
-    setInterestedLabIds(prev => {
-      const newSet = new Set(prev);
-      if (isInterested) {
-        newSet.add(labId);
-      } else {
-        newSet.delete(labId);
-      }
-      return newSet;
-    });
+    // Use parent handler if provided, otherwise handle locally
+    if (onInterestChange) {
+      onInterestChange(labId, isInterested);
+    } else {
+      setLocalInterestedLabIds(prev => {
+        const newSet = new Set(prev);
+        if (isInterested) {
+          newSet.add(labId);
+        } else {
+          newSet.delete(labId);
+        }
+        return newSet;
+      });
+    }
   };
 
   // Convert raw data to Lab instances if needed
@@ -141,7 +153,7 @@ const SearchResults = ({
             lab={lab}
             searchQuery={query}
             onClick={onLabClick}
-            isInterested={interestedLabIds.has(lab.id)}
+            isInterested={effectiveInterestedLabIds.has(lab.id)}
             onInterestChange={handleInterestChange}
           />
         ))}

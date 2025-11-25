@@ -7,6 +7,8 @@ import FilterSidebar from '../components/search/FilterSidebar';
 import SearchResults from '../components/search/SearchResults';
 import { colors, spacing } from '../theme';
 import { SearchService } from '../services/searchService';
+import { ApiService } from '../services/apiService';
+import { AuthService } from '../services/authService';
 import { SearchFilter } from '../models/Lab';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { trackSearch, trackFilterChange, trackPageView } from '../lib/analytics/trackEvent';
@@ -82,6 +84,8 @@ const SearchPage = () => {
   const [error, setError] = useState(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [interestedLabIds, setInterestedLabIds] = useState(new Set());
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { width } = useBreakpoint();
   const isMobile = width < 1000;
 
@@ -194,6 +198,57 @@ const SearchPage = () => {
     // You could trigger a fresh search here if needed
     // performSearch(query, filters, 1, false);
   };
+
+  // Handle interest change for a lab
+  const handleInterestChange = async (labId, isInterested) => {
+    if (!isAuthenticated) {
+      // Redirect to sign in if not authenticated
+      navigate('/sign-in');
+      return;
+    }
+
+    try {
+      if (isInterested) {
+        await ApiService.addLabInterest(labId);
+        setInterestedLabIds(prev => new Set(prev).add(labId));
+      } else {
+        await ApiService.removeLabInterest(labId);
+        setInterestedLabIds(prev => {
+          const updated = new Set(prev);
+          updated.delete(labId);
+          return updated;
+        });
+      }
+    } catch (error) {
+      console.error('Error updating lab interest:', error);
+      // You might want to show a toast notification here
+    }
+  };
+
+  // Load user authentication status and interested labs
+  useEffect(() => {
+    const loadUserData = async () => {
+      const authenticated = AuthService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+
+      if (authenticated) {
+        try {
+          // Load minimal lab interest data (just IDs)
+          const response = await ApiService.getLabInterests(true);
+          const labInterests = response.results || [];
+
+          // Extract lab IDs and create a Set for fast lookup
+          const labIds = new Set(labInterests.map(interest => interest.lab));
+          setInterestedLabIds(labIds);
+        } catch (error) {
+          console.error('Error loading interested labs:', error);
+          // Don't set error state for this, just continue without interest data
+        }
+      }
+    };
+
+    loadUserData();
+  }, []);
 
   // Load initial data on mount - either from URL query or popular labs
   useEffect(() => {
@@ -396,6 +451,9 @@ const SearchPage = () => {
             onLoadMore={handleLoadMore}
             onLabClick={handleLabClick}
             onLabAdded={handleLabAdded}
+            interestedLabIds={interestedLabIds}
+            onInterestChange={handleInterestChange}
+            isAuthenticated={isAuthenticated}
           />
 
           {/* Search Tips (shown when no results and no query) */}

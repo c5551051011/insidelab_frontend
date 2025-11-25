@@ -256,9 +256,12 @@ class ApiService {
     }
   }
 
-  static async getLabInterests() {
+  static async getLabInterests(fieldsMinimal = false) {
     try {
-      const response = await this.get('/auth/lab-interests/', true);
+      const endpoint = fieldsMinimal
+        ? '/auth/lab-interests/?fields=minimal'
+        : '/auth/lab-interests/';
+      const response = await this.get(endpoint, true);
       return response;
     } catch (error) {
       console.error('Error fetching lab interests:', error);
