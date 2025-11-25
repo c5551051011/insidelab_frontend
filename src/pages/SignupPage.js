@@ -131,6 +131,9 @@ const SignupPage = () => {
 
     // Debounced validation for email
     if (field === 'email') {
+      // Reset validation state while typing
+      setEmailValidation({ checking: false, available: null, message: '' });
+
       if (emailTimeoutRef.current) {
         clearTimeout(emailTimeoutRef.current);
       }
@@ -141,6 +144,9 @@ const SignupPage = () => {
 
     // Debounced validation for username
     if (field === 'username') {
+      // Reset validation state while typing
+      setUsernameValidation({ checking: false, available: null, message: '' });
+
       if (usernameTimeoutRef.current) {
         clearTimeout(usernameTimeoutRef.current);
       }
@@ -166,32 +172,43 @@ const SignupPage = () => {
 
     try {
       const response = await ApiService.checkEmailAvailability(email);
+      console.log('Email validation response:', response);
       setEmailValidation({
         checking: false,
-        available: response.available,
-        message: response.message
+        available: response.available === true,
+        message: response.message || ''
       });
     } catch (error) {
+      console.error('Email validation error:', error);
+
+      // 400 error means invalid format (too short, wrong format, etc.)
       if (error instanceof ApiException && error.statusCode === 400) {
+        let errorMessage = 'Invalid email format';
+
         try {
           const errorData = JSON.parse(error.message);
-          setEmailValidation({
-            checking: false,
-            available: false,
-            message: errorData.email?.[0] || errorData.message || 'Invalid email format'
-          });
-        } catch {
-          setEmailValidation({
-            checking: false,
-            available: false,
-            message: 'Email is already taken'
-          });
+          if (errorData.email && Array.isArray(errorData.email)) {
+            errorMessage = errorData.email[0];
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (parseError) {
+          // Keep default message
         }
-      } else {
+
         setEmailValidation({
           checking: false,
           available: false,
-          message: 'Email is already taken'
+          message: errorMessage
+        });
+      } else {
+        // Other errors (network, server, etc.)
+        setEmailValidation({
+          checking: false,
+          available: null,
+          message: 'Unable to verify email. Please try again.'
         });
       }
     }
@@ -208,32 +225,43 @@ const SignupPage = () => {
 
     try {
       const response = await ApiService.checkUsernameAvailability(username);
+      console.log('Username validation response:', response);
       setUsernameValidation({
         checking: false,
-        available: response.available,
-        message: response.message
+        available: response.available === true,
+        message: response.message || ''
       });
     } catch (error) {
+      console.error('Username validation error:', error);
+
+      // 400 error means invalid format (too short, invalid characters, etc.)
       if (error instanceof ApiException && error.statusCode === 400) {
+        let errorMessage = 'Invalid username format';
+
         try {
           const errorData = JSON.parse(error.message);
-          setUsernameValidation({
-            checking: false,
-            available: false,
-            message: errorData.username?.[0] || errorData.message || 'Invalid username format'
-          });
-        } catch {
-          setUsernameValidation({
-            checking: false,
-            available: false,
-            message: 'Username is already taken'
-          });
+          if (errorData.username && Array.isArray(errorData.username)) {
+            errorMessage = errorData.username[0];
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (parseError) {
+          // Keep default message
         }
-      } else {
+
         setUsernameValidation({
           checking: false,
           available: false,
-          message: 'Username is already taken'
+          message: errorMessage
+        });
+      } else {
+        // Other errors (network, server, etc.)
+        setUsernameValidation({
+          checking: false,
+          available: null,
+          message: 'Unable to verify username. Please try again.'
         });
       }
     }
@@ -555,7 +583,7 @@ const SignupPage = () => {
                   {errors.email}
                 </p>
               )}
-              {!errors.email && emailValidation.message && (
+              {!errors.email && emailValidation.message && emailValidation.available !== null && (
                 <p
                   style={{
                     fontSize: '12px',
@@ -661,7 +689,7 @@ const SignupPage = () => {
                   {errors.username}
                 </p>
               )}
-              {!errors.username && usernameValidation.message && (
+              {!errors.username && usernameValidation.message && usernameValidation.available !== null && (
                 <p
                   style={{
                     fontSize: '12px',
