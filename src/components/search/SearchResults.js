@@ -34,8 +34,22 @@ const SearchResults = ({
 
     const fetchInterestedLabs = async () => {
       try {
-        const response = await ApiService.getLabInterests(true); // Use minimal fields
-        const professorIds = new Set((response.results || response || []).map(item => item.professor));
+        const response = await ApiService.getLabInterests();
+        console.log('Lab interests API response:', response);
+
+        // API returns: {results: [{id: 1, lab: 12, professor: 1}, ...]}
+        const items = response.results || response || [];
+        console.log('Lab interests items:', items);
+
+        // Extract professor IDs from the response
+        const professorIds = new Set(items.map(item => {
+          // The professor field is the professor ID
+          const profId = item.professor;
+          console.log('Processing item:', item, 'professor ID:', profId);
+          return profId;
+        }).filter(id => id !== null && id !== undefined));
+
+        console.log('Interested professor IDs:', Array.from(professorIds));
         setLocalInterestedProfessorIds(professorIds);
       } catch (error) {
         // Silent fail - user might not be logged in
@@ -148,16 +162,28 @@ const SearchResults = ({
         gap: spacing[4],
         gridTemplateColumns: '1fr'
       }}>
-        {labInstances.map((lab, index) => (
-          <LabCard
-            key={lab.id ? `${lab.id}-${index}` : index}
-            lab={lab}
-            searchQuery={query}
-            onClick={onLabClick}
-            isInterested={effectiveInterestedProfessorIds.has(lab.professorId)}
-            onInterestChange={handleInterestChange}
-          />
-        ))}
+        {labInstances.map((lab, index) => {
+          const isInterested = effectiveInterestedProfessorIds.has(lab.professorId);
+          if (index === 0) {
+            console.log('First lab:', {
+              labId: lab.id,
+              professorId: lab.professorId,
+              professorName: lab.professorName,
+              isInterested,
+              interestedProfIds: Array.from(effectiveInterestedProfessorIds)
+            });
+          }
+          return (
+            <LabCard
+              key={lab.id ? `${lab.id}-${index}` : index}
+              lab={lab}
+              searchQuery={query}
+              onClick={onLabClick}
+              isInterested={isInterested}
+              onInterestChange={handleInterestChange}
+            />
+          );
+        })}
       </div>
 
       {/* Load More Button */}
