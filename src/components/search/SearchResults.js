@@ -18,24 +18,25 @@ const SearchResults = ({
   className = '',
   style = {},
   onLabAdded,
-  interestedLabIds = new Set(),
+  interestedLabIds = new Set(), // For backward compatibility
+  interestedProfessorIds = new Set(), // New prop for professor ID mapping
   onInterestChange,
   isAuthenticated = false
 }) => {
   const [showAddLabModal, setShowAddLabModal] = useState(false);
-  // Use interestedLabIds from props if provided, otherwise use local state
-  const [localInterestedLabIds, setLocalInterestedLabIds] = useState(new Set());
-  const effectiveInterestedLabIds = interestedLabIds.size > 0 ? interestedLabIds : localInterestedLabIds;
+  // Use interestedProfessorIds from props if provided, otherwise use local state
+  const [localInterestedProfessorIds, setLocalInterestedProfessorIds] = useState(new Set());
+  const effectiveInterestedProfessorIds = interestedProfessorIds.size > 0 ? interestedProfessorIds : localInterestedProfessorIds;
 
   // Fetch user's interested labs on mount (only if not provided from parent)
   useEffect(() => {
-    if (interestedLabIds.size > 0) return; // Skip if provided from parent
+    if (interestedProfessorIds.size > 0) return; // Skip if provided from parent
 
     const fetchInterestedLabs = async () => {
       try {
         const response = await ApiService.getLabInterests(true); // Use minimal fields
-        const labIds = new Set((response.results || response || []).map(item => item.lab));
-        setLocalInterestedLabIds(labIds);
+        const professorIds = new Set((response.results || response || []).map(item => item.professor));
+        setLocalInterestedProfessorIds(professorIds);
       } catch (error) {
         // Silent fail - user might not be logged in
         console.log('Could not fetch lab interests:', error.message);
@@ -43,20 +44,20 @@ const SearchResults = ({
     };
 
     fetchInterestedLabs();
-  }, [interestedLabIds.size]);
+  }, [interestedProfessorIds.size]);
 
   // Handle interest change from LabCard
-  const handleInterestChange = (labId, isInterested) => {
+  const handleInterestChange = (labId, isInterested, professorId) => {
     // Use parent handler if provided, otherwise handle locally
     if (onInterestChange) {
-      onInterestChange(labId, isInterested);
+      onInterestChange(labId, isInterested, professorId);
     } else {
-      setLocalInterestedLabIds(prev => {
+      setLocalInterestedProfessorIds(prev => {
         const newSet = new Set(prev);
         if (isInterested) {
-          newSet.add(labId);
+          newSet.add(professorId);
         } else {
-          newSet.delete(labId);
+          newSet.delete(professorId);
         }
         return newSet;
       });
@@ -153,7 +154,7 @@ const SearchResults = ({
             lab={lab}
             searchQuery={query}
             onClick={onLabClick}
-            isInterested={effectiveInterestedLabIds.has(lab.id)}
+            isInterested={effectiveInterestedProfessorIds.has(lab.professorId)}
             onInterestChange={handleInterestChange}
           />
         ))}

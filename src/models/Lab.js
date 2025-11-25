@@ -4,6 +4,7 @@ export class Lab {
     this.id = data.id;
     this.labName = data.labName || data.lab_name || '';
     this.professorName = data.professorName || data.professor_name || '';
+    this.professorId = data.professorId || data.professor_id || null;
     this.universityName = data.universityName || data.university_name || '';
     this.department = data.department || '';
     this.researchGroup = data.researchGroup || data.research_group || '';
@@ -111,6 +112,7 @@ export class Lab {
       id: this.id,
       labName: this.labName,
       professorName: this.professorName,
+      professorId: this.professorId,
       universityName: this.universityName,
       department: this.department,
       researchGroup: this.researchGroup,
