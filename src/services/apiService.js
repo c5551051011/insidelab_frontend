@@ -238,7 +238,7 @@ class ApiService {
   // Lab Interest API methods
   static async addLabInterest(labId) {
     try {
-      const response = await this.post('/auth/lab-interest/', { lab_id: labId }, true);
+      const response = await this.post('/auth/lab-interests/', { lab_id: labId }, true);
       return response;
     } catch (error) {
       console.error('Error adding lab interest:', error);
@@ -248,7 +248,7 @@ class ApiService {
 
   static async removeLabInterest(labId) {
     try {
-      const response = await this.post('/auth/lab-interest/remove_interest/', { lab_id: labId }, true);
+      const response = await this.post('/auth/lab-interests/remove_interest/', { lab_id: labId }, true);
       return response;
     } catch (error) {
       console.error('Error removing lab interest:', error);
@@ -258,7 +258,7 @@ class ApiService {
 
   static async getLabInterests() {
     try {
-      const response = await this.get('/auth/lab-interest/', true);
+      const response = await this.get('/auth/lab-interests/', true);
       return response;
     } catch (error) {
       console.error('Error fetching lab interests:', error);
