@@ -265,6 +265,27 @@ class ApiService {
       throw error;
     }
   }
+
+  // Email and Username validation methods
+  static async checkEmailAvailability(email) {
+    try {
+      const response = await this.post('/auth/check-email/', { email }, false);
+      return response;
+    } catch (error) {
+      console.error('Error checking email availability:', error);
+      throw error;
+    }
+  }
+
+  static async checkUsernameAvailability(username) {
+    try {
+      const response = await this.post('/auth/check-username/', { username }, false);
+      return response;
+    } catch (error) {
+      console.error('Error checking username availability:', error);
+      throw error;
+    }
+  }
 }
 
 // Custom exception for API errors

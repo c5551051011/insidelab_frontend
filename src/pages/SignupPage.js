@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, RefreshCw, Check } from 'lucide-react';
+import { Mail, Lock, User, RefreshCw, Check, X, Loader } from 'lucide-react';
 import Header from '../components/Header';
 import { FormInput } from '../components/FormInput';
 import UniversityDepartmentSelector from '../components/UniversityDepartmentSelector';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
-import { ApiException } from '../services/apiService';
+import { ApiService, ApiException } from '../services/apiService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const SignupPage = () => {
@@ -34,6 +34,22 @@ const SignupPage = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [allowEmails, setAllowEmails] = useState(false);
 
+  // Validation state
+  const [emailValidation, setEmailValidation] = useState({
+    checking: false,
+    available: null,
+    message: ''
+  });
+  const [usernameValidation, setUsernameValidation] = useState({
+    checking: false,
+    available: null,
+    message: ''
+  });
+
+  // Debounce timers
+  const emailTimeoutRef = useRef(null);
+  const usernameTimeoutRef = useRef(null);
+
   // Position options
   const positions = [
     'PhD Student',
@@ -47,6 +63,18 @@ const SignupPage = () => {
   // Generate random username on mount
   useEffect(() => {
     generateRandomUsername();
+  }, []);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (emailTimeoutRef.current) {
+        clearTimeout(emailTimeoutRef.current);
+      }
+      if (usernameTimeoutRef.current) {
+        clearTimeout(usernameTimeoutRef.current);
+      }
+    };
   }, []);
 
   const generateRandomUsername = () => {
@@ -86,9 +114,11 @@ const SignupPage = () => {
   };
 
   const handleInputChange = (field) => (e) => {
+    const value = e.target.value;
+
     setFormData(prev => ({
       ...prev,
-      [field]: e.target.value
+      [field]: value
     }));
 
     // Clear error when user starts typing
@@ -98,12 +128,116 @@ const SignupPage = () => {
         [field]: ''
       }));
     }
+
+    // Debounced validation for email
+    if (field === 'email') {
+      if (emailTimeoutRef.current) {
+        clearTimeout(emailTimeoutRef.current);
+      }
+      emailTimeoutRef.current = setTimeout(() => {
+        checkEmailAvailability(value);
+      }, 500);
+    }
+
+    // Debounced validation for username
+    if (field === 'username') {
+      if (usernameTimeoutRef.current) {
+        clearTimeout(usernameTimeoutRef.current);
+      }
+      usernameTimeoutRef.current = setTimeout(() => {
+        checkUsernameAvailability(value);
+      }, 500);
+    }
   };
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
+
+  // Check email availability with debounce
+  const checkEmailAvailability = useCallback(async (email) => {
+    if (!email || !validateEmail(email)) {
+      setEmailValidation({ checking: false, available: null, message: '' });
+      return;
+    }
+
+    setEmailValidation({ checking: true, available: null, message: '' });
+
+    try {
+      const response = await ApiService.checkEmailAvailability(email);
+      setEmailValidation({
+        checking: false,
+        available: response.available,
+        message: response.message
+      });
+    } catch (error) {
+      if (error instanceof ApiException && error.statusCode === 400) {
+        try {
+          const errorData = JSON.parse(error.message);
+          setEmailValidation({
+            checking: false,
+            available: false,
+            message: errorData.email?.[0] || errorData.message || 'Invalid email format'
+          });
+        } catch {
+          setEmailValidation({
+            checking: false,
+            available: false,
+            message: 'Email is already taken'
+          });
+        }
+      } else {
+        setEmailValidation({
+          checking: false,
+          available: false,
+          message: 'Email is already taken'
+        });
+      }
+    }
+  }, []);
+
+  // Check username availability with debounce
+  const checkUsernameAvailability = useCallback(async (username) => {
+    if (!username || username.length < 3) {
+      setUsernameValidation({ checking: false, available: null, message: '' });
+      return;
+    }
+
+    setUsernameValidation({ checking: true, available: null, message: '' });
+
+    try {
+      const response = await ApiService.checkUsernameAvailability(username);
+      setUsernameValidation({
+        checking: false,
+        available: response.available,
+        message: response.message
+      });
+    } catch (error) {
+      if (error instanceof ApiException && error.statusCode === 400) {
+        try {
+          const errorData = JSON.parse(error.message);
+          setUsernameValidation({
+            checking: false,
+            available: false,
+            message: errorData.username?.[0] || errorData.message || 'Invalid username format'
+          });
+        } catch {
+          setUsernameValidation({
+            checking: false,
+            available: false,
+            message: 'Username is already taken'
+          });
+        }
+      } else {
+        setUsernameValidation({
+          checking: false,
+          available: false,
+          message: 'Username is already taken'
+        });
+      }
+    }
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -112,6 +246,8 @@ const SignupPage = () => {
       newErrors.email = 'Please enter your email';
     } else if (!validateEmail(formData.email)) {
       newErrors.email = 'Please enter a valid email';
+    } else if (emailValidation.available === false) {
+      newErrors.email = emailValidation.message || 'This email is already taken';
     }
 
     if (!formData.username) {
@@ -120,6 +256,8 @@ const SignupPage = () => {
       newErrors.username = 'Username must be at least 3 characters';
     } else if (formData.username.length > 20) {
       newErrors.username = 'Username must be less than 20 characters';
+    } else if (usernameValidation.available === false) {
+      newErrors.username = usernameValidation.message || 'This username is already taken';
     }
 
     if (!formData.name) {
@@ -334,16 +472,103 @@ const SignupPage = () => {
           {/* Form */}
           <form onSubmit={handleSignUp}>
             {/* Email */}
-            <FormInput
-              label="Email Address"
-              type="email"
-              placeholder="your.email@example.com"
-              value={formData.email}
-              onChange={handleInputChange('email')}
-              error={errors.email}
-              icon={Mail}
-              required
-            />
+            <div style={{ marginBottom: spacing[4] }}>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: isMobile ? '14px' : '16px',
+                  fontWeight: '500',
+                  color: colors.textPrimary,
+                  marginBottom: spacing[2],
+                  fontFamily: 'Inter',
+                }}
+              >
+                Email Address <span style={{ color: colors.error }}>*</span>
+              </label>
+              <div style={{ position: 'relative' }}>
+                <div style={{ position: 'relative' }}>
+                  <Mail
+                    size={18}
+                    color={colors.textTertiary}
+                    style={{
+                      position: 'absolute',
+                      left: spacing[3],
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      pointerEvents: 'none',
+                    }}
+                  />
+                  <input
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={formData.email}
+                    onChange={handleInputChange('email')}
+                    style={{
+                      width: '100%',
+                      height: '48px',
+                      padding: `0 ${spacing[10]} 0 ${spacing[10]}`,
+                      fontSize: '14px',
+                      border: `2px solid ${
+                        errors.email
+                          ? colors.error
+                          : emailValidation.available === true
+                          ? colors.success
+                          : emailValidation.available === false
+                          ? colors.error
+                          : colors.border
+                      }`,
+                      borderRadius: '8px',
+                      outline: 'none',
+                      backgroundColor: colors.background,
+                      color: colors.textPrimary,
+                      fontFamily: 'Inter',
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      right: spacing[3],
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                    }}
+                  >
+                    {emailValidation.checking ? (
+                      <Loader size={18} color={colors.primary} style={{ animation: 'spin 1s linear infinite' }} />
+                    ) : emailValidation.available === true ? (
+                      <Check size={18} color={colors.success} />
+                    ) : emailValidation.available === false ? (
+                      <X size={18} color={colors.error} />
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+              {errors.email && (
+                <p
+                  style={{
+                    fontSize: '12px',
+                    color: colors.error,
+                    margin: 0,
+                    marginTop: spacing[1],
+                    fontFamily: 'Inter',
+                  }}
+                >
+                  {errors.email}
+                </p>
+              )}
+              {!errors.email && emailValidation.message && (
+                <p
+                  style={{
+                    fontSize: '12px',
+                    color: emailValidation.available ? colors.success : colors.error,
+                    margin: 0,
+                    marginTop: spacing[1],
+                    fontFamily: 'Inter',
+                  }}
+                >
+                  {emailValidation.message}
+                </p>
+              )}
+            </div>
 
             {/* Username with refresh button */}
             <div style={{ marginBottom: spacing[4] }}>
@@ -360,24 +585,50 @@ const SignupPage = () => {
                 Username <span style={{ color: colors.error }}>*</span>
               </label>
               <div style={{ display: 'flex', gap: spacing[2] }}>
-                <input
-                  type="text"
-                  placeholder="Choose a unique username"
-                  value={formData.username}
-                  onChange={handleInputChange('username')}
-                  style={{
-                    flex: 1,
-                    height: '48px',
-                    padding: `0 ${spacing[3]}`,
-                    fontSize: '14px',
-                    border: `2px solid ${errors.username ? colors.error : colors.border}`,
-                    borderRadius: '8px',
-                    outline: 'none',
-                    backgroundColor: colors.background,
-                    color: colors.textPrimary,
-                    fontFamily: 'Inter',
-                  }}
-                />
+                <div style={{ position: 'relative', flex: 1 }}>
+                  <input
+                    type="text"
+                    placeholder="Choose a unique username"
+                    value={formData.username}
+                    onChange={handleInputChange('username')}
+                    style={{
+                      width: '100%',
+                      height: '48px',
+                      padding: `0 ${spacing[10]} 0 ${spacing[3]}`,
+                      fontSize: '14px',
+                      border: `2px solid ${
+                        errors.username
+                          ? colors.error
+                          : usernameValidation.available === true
+                          ? colors.success
+                          : usernameValidation.available === false
+                          ? colors.error
+                          : colors.border
+                      }`,
+                      borderRadius: '8px',
+                      outline: 'none',
+                      backgroundColor: colors.background,
+                      color: colors.textPrimary,
+                      fontFamily: 'Inter',
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      right: spacing[3],
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                    }}
+                  >
+                    {usernameValidation.checking ? (
+                      <Loader size={18} color={colors.primary} style={{ animation: 'spin 1s linear infinite' }} />
+                    ) : usernameValidation.available === true ? (
+                      <Check size={18} color={colors.success} />
+                    ) : usernameValidation.available === false ? (
+                      <X size={18} color={colors.error} />
+                    ) : null}
+                  </div>
+                </div>
                 <button
                   type="button"
                   onClick={generateRandomUsername}
@@ -408,6 +659,19 @@ const SignupPage = () => {
                   }}
                 >
                   {errors.username}
+                </p>
+              )}
+              {!errors.username && usernameValidation.message && (
+                <p
+                  style={{
+                    fontSize: '12px',
+                    color: usernameValidation.available ? colors.success : colors.error,
+                    margin: 0,
+                    marginTop: spacing[1],
+                    fontFamily: 'Inter',
+                  }}
+                >
+                  {usernameValidation.message}
                 </p>
               )}
               {/* Privacy recommendation */}
