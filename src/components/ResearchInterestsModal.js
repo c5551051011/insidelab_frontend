@@ -113,22 +113,29 @@ const ResearchInterestsModal = ({ isOpen, onClose, user, onUserUpdate }) => {
       }}
       contentStyle={{
         borderRadius: isMobile ? '24px 24px 0 0' : '16px',
-        overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'white',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+        overflow: 'hidden'
       }}
     >
-      <div>
-        {/* Header */}
+      {/* Main container with proper flex structure for scrolling */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        minHeight: 0  // Important for proper flex scrolling
+      }}>
+        {/* Header - Fixed */}
         <div style={{
           padding: isMobile ? spacing[5] : spacing[6],
-            borderBottom: `1px solid ${colors.border}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
+          borderBottom: `1px solid ${colors.border}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexShrink: 0  // Prevent header from shrinking
+        }}>
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -173,11 +180,12 @@ const ResearchInterestsModal = ({ isOpen, onClose, user, onUserUpdate }) => {
             </button>
           </div>
 
-          {/* Content */}
+          {/* Scrollable Content */}
           <div style={{
             padding: isMobile ? spacing[5] : spacing[6],
             overflowY: 'auto',
-            flex: 1
+            flex: 1,
+            minHeight: 0  // Important for proper flex scrolling
           }}>
             {error && (
               <div style={{
@@ -586,13 +594,14 @@ const ResearchInterestsModal = ({ isOpen, onClose, user, onUserUpdate }) => {
             </div>
           </div>
 
-          {/* Footer */}
+          {/* Footer - Fixed */}
           <div style={{
             padding: isMobile ? spacing[5] : spacing[6],
             borderTop: `1px solid ${colors.border}`,
             display: 'flex',
             gap: spacing[3],
-            justifyContent: 'flex-end'
+            justifyContent: 'flex-end',
+            flexShrink: 0  // Prevent footer from shrinking
           }}>
             <button
               onClick={onClose}
