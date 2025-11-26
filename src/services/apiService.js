@@ -248,7 +248,7 @@ class ApiService {
 
   static async removeLabInterest(labId) {
     try {
-      const response = await this.post('/auth/lab-interests/remove_interest/', { lab: labId }, true);
+      const response = await this.delete(`/auth/lab-interests/${labId}/`, true);
       return response;
     } catch (error) {
       console.error('Error removing lab interest:', error);
@@ -281,7 +281,7 @@ class ApiService {
 
   static async getLabInterestByLabId(labId) {
     try {
-      const response = await this.get(`/auth/lab-interests/?lab_id=${labId}`, true);
+      const response = await this.get(`/auth/lab-interests/?lab_id=${labId}&fields=minimal`, true);
       return response;
     } catch (error) {
       console.error('Error fetching lab interest by lab ID:', error);

@@ -484,12 +484,13 @@ const LabDetailPage = () => {
         console.log('[Lab Detail] Response type:', typeof response);
         console.log('[Lab Detail] Response structure:', JSON.stringify(response, null, 2));
 
-        // API returns an array, check if it has any results
-        const isLabBookmarked = Array.isArray(response) && response.length > 0;
-        console.log('[Lab Detail] Is array:', Array.isArray(response));
-        console.log('[Lab Detail] Array length:', response?.length);
-        console.log('[Lab Detail] Is lab bookmarked:', isLabBookmarked);
-        setIsBookmarked(isLabBookmarked);
+        // API returns { results: [...] }, check if results array has any items
+        const hasResults = response.results && Array.isArray(response.results) && response.results.length > 0;
+        console.log('[Lab Detail] Response has results:', response.results);
+        console.log('[Lab Detail] Is array:', Array.isArray(response.results));
+        console.log('[Lab Detail] Results length:', response.results?.length);
+        console.log('[Lab Detail] Is lab bookmarked:', hasResults);
+        setIsBookmarked(hasResults);
       } catch (error) {
         console.log('[Lab Detail] Error occurred:', error);
         console.log('[Lab Detail] Error status code:', error.statusCode);
