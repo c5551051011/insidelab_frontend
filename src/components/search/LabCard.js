@@ -98,7 +98,7 @@ const LabCard = ({
 
       // Notify parent component if callback exists
       if (onInterestChange) {
-        onInterestChange(labInstance.id, newBookmarkState, labInstance.professorId);
+        onInterestChange(labInstance.id, newBookmarkState);
       }
     } catch (error) {
       console.error('Error toggling bookmark:', error);

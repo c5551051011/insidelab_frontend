@@ -543,6 +543,9 @@ const LabDetailPage = () => {
     const newBookmarkState = !isBookmarked;
     const previousState = isBookmarked;
 
+    // Use lab ID from URL parameter (most reliable source)
+    const labId = id;
+
     // Optimistic update
     setIsBookmarked(newBookmarkState);
     setIsProcessing(true);
@@ -551,7 +554,7 @@ const LabDetailPage = () => {
     trackEvent(
       newBookmarkState ? AnalyticsEvents.LAB_FAVORITE_ADDED : AnalyticsEvents.LAB_FAVORITE_REMOVED,
       {
-        labId: lab?.id,
+        labId: labId,
         labName: lab?.labName,
         professorName: lab?.professorName,
       }
@@ -559,11 +562,13 @@ const LabDetailPage = () => {
 
     try {
       if (newBookmarkState) {
-        await ApiService.addLabInterest(lab?.id);
-        console.log('Lab bookmarked successfully:', lab?.id);
+        // Add lab interest using lab ID from URL
+        await ApiService.addLabInterest(labId);
+        console.log('Lab bookmarked successfully with lab ID:', labId);
       } else {
-        await ApiService.removeLabInterest(lab?.id);
-        console.log('Lab unbookmarked successfully:', lab?.id);
+        // Remove lab interest using lab ID from URL
+        await ApiService.removeLabInterest(labId);
+        console.log('Lab unbookmarked successfully with lab ID:', labId);
       }
     } catch (error) {
       console.error('Error toggling bookmark:', error);

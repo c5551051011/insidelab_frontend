@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Search, AlertCircle, ChevronDown, Plus } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import LabCard, { LabCardSkeleton } from './LabCard';
 import { Lab } from '../../models/Lab';
 import AddLabModal from '../AddLabModal';
-import { ApiService } from '../../services/apiService';
 
 const SearchResults = ({
   results = [],
@@ -18,63 +17,17 @@ const SearchResults = ({
   className = '',
   style = {},
   onLabAdded,
-  interestedLabIds = new Set(), // For backward compatibility
-  interestedProfessorIds = new Set(), // New prop for professor ID mapping
+  interestedLabIds = new Set(), // Lab IDs that are bookmarked
   onInterestChange,
   isAuthenticated = false
 }) => {
   const [showAddLabModal, setShowAddLabModal] = useState(false);
-  // Use interestedProfessorIds from props if provided, otherwise use local state
-  const [localInterestedProfessorIds, setLocalInterestedProfessorIds] = useState(new Set());
-  const effectiveInterestedProfessorIds = interestedProfessorIds.size > 0 ? interestedProfessorIds : localInterestedProfessorIds;
-
-  // Fetch user's interested labs on mount (only if not provided from parent)
-  useEffect(() => {
-    if (interestedProfessorIds.size > 0) return; // Skip if provided from parent
-
-    const fetchInterestedLabs = async () => {
-      try {
-        const response = await ApiService.getLabInterests();
-        console.log('Lab interests API response:', response);
-
-        // API returns: {results: [{id: 1, lab: 12, professor: 1}, ...]}
-        const items = response.results || response || [];
-        console.log('Lab interests items:', items);
-
-        // Extract professor IDs from the response
-        const professorIds = new Set(items.map(item => {
-          // The professor field is the professor ID
-          const profId = item.professor;
-          console.log('Processing item:', item, 'professor ID:', profId);
-          return profId;
-        }).filter(id => id !== null && id !== undefined));
-
-        console.log('Interested professor IDs:', Array.from(professorIds));
-        setLocalInterestedProfessorIds(professorIds);
-      } catch (error) {
-        // Silent fail - user might not be logged in
-        console.log('Could not fetch lab interests:', error.message);
-      }
-    };
-
-    fetchInterestedLabs();
-  }, [interestedProfessorIds.size]);
 
   // Handle interest change from LabCard
-  const handleInterestChange = (labId, isInterested, professorId) => {
-    // Use parent handler if provided, otherwise handle locally
+  const handleInterestChange = (labId, isInterested) => {
+    // Forward to parent handler
     if (onInterestChange) {
-      onInterestChange(labId, isInterested, professorId);
-    } else {
-      setLocalInterestedProfessorIds(prev => {
-        const newSet = new Set(prev);
-        if (isInterested) {
-          newSet.add(professorId);
-        } else {
-          newSet.delete(professorId);
-        }
-        return newSet;
-      });
+      onInterestChange(labId, isInterested);
     }
   };
 
@@ -163,16 +116,7 @@ const SearchResults = ({
         gridTemplateColumns: '1fr'
       }}>
         {labInstances.map((lab, index) => {
-          const isInterested = effectiveInterestedProfessorIds.has(lab.professorId);
-          if (index === 0) {
-            console.log('First lab:', {
-              labId: lab.id,
-              professorId: lab.professorId,
-              professorName: lab.professorName,
-              isInterested,
-              interestedProfIds: Array.from(effectiveInterestedProfessorIds)
-            });
-          }
+          const isInterested = interestedLabIds.has(lab.id);
           return (
             <LabCard
               key={lab.id ? `${lab.id}-${index}` : index}

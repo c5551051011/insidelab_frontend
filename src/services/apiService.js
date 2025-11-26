@@ -256,11 +256,9 @@ class ApiService {
     }
   }
 
-  static async getLabInterests(fieldsMinimal = false) {
+  static async getLabInterests() {
     try {
-      const endpoint = fieldsMinimal
-        ? '/auth/lab-interests/?fields=minimal'
-        : '/auth/lab-interests/';
+      const endpoint = '/auth/lab-interests/?fields=minimal';
       const response = await this.get(endpoint, true);
       return response;
     } catch (error) {
