@@ -493,7 +493,7 @@ const LabDetailPage = () => {
     };
 
     loadBookmarkStatus();
-  }, [lab?.id]);
+  }, [lab?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Track lab view when lab data is loaded
   useEffect(() => {
