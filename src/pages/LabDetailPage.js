@@ -475,18 +475,36 @@ const LabDetailPage = () => {
     const loadBookmarkStatus = async () => {
       if (!lab || !lab.id) return;
 
-      try {
-        const response = await ApiService.getLabInterestById(lab.id);
-        console.log('Lab interest for bookmark check:', response);
+      console.log(`[Lab Detail] Checking bookmark status for lab ID: ${lab.id}`);
+      console.log(`[Lab Detail] Calling API: /auth/lab-interests/${lab.id}/`);
 
-        // If we get a response, the lab is bookmarked
-        setIsBookmarked(true);
+      try {
+        const response = await ApiService.getLabInterestByLabId(lab.id);
+        console.log('[Lab Detail] API Response:', response);
+        console.log('[Lab Detail] Response type:', typeof response);
+        console.log('[Lab Detail] Response structure:', JSON.stringify(response, null, 2));
+
+        // API returns an array, check if it has any results
+        const isLabBookmarked = Array.isArray(response) && response.length > 0;
+        console.log('[Lab Detail] Is array:', Array.isArray(response));
+        console.log('[Lab Detail] Array length:', response?.length);
+        console.log('[Lab Detail] Is lab bookmarked:', isLabBookmarked);
+        setIsBookmarked(isLabBookmarked);
       } catch (error) {
-        // 404 means not bookmarked, other errors might mean not logged in
+        console.log('[Lab Detail] Error occurred:', error);
+        console.log('[Lab Detail] Error status code:', error.statusCode);
+        console.log('[Lab Detail] Error message:', error.message);
+
+        // 404 means not bookmarked, 401 means not logged in
         if (error.statusCode === 404) {
+          console.log('[Lab Detail] Setting bookmark to false (404 - not bookmarked)');
+          setIsBookmarked(false);
+        } else if (error.statusCode === 401) {
+          console.log('[Lab Detail] Setting bookmark to false (401 - not logged in)');
           setIsBookmarked(false);
         } else {
-          console.log('Could not load bookmark status:', error.message);
+          console.log('[Lab Detail] Setting bookmark to false (other error)');
+          setIsBookmarked(false);
         }
         // Don't show error - user might not be logged in
       }
