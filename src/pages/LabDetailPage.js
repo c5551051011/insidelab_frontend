@@ -473,13 +473,13 @@ const LabDetailPage = () => {
   // Load bookmark status when lab data is loaded
   useEffect(() => {
     const loadBookmarkStatus = async () => {
-      if (!lab || !lab.id) return;
+      if (!lab || !id) return;
 
-      console.log(`[Lab Detail] Checking bookmark status for lab ID: ${lab.id}`);
-      console.log(`[Lab Detail] Calling API: /auth/lab-interests/${lab.id}/`);
+      console.log(`[Lab Detail] Checking bookmark status for lab ID: ${id}`);
+      console.log(`[Lab Detail] Calling API: /auth/lab-interests/ with lab_id=${id}`);
 
       try {
-        const response = await ApiService.getLabInterestByLabId(lab.id);
+        const response = await ApiService.getLabInterestByLabId(id);
         console.log('[Lab Detail] API Response:', response);
         console.log('[Lab Detail] Response type:', typeof response);
         console.log('[Lab Detail] Response structure:', JSON.stringify(response, null, 2));
@@ -512,7 +512,7 @@ const LabDetailPage = () => {
     };
 
     loadBookmarkStatus();
-  }, [lab?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lab, id]); // Run when lab is loaded and use the correct lab ID from URL
 
   // Track lab view when lab data is loaded
   useEffect(() => {
@@ -967,19 +967,101 @@ const LabInformation = ({ lab, onWebsiteClick }) => {
         margin: 0,
         marginBottom: spacing[4]
       }}>
-        Lab Information
+        Lab Overview
       </h3>
 
-      {/* Description */}
+      {/* Lab Description */}
       {lab.description && (
-        <div style={{ marginBottom: spacing[4] }}>
+        <div style={{ marginBottom: spacing[5] }}>
+          <h4 style={{
+            fontSize: '16px',
+            fontWeight: '600',
+            color: colors.textPrimary,
+            margin: 0,
+            marginBottom: spacing[2]
+          }}>
+            About the Lab
+          </h4>
           <p style={{
             color: colors.textSecondary,
             lineHeight: 1.6,
-            margin: 0
+            margin: 0,
+            fontSize: '15px'
           }}>
             {lab.description}
           </p>
+        </div>
+      )}
+
+      {/* Lab Website - Prominent Display */}
+      {lab.website && (
+        <div style={{ marginBottom: spacing[5] }}>
+          <button
+            onClick={() => onWebsiteClick(lab.website)}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: spacing[4],
+              backgroundColor: `${colors.primary}10`,
+              border: `2px solid ${colors.primary}30`,
+              borderRadius: '12px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = `${colors.primary}20`;
+              e.currentTarget.style.borderColor = colors.primary;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = `${colors.primary}10`;
+              e.currentTarget.style.borderColor = `${colors.primary}30`;
+            }}
+          >
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing[3]
+            }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '8px',
+                backgroundColor: colors.primary,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white'
+              }}>
+                <Globe size={20} />
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  marginBottom: '2px'
+                }}>
+                  Visit Lab Website
+                </div>
+                <div style={{
+                  fontSize: '13px',
+                  color: colors.textSecondary,
+                  fontFamily: 'monospace'
+                }}>
+                  {lab.website}
+                </div>
+              </div>
+            </div>
+            <div style={{
+              fontSize: '18px',
+              color: colors.primary,
+              fontWeight: '600'
+            }}>
+              →
+            </div>
+          </button>
         </div>
       )}
 
@@ -1006,16 +1088,6 @@ const LabInformation = ({ lab, onWebsiteClick }) => {
           label="Lab Size"
           value={lab.labSize ? `${lab.labSize} members` : 'Unknown'}
         />
-
-        {lab.website && (
-          <InfoRow
-            icon={<Globe size={16} />}
-            label="Website"
-            value={lab.website}
-            isLink={true}
-            onClick={() => onWebsiteClick(lab.website)}
-          />
-        )}
       </div>
 
       {/* Research Areas */}
