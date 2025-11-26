@@ -84,7 +84,7 @@ const SearchPage = () => {
   const [error, setError] = useState(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
-  const [interestedLabIds, setInterestedLabIds] = useState(new Set());
+  const [interestedProfessorIds, setInterestedProfessorIds] = useState(new Set());
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { width } = useBreakpoint();
   const isMobile = width < 1000;
@@ -200,18 +200,22 @@ const SearchPage = () => {
   };
 
   // Handle interest change for a lab
-  const handleInterestChange = async (labId, isInterested) => {
+  const handleInterestChange = async (labId, isInterested, professorId) => {
     // LabCard already handles the API call, just update the UI state
     if (isInterested) {
-      // Add lab ID to the interested set
-      setInterestedLabIds(prev => new Set(prev).add(labId));
+      // Add professor ID to the interested set
+      if (professorId) {
+        setInterestedProfessorIds(prev => new Set(prev).add(Number(professorId)));
+      }
     } else {
-      // Remove lab ID from the interested set
-      setInterestedLabIds(prev => {
-        const updated = new Set(prev);
-        updated.delete(labId);
-        return updated;
-      });
+      // Remove professor ID from the interested set
+      if (professorId) {
+        setInterestedProfessorIds(prev => {
+          const updated = new Set(prev);
+          updated.delete(Number(professorId));
+          return updated;
+        });
+      }
     }
   };
 
@@ -227,11 +231,12 @@ const SearchPage = () => {
           const response = await ApiService.getLabInterests();
           const labInterests = response.results || [];
 
-          // Extract lab IDs from lab interests and create a Set for fast lookup
-          const labIds = new Set(labInterests.map(interest => interest.lab));
-          setInterestedLabIds(labIds);
+          // Extract professor IDs from lab interests and create a Set for fast lookup
+          // Convert to numbers to ensure consistent type matching
+          const professorIds = new Set(labInterests.map(interest => Number(interest.professor)));
+          setInterestedProfessorIds(professorIds);
 
-          console.log('Loaded interested lab IDs:', Array.from(labIds));
+          console.log('Loaded interested professor IDs:', Array.from(professorIds));
         } catch (error) {
           console.error('Error loading interested labs:', error);
           // Don't set error state for this, just continue without interest data
@@ -443,7 +448,7 @@ const SearchPage = () => {
             onLoadMore={handleLoadMore}
             onLabClick={handleLabClick}
             onLabAdded={handleLabAdded}
-            interestedLabIds={interestedLabIds}
+            interestedProfessorIds={interestedProfessorIds}
             onInterestChange={handleInterestChange}
             isAuthenticated={isAuthenticated}
           />

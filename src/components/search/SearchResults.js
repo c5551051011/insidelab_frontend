@@ -17,17 +17,18 @@ const SearchResults = ({
   className = '',
   style = {},
   onLabAdded,
-  interestedLabIds = new Set(), // Lab IDs that are bookmarked
+  interestedLabIds = new Set(), // Lab IDs that are bookmarked (backward compatibility)
+  interestedProfessorIds = new Set(), // Professor IDs for professor-based matching
   onInterestChange,
   isAuthenticated = false
 }) => {
   const [showAddLabModal, setShowAddLabModal] = useState(false);
 
   // Handle interest change from LabCard
-  const handleInterestChange = (labId, isInterested) => {
+  const handleInterestChange = (labId, isInterested, professorId) => {
     // Forward to parent handler
     if (onInterestChange) {
-      onInterestChange(labId, isInterested);
+      onInterestChange(labId, isInterested, professorId);
     }
   };
 
@@ -116,7 +117,18 @@ const SearchResults = ({
         gridTemplateColumns: '1fr'
       }}>
         {labInstances.map((lab, index) => {
-          const isInterested = interestedLabIds.has(lab.id);
+          // Use professor ID matching if available, otherwise fall back to lab ID
+          const isInterested = interestedProfessorIds.size > 0
+            ? interestedProfessorIds.has(Number(lab.professorId))
+            : interestedLabIds.has(lab.id);
+
+          // Debug logging for first few labs
+          if (index < 3) {
+            console.log(`[SearchResults] Lab ${index}: ID=${lab.id}, ProfessorID=${lab.professorId}, IsInterested=${isInterested}`);
+            console.log(`[SearchResults] Available professor IDs:`, Array.from(interestedProfessorIds));
+            console.log(`[SearchResults] Checking if ${lab.professorId} is in professor IDs:`, interestedProfessorIds.has(lab.professorId));
+          }
+
           return (
             <LabCard
               key={lab.id ? `${lab.id}-${index}` : index}
