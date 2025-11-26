@@ -271,10 +271,20 @@ class ApiService {
 
   static async getLabInterestById(labId) {
     try {
-      const response = await this.get(`/auth/lab-interests/${labId}/`, true);
+      const response = await this.get(`/auth/lab-interests/?id=${labId}`, true);
       return response;
     } catch (error) {
       console.error('Error fetching lab interest by ID:', error);
+      throw error;
+    }
+  }
+
+  static async getLabInterestByLabId(labId) {
+    try {
+      const response = await this.get(`/auth/lab-interests/?lab_id=${labId}`, true);
+      return response;
+    } catch (error) {
+      console.error('Error fetching lab interest by lab ID:', error);
       throw error;
     }
   }
