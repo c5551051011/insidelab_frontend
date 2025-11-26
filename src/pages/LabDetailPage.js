@@ -411,6 +411,7 @@ const LabDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { width } = useBreakpoint();
   const isMobile = width < 1000;
   const isCompactLayout = width < 768;
@@ -469,6 +470,31 @@ const LabDetailPage = () => {
     }
   }, [id]);
 
+  // Load bookmark status when lab data is loaded
+  useEffect(() => {
+    const loadBookmarkStatus = async () => {
+      if (!lab || !lab.id) return;
+
+      try {
+        const response = await ApiService.getLabInterestById(lab.id);
+        console.log('Lab interest for bookmark check:', response);
+
+        // If we get a response, the lab is bookmarked
+        setIsBookmarked(true);
+      } catch (error) {
+        // 404 means not bookmarked, other errors might mean not logged in
+        if (error.statusCode === 404) {
+          setIsBookmarked(false);
+        } else {
+          console.log('Could not load bookmark status:', error.message);
+        }
+        // Don't show error - user might not be logged in
+      }
+    };
+
+    loadBookmarkStatus();
+  }, [lab?.id]);
+
   // Track lab view when lab data is loaded
   useEffect(() => {
     if (lab && lab.id) {
@@ -489,11 +515,18 @@ const LabDetailPage = () => {
   }, [lab, id, location.state]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleBookmarkToggle = async () => {
+    // Prevent duplicate concurrent requests
+    if (isProcessing) {
+      console.log('Bookmark operation already in progress, ignoring duplicate request');
+      return;
+    }
+
     const newBookmarkState = !isBookmarked;
     const previousState = isBookmarked;
 
     // Optimistic update
     setIsBookmarked(newBookmarkState);
+    setIsProcessing(true);
 
     // Track bookmark event
     trackEvent(
@@ -524,6 +557,8 @@ const LabDetailPage = () => {
       } else {
         alert('Failed to update bookmark. Please try again.');
       }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -652,6 +687,7 @@ const LabDetailPage = () => {
       <LabHeader
         lab={lab}
         isBookmarked={isBookmarked}
+        isProcessing={isProcessing}
         onBookmarkToggle={handleBookmarkToggle}
         onBack={() => navigate(-1)}
         onWriteReview={handleWriteReview}
@@ -680,6 +716,7 @@ const LabDetailPage = () => {
 const LabHeader = ({
   lab,
   isBookmarked,
+  isProcessing = false,
   onBookmarkToggle,
   onBack,
   onWriteReview,
@@ -729,6 +766,7 @@ const LabHeader = ({
         {/* Bookmark Button */}
         <button
           onClick={onBookmarkToggle}
+          disabled={isProcessing}
           style={{
             position: 'absolute',
             top: spacing[4],
@@ -741,9 +779,10 @@ const LabHeader = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            cursor: 'pointer',
+            cursor: isProcessing ? 'not-allowed' : 'pointer',
             color: 'white',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            opacity: isProcessing ? 0.6 : 1
           }}
           title={isBookmarked ? 'Remove from bookmarks' : 'Add to bookmarks'}
         >

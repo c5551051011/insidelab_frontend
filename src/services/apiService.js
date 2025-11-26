@@ -269,6 +269,16 @@ class ApiService {
     }
   }
 
+  static async getLabInterestById(labId) {
+    try {
+      const response = await this.get(`/auth/lab-interests/${labId}/`, true);
+      return response;
+    } catch (error) {
+      console.error('Error fetching lab interest by ID:', error);
+      throw error;
+    }
+  }
+
   // Email and Username validation methods
   static async checkEmailAvailability(email) {
     try {
