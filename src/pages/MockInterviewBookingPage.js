@@ -21,6 +21,7 @@ import { AuthService } from '../services/authService';
 import { InterviewService } from '../services/interviewService';
 import { SearchService } from '../services/searchService';
 import { BookmarkService } from '../services/bookmarkService';
+import { ApiService } from '../services/apiService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const MockInterviewBookingPage = () => {
@@ -266,8 +267,33 @@ const MockInterviewBookingPage = () => {
     try {
       // Validate and prepare booking data
       console.log('Selected research areas before mapping:', selectedResearchAreas);
-      const researchAreaIds = selectedResearchAreas.map(area => area.id);
-      console.log('Research area IDs:', researchAreaIds);
+
+      // Process research areas - register custom ones first
+      const researchAreaIds = [];
+      for (const area of selectedResearchAreas) {
+        if (typeof area.id === 'string' && area.id.startsWith('custom_')) {
+          // This is a custom research area - register it first
+          console.log('Registering custom research area:', area.name);
+          try {
+            const createdArea = await ApiService.createResearchArea(
+              area.name,
+              area.description || 'Custom research area',
+              selectedDepartmentObject?.department || null
+            );
+            console.log('Custom research area registered:', createdArea);
+            // Use the real ID from the API response
+            researchAreaIds.push(createdArea.id);
+          } catch (error) {
+            console.error('Error creating custom research area:', error);
+            throw new Error(`Failed to register custom research area "${area.name}". Please try again.`);
+          }
+        } else {
+          // This is an existing research area - use its ID directly
+          researchAreaIds.push(area.id);
+        }
+      }
+
+      console.log('Final research area IDs (after custom area registration):', researchAreaIds);
 
       const bookingData = {
         sessionType,

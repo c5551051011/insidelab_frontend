@@ -307,6 +307,29 @@ class ApiService {
       throw error;
     }
   }
+
+  // Research Area API methods
+  static async createResearchArea(name, description = '', departmentId = null) {
+    try {
+      const payload = {
+        name: name.trim()
+      };
+
+      if (description) {
+        payload.description = description;
+      }
+
+      if (departmentId) {
+        payload.department = departmentId;
+      }
+
+      const response = await this.post('/research-areas/', payload, true);
+      return response;
+    } catch (error) {
+      console.error('Error creating research area:', error);
+      throw error;
+    }
+  }
 }
 
 // Custom exception for API errors
