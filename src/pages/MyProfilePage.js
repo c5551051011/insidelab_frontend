@@ -75,8 +75,36 @@ const MyProfilePageRefactored = () => {
       setLabsLoading(true);
       try {
         const response = await ApiService.getLabInterests();
+        console.log('DEBUG: Raw API response for lab interests:', response);
+
+        // The API returns { results: [...] } or directly an array
         const labs = response.results || response || [];
-        setInterestedLabs(labs);
+        console.log('DEBUG: Extracted labs array:', labs);
+
+        // Transform the lab interest data to match LabCard expected format
+        const transformedLabs = labs.map(interest => {
+          console.log('DEBUG: Processing interest item:', interest);
+
+          // The API returns interest objects with nested lab data
+          // We need to extract and flatten this into the format LabCard expects
+          return {
+            id: interest.lab?.id || interest.lab,
+            labName: interest.lab_name || interest.lab?.name || 'Unknown Lab',
+            professorName: interest.lab_professor || interest.lab?.professor || 'Unknown Professor',
+            universityName: interest.lab_university || interest.lab?.university || 'Unknown University',
+            department: interest.lab_department || interest.lab?.department || 'Unknown Department',
+            researchAreas: interest.lab?.research_areas || [],
+            tags: interest.lab?.tags || [],
+            overallRating: parseFloat(interest.lab_rating || interest.lab?.overall_rating || 0),
+            reviewCount: parseInt(interest.lab?.review_count || 0),
+            description: interest.lab?.description || '',
+            website: interest.lab?.website || '',
+            recruitmentStatus: interest.lab?.recruitment_status || { phd: false, postdoc: false, intern: false }
+          };
+        });
+
+        console.log('DEBUG: Transformed labs for display:', transformedLabs);
+        setInterestedLabs(transformedLabs);
       } catch (error) {
         console.error('Error loading interested labs:', error);
         setInterestedLabs([]);
@@ -669,15 +697,16 @@ const MyProfilePageRefactored = () => {
                   gap: spacing[4],
                   gridTemplateColumns: '1fr'
                 }}>
-                  {interestedLabs.map((item, index) => (
+                  {interestedLabs.map((lab, index) => (
                     <LabCard
-                      key={item.id || index}
-                      lab={item.lab}
-                      onClick={(lab) => navigate(`/lab/${lab.id}`)}
+                      key={lab.id || index}
+                      lab={lab}
+                      onClick={(labInstance) => navigate(`/lab/${labInstance.id}`)}
                       isInterested={true}
                       onInterestChange={async (labId, isInterested) => {
                         if (!isInterested) {
-                          setInterestedLabs(prev => prev.filter(l => l.lab?.id !== labId));
+                          // Remove the lab from the list when unbookmarked
+                          setInterestedLabs(prev => prev.filter(l => l.id !== labId));
                         }
                       }}
                     />
