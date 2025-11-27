@@ -122,12 +122,6 @@ const SearchResults = ({
             ? interestedProfessorIds.has(Number(lab.professorId))
             : interestedLabIds.has(lab.id);
 
-          // Debug logging for first few labs
-          if (index < 3) {
-            console.log(`[SearchResults] Lab ${index}: ID=${lab.id}, ProfessorID=${lab.professorId}, IsInterested=${isInterested}`);
-            console.log(`[SearchResults] Available professor IDs:`, Array.from(interestedProfessorIds));
-            console.log(`[SearchResults] Checking if ${lab.professorId} is in professor IDs:`, interestedProfessorIds.has(lab.professorId));
-          }
 
           return (
             <LabCard

@@ -256,9 +256,9 @@ class ApiService {
     }
   }
 
-  static async getLabInterests() {
+  static async getLabInterests(fields = 'minimal') {
     try {
-      const endpoint = '/auth/lab-interests/?fields=minimal';
+      const endpoint = fields ? `/auth/lab-interests/?fields=${fields}` : '/auth/lab-interests/';
       const response = await this.get(endpoint, true);
       return response;
     } catch (error) {
@@ -277,9 +277,10 @@ class ApiService {
     }
   }
 
-  static async getLabInterestByLabId(labId) {
+  static async getLabInterestByLabId(labId, fields = 'minimal') {
     try {
-      const response = await this.get(`/auth/lab-interests/?lab_id=${labId}&fields=minimal`, true);
+      const endpoint = fields ? `/auth/lab-interests/?lab_id=${labId}&fields=${fields}` : `/auth/lab-interests/?lab_id=${labId}`;
+      const response = await this.get(endpoint, true);
       return response;
     } catch (error) {
       console.error('Error fetching lab interest by lab ID:', error);

@@ -227,8 +227,8 @@ const SearchPage = () => {
 
       if (authenticated) {
         try {
-          // Load minimal lab interest data (just lab IDs)
-          const response = await ApiService.getLabInterests();
+          // Load full lab interest data for search page display
+          const response = await ApiService.getLabInterests(null);
           const labInterests = response.results || [];
 
           // Extract professor IDs from lab interests and create a Set for fast lookup

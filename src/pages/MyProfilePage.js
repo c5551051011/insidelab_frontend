@@ -74,7 +74,7 @@ const MyProfilePageRefactored = () => {
 
       setLabsLoading(true);
       try {
-        const response = await ApiService.getLabInterests();
+        const response = await ApiService.getLabInterests(null);
         console.log('DEBUG: Raw API response for lab interests:', response);
 
         // The API returns { results: [...] } or directly an array
@@ -85,21 +85,21 @@ const MyProfilePageRefactored = () => {
         const transformedLabs = labs.map(interest => {
           console.log('DEBUG: Processing interest item:', interest);
 
-          // The API returns interest objects with nested lab data
-          // We need to extract and flatten this into the format LabCard expects
+          // The API returns flat interest objects with all lab data at the top level
           return {
-            id: interest.lab?.id || interest.lab,
-            labName: interest.lab_name || interest.lab?.name || 'Unknown Lab',
-            professorName: interest.lab_professor || interest.lab?.professor || 'Unknown Professor',
-            universityName: interest.lab_university || interest.lab?.university || 'Unknown University',
-            department: interest.lab_department || interest.lab?.department || 'Unknown Department',
-            researchAreas: interest.lab?.research_areas || [],
-            tags: interest.lab?.tags || [],
-            overallRating: parseFloat(interest.lab_rating || interest.lab?.overall_rating || 0),
-            reviewCount: parseInt(interest.lab?.review_count || 0),
-            description: interest.lab?.description || '',
-            website: interest.lab?.website || '',
-            recruitmentStatus: interest.lab?.recruitment_status || { phd: false, postdoc: false, intern: false }
+            id: interest.lab, // lab ID from the interest
+            labName: interest.lab_name || 'Unknown Lab',
+            professorName: interest.professor_name || 'Unknown Professor',
+            professorId: interest.professor_id || interest.lab, // Use lab ID as fallback
+            universityName: interest.university_name || 'Unknown University',
+            department: interest.department || 'Unknown Department',
+            researchAreas: interest.research_areas || [],
+            tags: interest.tags || [],
+            overallRating: parseFloat(interest.overall_rating || 0),
+            reviewCount: parseInt(interest.review_count || 0),
+            description: interest.description || '',
+            website: interest.website || '',
+            recruitmentStatus: interest.recruitment_status || { phd: false, postdoc: false, intern: false }
           };
         });
 
