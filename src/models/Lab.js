@@ -190,6 +190,7 @@ export class SearchFilter {
   constructor(data = {}) {
     this.rating = data.rating || 0;
     this.universities = data.universities || [];
+    this.departments = data.departments || [];
     this.researchAreas = data.researchAreas || [];
     this.tags = data.tags || [];
     this.sortBy = data.sortBy || 'rating';
@@ -200,6 +201,7 @@ export class SearchFilter {
   hasActiveFilters() {
     return this.rating > 0 ||
            this.universities.length > 0 ||
+           this.departments.length > 0 ||
            this.researchAreas.length > 0 ||
            this.tags.length > 0 ||
            this.recruitmentOnly;
@@ -210,6 +212,7 @@ export class SearchFilter {
     let count = 0;
     if (this.rating > 0) count++;
     if (this.universities.length > 0) count++;
+    if (this.departments.length > 0) count++;
     if (this.researchAreas.length > 0) count++;
     if (this.tags.length > 0) count++;
     if (this.recruitmentOnly) count++;
@@ -220,6 +223,7 @@ export class SearchFilter {
   clear() {
     this.rating = 0;
     this.universities = [];
+    this.departments = [];
     this.researchAreas = [];
     this.tags = [];
     this.recruitmentOnly = false;
@@ -268,6 +272,7 @@ export class SearchFilter {
 
     if (this.rating > 0) params.min_rating = this.rating;
     if (this.universities.length > 0) params.universities = this.universities.join(',');
+    if (this.departments.length > 0) params.departments = this.departments.join(',');
     if (this.researchAreas.length > 0) params.research_areas = this.researchAreas.join(',');
     if (this.tags.length > 0) params.tags = this.tags.join(',');
     if (this.sortBy) params.sort_by = this.sortBy;
@@ -281,6 +286,7 @@ export class SearchFilter {
     return new SearchFilter({
       rating: parseFloat(params.min_rating) || 0,
       universities: params.universities ? params.universities.split(',') : [],
+      departments: params.departments ? params.departments.split(',') : [],
       researchAreas: params.research_areas ? params.research_areas.split(',') : [],
       tags: params.tags ? params.tags.split(',') : [],
       sortBy: params.sort_by || 'rating',
@@ -293,6 +299,7 @@ export class SearchFilter {
     return {
       rating: this.rating,
       universities: this.universities,
+      departments: this.departments,
       researchAreas: this.researchAreas,
       tags: this.tags,
       sortBy: this.sortBy,

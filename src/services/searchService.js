@@ -122,12 +122,35 @@ export class SearchService {
         }
       }
 
+      if (filters.departments?.length > 0) {
+        // Support both single department and multiple departments
+        if (filters.departments.length === 1) {
+          params.append('department', filters.departments[0]);
+        } else {
+          params.append('departments', filters.departments.join(','));
+        }
+      }
+
       if (filters.researchAreas?.length > 0) {
         filters.researchAreas.forEach(area => params.append('research_area', area));
       }
 
       if (filters.rating > 0) {
         params.append('min_rating', filters.rating.toString());
+      }
+
+      // Add sorting/ordering
+      if (filters.sortBy) {
+        // Map frontend sort values to API parameter names
+        const sortMapping = {
+          'rating': 'overall_rating',
+          'reviews': 'review_count',
+          'labName': 'name',
+          'professor': 'name',
+          'university': 'university_name'
+        };
+        const apiSortField = sortMapping[filters.sortBy] || 'overall_rating';
+        params.append('ordering', `-${apiSortField}`); // Add minus for descending order
       }
 
       const url = `${API_BASE_URL}/professors/?fields=minimal&${params.toString()}`;
@@ -676,8 +699,9 @@ export class SearchService {
   static async getFilterOptions() {
     try {
       // Fetch filter options from multiple APIs in parallel for better performance
-      const [universitiesResponse, professorsResponse] = await Promise.all([
+      const [universitiesResponse, departmentsResponse, professorsResponse] = await Promise.all([
         fetch(`${API_BASE_URL}/universities/?fields=minimal`),
+        fetch(`${API_BASE_URL}/departments/?fields=minimal&page_size=1000`),
         fetch(`${API_BASE_URL}/professors/?fields=minimal&page_size=1000`)
       ]);
 
@@ -685,8 +709,9 @@ export class SearchService {
         throw new Error('Failed to fetch filter options');
       }
 
-      const [universitiesData, professorsData] = await Promise.all([
+      const [universitiesData, departmentsData, professorsData] = await Promise.all([
         universitiesResponse.json(),
+        departmentsResponse.json(),
         professorsResponse.json()
       ]);
 
@@ -701,9 +726,14 @@ export class SearchService {
       // Extract unique countries from universities data
       const countries = [...new Set(universities.map(uni => uni.country))].filter(Boolean).sort();
 
+      // Extract departments from dedicated API with ID and name
+      const departments = departmentsData.results?.map(dept => ({
+        id: dept.id,
+        name: dept.name
+      })).filter(dept => dept.id && dept.name).sort((a, b) => a.name.localeCompare(b.name)) || [];
+
       // Extract other filter options from professors data
       const professors = professorsData.results || [];
-      const departments = [...new Set(professors.map(prof => prof.department_name).filter(Boolean))].sort();
       const researchGroups = [...new Set(professors.map(prof => prof.research_group_name).filter(Boolean))].sort();
 
       // Extract research areas (flattened from all professors)
@@ -741,9 +771,9 @@ export class SearchService {
       countries: this.getFallbackCountries(),
       universities: this.getFallbackUniversities(),
       departments: [
-        'Computer Science',
-        'Electrical Engineering',
-        'Data Science'
+        { id: 1, name: 'Computer Science' },
+        { id: 2, name: 'Electrical Engineering' },
+        { id: 3, name: 'Data Science' }
       ],
       researchGroups: [
         'AI Research Group',

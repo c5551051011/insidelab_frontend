@@ -98,6 +98,18 @@ const FilterSidebar = ({
     });
   };
 
+  // Handle department toggle
+  const handleDepartmentToggle = (departmentId) => {
+    const newDepartments = filters.departments.includes(departmentId)
+      ? filters.departments.filter(d => d !== departmentId)
+      : [...filters.departments, departmentId];
+
+    onFiltersChange({
+      ...filters,
+      departments: newDepartments
+    });
+  };
+
   // Handle research area toggle
   const handleResearchAreaToggle = (area) => {
     const newAreas = filters.researchAreas.includes(area)
@@ -154,6 +166,7 @@ const FilterSidebar = ({
     onFiltersChange({
       rating: 0,
       universities: [],
+      departments: [],
       researchAreas: [],
       tags: [],
       sortBy: 'rating',
@@ -173,6 +186,7 @@ const FilterSidebar = ({
   const hasActiveFilters = () => {
     return filters.rating > 0 ||
            filters.universities.length > 0 ||
+           filters.departments.length > 0 ||
            filters.researchAreas.length > 0 ||
            filters.tags.length > 0 ||
            filters.recruitmentOnly;
@@ -224,6 +238,7 @@ const FilterSidebar = ({
               {[
                 filters.rating > 0 ? 1 : 0,
                 filters.universities.length,
+                filters.departments.length,
                 filters.researchAreas.length,
                 filters.tags.length,
                 filters.recruitmentOnly ? 1 : 0
@@ -390,6 +405,36 @@ const FilterSidebar = ({
               fontStyle: 'italic'
             }}>
               No universities found in {selectedCountry}
+            </div>
+          )}
+        </div>
+      </FilterSection>
+
+      {/* Departments */}
+      <FilterSection
+        title="Departments"
+        collapsible={isMobile}
+        defaultExpanded={!isMobile}
+      >
+        <div style={{ maxHeight: isMobile ? '150px' : '200px', overflowY: 'auto' }}>
+          {filterOptions.departments.map(department => (
+            <CheckboxItem
+              key={department.id || department}
+              label={department.name || department}
+              checked={filters.departments.includes(department.id || department)}
+              onChange={() => handleDepartmentToggle(department.id || department)}
+            />
+          ))}
+          {filterOptions.departments.length === 0 && (
+            <div style={{
+              fontSize: '14px',
+              color: colors.textSecondary,
+              fontFamily: 'Inter',
+              padding: spacing[2],
+              textAlign: 'center',
+              fontStyle: 'italic'
+            }}>
+              No departments available
             </div>
           )}
         </div>

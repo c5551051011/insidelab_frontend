@@ -34,6 +34,10 @@ const SearchPage = () => {
       });
     }
 
+    // Parse departments (comma-separated)
+    const departments = searchParams.get('departments');
+    if (departments) filterData.departments = departments.split(',').filter(Boolean);
+
     // Parse research areas (comma-separated)
     const researchAreas = searchParams.get('researchAreas');
     if (researchAreas) filterData.researchAreas = researchAreas.split(',').filter(Boolean);
@@ -63,6 +67,7 @@ const SearchPage = () => {
     // Add filters
     if (filters.rating > 0) params.set('rating', filters.rating.toString());
     if (filters.universities.length > 0) params.set('universities', filters.universities.join(','));
+    if (filters.departments.length > 0) params.set('departments', filters.departments.join(','));
     if (filters.researchAreas.length > 0) params.set('researchAreas', filters.researchAreas.join(','));
     if (filters.tags.length > 0) params.set('tags', filters.tags.join(','));
     if (filters.sortBy !== 'rating') params.set('sortBy', filters.sortBy);
