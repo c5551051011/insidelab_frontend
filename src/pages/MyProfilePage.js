@@ -804,22 +804,6 @@ const MyProfilePageRefactored = () => {
                     ({interestedLabs.length})
                   </span>
                 </h3>
-                <button
-                  onClick={() => navigate('/search')}
-                  style={{
-                    padding: `${spacing[2]} ${spacing[4]}`,
-                    backgroundColor: 'transparent',
-                    color: colors.primary,
-                    border: `2px solid ${colors.primary}`,
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  Browse Labs
-                </button>
               </div>
 
               {labsLoading ? (
