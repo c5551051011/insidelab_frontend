@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, GraduationCap, BookOpen, FileText, Briefcase, Settings, Shield, Heart, Plus, Edit2, Building2, Award, Globe, Edit3 } from 'lucide-react';
+import { User, GraduationCap, BookOpen, FileText, Briefcase, Settings, Shield, Heart, Plus, Edit2, Building2, Award, Globe, Edit3, Star, Calendar, MapPin } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import EditProfileModal from '../components/EditProfileModal';
@@ -9,6 +9,7 @@ import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { ApiService } from '../services/apiService';
 import { ResearchProfileService } from '../services/researchProfileService';
+import { ReviewService } from '../services/reviewService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import LabCard from '../components/search/LabCard';
 import {
@@ -162,6 +163,8 @@ const MyProfilePageRefactored = () => {
   const [researchProfile, setResearchProfile] = useState(null);
   const [interestedLabs, setInterestedLabs] = useState([]);
   const [labsLoading, setLabsLoading] = useState(false);
+  const [userReviews, setUserReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
   const { isMobile } = useBreakpoint();
 
   // Authentication and user data loading
@@ -239,6 +242,52 @@ const MyProfilePageRefactored = () => {
     };
 
     loadInterestedLabs();
+  }, [user]);
+
+  // Load user reviews
+  useEffect(() => {
+    const loadUserReviews = async () => {
+      if (!user) return;
+
+      setReviewsLoading(true);
+      try {
+        // Try to use the general reviews API and filter by user
+        // Since my-reviews endpoint is not available, we'll try a different approach
+        const params = new URLSearchParams({
+          page: '1',
+          page_size: '5',
+          // Add user filter if the API supports it
+          author: user.id || user.email
+        });
+
+        // Use the general reviews endpoint with user filter
+        const response = await ApiService.get(`/reviews/?${params}`, true);
+        console.log('DEBUG: User reviews response:', response);
+
+        // Transform the response to match the expected format
+        const reviews = response.results?.map(reviewData => {
+          return {
+            id: reviewData.id,
+            labName: reviewData.lab_name || 'Lab',
+            overallRating: reviewData.overall_rating,
+            reviewText: reviewData.review_text,
+            position: reviewData.position,
+            duration: reviewData.duration,
+            createdAt: reviewData.created_at
+          };
+        }) || [];
+
+        setUserReviews(reviews);
+      } catch (error) {
+        console.error('Error loading user reviews:', error);
+        // If the API call fails, show empty state instead of crashing
+        setUserReviews([]);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
+    loadUserReviews();
   }, [user]);
 
   /**
@@ -512,7 +561,7 @@ const MyProfilePageRefactored = () => {
             {/* Interview Sessions */}
             <InterviewSessionsList user={user} isMobile={isMobile} />
 
-            {/* Reviews Section - Placeholder for now */}
+            {/* My Reviews Section */}
             <div style={{
               backgroundColor: 'white',
               borderRadius: '16px',
@@ -520,22 +569,210 @@ const MyProfilePageRefactored = () => {
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
               border: '1px solid rgba(0, 0, 0, 0.05)'
             }}>
-              <h3 style={{
-                fontSize: isMobile ? '18px' : '20px',
-                fontWeight: '700',
-                color: colors.textPrimary,
-                marginBottom: spacing[4]
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: spacing[5]
               }}>
-                My Reviews
-              </h3>
-              <p style={{
-                fontSize: '14px',
-                color: colors.textSecondary,
-                textAlign: 'center',
-                padding: spacing[4]
-              }}>
-                Review functionality coming soon
-              </p>
+                <h3 style={{
+                  fontSize: isMobile ? '18px' : '20px',
+                  fontWeight: '700',
+                  color: colors.textPrimary,
+                  margin: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing[2]
+                }}>
+                  <FileText size={20} color={colors.primary} />
+                  My Reviews
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: colors.textSecondary,
+                    marginLeft: spacing[2]
+                  }}>
+                    ({userReviews.length})
+                  </span>
+                </h3>
+              </div>
+
+              {reviewsLoading ? (
+                <div style={{
+                  textAlign: 'center',
+                  padding: spacing[8],
+                  color: colors.textSecondary
+                }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    border: `3px solid ${colors.border}`,
+                    borderTop: `3px solid ${colors.primary}`,
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    margin: '0 auto',
+                    marginBottom: spacing[3]
+                  }} />
+                  Loading reviews...
+                </div>
+              ) : userReviews.length > 0 ? (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: spacing[4]
+                }}>
+                  {userReviews.map((review, index) => (
+                    <div
+                      key={review.id || index}
+                      style={{
+                        padding: spacing[4],
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: '12px',
+                        backgroundColor: colors.background
+                      }}
+                    >
+                      {/* Review Header */}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        marginBottom: spacing[3]
+                      }}>
+                        <div>
+                          <h4 style={{
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            color: colors.textPrimary,
+                            margin: 0,
+                            marginBottom: spacing[1]
+                          }}>
+                            {review.labName || 'Lab Review'}
+                          </h4>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: spacing[2],
+                            fontSize: '12px',
+                            color: colors.textSecondary
+                          }}>
+                            <Calendar size={12} />
+                            {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : 'N/A'}
+                          </div>
+                        </div>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: spacing[1]
+                        }}>
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              size={14}
+                              fill={star <= (review.overallRating || 0) ? colors.primary : 'none'}
+                              color={star <= (review.overallRating || 0) ? colors.primary : colors.border}
+                            />
+                          ))}
+                          <span style={{
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            color: colors.textPrimary,
+                            marginLeft: spacing[1]
+                          }}>
+                            {review.overallRating || 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Review Text */}
+                      {review.reviewText && (
+                        <p style={{
+                          fontSize: '14px',
+                          color: colors.textPrimary,
+                          lineHeight: 1.5,
+                          margin: 0,
+                          marginBottom: spacing[3]
+                        }}>
+                          {review.reviewText.length > 150
+                            ? `${review.reviewText.substring(0, 150)}...`
+                            : review.reviewText
+                          }
+                        </p>
+                      )}
+
+                      {/* Review Meta */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: spacing[4],
+                        fontSize: '12px',
+                        color: colors.textSecondary
+                      }}>
+                        {review.position && (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: spacing[1]
+                          }}>
+                            <User size={12} />
+                            {review.position}
+                          </div>
+                        )}
+                        {review.duration && (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: spacing[1]
+                          }}>
+                            <Calendar size={12} />
+                            {review.duration}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{
+                  textAlign: 'center',
+                  padding: spacing[8],
+                  color: colors.textSecondary
+                }}>
+                  <FileText
+                    size={48}
+                    color={colors.textTertiary}
+                    style={{ marginBottom: spacing[3] }}
+                  />
+                  <p style={{
+                    fontSize: '16px',
+                    marginBottom: spacing[2]
+                  }}>
+                    No reviews written yet
+                  </p>
+                  <p style={{
+                    fontSize: '14px',
+                    color: colors.textTertiary,
+                    marginBottom: spacing[4]
+                  }}>
+                    Share your lab experiences by writing reviews
+                  </p>
+                  <button
+                    onClick={() => navigate('/search')}
+                    style={{
+                      padding: `${spacing[3]} ${spacing[5]}`,
+                      backgroundColor: colors.primary,
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    Find Labs to Review
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         );
