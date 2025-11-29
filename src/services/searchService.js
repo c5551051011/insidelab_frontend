@@ -143,14 +143,13 @@ export class SearchService {
       if (filters.sortBy) {
         // Map frontend sort values to API parameter names
         const sortMapping = {
-          'rating': 'overall_rating',
-          'reviews': 'review_count',
-          'labName': 'name',
-          'professor': 'name',
-          'university': 'university_name'
+          'rating': '-overall_rating',    // Descending
+          'reviews': '-review_count',     // Descending
+          'professor': 'name',            // Ascending for professor name
+          'university': '-university_name' // Descending
         };
-        const apiSortField = sortMapping[filters.sortBy] || 'overall_rating';
-        params.append('ordering', `-${apiSortField}`); // Add minus for descending order
+        const ordering = sortMapping[filters.sortBy] || '-overall_rating';
+        params.append('ordering', ordering);
       }
 
       const url = `${API_BASE_URL}/professors/?fields=minimal&${params.toString()}`;
@@ -754,7 +753,6 @@ export class SearchService {
         sortOptions: [
           { value: 'rating', label: 'Highest Rating' },
           { value: 'reviews', label: 'Most Reviews' },
-          { value: 'labName', label: 'Lab Name (A-Z)' },
           { value: 'professor', label: 'Professor Name (A-Z)' },
           { value: 'university', label: 'University Name (A-Z)' }
         ]
@@ -785,7 +783,6 @@ export class SearchService {
       sortOptions: [
         { value: 'rating', label: 'Highest Rating' },
         { value: 'reviews', label: 'Most Reviews' },
-        { value: 'labName', label: 'Lab Name (A-Z)' },
         { value: 'professor', label: 'Professor Name (A-Z)' },
         { value: 'university', label: 'University Name (A-Z)' }
       ]

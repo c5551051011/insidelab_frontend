@@ -36,22 +36,26 @@ class BookmarkService {
   static async getLabInterests() {
     try {
       console.log('DEBUG: Fetching lab interests');
-      const response = await ApiService.get('/auth/lab-interests/', true);
+      const response = await ApiService.get('/auth/lab-interests/?fields=minimal', true);
       console.log('DEBUG: Lab interests response:', response);
 
       if (Array.isArray(response)) {
-        return response.map(json => ({
-          id: json.id,
-          labId: json.lab.toString(),
-          labName: json.lab_name,
-          labProfessor: json.lab_professor,
-          labUniversity: json.lab_university,
-          labDepartment: json.lab_department,
-          labRating: parseFloat(json.lab_rating),
-          interestType: json.interest_type,
-          notes: json.notes,
-          createdAt: new Date(json.created_at)
-        }));
+        return response.map(json => {
+          console.log('DEBUG: Raw lab interest data:', json);
+          return {
+            id: json.id,
+            labId: json.lab.toString(),
+            labName: json.lab_name,
+            labProfessor: json.lab_professor,
+            labProfessorId: json.lab_professor_id || json.professor_id, // Add professor ID
+            labUniversity: json.lab_university,
+            labDepartment: json.lab_department,
+            labRating: parseFloat(json.lab_rating),
+            interestType: json.interest_type,
+            notes: json.notes,
+            createdAt: new Date(json.created_at)
+          };
+        });
       }
       return [];
     } catch (e) {
@@ -63,7 +67,7 @@ class BookmarkService {
   // Get lab interests summary grouped by type
   static async getLabInterestsSummary() {
     try {
-      const response = await ApiService.get('/auth/lab-interests/summary/', true);
+      const response = await ApiService.get('/auth/lab-interests/summary/?fields=minimal', true);
       return response;
     } catch (e) {
       console.log('DEBUG: Error fetching lab interests summary:', e);

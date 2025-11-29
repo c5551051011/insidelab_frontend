@@ -410,12 +410,11 @@ const MockInterviewBookingPage = () => {
           </div>
         )}
 
-        {/* Main Form */}
-        <form
-          onSubmit={handleSubmit}
+        {/* Main Form - Using div instead of form to prevent auto-submit */}
+        <div
           onKeyDown={(e) => {
-            // Prevent form submission on Enter key (except for textareas)
-            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+            // Prevent any unwanted behavior on Enter key
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit') {
               e.preventDefault();
             }
           }}
@@ -556,8 +555,11 @@ const MockInterviewBookingPage = () => {
               </button>
             ) : (
               <button
-                type="submit"
+                type="button"
                 disabled={isSubmitting}
+                onClick={(e) => {
+                  handleSubmit(e);
+                }}
                 style={{
                   flex: 1,
                   padding: `${spacing[4]} ${spacing[6]}`,
@@ -596,7 +598,7 @@ const MockInterviewBookingPage = () => {
               </button>
             )}
           </div>
-        </form>
+        </div>
       </div>
 
       <Footer />
@@ -1971,6 +1973,7 @@ const ResearchAreaStep = ({
               }}>
                 {area.name}
                 <button
+                  type="button"
                   onClick={() => handleAreaToggle(area)}
                   style={{
                     background: 'none',
@@ -2051,6 +2054,7 @@ const ResearchAreaStep = ({
                     const canSelect = !isSelected && selectedResearchAreas.length < 3;
                     return (
                       <button
+                        type="button"
                         key={`popular-${area.id}`}
                         onClick={() => !isSelected && handleAreaToggle(area)}
                         disabled={isSelected || selectedResearchAreas.length >= 3}
@@ -2122,6 +2126,7 @@ const ResearchAreaStep = ({
                     const canSelect = !isSelected && selectedResearchAreas.length < 3;
                     return (
                       <button
+                        type="button"
                         key={area.id}
                         onClick={() => !isSelected && handleAreaToggle(area)}
                         disabled={isSelected || selectedResearchAreas.length >= 3}
@@ -2325,6 +2330,7 @@ const ResearchAreaStep = ({
               Add
             </button>
             <button
+              type="button"
               onClick={() => {
                 setShowCustomInput(false);
                 setCustomAreaName('');

@@ -9,6 +9,7 @@ import { colors, spacing } from '../theme';
 import { SearchService } from '../services/searchService';
 import { ApiService } from '../services/apiService';
 import { AuthService } from '../services/authService';
+import { BookmarkService } from '../services/bookmarkService';
 import { SearchFilter } from '../models/Lab';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { trackSearch, trackFilterChange, trackPageView } from '../lib/analytics/trackEvent';
@@ -232,16 +233,38 @@ const SearchPage = () => {
 
       if (authenticated) {
         try {
-          // Load full lab interest data for search page display
-          const response = await ApiService.getLabInterests(null);
-          const labInterests = response.results || [];
+          // Load lab interest data for search page display using BookmarkService
+          const labInterests = await BookmarkService.getLabInterests();
+
+          console.log('DEBUG: Lab interests from BookmarkService:', labInterests);
 
           // Extract professor IDs from lab interests and create a Set for fast lookup
-          // Convert to numbers to ensure consistent type matching
-          const professorIds = new Set(labInterests.map(interest => Number(interest.professor)));
-          setInterestedProfessorIds(professorIds);
+          // For now, use labId since the professor matching might be based on lab
+          const professorIds = new Set();
+          const labIds = new Set();
 
+          labInterests.forEach(interest => {
+            console.log('Processing interest:', interest);
+
+            // Add lab ID to the set as well
+            if (interest.labId) {
+              labIds.add(Number(interest.labId));
+            }
+
+            // Try to extract professor ID if available
+            const professorId = interest.labProfessorId ||
+                               interest.professorId ||
+                               interest.lab_professor_id;
+
+            if (professorId && !isNaN(professorId)) {
+              professorIds.add(Number(professorId));
+              console.log('Added professor ID:', professorId);
+            }
+          });
+
+          setInterestedProfessorIds(professorIds);
           console.log('Loaded interested professor IDs:', Array.from(professorIds));
+          console.log('Loaded interested lab IDs:', Array.from(labIds));
         } catch (error) {
           console.error('Error loading interested labs:', error);
           // Don't set error state for this, just continue without interest data
