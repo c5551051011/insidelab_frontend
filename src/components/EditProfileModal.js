@@ -416,29 +416,14 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
               style={{ marginBottom: spacing[4] }}
             />
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-              gap: spacing[4]
-            }}>
-              <FormSelect
-                label="Your Position"
-                name="position"
-                value={formData.position}
-                onChange={handleInputChange}
-                options={positionOptions.map(pos => ({ value: pos, label: pos }))}
-                icon={GraduationCap}
-              />
-
-              <FormSelect
-                label="Language"
-                name="language"
-                value={formData.language}
-                onChange={handleInputChange}
-                options={languageOptions}
-                icon={Globe}
-              />
-            </div>
+            <FormSelect
+              label="Language"
+              name="language"
+              value={formData.language}
+              onChange={handleInputChange}
+              options={languageOptions}
+              icon={Globe}
+            />
           </div>
 
           {/* University Information */}
