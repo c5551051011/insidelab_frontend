@@ -7,7 +7,6 @@ import FilterSidebar from '../components/search/FilterSidebar';
 import SearchResults from '../components/search/SearchResults';
 import { colors, spacing } from '../theme';
 import { SearchService } from '../services/searchService';
-import { ApiService } from '../services/apiService';
 import { AuthService } from '../services/authService';
 import { BookmarkService } from '../services/bookmarkService';
 import { SearchFilter } from '../models/Lab';
