@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, User, Mail, Building2, GraduationCap, Globe, Save, Loader, Search } from 'lucide-react';
+import { X, User, Mail, Globe, Save, Loader, Search } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { UniversityService } from '../services/universityService';
@@ -32,22 +32,6 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
   const [isLoadingProfessors, setIsLoadingProfessors] = useState(false);
   const [showProfessorDropdown, setShowProfessorDropdown] = useState(false);
   const { isMobile } = useBreakpoint();
-
-  // Position options
-  const positionOptions = [
-    'Undergraduate Student',
-    'Graduate Student',
-    'PhD Student',
-    'Postdoc',
-    'Research Assistant',
-    'Research Associate',
-    'Assistant Professor',
-    'Associate Professor',
-    'Professor',
-    'Lab Manager',
-    'Staff Scientist',
-    'Other'
-  ];
 
   // Language options
   const languageOptions = [
