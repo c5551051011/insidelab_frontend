@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { X, User, Mail, Building2, GraduationCap, Globe, Save, Loader } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, User, Mail, Building2, GraduationCap, Globe, Save, Loader, Search } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { UniversityService } from '../services/universityService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import UniversityDepartmentSelector from './UniversityDepartmentSelector';
 import Modal from './Modal';
 
 const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
@@ -13,18 +14,23 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
     name: '',
     position: '',
     language: 'en',
-    university_department: '',
-    department: '',
-    lab_name: '',
+    universityId: '',
+    universityName: '',
+    departmentId: '',
+    departmentName: '',
+    professorId: '',
+    labId: '',
+    labName: '',
     is_lab_member: false,
     can_provide_services: false
   });
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [universities, setUniversities] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [loadingDepartments, setLoadingDepartments] = useState(false);
+  const [professors, setProfessors] = useState([]);
+  const [filteredProfessors, setFilteredProfessors] = useState([]);
+  const [isLoadingProfessors, setIsLoadingProfessors] = useState(false);
+  const [showProfessorDropdown, setShowProfessorDropdown] = useState(false);
   const { isMobile } = useBreakpoint();
 
   // Position options
@@ -62,44 +68,82 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
         name: user.name || '',
         position: user.position || '',
         language: user.language || 'en',
-        university_department: user.university_department || '',
-        department: user.department || '',
-        lab_name: user.lab_name || '',
+        universityId: user.university_department || '',
+        universityName: user.university_name || '',
+        departmentId: user.department_id || '',
+        departmentName: user.department || '',
+        professorId: user.professor_id || '',
+        labId: user.lab_id || '',
+        labName: user.lab_name || '',
         is_lab_member: user.is_lab_member || false,
         can_provide_services: user.can_provide_services || false
       });
-
-      // Load universities
-      loadUniversities();
-
-      // Load departments if university is selected
-      if (user.university_department) {
-        loadDepartments(user.university_department);
-      }
     }
   }, [isOpen, user]);
 
-  const loadUniversities = async () => {
-    try {
-      const response = await UniversityService.getUniversities();
-      setUniversities(response || []);
-    } catch (error) {
-      console.error('Error loading universities:', error);
+  const handleUniversitySelected = (universityId, universityName) => {
+    console.log('University selected:', universityId, universityName);
+    setFormData(prev => ({
+      ...prev,
+      universityId: String(universityId),
+      universityName: String(universityName),
+      // Clear dependent fields
+      departmentId: '',
+      departmentName: '',
+      professorId: '',
+      labId: '',
+      labName: ''
+    }));
+  };
+
+  const handleDepartmentSelected = async (departmentId, departmentName) => {
+    console.log('Department selected:', departmentId, departmentName);
+    setFormData(prev => ({
+      ...prev,
+      departmentId: String(departmentId),
+      departmentName: String(departmentName),
+      // Clear dependent fields
+      professorId: '',
+      labId: '',
+      labName: ''
+    }));
+
+    // Load professors for the selected department
+    if (departmentId && formData.universityId) {
+      loadProfessors({
+        university: formData.universityId,
+        university_department: departmentId
+      });
     }
   };
 
-  const loadDepartments = async (universityId) => {
-    try {
-      setLoadingDepartments(true);
-      const response = await UniversityService.getDepartments(universityId);
-      setDepartments(response || []);
-    } catch (error) {
-      console.error('Error loading departments:', error);
-      setDepartments([]);
-    } finally {
-      setLoadingDepartments(false);
+  const loadProfessors = useCallback(async (filters = {}) => {
+    if (!filters.university && !formData.universityId) {
+      setProfessors([]);
+      setFilteredProfessors([]);
+      return;
     }
-  };
+
+    setIsLoadingProfessors(true);
+    try {
+      const professorFilters = {
+        university: filters.university || formData.universityId,
+        ...(filters.university_department || formData.departmentId ? {
+          university_department: filters.university_department || formData.departmentId
+        } : {})
+      };
+
+      const professorData = await UniversityService.getProfessors(professorFilters);
+      setProfessors(professorData || []);
+      setFilteredProfessors(professorData || []);
+    } catch (error) {
+      console.error('❌ Error loading professors:', error);
+      setProfessors([]);
+      setFilteredProfessors([]);
+    } finally {
+      setIsLoadingProfessors(false);
+    }
+  }, [formData.universityId, formData.departmentId]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -116,13 +160,26 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
       }));
     }
 
-    // Load departments when university changes
-    if (name === 'university_department' && value) {
-      loadDepartments(value);
+    // Handle professor/lab search
+    if (name === 'labName') {
       setFormData(prev => ({
         ...prev,
-        department: '' // Reset department when university changes
+        professorId: '', // Clear professor ID when typing
+        labId: '' // Clear lab ID when typing
       }));
+
+      // Filter professors based on search term
+      if (value) {
+        const filtered = professors.filter(professor =>
+          professor.name.toLowerCase().includes(value.toLowerCase()) ||
+          (professor.lab && professor.lab.name && professor.lab.name.toLowerCase().includes(value.toLowerCase()))
+        );
+        setFilteredProfessors(filtered);
+        setShowProfessorDropdown(filtered.length > 0);
+      } else {
+        setFilteredProfessors(professors);
+        setShowProfessorDropdown(false);
+      }
     }
   };
 
@@ -147,6 +204,32 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleProfessorSelect = (professor) => {
+    const displayName = professor.lab && professor.lab.name
+      ? `${professor.name} - ${professor.lab.name}`
+      : professor.name;
+
+    setFormData(prev => ({
+      ...prev,
+      professorId: professor.id,
+      labId: professor.lab ? professor.lab.id : '',
+      labName: displayName
+    }));
+    setShowProfessorDropdown(false);
+  };
+
+  const handleProfessorInputFocus = () => {
+    if (professors.length > 0) {
+      setShowProfessorDropdown(true);
+      setFilteredProfessors(professors);
+    }
+  };
+
+  const handleProfessorInputBlur = () => {
+    // Delay hiding dropdown to allow clicks
+    setTimeout(() => setShowProfessorDropdown(false), 200);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -169,13 +252,21 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
       };
 
       // Include university_department if selected
-      if (formData.university_department) {
-        updateData.university_department = parseInt(formData.university_department);
+      if (formData.universityId) {
+        updateData.university_department = parseInt(formData.universityId);
       }
 
-      // Include department if provided (legacy field)
-      if (formData.department) {
-        updateData.department = formData.department;
+      // Include department if provided
+      if (formData.departmentName) {
+        updateData.department = formData.departmentName;
+      }
+
+      // Include professor/lab if selected
+      if (formData.professorId) {
+        updateData.professor_id = parseInt(formData.professorId);
+      }
+      if (formData.labId) {
+        updateData.lab_id = parseInt(formData.labId);
       }
 
       const updatedUser = await AuthService.updateProfile(updateData);
@@ -308,6 +399,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
                 error={errors.username}
                 icon={User}
                 required
+                disabled={true}
               />
             </div>
 
@@ -320,6 +412,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
               error={errors.email}
               icon={Mail}
               required
+              disabled={true}
               style={{ marginBottom: spacing[4] }}
             />
 
@@ -329,7 +422,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
               gap: spacing[4]
             }}>
               <FormSelect
-                label="Position"
+                label="Your Position"
                 name="position"
                 value={formData.position}
                 onChange={handleInputChange}
@@ -359,43 +452,151 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
               University Information
             </h3>
 
-            <FormSelect
-              label="University"
-              name="university_department"
-              value={formData.university_department}
-              onChange={handleInputChange}
-              options={universities.map(uni => ({
-                value: uni.id.toString(),
-                label: uni.name
-              }))}
-              icon={Building2}
-              style={{ marginBottom: spacing[4] }}
+            <UniversityDepartmentSelector
+              selectedUniversityId={formData.universityId}
+              selectedUniversityName={formData.universityName}
+              selectedUniversityDepartmentId={formData.departmentId}
+              onUniversitySelected={handleUniversitySelected}
+              onDepartmentSelected={handleDepartmentSelected}
+              isRequired={false}
+              layout="responsive"
             />
 
-            {formData.university_department && (
-              <FormSelect
-                label="Department"
-                name="department"
-                value={formData.department}
-                onChange={handleInputChange}
-                options={departments.map(dept => ({
-                  value: dept.name,
-                  label: dept.name
-                }))}
-                icon={GraduationCap}
-                loading={loadingDepartments}
-                style={{ marginBottom: spacing[4] }}
-              />
+            {/* Professor/Lab Selection */}
+            {formData.universityId && (
+              <div style={{ marginTop: spacing[4] }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  marginBottom: spacing[2],
+                  fontFamily: 'Inter'
+                }}>
+                  Professor/Lab (Optional)
+                </label>
+
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    name="labName"
+                    value={formData.labName}
+                    onChange={handleInputChange}
+                    onFocus={handleProfessorInputFocus}
+                    onBlur={handleProfessorInputBlur}
+                    placeholder={formData.universityId
+                      ? 'Search professor or lab name...'
+                      : 'Please select a university first'
+                    }
+                    disabled={!formData.universityId}
+                    style={{
+                      width: '100%',
+                      height: '56px',
+                      padding: `0 ${spacing[4]} 0 ${spacing[4]}`,
+                      paddingRight: '48px',
+                      fontSize: '14px',
+                      border: `2px solid ${colors.border}`,
+                      borderRadius: '8px',
+                      outline: 'none',
+                      backgroundColor: colors.background,
+                      color: colors.textPrimary,
+                      fontFamily: 'Inter',
+                      cursor: formData.universityId ? 'text' : 'not-allowed',
+                      opacity: !formData.universityId ? 0.6 : 1
+                    }}
+                  />
+
+                  <div style={{
+                    position: 'absolute',
+                    right: spacing[3],
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    cursor: formData.labName ? 'pointer' : 'default'
+                  }}>
+                    {isLoadingProfessors ? (
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        border: `2px solid ${colors.border}`,
+                        borderTop: `2px solid ${colors.primary}`,
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                    ) : formData.labName ? (
+                      <X
+                        size={20}
+                        color={colors.textSecondary}
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, labName: '', professorId: '', labId: '' }));
+                          setShowProfessorDropdown(false);
+                        }}
+                      />
+                    ) : (
+                      <Search size={20} color={colors.textSecondary} />
+                    )}
+                  </div>
+
+                  {/* Professor Dropdown */}
+                  {showProfessorDropdown && filteredProfessors.length > 0 && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      backgroundColor: 'white',
+                      border: `2px solid ${colors.border}`,
+                      borderRadius: '8px',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                      zIndex: 1000,
+                      maxHeight: '240px',
+                      overflowY: 'auto',
+                      marginTop: '2px'
+                    }}>
+                      {filteredProfessors.map((professor) => {
+                        const displayName = professor.lab && professor.lab.name
+                          ? `${professor.name} - ${professor.lab.name}`
+                          : professor.name;
+
+                        return (
+                          <div
+                            key={professor.id}
+                            onClick={() => handleProfessorSelect(professor)}
+                            style={{
+                              padding: `${spacing[3]} ${spacing[4]}`,
+                              cursor: 'pointer',
+                              backgroundColor: 'white',
+                              fontSize: '14px',
+                              fontFamily: 'Inter',
+                              color: colors.textPrimary,
+                              transition: 'background-color 0.15s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#E8E8E8';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'white';
+                            }}
+                          >
+                            <div style={{ fontWeight: '500', color: colors.textPrimary }}>
+                              {displayName}
+                            </div>
+                            {professor.university_department_name && (
+                              <div style={{
+                                fontSize: '12px',
+                                color: colors.textSecondary,
+                                marginTop: spacing[1]
+                              }}>
+                                {professor.university_department_name}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
-
-            <FormField
-              label="Lab Name"
-              name="lab_name"
-              value={formData.lab_name}
-              onChange={handleInputChange}
-              icon={Building2}
-              placeholder="Enter your lab name (optional)"
-            />
           </div>
 
           {/* Additional Settings */}
@@ -504,7 +705,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
 };
 
 // Form Field Component
-const FormField = ({ label, name, value, onChange, error, icon: Icon, required, type = 'text', placeholder, style }) => {
+const FormField = ({ label, name, value, onChange, error, icon: Icon, required, type = 'text', placeholder, style, disabled = false }) => {
   return (
     <div style={style}>
       <label style={{
@@ -536,17 +737,21 @@ const FormField = ({ label, name, value, onChange, error, icon: Icon, required, 
           value={value}
           onChange={onChange}
           placeholder={placeholder}
+          disabled={disabled}
           style={{
             width: '100%',
             border: `1px solid ${error ? colors.error : colors.border}`,
             borderRadius: '8px',
             padding: `${spacing[3]} ${Icon ? spacing[10] : spacing[3]}`,
             fontSize: '14px',
-            backgroundColor: 'white',
+            backgroundColor: disabled ? colors.backgroundSecondary : 'white',
+            color: disabled ? colors.textSecondary : colors.textPrimary,
+            cursor: disabled ? 'not-allowed' : 'text',
             outline: 'none',
             transition: 'border-color 0.2s ease',
+            opacity: disabled ? 0.7 : 1,
             ':focus': {
-              borderColor: colors.primary
+              borderColor: disabled ? colors.border : colors.primary
             }
           }}
         />
