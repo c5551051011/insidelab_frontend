@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, GraduationCap, BookOpen, FileText, Briefcase, Settings, Shield, Heart, Plus, Edit2 } from 'lucide-react';
+import { User, GraduationCap, BookOpen, FileText, Briefcase, Settings, Shield, Heart, Plus, Edit2, Building2, Award, Globe, Edit3 } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import EditProfileModal from '../components/EditProfileModal';
@@ -11,8 +11,6 @@ import { ApiService } from '../services/apiService';
 import { ResearchProfileService } from '../services/researchProfileService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import LabCard from '../components/search/LabCard';
-
-// Import the new refactored components
 import {
   MobileProfileCard,
   DesktopProfileCard,
@@ -20,6 +18,133 @@ import {
   ProviderDashboard,
   isServiceProvider
 } from '../components/profile';
+
+/**
+ * InfoRow Component for displaying academic information
+ */
+const InfoRow = ({ info }) => {
+  const Icon = info.icon;
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: spacing[3],
+      padding: spacing[3],
+      backgroundColor: colors.background,
+      borderRadius: '8px'
+    }}>
+      <Icon size={16} color={colors.textSecondary} />
+      <div>
+        <div style={{
+          fontSize: '12px',
+          color: colors.textSecondary,
+          marginBottom: spacing[1]
+        }}>
+          {info.label}
+        </div>
+        <div style={{
+          fontSize: '14px',
+          color: colors.textPrimary,
+          fontWeight: '500'
+        }}>
+          {info.value || 'Not specified'}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * AcademicProfile Component for displaying academic information
+ */
+const AcademicProfile = ({ user, isMobile, onEditProfile }) => {
+  const academicInfo = [
+    { label: 'University', value: user.university_name || user.university, icon: Building2 },
+    { label: 'Department', value: user.department_name || user.department, icon: GraduationCap },
+    { label: 'Position', value: user.position, icon: Award },
+    { label: 'Lab Name', value: user.lab_name, icon: BookOpen },
+    { label: 'Language', value: user.language === 'ko' ? '한국어' : user.language === 'en' ? 'English' : user.language, icon: Globe }
+  ];
+
+  return (
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      padding: spacing[6],
+      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+      border: '1px solid rgba(0, 0, 0, 0.05)'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: spacing[6]
+      }}>
+        <h2 style={{
+          fontSize: isMobile ? '18px' : '20px',
+          fontWeight: '700',
+          color: colors.textPrimary,
+          margin: 0,
+          fontFamily: 'Inter'
+        }}>
+          Academic Profile
+        </h2>
+        <button
+          onClick={onEditProfile}
+          style={{
+            backgroundColor: 'transparent',
+            border: `1px solid ${colors.primary}`,
+            borderRadius: '8px',
+            padding: `${spacing[2]} ${spacing[3]}`,
+            color: colors.primary,
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing[2],
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <Edit3 size={14} />
+          Edit
+        </button>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+        gap: spacing[4]
+      }}>
+        {academicInfo.map((info, index) => (
+          <InfoRow key={index} info={info} />
+        ))}
+      </div>
+
+      {user.bio && (
+        <div style={{ marginTop: spacing[6] }}>
+          <h3 style={{
+            fontSize: '16px',
+            fontWeight: '600',
+            color: colors.textPrimary,
+            marginBottom: spacing[3],
+            fontFamily: 'Inter'
+          }}>
+            Bio
+          </h3>
+          <p style={{
+            fontSize: '14px',
+            color: colors.textSecondary,
+            lineHeight: 1.6,
+            fontFamily: 'Inter'
+          }}>
+            {user.bio}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
 
 /**
  * MyProfilePageRefactored - Refactored version of MyProfilePage
@@ -328,14 +453,38 @@ const MyProfilePageRefactored = () => {
                 }}>
                   Profile Status
                 </h3>
-                <p style={{
+                <div style={{
                   fontSize: '14px',
                   color: colors.textSecondary,
                   marginBottom: spacing[3],
-                  fontFamily: 'Inter'
+                  fontFamily: 'Inter',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing[2]
                 }}>
-                  Verification: {user?.verificationStatus || 'Unverified'}
-                </p>
+                  <span>Verification: {user?.verificationStatus || 'Unverified'}</span>
+                  {(!user?.verificationStatus || user?.verificationStatus === 'Unverified') && (
+                    <button
+                      onClick={() => {
+                        // TODO: Implement verification process
+                        alert('Verification process would be implemented here');
+                      }}
+                      style={{
+                        backgroundColor: colors.primary,
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: `${spacing[1]} ${spacing[2]}`,
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      Verify Account
+                    </button>
+                  )}
+                </div>
                 <p style={{
                   fontSize: '14px',
                   color: colors.textSecondary,
@@ -759,6 +908,8 @@ const MyProfilePageRefactored = () => {
         );
 
       case 'academic':
+        return <AcademicProfile user={user} isMobile={isMobile} onEditProfile={handleEditProfile} />;
+
       case 'settings':
       case 'privacy':
       default:
@@ -776,7 +927,7 @@ const MyProfilePageRefactored = () => {
             </h3>
             <p>This section would contain the {activeTab} content.</p>
             <p style={{ fontSize: '14px', marginTop: spacing[4] }}>
-              Additional components like AcademicProfile, SettingsTab, and PrivacyTab would be extracted and placed here.
+              Additional components like SettingsTab, and PrivacyTab would be extracted and placed here.
             </p>
           </div>
         );
