@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Clock,
@@ -27,7 +27,10 @@ const MySessionsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentLang = getLangFromPath(location.pathname);
-  const localizePath = (path) => buildLocalizedPath(path, currentLang);
+  const localizePath = useCallback(
+    (path) => buildLocalizedPath(path, currentLang),
+    [currentLang]
+  );
   const { isMobile } = useBreakpoint();
   const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming', 'past', 'all'
   const [sessions, setSessions] = useState([]);

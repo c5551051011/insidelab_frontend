@@ -19,7 +19,10 @@ const WriteReviewPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const currentLang = getLangFromPath(location.pathname);
-  const localizePath = (path) => buildLocalizedPath(path, currentLang);
+  const localizePath = useCallback(
+    (path) => buildLocalizedPath(path, currentLang),
+    [currentLang]
+  );
   const { width } = useBreakpoint();
   const isCompact600 = width < 600;
   const isCompact640 = width < 640;

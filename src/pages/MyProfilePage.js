@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { User, GraduationCap, BookOpen, FileText, Briefcase, Settings, Shield, Heart, Plus, Edit2, Building2, Award, Globe, Edit3, Star, Calendar, MapPin } from 'lucide-react';
+import { User, GraduationCap, BookOpen, FileText, Briefcase, Settings, Shield, Heart, Plus, Edit2, Building2, Award, Globe, Edit3, Star, Calendar } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import EditProfileModal from '../components/EditProfileModal';
@@ -9,7 +9,6 @@ import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { ApiService } from '../services/apiService';
 import { ResearchProfileService } from '../services/researchProfileService';
-import { ReviewService } from '../services/reviewService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { buildLocalizedPath, getLangFromPath } from '../utils/locale';
 import LabCard from '../components/search/LabCard';
@@ -271,7 +270,7 @@ const MyProfilePageRefactored = () => {
           page: '1',
           page_size: '5',
           // Add user filter if the API supports it
-          author: user.id || user.email
+          author: userKey
         });
 
         // Use the general reviews endpoint with user filter

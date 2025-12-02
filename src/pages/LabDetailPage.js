@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Star,
@@ -418,7 +418,7 @@ const LabDetailPage = () => {
   const fetchedLabRef = useRef(null);
   const fetchedBookmarkRef = useRef(null);
 
-  const enrichLabWithMinimal = async (labData) => {
+  const enrichLabWithMinimal = useCallback(async (labData) => {
     if (!id) return labData;
     try {
       const minimal = await ApiService.get(`/labs/${id}/?fields=minimal`);
@@ -436,7 +436,7 @@ const LabDetailPage = () => {
       console.warn('Failed to fetch minimal lab data:', err);
       return labData;
     }
-  };
+  }, [id, enrichLabWithMinimal]);
 
   useEffect(() => {
     const loadLabDetails = async () => {
