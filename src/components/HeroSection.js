@@ -1,22 +1,32 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { colors, gradients, spacing, sectionSpacing } from '../theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { buildLocalizedPath, isKoreanPath } from '../utils/locale';
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isKorean = isKoreanPath(location.pathname);
+  const currentLang = isKorean ? 'ko' : 'en';
   const [searchValue, setSearchValue] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const { isMobile } = useBreakpoint();
+  const { t, i18n } = useTranslation();
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchValue.trim()) {
-      // Navigate to search page with query parameter
-      navigate(`/search?q=${encodeURIComponent(searchValue.trim())}`);
+      const target = buildLocalizedPath(`/search?q=${encodeURIComponent(searchValue.trim())}`, currentLang);
+      navigate(target);
     }
   };
+
+  if (i18n.language !== currentLang) {
+    i18n.changeLanguage(currentLang);
+  }
 
   return (
     <section
@@ -82,7 +92,7 @@ const HeroSection = () => {
                 padding: isMobile ? '0 16px' : '0',
               }}
             >
-              Your Gateway to Graduate School Success
+              {t('hero.title', 'Your Gateway to Graduate School Success')}
             </h1>
 
             <p
@@ -96,7 +106,7 @@ const HeroSection = () => {
                 padding: isMobile ? '0 16px' : '0',
               }}
             >
-              Search labs with detailed ratings, read honest reviews from current grad students, and find the perfect research environment for your goals.
+              {t('hero.subtitle', 'Search labs with detailed ratings, read honest reviews from current grad students, and find the perfect research environment for your goals.')}
             </p>
           </div>
 
@@ -139,7 +149,7 @@ const HeroSection = () => {
                 onChange={(e) => setSearchValue(e.target.value)}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
-                placeholder={isMobile ? 'Search labs, professors...' : 'Search by university, professor, lab name, or research area'}
+                placeholder={isMobile ? t('hero.placeholderMobile', 'Search labs, professors...') : t('hero.placeholderDesktop', 'Search by university, professor, lab name, or research area')}
                 style={{
                   width: '100%',
                   height: isMobile ? '48px' : '60px',

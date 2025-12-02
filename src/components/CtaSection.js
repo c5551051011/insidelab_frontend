@@ -1,10 +1,20 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { colors, spacing, sectionSpacing } from '../theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { buildLocalizedPath, isKoreanPath } from '../utils/locale';
 
 const CtaSection = () => {
   const { isMobile } = useBreakpoint();
+  const { t, i18n } = useTranslation();
+  const location = useLocation();
+  const isKorean = isKoreanPath(location.pathname);
+  const currentLang = isKorean ? 'ko' : 'en';
+
+  if (i18n.language !== currentLang) {
+    i18n.changeLanguage(currentLang);
+  }
 
   return (
     <section
@@ -34,7 +44,7 @@ const CtaSection = () => {
               marginBottom: isMobile ? spacing[4] : spacing[5],
             }}
           >
-            Ready to Start Your Graduate School Journey?
+            {t('cta.title', 'Ready to Start Your Graduate School Journey?')}
           </h2>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <p
@@ -46,7 +56,7 @@ const CtaSection = () => {
                 margin: 0,
               }}
             >
-              Join thousands of students who have successfully navigated their graduate school applications with our expert guidance and insider insights.
+              {t('cta.subtitle', 'Join thousands of students who have successfully navigated their graduate school applications with our expert guidance and insider insights.')}
             </p>
           </div>
         </div>
@@ -63,7 +73,7 @@ const CtaSection = () => {
           }}
         >
           <Link
-            to="/signup"
+            to={buildLocalizedPath('/signup', currentLang)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -91,11 +101,11 @@ const CtaSection = () => {
               e.target.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.1)';
             }}
           >
-            Get Started Free
+            {t('cta.primary', 'Get Started Free')}
           </Link>
 
           <Link
-            to="/search"
+            to={buildLocalizedPath('/search', currentLang)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -121,7 +131,7 @@ const CtaSection = () => {
               e.target.style.borderColor = 'white';
             }}
           >
-            Browse Labs
+            {t('cta.secondary', 'Browse Labs')}
           </Link>
         </div>
 
@@ -129,12 +139,12 @@ const CtaSection = () => {
         <div
           style={{
             fontSize: '14px',
-            color: 'rgba(255, 255, 255, 0.7)',
-            fontFamily: 'Inter',
-          }}
-        >
-          No credit card required · Join 15,000+ students worldwide
-        </div>
+          color: 'rgba(255, 255, 255, 0.7)',
+          fontFamily: 'Inter',
+        }}
+      >
+          {t('cta.meta', 'No credit card required · Join 15,000+ students worldwide')}
+      </div>
       </div>
     </section>
   );

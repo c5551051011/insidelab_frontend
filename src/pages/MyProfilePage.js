@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { User, GraduationCap, BookOpen, FileText, Briefcase, Settings, Shield, Heart, Plus, Edit2, Building2, Award, Globe, Edit3, Star, Calendar, MapPin } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -11,6 +11,7 @@ import { ApiService } from '../services/apiService';
 import { ResearchProfileService } from '../services/researchProfileService';
 import { ReviewService } from '../services/reviewService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { buildLocalizedPath, getLangFromPath } from '../utils/locale';
 import LabCard from '../components/search/LabCard';
 import {
   MobileProfileCard,
@@ -155,6 +156,12 @@ const AcademicProfile = ({ user, isMobile, onEditProfile }) => {
  */
 const MyProfilePageRefactored = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentLang = getLangFromPath(location.pathname);
+  const localizePath = useMemo(
+    () => (path) => buildLocalizedPath(path, currentLang),
+    [currentLang]
+  );
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -166,12 +173,15 @@ const MyProfilePageRefactored = () => {
   const [userReviews, setUserReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const { isMobile } = useBreakpoint();
+  const lastLabInterestUserRef = useRef(null);
+  const lastReviewUserRef = useRef(null);
+  const userKey = user?.id || user?.email;
 
   // Authentication and user data loading
   useEffect(() => {
     const checkAuth = async () => {
       if (!AuthService.isAuthenticated()) {
-        navigate('/sign-in');
+        navigate(localizePath('/sign-in'));
         return;
       }
 
@@ -186,19 +196,21 @@ const MyProfilePageRefactored = () => {
       } catch (error) {
         console.error('Error fetching user data:', error);
         AuthService.logout();
-        navigate('/sign-in');
+        navigate(localizePath('/sign-in'));
       } finally {
         setLoading(false);
       }
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, localizePath]);
 
   // Load interested labs
   useEffect(() => {
     const loadInterestedLabs = async () => {
-      if (!user) return;
+      if (!userKey) return;
+      if (lastLabInterestUserRef.current === userKey) return;
+      lastLabInterestUserRef.current = userKey;
 
       setLabsLoading(true);
       try {
@@ -242,12 +254,14 @@ const MyProfilePageRefactored = () => {
     };
 
     loadInterestedLabs();
-  }, [user]);
+  }, [userKey]);
 
   // Load user reviews
   useEffect(() => {
     const loadUserReviews = async () => {
-      if (!user) return;
+      if (!userKey) return;
+      if (lastReviewUserRef.current === userKey) return;
+      lastReviewUserRef.current = userKey;
 
       setReviewsLoading(true);
       try {
@@ -756,7 +770,7 @@ const MyProfilePageRefactored = () => {
                     Share your lab experiences by writing reviews
                   </p>
                   <button
-                    onClick={() => navigate('/search')}
+                    onClick={() => navigate(localizePath('/search'))}
                     style={{
                       padding: `${spacing[3]} ${spacing[5]}`,
                       backgroundColor: colors.primary,
@@ -1107,7 +1121,7 @@ const MyProfilePageRefactored = () => {
                     Browse labs and bookmark the ones you're interested in
                   </p>
                   <button
-                    onClick={() => navigate('/search')}
+                    onClick={() => navigate(localizePath('/search'))}
                     style={{
                       padding: `${spacing[3]} ${spacing[5]}`,
                       backgroundColor: colors.primary,

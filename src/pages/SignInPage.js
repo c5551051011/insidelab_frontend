@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Mail, Lock } from 'lucide-react';
 import Header from '../components/Header';
 import { FormInput } from '../components/FormInput';
@@ -7,9 +7,13 @@ import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { ApiException } from '../services/apiService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { buildLocalizedPath, getLangFromPath } from '../utils/locale';
 
 const SignInPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentLang = getLangFromPath(location.pathname);
+  const localizePath = (path) => buildLocalizedPath(path, currentLang);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -72,7 +76,7 @@ const SignInPage = () => {
       console.log('Sign in successful:', response);
 
       // Navigate to home page on success
-      navigate('/');
+      navigate(localizePath('/'));
 
     } catch (error) {
       console.error('Sign in error:', error);
@@ -213,7 +217,7 @@ const SignInPage = () => {
               }}
             >
               <Link
-                to="/forgot-password"
+                to={localizePath('/forgot-password')}
                 style={{
                   fontSize: isMobile ? '14px' : '16px',
                   color: colors.primary,
@@ -396,7 +400,7 @@ const SignInPage = () => {
               Don't have an account?{' '}
             </span>
             <Link
-              to="/signup"
+              to={localizePath('/signup')}
               style={{
                 fontSize: isMobile ? '14px' : '16px',
                 color: colors.primary,

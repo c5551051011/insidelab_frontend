@@ -1,0 +1,30 @@
+{
+  "header": {
+    "search": "랩 검색",
+    "services": "서비스",
+    "news": "뉴스 및 이벤트",
+    "login": "로그인",
+    "signup": "회원가입",
+    "mockInterview": "모의 면접",
+    "reviews": "리뷰 작성",
+    "myProfile": "내 프로필",
+    "mySessions": "내 세션",
+    "signOut": "로그아웃",
+    "signedIn": "로그인됨",
+    "account": "계정",
+    "languageToggle": "ENG"
+  },
+  "hero": {
+    "title": "대학원 진학을 위한 최적의 파트너",
+    "subtitle": "세부 평점과 실제 후기, 선배들의 인사이트로 나에게 맞는 연구실을 찾아보세요.",
+    "placeholderMobile": "랩, 교수님을 검색하세요...",
+    "placeholderDesktop": "학교, 교수님, 연구실, 연구분야로 검색하세요"
+  },
+  "cta": {
+    "title": "지금 대학원 준비를 시작해보세요",
+    "subtitle": "수천 명의 학생이 인사이드랩의 인사이트와 가이드로 합격을 준비했습니다.",
+    "primary": "무료로 시작하기",
+    "secondary": "랩 둘러보기",
+    "meta": "신용카드 불필요 · 전 세계 15,000+ 학생이 사용 중"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "header": {
+    "search": "Search",
+    "services": "Services",
+    "news": "News & Events",
+    "login": "Login",
+    "signup": "Sign Up",
+    "mockInterview": "Mock Interview",
+    "reviews": "Reviews",
+    "myProfile": "My Profile",
+    "mySessions": "My Sessions",
+    "signOut": "Sign Out",
+    "signedIn": "Signed in",
+    "account": "Account",
+    "languageToggle": "KOR"
+  },
+  "hero": {
+    "title": "Your Gateway to Graduate School Success",
+    "subtitle": "Search labs with detailed ratings, read honest reviews from current grad students, and find the perfect research environment for your goals.",
+    "placeholderMobile": "Search labs, professors...",
+    "placeholderDesktop": "Search by university, professor, lab name, or research area"
+  },
+  "cta": {
+    "title": "Ready to Start Your Graduate School Journey?",
+    "subtitle": "Join thousands of students who have successfully navigated their graduate school applications with our expert guidance and insider insights.",
+    "primary": "Get Started Free",
+    "secondary": "Browse Labs",
+    "meta": "No credit card required · Join 15,000+ students worldwide"
+  }
+}

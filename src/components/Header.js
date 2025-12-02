@@ -1,14 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, User, LogOut, Video } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { PrimaryButton } from './Button';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { Modal } from './Modal';
+import { buildLocalizedPath, isKoreanPath } from '../utils/locale';
 
 const Header = () => {
+  const { t, i18n } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { width } = useBreakpoint();
+  const isKorean = isKoreanPath(location.pathname);
+  const currentLang = isKorean ? 'ko' : 'en';
+  const localizePath = (path) => buildLocalizedPath(path, currentLang);
   const isMobile = width < 850;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -17,6 +25,12 @@ const Header = () => {
   const [user, setUser] = useState(null);
   const userMenuRef = useRef(null);
   const servicesMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (i18n.language !== currentLang) {
+      i18n.changeLanguage(currentLang);
+    }
+  }, [currentLang, i18n]);
 
   // Check authentication status
   useEffect(() => {
@@ -78,6 +92,10 @@ const Header = () => {
     };
   }, []);
 
+  const handleNavigate = (path) => {
+    navigate(localizePath(path));
+  };
+
   const handleLogout = () => {
     AuthService.logout();
     // No need for manual state updates or navigation - logout handles everything
@@ -104,7 +122,7 @@ const Header = () => {
       }}>
         {/* Logo - Flutter와 동일한 스타일 */}
         <Link
-          to="/"
+          to={localizePath('/')}
           style={{
             textDecoration: 'none',
           }}
@@ -128,13 +146,18 @@ const Header = () => {
             alignItems: 'center',
             gap: spacing[3]
           }}>
-            <NavLink to="/search">Search</NavLink>
+            <NavLink to={localizePath('/search')}>{t('header.search', 'Search')}</NavLink>
             <ServicesMenu
               isOpen={servicesMenuOpen}
               onToggle={() => setServicesMenuOpen(!servicesMenuOpen)}
               servicesMenuRef={servicesMenuRef}
+              localizePath={localizePath}
+              navigate={navigate}
+              label={t('header.services', 'Services')}
+              mockInterviewLabel={t('header.mockInterview', 'Mock Interview')}
+              reviewsLabel={t('header.reviews', 'Reviews')}
             />
-            <NavLink to="/news">News & Events</NavLink>
+            <NavLink to={localizePath('/news')}>{t('header.news', 'News & Events')}</NavLink>
           </div>
         )}
 
@@ -176,17 +199,20 @@ const Header = () => {
             marginLeft: spacing[4]
           }}>
             {isAuthenticated ? (
-              <UserMenu
-                user={user}
-                isOpen={userMenuOpen}
-                onToggle={() => setUserMenuOpen(!userMenuOpen)}
-                onLogout={handleLogout}
-                userMenuRef={userMenuRef}
-              />
+            <UserMenu
+              user={user}
+              isOpen={userMenuOpen}
+              onToggle={() => setUserMenuOpen(!userMenuOpen)}
+              onLogout={handleLogout}
+              userMenuRef={userMenuRef}
+              navigate={navigate}
+              localizePath={localizePath}
+              t={t}
+            />
             ) : (
               <>
                 <Link
-                  to="/sign-in"
+                  to={localizePath('/sign-in')}
                   style={{
                     padding: `${spacing[2]} ${spacing[4]}`,
                     fontSize: '14px',
@@ -204,13 +230,13 @@ const Header = () => {
                     e.target.style.backgroundColor = 'transparent';
                   }}
                 >
-                  Login
+                  {t('header.login', 'Login')}
                 </Link>
                 <PrimaryButton
-                  to="/signup"
+                  to={localizePath('/signup')}
                   size="small"
                 >
-                  Sign Up
+                  {t('header.signup', 'Sign Up')}
                 </PrimaryButton>
               </>
             )}
@@ -256,7 +282,7 @@ const Header = () => {
               <span
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  window.location.href = '/';
+                  handleNavigate('/');
                 }}
                 style={{
                   fontSize: '22px',
@@ -331,7 +357,7 @@ const Header = () => {
                       color: colors.textSecondary,
                       fontFamily: 'Inter'
                     }}>
-                      Signed in
+                      {t('header.signedIn', 'Signed in')}
                     </div>
                   </div>
                 </div>
@@ -347,10 +373,10 @@ const Header = () => {
             }}>
               {/* Search */}
               <MobileMenuItem
-                text="Search"
+                text={t('header.search', 'Search')}
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  window.location.href = '/search';
+                  handleNavigate('/search');
                 }}
               />
 
@@ -371,22 +397,22 @@ const Header = () => {
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px'
               }}>
-                Services
+                {t('header.services', 'Services')}
               </div>
 
               <MobileMenuItem
-                text="Mock Interview"
+                text={t('header.mockInterview', 'Mock Interview')}
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  window.location.href = '/services/mock-interview/';
+                  handleNavigate('/services/mock-interview');
                 }}
               />
 
               <MobileMenuItem
-                text="Reviews"
+                text={t('header.reviews', 'Reviews')}
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  window.location.href = '/write-review';
+                  handleNavigate('/write-review');
                 }}
               />
 
@@ -398,10 +424,10 @@ const Header = () => {
               }} />
 
               <MobileMenuItem
-                text="News & Events"
+                text={t('header.news', 'News & Events')}
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  window.location.href = '/news';
+                  handleNavigate('/news');
                 }}
               />
 
@@ -424,22 +450,22 @@ const Header = () => {
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px'
                   }}>
-                    Account
+                    {t('header.account', 'Account')}
                   </div>
 
                   <MobileMenuItem
-                    text="My Profile"
+                    text={t('header.myProfile', 'My Profile')}
                     onClick={() => {
                       setMobileMenuOpen(false);
-                      window.location.href = '/profile';
+                      handleNavigate('/profile');
                     }}
                   />
 
                   <MobileMenuItem
-                    text="My Sessions"
+                    text={t('header.mySessions', 'My Sessions')}
                     onClick={() => {
                       setMobileMenuOpen(false);
-                      window.location.href = '/my-sessions';
+                      handleNavigate('/my-sessions');
                     }}
                   />
 
@@ -452,7 +478,7 @@ const Header = () => {
 
                   <MobileMenuItem
                     icon={<LogOut size={20} color={colors.error} />}
-                    text="Sign Out"
+                    text={t('header.signOut', 'Sign Out')}
                     onClick={() => {
                       handleLogout();
                       setMobileMenuOpen(false);
@@ -490,15 +516,15 @@ const Header = () => {
                       onMouseEnter={(e) => {
                         e.target.style.backgroundColor = colors.backgroundLight;
                       }}
-                      onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      Login
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                      {t('header.login', 'Login')}
                     </Link>
 
                     <Link
-                      to="/signup"
+                      to={localizePath('/signup')}
                       onClick={() => setMobileMenuOpen(false)}
                       style={{
                         display: 'block',
@@ -522,7 +548,7 @@ const Header = () => {
                         e.target.style.backgroundColor = colors.primary;
                       }}
                     >
-                      Sign Up
+                      {t('header.signup', 'Sign Up')}
                     </Link>
                   </div>
                 </>
@@ -596,7 +622,7 @@ const MobileMenuItem = ({ icon, text, onClick, style = {} }) => {
   );
 };
 
-const UserMenu = ({ user, isOpen, onToggle, onLogout, userMenuRef }) => {
+const UserMenu = ({ user, isOpen, onToggle, onLogout, userMenuRef, navigate, localizePath, t }) => {
   const getUserInitial = () => {
     if (user?.name) {
       return user.name.charAt(0).toUpperCase();
@@ -690,13 +716,13 @@ const UserMenu = ({ user, isOpen, onToggle, onLogout, userMenuRef }) => {
         }}>
           <UserMenuItem
             icon={<User size={16} />}
-            text="My Profile"
-            onClick={() => window.location.href = '/profile'}
+            text={t('header.myProfile', 'My Profile')}
+            onClick={() => navigate(localizePath('/profile'))}
           />
           <UserMenuItem
             icon={<Video size={16} />}
-            text="My Sessions"
-            onClick={() => window.location.href = '/my-sessions'}
+            text={t('header.mySessions', 'My Sessions')}
+            onClick={() => navigate(localizePath('/my-sessions'))}
           />
           <div style={{
             height: '1px',
@@ -705,7 +731,7 @@ const UserMenu = ({ user, isOpen, onToggle, onLogout, userMenuRef }) => {
           }} />
           <UserMenuItem
             icon={<LogOut size={16} />}
-            text="Sign Out"
+            text={t('header.signOut', 'Sign Out')}
             onClick={onLogout}
             style={{ color: colors.error }}
           />
@@ -749,7 +775,7 @@ const UserMenuItem = ({ icon, text, onClick, style = {} }) => {
   );
 };
 
-const ServicesMenu = ({ isOpen, onToggle, servicesMenuRef }) => {
+const ServicesMenu = ({ isOpen, onToggle, servicesMenuRef, localizePath, navigate, label, mockInterviewLabel, reviewsLabel }) => {
   return (
     <div style={{ position: 'relative' }} ref={servicesMenuRef}>
       <button
@@ -780,7 +806,7 @@ const ServicesMenu = ({ isOpen, onToggle, servicesMenuRef }) => {
           }
         }}
       >
-        Services
+        {label}
         <ChevronDown size={16} color={isOpen ? colors.primary : colors.textSecondary} />
       </button>
 
@@ -800,16 +826,16 @@ const ServicesMenu = ({ isOpen, onToggle, servicesMenuRef }) => {
           overflow: 'hidden'
         }}>
           <ServiceMenuItem
-            text="Mock Interview"
+            text={mockInterviewLabel}
             onClick={() => {
-              window.location.href = '/services/mock-interview/';
+              navigate(localizePath('/services/mock-interview'));
               onToggle();
             }}
           />
           <ServiceMenuItem
-            text="Reviews"
+            text={reviewsLabel}
             onClick={() => {
-              window.location.href = '/write-review';
+              navigate(localizePath('/write-review'));
               onToggle();
             }}
           />

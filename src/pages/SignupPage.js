@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, RefreshCw, Check, X, Loader } from 'lucide-react';
 import Header from '../components/Header';
 import { FormInput } from '../components/FormInput';
@@ -8,9 +8,13 @@ import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { ApiService, ApiException } from '../services/apiService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { buildLocalizedPath, getLangFromPath } from '../utils/locale';
 
 const SignupPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentLang = getLangFromPath(location.pathname);
+  const localizePath = (path) => buildLocalizedPath(path, currentLang);
   const { isMobile } = useBreakpoint();
 
   // Form data
@@ -354,7 +358,7 @@ const SignupPage = () => {
         alert('Account created successfully!');
       }
 
-      navigate('/sign-in');
+      navigate(localizePath('/sign-in'));
 
     } catch (error) {
       console.error('Sign up error:', error);
@@ -881,7 +885,7 @@ const SignupPage = () => {
                 >
                   I agree to the{' '}
                   <Link
-                    to="/terms"
+                    to={localizePath('/terms')}
                     style={{
                       color: colors.primary,
                       textDecoration: 'none',
@@ -892,7 +896,7 @@ const SignupPage = () => {
                   </Link>{' '}
                   and{' '}
                   <Link
-                    to="/privacy"
+                    to={localizePath('/privacy')}
                     style={{
                       color: colors.primary,
                       textDecoration: 'none',
@@ -980,7 +984,7 @@ const SignupPage = () => {
             >
               Already have an account?{' '}
               <Link
-                to="/sign-in"
+                to={localizePath('/sign-in')}
                 style={{
                   color: colors.primary,
                   textDecoration: 'none',

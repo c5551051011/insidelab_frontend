@@ -416,6 +416,26 @@ const LabDetailPage = () => {
   const isMobile = width < 1000;
   const isCompactLayout = width < 768;
 
+  const enrichLabWithMinimal = async (labData) => {
+    if (!id) return labData;
+    try {
+      const minimal = await ApiService.get(`/labs/${id}/?fields=minimal`);
+      const m = minimal || {};
+      return {
+        ...labData,
+        universityId: labData.universityId || m.university,
+        universityName: labData.universityName || m.university_name,
+        departmentId: labData.departmentId || m.department,
+        departmentName: labData.departmentName || labData.department || m.department_name || m.department_local_name,
+        researchGroupId: labData.researchGroupId || m.research_group,
+        researchGroupName: labData.researchGroupName || labData.researchGroup || m.research_group_name || m.research_group,
+      };
+    } catch (err) {
+      console.warn('Failed to fetch minimal lab data:', err);
+      return labData;
+    }
+  };
+
   useEffect(() => {
     const loadLabDetails = async () => {
       try {
@@ -452,10 +472,12 @@ const LabDetailPage = () => {
 
           // Use complete professor data if available, otherwise use original lab data
           const finalLabData = professorData || labData;
-          setLab(addMockPublications(finalLabData));
+          const enrichedLab = await enrichLabWithMinimal(finalLabData);
+          setLab(addMockPublications(enrichedLab));
         } else {
           // Data is already complete
-          setLab(addMockPublications(labData));
+          const enrichedLab = await enrichLabWithMinimal(labData);
+          setLab(addMockPublications(enrichedLab));
         }
       } catch (err) {
         console.error('Error loading lab details:', err);
@@ -614,12 +636,12 @@ const LabDetailPage = () => {
           labName: lab.labName || lab.name,
           professorId: lab.professorId,
           professorName: lab.professorName,
-          universityId: lab.universityId,
-          universityName: lab.universityName,
-          departmentId: lab.departmentId,
-          departmentName: lab.department,
-          researchGroupId: lab.researchGroupId,
-          researchGroupName: lab.researchGroup
+          universityId: lab.universityId || lab.university,
+          universityName: lab.universityName || lab.university_name,
+          departmentId: lab.departmentId || lab.department,
+          departmentName: lab.departmentName || lab.department || lab.department_name || lab.department_local_name,
+          researchGroupId: lab.researchGroupId || lab.research_group,
+          researchGroupName: lab.researchGroupName || lab.researchGroup || lab.research_group_name
         }
       }
     });
@@ -993,84 +1015,22 @@ const LabInformation = ({ lab, onWebsiteClick }) => {
         </div>
       )}
 
-      {/* Lab Website - Prominent Display */}
-      {lab.website && (
-        <div style={{ marginBottom: spacing[5] }}>
-          <button
-            onClick={() => onWebsiteClick(lab.website)}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: spacing[4],
-              backgroundColor: `${colors.primary}10`,
-              border: `2px solid ${colors.primary}30`,
-              borderRadius: '12px',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = `${colors.primary}20`;
-              e.currentTarget.style.borderColor = colors.primary;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = `${colors.primary}10`;
-              e.currentTarget.style.borderColor = `${colors.primary}30`;
-            }}
-          >
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing[3]
-            }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '8px',
-                backgroundColor: colors.primary,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white'
-              }}>
-                <Globe size={20} />
-              </div>
-              <div style={{ textAlign: 'left' }}>
-                <div style={{
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: colors.textPrimary,
-                  marginBottom: '2px'
-                }}>
-                  Visit Lab Website
-                </div>
-                <div style={{
-                  fontSize: '13px',
-                  color: colors.textSecondary,
-                  fontFamily: 'monospace'
-                }}>
-                  {lab.website}
-                </div>
-              </div>
-            </div>
-            <div style={{
-              fontSize: '18px',
-              color: colors.primary,
-              fontWeight: '600'
-            }}>
-              →
-            </div>
-          </button>
-        </div>
-      )}
-
       {/* Info Rows */}
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         gap: spacing[3]
       }}>
+        {lab.website && (
+          <InfoRow
+            icon={<Globe size={16} />}
+            label="Website"
+            value={lab.website}
+            isLink
+            onClick={() => onWebsiteClick(lab.website)}
+          />
+        )}
+
         <InfoRow
           icon={<Building2 size={16} />}
           label="Department"

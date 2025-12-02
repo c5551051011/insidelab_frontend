@@ -1,47 +1,51 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Mail, School, HelpCircle } from 'lucide-react';
 import { colors, spacing, sectionSpacing } from '../theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { buildLocalizedPath, getLangFromPath } from '../utils/locale';
 
 const Footer = () => {
   const { width } = useBreakpoint();
   const isMobile = width < 768;
   const isTablet = width >= 768 && width < 1024;
+  const location = useLocation();
+  const currentLang = getLangFromPath(location.pathname);
+  const localizePath = (path) => buildLocalizedPath(path, currentLang);
 
   const renderFooterContent = () => {
     if (isMobile) {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[8] }}>
-          <BrandSection />
-          <ProductLinks />
-          <CompanyLinks />
-          <ResourcesLinks />
-          <SupportLinks />
+          <BrandSection localizePath={localizePath} />
+          <ProductLinks localizePath={localizePath} />
+          <CompanyLinks localizePath={localizePath} />
+          <ResourcesLinks localizePath={localizePath} />
+          <SupportLinks localizePath={localizePath} />
         </div>
       );
     } else if (isTablet) {
       return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[8] }}>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: spacing[10] }}>
-            <BrandSection />
-            <ProductLinks />
-            <CompanyLinks />
+            <BrandSection localizePath={localizePath} />
+            <ProductLinks localizePath={localizePath} />
+            <CompanyLinks localizePath={localizePath} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing[10] }}>
-            <ResourcesLinks />
-            <SupportLinks />
+            <ResourcesLinks localizePath={localizePath} />
+            <SupportLinks localizePath={localizePath} />
           </div>
         </div>
       );
     } else {
       return (
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr', gap: spacing[10] }}>
-          <BrandSection />
-          <ProductLinks />
-          <CompanyLinks />
-          <ResourcesLinks />
-          <SupportLinks />
+          <BrandSection localizePath={localizePath} />
+          <ProductLinks localizePath={localizePath} />
+          <CompanyLinks localizePath={localizePath} />
+          <ResourcesLinks localizePath={localizePath} />
+          <SupportLinks localizePath={localizePath} />
         </div>
       );
     }
@@ -71,12 +75,12 @@ const Footer = () => {
   );
 };
 
-const BrandSection = () => {
+const BrandSection = ({ localizePath }) => {
   return (
     <div style={{ maxWidth: '300px' }}>
       {/* Logo */}
       <Link
-        to="/"
+        to={localizePath('/')}
         style={{
           textDecoration: 'none',
           marginBottom: spacing[4],
@@ -112,17 +116,17 @@ const BrandSection = () => {
       <div style={{ display: 'flex', gap: spacing[3] }}>
         <SocialIcon
           icon={Mail}
-          href="/contact"
+          href={localizePath('/contact')}
           aria-label="Contact us"
         />
         <SocialIcon
           icon={School}
-          href="/about"
+          href={localizePath('/about')}
           aria-label="About us"
         />
         <SocialIcon
           icon={HelpCircle}
-          href="/faq"
+          href={localizePath('/faq')}
           aria-label="FAQ"
         />
       </div>
@@ -227,46 +231,46 @@ const FooterLink = ({ to, children, external = false }) => {
   );
 };
 
-const ProductLinks = () => {
+const ProductLinks = ({ localizePath }) => {
   return (
     <FooterSection title="Product">
-      <FooterLink to="/">Professor Reviews</FooterLink>
-      <FooterLink to="/services/cv-review">CV Feedback</FooterLink>
-      <FooterLink to="/services/mock-interview">Mock Interviews</FooterLink>
-      <FooterLink to="/services">Application Services</FooterLink>
+      <FooterLink to={localizePath('/')}>Professor Reviews</FooterLink>
+      <FooterLink to={localizePath('/services/cv-review')}>CV Feedback</FooterLink>
+      <FooterLink to={localizePath('/services/mock-interview')}>Mock Interviews</FooterLink>
+      <FooterLink to={localizePath('/services')}>Application Services</FooterLink>
     </FooterSection>
   );
 };
 
-const CompanyLinks = () => {
+const CompanyLinks = ({ localizePath }) => {
   return (
     <FooterSection title="Company">
-      <FooterLink to="/about">About Us</FooterLink>
-      <FooterLink to="/success-stories">Success Stories</FooterLink>
-      <FooterLink to="/careers">Careers</FooterLink>
-      <FooterLink to="/contact">Contact</FooterLink>
+      <FooterLink to={localizePath('/about')}>About Us</FooterLink>
+      <FooterLink to={localizePath('/success-stories')}>Success Stories</FooterLink>
+      <FooterLink to={localizePath('/careers')}>Careers</FooterLink>
+      <FooterLink to={localizePath('/contact')}>Contact</FooterLink>
     </FooterSection>
   );
 };
 
-const ResourcesLinks = () => {
+const ResourcesLinks = ({ localizePath }) => {
   return (
     <FooterSection title="Resources">
-      <FooterLink to="/blog">Blog</FooterLink>
-      <FooterLink to="/guides">Guides</FooterLink>
-      <FooterLink to="/faq">FAQ</FooterLink>
-      <FooterLink to="/help">Help Center</FooterLink>
+      <FooterLink to={localizePath('/blog')}>Blog</FooterLink>
+      <FooterLink to={localizePath('/guides')}>Guides</FooterLink>
+      <FooterLink to={localizePath('/faq')}>FAQ</FooterLink>
+      <FooterLink to={localizePath('/help')}>Help Center</FooterLink>
     </FooterSection>
   );
 };
 
-const SupportLinks = () => {
+const SupportLinks = ({ localizePath }) => {
   return (
     <FooterSection title="Support">
-      <FooterLink to="/privacy">Privacy Policy</FooterLink>
-      <FooterLink to="/terms">Terms of Service</FooterLink>
-      <FooterLink to="/cookies">Cookie Policy</FooterLink>
-      <FooterLink to="/guidelines">Community Guidelines</FooterLink>
+      <FooterLink to={localizePath('/privacy')}>Privacy Policy</FooterLink>
+      <FooterLink to={localizePath('/terms')}>Terms of Service</FooterLink>
+      <FooterLink to={localizePath('/cookies')}>Cookie Policy</FooterLink>
+      <FooterLink to={localizePath('/guidelines')}>Community Guidelines</FooterLink>
     </FooterSection>
   );
 };

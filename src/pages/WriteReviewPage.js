@@ -13,10 +13,13 @@ import { AuthService } from '../services/authService';
 import { ApiService } from '../services/apiService';
 import { DropdownField } from '../components/Dropdown';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { buildLocalizedPath, getLangFromPath } from '../utils/locale';
 
 const WriteReviewPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const currentLang = getLangFromPath(location.pathname);
+  const localizePath = (path) => buildLocalizedPath(path, currentLang);
   const { width } = useBreakpoint();
   const isCompact600 = width < 600;
   const isCompact640 = width < 640;
@@ -119,7 +122,7 @@ const WriteReviewPage = () => {
       const isAuthenticated = AuthService.isAuthenticated();
 
       if (!isAuthenticated) {
-        navigate('/sign-in');
+        navigate(localizePath('/sign-in'));
         return;
       }
 
@@ -127,9 +130,9 @@ const WriteReviewPage = () => {
 
     } catch (error) {
       console.error('Auth check failed:', error);
-      navigate('/sign-in');
+      navigate(localizePath('/sign-in'));
     }
-  }, [navigate]);
+  }, [navigate, localizePath]);
 
   // Pre-fill form from navigation state
   const prefillFormFromState = useCallback(async () => {

@@ -1,5 +1,6 @@
 // Auth Service for authentication operations
 import { ApiService } from './apiService';
+import { buildLocalizedPath, getLangFromPath } from '../utils/locale';
 
 class AuthService {
   // User data management
@@ -77,7 +78,9 @@ class AuthService {
     this.clearUserData();
 
     // Redirect to home and refresh the page
-    window.location.href = '/';
+    const currentPath = window.location?.pathname || '/';
+    const lang = getLangFromPath(currentPath);
+    window.location.href = buildLocalizedPath('/', lang);
   }
 
   static async getCurrentUser(useCache = true) {

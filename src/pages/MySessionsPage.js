@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Clock,
   Calendar,
@@ -21,9 +21,13 @@ import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { InterviewService } from '../services/interviewService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
+import { buildLocalizedPath, getLangFromPath } from '../utils/locale';
 
 const MySessionsPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const currentLang = getLangFromPath(location.pathname);
+  const localizePath = (path) => buildLocalizedPath(path, currentLang);
   const { isMobile } = useBreakpoint();
   const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming', 'past', 'all'
   const [sessions, setSessions] = useState([]);
@@ -635,9 +639,9 @@ const MySessionsPage = () => {
 
   useEffect(() => {
     if (!AuthService.isAuthenticated()) {
-      navigate('/sign-in', { state: { from: '/my-sessions' } });
+      navigate(localizePath('/sign-in'), { state: { from: localizePath('/my-sessions') } });
     }
-  }, [navigate]);
+  }, [navigate, localizePath]);
 
   const getStatusInfo = (status) => {
     switch (status) {
@@ -841,7 +845,7 @@ const MySessionsPage = () => {
               You haven't booked any sessions yet
             </p>
             <button
-              onClick={() => navigate('/services/mock-interview')}
+              onClick={() => navigate(localizePath('/services/mock-interview'))}
               style={{
                 padding: `${spacing[3]} ${spacing[6]}`,
                 backgroundColor: colors.primary,
