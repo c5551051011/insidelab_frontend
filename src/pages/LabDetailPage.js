@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   Star,
@@ -415,6 +415,8 @@ const LabDetailPage = () => {
   const { width } = useBreakpoint();
   const isMobile = width < 1000;
   const isCompactLayout = width < 768;
+  const fetchedLabRef = useRef(null);
+  const fetchedBookmarkRef = useRef(null);
 
   const enrichLabWithMinimal = async (labData) => {
     if (!id) return labData;
@@ -425,10 +427,10 @@ const LabDetailPage = () => {
         ...labData,
         universityId: labData.universityId || m.university,
         universityName: labData.universityName || m.university_name,
-        departmentId: labData.departmentId || m.department,
+        departmentId: labData.departmentId || m.department || m.university_department,
         departmentName: labData.departmentName || labData.department || m.department_name || m.department_local_name,
-        researchGroupId: labData.researchGroupId || m.research_group,
-        researchGroupName: labData.researchGroupName || labData.researchGroup || m.research_group_name || m.research_group,
+        researchGroupId: labData.researchGroupId || m.research_group || m.research_group_id,
+        researchGroupName: labData.researchGroupName || labData.researchGroup || m.research_group_name || m.research_group_local_name || m.research_group,
       };
     } catch (err) {
       console.warn('Failed to fetch minimal lab data:', err);
@@ -438,6 +440,9 @@ const LabDetailPage = () => {
 
   useEffect(() => {
     const loadLabDetails = async () => {
+      if (fetchedLabRef.current === id) return;
+      fetchedLabRef.current = id;
+
       try {
         setLoading(true);
         setError(null);
@@ -496,6 +501,8 @@ const LabDetailPage = () => {
   useEffect(() => {
     const loadBookmarkStatus = async () => {
       if (!lab || !id) return;
+      if (fetchedBookmarkRef.current === id) return;
+      fetchedBookmarkRef.current = id;
 
       console.log(`[Lab Detail] Checking bookmark status for lab ID: ${id}`);
       console.log(`[Lab Detail] Calling API: /auth/lab-interests/ with lab_id=${id}`);
@@ -638,10 +645,10 @@ const LabDetailPage = () => {
           professorName: lab.professorName,
           universityId: lab.universityId || lab.university,
           universityName: lab.universityName || lab.university_name,
-          departmentId: lab.departmentId || lab.department,
+          departmentId: lab.departmentId || lab.department || lab.university_department,
           departmentName: lab.departmentName || lab.department || lab.department_name || lab.department_local_name,
-          researchGroupId: lab.researchGroupId || lab.research_group,
-          researchGroupName: lab.researchGroupName || lab.researchGroup || lab.research_group_name
+          researchGroupId: lab.researchGroupId || lab.research_group || lab.research_group_id,
+          researchGroupName: lab.researchGroupName || lab.researchGroup || lab.research_group_name || lab.research_group_local_name
         }
       }
     });
@@ -1948,6 +1955,7 @@ const ReviewsSection = ({ lab, onWriteReview }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  const fetchedReviewsRef = useRef(null);
 
   useEffect(() => {
     const loadReviews = async () => {
@@ -1955,6 +1963,10 @@ const ReviewsSection = ({ lab, onWriteReview }) => {
         setLoading(false);
         return;
       }
+      if (fetchedReviewsRef.current === lab.professorId) {
+        return;
+      }
+      fetchedReviewsRef.current = lab.professorId;
 
       setLoading(true);
       try {
@@ -2143,22 +2155,6 @@ const ReviewsSection = ({ lab, onWriteReview }) => {
           }}>
             Be the first to share your experience working in this lab. Your review will help future students and researchers.
           </p>
-          <button
-            onClick={onWriteReview}
-            style={{
-              backgroundColor: colors.primary,
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              padding: `${spacing[3]} ${spacing[5]}`,
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            Write First Review
-          </button>
         </div>
       )}
     </div>
