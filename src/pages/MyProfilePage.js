@@ -253,7 +253,7 @@ const MyProfilePageRefactored = () => {
     };
 
     loadInterestedLabs();
-  }, [userKey, ApiService]);
+  }, [userKey]);
 
   // Load user reviews
   useEffect(() => {
@@ -301,7 +301,7 @@ const MyProfilePageRefactored = () => {
     };
 
     loadUserReviews();
-  }, [userKey, ApiService]);
+  }, [userKey]);
 
   /**
    * Handle user sign out
