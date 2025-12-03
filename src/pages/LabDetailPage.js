@@ -436,7 +436,7 @@ const LabDetailPage = () => {
       console.warn('Failed to fetch minimal lab data:', err);
       return labData;
     }
-  }, [id, enrichLabWithMinimal]);
+  }, [id]);
 
   useEffect(() => {
     const loadLabDetails = async () => {
@@ -495,7 +495,7 @@ const LabDetailPage = () => {
     if (id) {
       loadLabDetails();
     }
-  }, [id]);
+  }, [id, enrichLabWithMinimal]);
 
   // Load bookmark status when lab data is loaded
   useEffect(() => {

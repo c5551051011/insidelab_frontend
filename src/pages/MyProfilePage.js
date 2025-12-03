@@ -202,7 +202,7 @@ const MyProfilePageRefactored = () => {
     };
 
     checkAuth();
-  }, [navigate, localizePath]);
+  }, [navigate, localizePath, userKey]);
 
   // Load interested labs
   useEffect(() => {
