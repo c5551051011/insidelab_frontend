@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { SearchService } from '../../services/searchService';
+import { ApiService } from '../../services/apiService';
 
 const FilterSidebar = ({
   filters,
@@ -19,6 +20,7 @@ const FilterSidebar = ({
     tags: [],
     sortOptions: []
   });
+  const [baseResearchAreas, setBaseResearchAreas] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState('');
   const [mappedUniversityIds, setMappedUniversityIds] = useState([]);
 
@@ -68,15 +70,68 @@ const FilterSidebar = ({
       try {
         const options = await SearchService.getFilterOptions();
         setFilterOptions(options);
+        setBaseResearchAreas(options.researchAreas || []);
       } catch (error) {
         console.error('Error loading filter options:', error);
         // Use fallback options
         setFilterOptions(SearchService.getFallbackFilterOptions());
+        setBaseResearchAreas(SearchService.getFallbackFilterOptions().researchAreas || []);
       }
     };
 
     loadFilterOptions();
   }, []);
+
+  // Load research areas based on selected departments
+  useEffect(() => {
+    const loadResearchAreas = async () => {
+      if (!filters.departments || filters.departments.length === 0) {
+        setFilterOptions(prev => ({ ...prev, researchAreas: baseResearchAreas }));
+        return;
+      }
+
+      const departmentIds = filters.departments
+        .map((dept) => {
+          if (typeof dept === 'number') return dept;
+          if (!dept) return null;
+          const match = (filterOptions.departments || []).find(
+            (d) => d.id === dept || String(d.id) === String(dept) || d.name === dept
+          );
+          return match ? match.id : null;
+        })
+        .filter((id) => Number.isFinite(id));
+
+      if (departmentIds.length === 0) {
+        setFilterOptions(prev => ({ ...prev, researchAreas: [] }));
+        return;
+      }
+
+      try {
+        const requests = departmentIds.map((deptId) =>
+          ApiService.get(`/research-areas/?department=${deptId}&fields=minimal`)
+        );
+        const responses = await Promise.all(requests);
+        const merged = responses.flatMap((resp) => resp.results || resp || []);
+        const uniqueByName = [];
+        const seen = new Set();
+        merged.forEach((area) => {
+          const name = area.name || area;
+          if (name && !seen.has(name)) {
+            seen.add(name);
+            uniqueByName.push(name);
+          }
+        });
+
+        setFilterOptions(prev => ({ ...prev, researchAreas: uniqueByName }));
+      } catch (error) {
+        console.error('Error loading research areas by department:', error);
+        // Fallback to base list if fetch fails
+        setFilterOptions(prev => ({ ...prev, researchAreas: baseResearchAreas }));
+      }
+    };
+
+    loadResearchAreas();
+  }, [filters.departments, baseResearchAreas]);
 
   // Handle rating change
   const handleRatingChange = (rating) => {
