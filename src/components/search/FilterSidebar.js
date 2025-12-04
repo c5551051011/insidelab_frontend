@@ -131,7 +131,7 @@ const FilterSidebar = ({
     };
 
     loadResearchAreas();
-  }, [filters.departments, baseResearchAreas]);
+  }, [filters.departments, baseResearchAreas, filterOptions.departments]);
 
   // Handle rating change
   const handleRatingChange = (rating) => {
