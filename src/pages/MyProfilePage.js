@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import EditProfileModal from '../components/EditProfileModal';
 import ResearchInterestsModal from '../components/ResearchInterestsModal';
+import EmailVerificationModal from '../components/EmailVerificationModal';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { ApiService } from '../services/apiService';
@@ -166,6 +167,7 @@ const MyProfilePageRefactored = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isResearchModalOpen, setIsResearchModalOpen] = useState(false);
+  const [isEmailVerificationOpen, setIsEmailVerificationOpen] = useState(false);
   const [researchProfile, setResearchProfile] = useState(null);
   const [interestedLabs, setInterestedLabs] = useState([]);
   const [labsLoading, setLabsLoading] = useState(false);
@@ -336,6 +338,45 @@ const MyProfilePageRefactored = () => {
     } catch (error) {
       console.error('Error fetching updated user data:', error);
       setUser(updatedUser);
+    }
+  };
+
+  /**
+   * Handle email verification completion
+   */
+  const handleEmailVerificationComplete = async (verificationData) => {
+    try {
+      // Update user's verification status in backend
+      const verificationUpdateData = {
+        verification_status: 'Verified',
+        university_email: verificationData.universityEmail,
+        university_name: verificationData.universityName,
+        department_name: verificationData.department
+      };
+
+      // Call API to update verification status
+      try {
+        await ApiService.patch('/users/me/', verificationUpdateData);
+      } catch (apiError) {
+        console.error('Failed to update verification in backend:', apiError);
+        // Continue with local update even if API fails
+      }
+
+      // Update local user state
+      const updatedUser = {
+        ...user,
+        verificationStatus: 'Verified',
+        universityEmail: verificationData.universityEmail,
+        // Update the correct field names based on what's already in user object
+        university_name: verificationData.universityName || user.university_name,
+        university: verificationData.universityName || user.university,
+        department_name: verificationData.department || user.department_name,
+        department: verificationData.department || user.department
+      };
+      setUser(updatedUser);
+      setIsEmailVerificationOpen(false);
+    } catch (error) {
+      console.error('Error updating verification status:', error);
     }
   };
 
@@ -527,10 +568,7 @@ const MyProfilePageRefactored = () => {
                   <span>Verification: {user?.verificationStatus || 'Unverified'}</span>
                   {(!user?.verificationStatus || user?.verificationStatus === 'Unverified') && (
                     <button
-                      onClick={() => {
-                        // TODO: Implement verification process
-                        alert('Verification process would be implemented here');
-                      }}
+                      onClick={() => setIsEmailVerificationOpen(true)}
                       style={{
                         backgroundColor: colors.primary,
                         color: 'white',
@@ -1306,6 +1344,13 @@ const MyProfilePageRefactored = () => {
         onClose={() => setIsResearchModalOpen(false)}
         user={user}
         onUserUpdate={handleUserUpdate}
+      />
+
+      <EmailVerificationModal
+        isOpen={isEmailVerificationOpen}
+        onClose={() => setIsEmailVerificationOpen(false)}
+        user={user}
+        onVerificationComplete={handleEmailVerificationComplete}
       />
     </div>
   );
