@@ -6,6 +6,7 @@ import { UniversityService } from '../services/universityService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import UniversityDepartmentSelector from './UniversityDepartmentSelector';
 import Modal from './Modal';
+import AddLabModal from './AddLabModal';
 
 const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
   const [formData, setFormData] = useState({
@@ -31,6 +32,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
   const [filteredProfessors, setFilteredProfessors] = useState([]);
   const [isLoadingProfessors, setIsLoadingProfessors] = useState(false);
   const [showProfessorDropdown, setShowProfessorDropdown] = useState(false);
+  const [showAddLabModal, setShowAddLabModal] = useState(false);
   const { isMobile } = useBreakpoint();
 
   // Language options
@@ -99,6 +101,34 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
         university_department: departmentId
       });
     }
+  };
+
+  const handleLabAdded = (lab) => {
+    setShowAddLabModal(false);
+    if (!lab) return;
+
+    const professor = lab.professor || {};
+    const labName = lab.name || lab.labName || formData.labName;
+    const professorName = professor.name || lab.professorName || labName;
+
+    // Add to dropdown options for future selection
+    if (professor.id || lab.professor_id) {
+      const professorEntry = {
+        id: professor.id || lab.professor_id,
+        name: professorName,
+        lab: { id: lab.id, name: labName },
+        university_department_name: formData.departmentName
+      };
+      setProfessors(prev => [...prev, professorEntry]);
+      setFilteredProfessors(prev => [...prev, professorEntry]);
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      professorId: professor.id || lab.professor_id || prev.professorId,
+      labId: lab.id || prev.labId,
+      labName: labName || prev.labName
+    }));
   };
 
   const loadProfessors = useCallback(async (filters = {}) => {
@@ -203,10 +233,8 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
   };
 
   const handleProfessorInputFocus = () => {
-    if (professors.length > 0) {
-      setShowProfessorDropdown(true);
-      setFilteredProfessors(professors);
-    }
+    setShowProfessorDropdown(true);
+    setFilteredProfessors(professors);
   };
 
   const handleProfessorInputBlur = () => {
@@ -286,6 +314,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
         boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)'
       }}
     >
+      <div>
         {/* Header */}
         <div style={{
           padding: spacing[6],
@@ -506,12 +535,12 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
                   </div>
 
                   {/* Professor Dropdown */}
-                  {showProfessorDropdown && filteredProfessors.length > 0 && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      right: 0,
+                    {showProfessorDropdown && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
                       backgroundColor: 'white',
                       border: `2px solid ${colors.border}`,
                       borderRadius: '8px',
@@ -521,46 +550,82 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
                       overflowY: 'auto',
                       marginTop: '2px'
                     }}>
-                      {filteredProfessors.map((professor) => {
-                        const displayName = professor.lab && professor.lab.name
-                          ? `${professor.name} - ${professor.lab.name}`
-                          : professor.name;
+                      {filteredProfessors.length > 0 ? (
+                        filteredProfessors.map((professor) => {
+                          const displayName = professor.lab && professor.lab.name
+                            ? `${professor.name} - ${professor.lab.name}`
+                            : professor.name;
 
-                        return (
-                          <div
-                            key={professor.id}
-                            onClick={() => handleProfessorSelect(professor)}
-                            style={{
-                              padding: `${spacing[3]} ${spacing[4]}`,
-                              cursor: 'pointer',
-                              backgroundColor: 'white',
-                              fontSize: '14px',
-                              fontFamily: 'Inter',
-                              color: colors.textPrimary,
-                              transition: 'background-color 0.15s ease'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#E8E8E8';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'white';
-                            }}
-                          >
-                            <div style={{ fontWeight: '500', color: colors.textPrimary }}>
-                              {displayName}
-                            </div>
-                            {professor.university_department_name && (
-                              <div style={{
-                                fontSize: '12px',
-                                color: colors.textSecondary,
-                                marginTop: spacing[1]
-                              }}>
-                                {professor.university_department_name}
+                          return (
+                            <div
+                              key={professor.id}
+                              onClick={() => handleProfessorSelect(professor)}
+                              style={{
+                                padding: `${spacing[3]} ${spacing[4]}`,
+                                cursor: 'pointer',
+                                backgroundColor: 'white',
+                                fontSize: '14px',
+                                fontFamily: 'Inter',
+                                color: colors.textPrimary,
+                                transition: 'background-color 0.15s ease'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = '#E8E8E8';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'white';
+                              }}
+                            >
+                              <div style={{ fontWeight: '500', color: colors.textPrimary }}>
+                                {displayName}
                               </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                              {professor.university_department_name && (
+                                <div style={{
+                                  fontSize: '12px',
+                                  color: colors.textSecondary,
+                                  marginTop: spacing[1]
+                                }}>
+                                  {professor.university_department_name}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div style={{
+                          padding: `${spacing[3]} ${spacing[4]}`,
+                          fontSize: '14px',
+                          color: colors.textSecondary,
+                          fontFamily: 'Inter'
+                        }}>
+                          No matching professors or labs
+                        </div>
+                      )}
+
+                      <div
+                        onClick={() => {
+                          setShowProfessorDropdown(false);
+                          setShowAddLabModal(true);
+                        }}
+                        style={{
+                          padding: `${spacing[3]} ${spacing[4]}`,
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontFamily: 'Inter',
+                          color: colors.primary,
+                          borderTop: `1px solid ${colors.border}`,
+                          backgroundColor: 'white',
+                          fontWeight: 600
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = colors.backgroundLight || '#F3F4F6';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'white';
+                        }}
+                      >
+                        + Add Professor/Lab
+                      </div>
                     </div>
                   )}
                 </div>
@@ -669,6 +734,23 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
             </button>
           </div>
         </form>
+
+        <AddLabModal
+          isOpen={showAddLabModal}
+          onClose={() => setShowAddLabModal(false)}
+          selectedUniversity={{
+            id: formData.universityId,
+            name: formData.universityName
+          }}
+          selectedDepartment={{
+            id: formData.departmentId,
+            name: formData.departmentName
+          }}
+          selectedResearchGroup={null}
+          onLabAdded={handleLabAdded}
+          showUniversitySelector={false}
+        />
+      </div>
     </Modal>
   );
 };
