@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, User, Mail, Globe, Save, Loader, Search } from 'lucide-react';
+import { X, User, Mail, Save, Loader, Search } from 'lucide-react';
 import { colors, spacing } from '../theme';
 import { AuthService } from '../services/authService';
 import { UniversityService } from '../services/universityService';
@@ -14,7 +14,6 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
     username: '',
     name: '',
     position: '',
-    language: 'en',
     universityId: '',
     universityName: '',
     departmentId: '',
@@ -35,15 +34,6 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
   const [showAddLabModal, setShowAddLabModal] = useState(false);
   const { isMobile } = useBreakpoint();
 
-  // Language options
-  const languageOptions = [
-    { value: 'en', label: 'English' },
-    { value: 'ko', label: '한국어' },
-    { value: 'zh', label: '中文' },
-    { value: 'ja', label: '日本語' },
-    { value: 'es', label: 'Español' },
-    { value: 'fr', label: 'Français' }
-  ];
 
   useEffect(() => {
     if (isOpen && user) {
@@ -53,10 +43,9 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
         username: user.username || '',
         name: user.name || '',
         position: user.position || '',
-        language: user.language || 'en',
-        universityId: user.university_department || '',
+        universityId: user.university || '',
         universityName: user.university_name || '',
-        departmentId: user.department_id || '',
+        departmentId: user.university_department || '',
         departmentName: user.department || '',
         professorId: user.professor_id || '',
         labId: user.lab_id || '',
@@ -214,6 +203,10 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
       newErrors.username = 'Username is required';
     }
 
+    if (!formData.departmentId) {
+      newErrors.departmentId = 'University department is required';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -257,28 +250,25 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
         username: formData.username,
         name: formData.name,
         position: formData.position,
-        language: formData.language,
-        lab_name: formData.lab_name,
+        lab_name: formData.labName,
         is_lab_member: formData.is_lab_member,
         can_provide_services: formData.can_provide_services
       };
 
-      // Include university_department if selected
+      // Include university and university_department if selected
       if (formData.universityId) {
-        updateData.university_department = parseInt(formData.universityId);
+        updateData.university = parseInt(formData.universityId, 10);
       }
-
-      // Include department if provided
-      if (formData.departmentName) {
-        updateData.department = formData.departmentName;
+      if (formData.departmentId) {
+        updateData.university_department = parseInt(formData.departmentId, 10);
       }
 
       // Include professor/lab if selected
       if (formData.professorId) {
-        updateData.professor_id = parseInt(formData.professorId);
+        updateData.professor_id = parseInt(formData.professorId, 10);
       }
       if (formData.labId) {
-        updateData.lab_id = parseInt(formData.labId);
+        updateData.lab_id = parseInt(formData.labId, 10);
       }
 
       const updatedUser = await AuthService.updateProfile(updateData);
@@ -429,14 +419,6 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
               style={{ marginBottom: spacing[4] }}
             />
 
-            <FormSelect
-              label="Language"
-              name="language"
-              value={formData.language}
-              onChange={handleInputChange}
-              options={languageOptions}
-              icon={Globe}
-            />
           </div>
 
           {/* University Information */}
@@ -456,9 +438,21 @@ const EditProfileModal = ({ isOpen, onClose, user, onUserUpdate }) => {
               selectedUniversityDepartmentId={formData.departmentId}
               onUniversitySelected={handleUniversitySelected}
               onDepartmentSelected={handleDepartmentSelected}
-              isRequired={false}
+              isRequired={true}
               layout="responsive"
+              error={errors.departmentId}
             />
+
+            {errors.departmentId && (
+              <div style={{
+                color: colors.error,
+                fontSize: '12px',
+                marginTop: spacing[1],
+                fontFamily: 'Inter'
+              }}>
+                {errors.departmentId}
+              </div>
+            )}
 
             {/* Professor/Lab Selection */}
             {formData.universityId && (
@@ -821,61 +815,6 @@ const FormField = ({ label, name, value, onChange, error, icon: Icon, required, 
   );
 };
 
-// Form Select Component
-const FormSelect = ({ label, name, value, onChange, options, icon: Icon, loading, style }) => {
-  return (
-    <div style={style}>
-      <label style={{
-        display: 'block',
-        fontSize: '14px',
-        fontWeight: '600',
-        color: colors.textPrimary,
-        marginBottom: spacing[2]
-      }}>
-        {label}
-      </label>
-
-      <div style={{ position: 'relative' }}>
-        {Icon && (
-          <div style={{
-            position: 'absolute',
-            left: spacing[3],
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 1
-          }}>
-            {loading ? <Loader size={16} className="animate-spin" /> : <Icon size={16} color={colors.textTertiary} />}
-          </div>
-        )}
-
-        <select
-          name={name}
-          value={value}
-          onChange={onChange}
-          disabled={loading}
-          style={{
-            width: '100%',
-            border: `1px solid ${colors.border}`,
-            borderRadius: '8px',
-            padding: `${spacing[3]} ${Icon ? spacing[10] : spacing[3]}`,
-            fontSize: '14px',
-            backgroundColor: 'white',
-            outline: 'none',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.6 : 1
-          }}
-        >
-          <option value="">Select {label}</option>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
-  );
-};
 
 // Form Checkbox Component
 const FormCheckbox = ({ label, name, checked, onChange, description }) => {
