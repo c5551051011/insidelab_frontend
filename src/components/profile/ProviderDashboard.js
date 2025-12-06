@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { InterviewService } from '../../services/interviewService';
-import { isServiceProvider } from '../../utils/profileUtils';
 import PerformanceOverview from './PerformanceOverview';
 import UpcomingSessions from './UpcomingSessions';
 import PendingRequests from './PendingRequests';
@@ -31,7 +30,7 @@ const ProviderDashboard = ({ user, isMobile = false }) => {
   const [selectedSession, setSelectedSession] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const userIsProvider = isServiceProvider(user);
+  const userIsProvider = true; // Temporarily show provider features for all users
 
   // Mock data fallback for development/demo - using useMemo to fix ESLint warning
   const mockDashboardData = useMemo(() => ({

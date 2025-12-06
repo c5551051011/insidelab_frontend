@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Calendar, Clock, User, AlertCircle, RefreshCw } from 'lucide-react';
+import { Calendar, Clock, AlertCircle, RefreshCw } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { InterviewService } from '../../services/interviewService';
 import { formatDate, getSessionTypeLabel, getStatusColor } from '../../utils/profileUtils';
@@ -316,7 +316,6 @@ const InterviewSessionsList = ({ user, isMobile = false }) => {
           alignItems: 'center',
           gap: spacing[3]
         }}>
-          <User size={24} color={colors.primary} />
           <h3 style={{
             fontSize: isMobile ? '18px' : '20px',
             fontWeight: '700',

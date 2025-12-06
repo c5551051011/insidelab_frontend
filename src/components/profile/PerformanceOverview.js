@@ -228,7 +228,7 @@ const PerformanceOverview = ({
   );
 
   // Check if we have any meaningful data
-  const hasData = Object.values(stats).some(value =>
+  const hasData = stats && Object.values(stats).some(value =>
     value !== null && value !== undefined && value !== 0
   );
 

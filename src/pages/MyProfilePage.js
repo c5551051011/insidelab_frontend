@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { User, GraduationCap, BookOpen, FileText, Briefcase, Settings, Shield, Heart, Plus, Edit2, Building2, Award, Globe, Edit3, Star, Calendar } from 'lucide-react';
+import { User, GraduationCap, BookOpen, FileText, Briefcase, Settings, Shield, Heart, Plus, Edit2, Building2, Award, Globe, Star, Calendar } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import EditProfileModal from '../components/EditProfileModal';
@@ -59,7 +59,7 @@ const InfoRow = ({ info }) => {
 /**
  * AcademicProfile Component for displaying academic information
  */
-const AcademicProfile = ({ user, isMobile, onEditProfile }) => {
+const AcademicProfile = ({ user, isMobile }) => {
   const academicInfo = [
     { label: 'University', value: user.university_name || user.university, icon: Building2 },
     { label: 'Department', value: user.department_name || user.department, icon: GraduationCap },
@@ -77,9 +77,6 @@ const AcademicProfile = ({ user, isMobile, onEditProfile }) => {
       border: '1px solid rgba(0, 0, 0, 0.05)'
     }}>
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
         marginBottom: spacing[6]
       }}>
         <h2 style={{
@@ -91,26 +88,6 @@ const AcademicProfile = ({ user, isMobile, onEditProfile }) => {
         }}>
           Academic Profile
         </h2>
-        <button
-          onClick={onEditProfile}
-          style={{
-            backgroundColor: 'transparent',
-            border: `1px solid ${colors.primary}`,
-            borderRadius: '8px',
-            padding: `${spacing[2]} ${spacing[3]}`,
-            color: colors.primary,
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: spacing[2],
-            transition: 'all 0.2s ease'
-          }}
-        >
-          <Edit3 size={14} />
-          Edit
-        </button>
       </div>
 
       <div style={{
@@ -385,7 +362,6 @@ const MyProfilePageRefactored = () => {
    */
   const getMenuItems = () => [
     { id: 'overview', label: 'Overview', icon: User },
-    { id: 'academic', label: 'Academic Profile', icon: GraduationCap },
     { id: 'research', label: 'Research Interests', icon: BookOpen },
     { id: 'reviews', label: 'Activities', icon: FileText },
     { id: 'services', label: 'Service Provider', icon: Briefcase },
@@ -487,114 +463,124 @@ const MyProfilePageRefactored = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
-        // Show basic user information overview
+        // Show basic user information overview with academic profile
         return (
           <div style={{
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            padding: spacing[6],
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
-            border: '1px solid rgba(0, 0, 0, 0.05)'
+            display: 'flex',
+            flexDirection: 'column',
+            gap: spacing[6]
           }}>
-            <h2 style={{
-              fontSize: '24px',
-              fontWeight: '700',
-              color: colors.textPrimary,
-              marginBottom: spacing[6],
-              fontFamily: 'Inter'
-            }}>
-              Profile Overview
-            </h2>
-
+            {/* Basic Profile Information */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
-              gap: spacing[4]
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: spacing[6],
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+              border: '1px solid rgba(0, 0, 0, 0.05)'
             }}>
-              <div>
-                <h3 style={{
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  color: colors.textPrimary,
-                  marginBottom: spacing[2],
-                  fontFamily: 'Inter'
-                }}>
-                  Account Information
-                </h3>
-                <p style={{
-                  fontSize: '14px',
-                  color: colors.textSecondary,
-                  marginBottom: spacing[3],
-                  fontFamily: 'Inter'
-                }}>
-                  Name: {user?.name || 'Not provided'}
-                </p>
-                <p style={{
-                  fontSize: '14px',
-                  color: colors.textSecondary,
-                  marginBottom: spacing[3],
-                  fontFamily: 'Inter'
-                }}>
-                  Email: {user?.email || 'Not provided'}
-                </p>
-                <p style={{
-                  fontSize: '14px',
-                  color: colors.textSecondary,
-                  fontFamily: 'Inter'
-                }}>
-                  Member since: {user?.createdAt ? new Date(user.createdAt).getFullYear() : 'N/A'}
-                </p>
-              </div>
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: colors.textPrimary,
+                marginBottom: spacing[6],
+                fontFamily: 'Inter'
+              }}>
+                Profile Overview
+              </h2>
 
-              <div>
-                <h3 style={{
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  color: colors.textPrimary,
-                  marginBottom: spacing[2],
-                  fontFamily: 'Inter'
-                }}>
-                  Profile Status
-                </h3>
-                <div style={{
-                  fontSize: '14px',
-                  color: colors.textSecondary,
-                  marginBottom: spacing[3],
-                  fontFamily: 'Inter',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: spacing[2]
-                }}>
-                  <span>Verification: {user?.verificationStatus || 'Unverified'}</span>
-                  {(!user?.verificationStatus || user?.verificationStatus === 'Unverified') && (
-                    <button
-                      onClick={() => setIsEmailVerificationOpen(true)}
-                      style={{
-                        backgroundColor: colors.primary,
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        padding: `${spacing[1]} ${spacing[2]}`,
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      Verify Account
-                    </button>
-                  )}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+                gap: spacing[4]
+              }}>
+                <div>
+                  <h3 style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: colors.textPrimary,
+                    marginBottom: spacing[2],
+                    fontFamily: 'Inter'
+                  }}>
+                    Account Information
+                  </h3>
+                  <p style={{
+                    fontSize: '14px',
+                    color: colors.textSecondary,
+                    marginBottom: spacing[3],
+                    fontFamily: 'Inter'
+                  }}>
+                    Name: {user?.name || 'Not provided'}
+                  </p>
+                  <p style={{
+                    fontSize: '14px',
+                    color: colors.textSecondary,
+                    marginBottom: spacing[3],
+                    fontFamily: 'Inter'
+                  }}>
+                    Email: {user?.email || 'Not provided'}
+                  </p>
+                  <p style={{
+                    fontSize: '14px',
+                    color: colors.textSecondary,
+                    fontFamily: 'Inter'
+                  }}>
+                    Member since: {user?.createdAt ? new Date(user.createdAt).getFullYear() : 'N/A'}
+                  </p>
                 </div>
-                <p style={{
-                  fontSize: '14px',
-                  color: colors.textSecondary,
-                  marginBottom: spacing[3],
-                  fontFamily: 'Inter'
-                }}>
-                  Service Provider: {isServiceProvider(user) ? 'Yes' : 'No'}
-                </p>
+
+                <div>
+                  <h3 style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: colors.textPrimary,
+                    marginBottom: spacing[2],
+                    fontFamily: 'Inter'
+                  }}>
+                    Profile Status
+                  </h3>
+                  <div style={{
+                    fontSize: '14px',
+                    color: colors.textSecondary,
+                    marginBottom: spacing[3],
+                    fontFamily: 'Inter',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: spacing[2]
+                  }}>
+                    <span>Verification: {user?.verificationStatus || 'Unverified'}</span>
+                    {(!user?.verificationStatus || user?.verificationStatus === 'Unverified') && (
+                      <button
+                        onClick={() => setIsEmailVerificationOpen(true)}
+                        style={{
+                          backgroundColor: colors.primary,
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: `${spacing[1]} ${spacing[2]}`,
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        Verify Account
+                      </button>
+                    )}
+                  </div>
+                  <p style={{
+                    fontSize: '14px',
+                    color: colors.textSecondary,
+                    marginBottom: spacing[3],
+                    fontFamily: 'Inter'
+                  }}>
+                    Service Provider: {isServiceProvider(user) ? 'Yes' : 'No'}
+                  </p>
+                </div>
               </div>
             </div>
+
+            {/* Academic Profile */}
+            <AcademicProfile user={user} isMobile={isMobile} />
           </div>
         );
 
@@ -635,7 +621,6 @@ const MyProfilePageRefactored = () => {
                   alignItems: 'center',
                   gap: spacing[2]
                 }}>
-                  <FileText size={20} color={colors.primary} />
                   My Reviews
                   <span style={{
                     fontSize: '14px',
@@ -1081,7 +1066,6 @@ const MyProfilePageRefactored = () => {
                   alignItems: 'center',
                   gap: spacing[2]
                 }}>
-                  <Heart size={20} color={colors.primary} />
                   Interested Labs
                   <span style={{
                     fontSize: '14px',
@@ -1178,9 +1162,6 @@ const MyProfilePageRefactored = () => {
             </div>
           </div>
         );
-
-      case 'academic':
-        return <AcademicProfile user={user} isMobile={isMobile} onEditProfile={handleEditProfile} />;
 
       case 'settings':
       case 'privacy':
