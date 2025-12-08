@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react';
-import { colors, spacing } from '../theme';
+import { spacing } from '../theme';
 
 const Toast = ({
   id,
