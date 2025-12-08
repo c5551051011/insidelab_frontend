@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, ExternalLink, MapPin, Users, Bookmark } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { Lab } from '../../models/Lab';
@@ -20,6 +20,11 @@ const LabCard = ({
 
   // Ensure lab is a Lab instance
   const labInstance = lab instanceof Lab ? lab : new Lab(lab);
+
+  // Sync bookmark state when isInterested prop changes
+  useEffect(() => {
+    setIsBookmarked(isInterested);
+  }, [isInterested]);
 
   // Highlight matching text in search results
   const highlightText = (text, query) => {
