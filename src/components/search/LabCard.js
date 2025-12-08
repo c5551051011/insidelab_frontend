@@ -3,6 +3,7 @@ import { Star, ExternalLink, MapPin, Users, Bookmark } from 'lucide-react';
 import { colors, spacing } from '../../theme';
 import { Lab } from '../../models/Lab';
 import { ApiService } from '../../services/apiService';
+import { useToast } from '../../contexts/ToastContext';
 
 const LabCard = ({
   lab,
@@ -15,6 +16,7 @@ const LabCard = ({
 }) => {
   const [isBookmarked, setIsBookmarked] = useState(isInterested);
   const [isProcessing, setIsProcessing] = useState(false);
+  const toast = useToast();
 
   // Ensure lab is a Lab instance
   const labInstance = lab instanceof Lab ? lab : new Lab(lab);
@@ -91,9 +93,11 @@ const LabCard = ({
       if (newBookmarkState) {
         await ApiService.addLabInterest(labInstance.id);
         console.log('Lab bookmarked successfully:', labInstance.id);
+        toast.success('Lab added to bookmarks');
       } else {
         await ApiService.removeLabInterest(labInstance.id);
         console.log('Lab unbookmarked successfully:', labInstance.id);
+        toast.info('Lab removed from bookmarks');
       }
 
       // Notify parent component if callback exists
@@ -107,9 +111,9 @@ const LabCard = ({
 
       // Show error message to user
       if (error.statusCode === 401) {
-        alert('Please log in to bookmark labs');
+        toast.error('Please log in to bookmark labs');
       } else {
-        alert('Failed to update bookmark. Please try again.');
+        toast.error('Failed to update bookmark. Please try again.');
       }
     } finally {
       setIsProcessing(false);

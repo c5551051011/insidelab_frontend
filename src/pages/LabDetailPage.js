@@ -22,6 +22,7 @@ import { SearchService } from '../services/searchService';
 import { ApiService } from '../services/apiService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { trackLabView, trackPageView, AnalyticsEvents, trackEvent } from '../lib/analytics/trackEvent';
+import { useToast } from '../contexts/ToastContext';
 
 // Helper function to add mock publications based on lab/professor name and research areas
 const addMockPublications = (labData) => {
@@ -417,6 +418,7 @@ const LabDetailPage = () => {
   const isCompactLayout = width < 768;
   const fetchedLabRef = useRef(null);
   const fetchedBookmarkRef = useRef(null);
+  const toast = useToast();
 
   const enrichLabWithMinimal = useCallback(async (labData) => {
     if (!id) return labData;
@@ -594,10 +596,12 @@ const LabDetailPage = () => {
         // Add lab interest using lab ID from URL
         await ApiService.addLabInterest(labId);
         console.log('Lab bookmarked successfully with lab ID:', labId);
+        toast.success('Lab added to bookmarks');
       } else {
         // Remove lab interest using lab ID from URL
         await ApiService.removeLabInterest(labId);
         console.log('Lab unbookmarked successfully with lab ID:', labId);
+        toast.info('Lab removed from bookmarks');
       }
     } catch (error) {
       console.error('Error toggling bookmark:', error);
@@ -606,9 +610,9 @@ const LabDetailPage = () => {
 
       // Show error message to user
       if (error.statusCode === 401) {
-        alert('Please log in to bookmark labs');
+        toast.error('Please log in to bookmark labs');
       } else {
-        alert('Failed to update bookmark. Please try again.');
+        toast.error('Failed to update bookmark. Please try again.');
       }
     } finally {
       setIsProcessing(false);

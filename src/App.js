@@ -11,6 +11,7 @@ import MockInterviewBookingPage from './pages/MockInterviewBookingPage';
 import MySessionsPage from './pages/MySessionsPage';
 import NewsPage from './pages/NewsPage';
 import i18n from './i18n';
+import { ToastProvider } from './contexts/ToastContext';
 
 const LanguageRoute = ({ children, lang }) => {
   const location = useLocation();
@@ -27,33 +28,35 @@ const LanguageRoute = ({ children, lang }) => {
 
 const App = () => (
   <Router>
-    <div className="App">
-      <Routes>
-        {/* English defaults */}
-        <Route path="/" element={<LanguageRoute lang="en"><Homepage /></LanguageRoute>} />
-        <Route path="/sign-in" element={<LanguageRoute lang="en"><SignInPage /></LanguageRoute>} />
-        <Route path="/signup" element={<LanguageRoute lang="en"><SignupPage /></LanguageRoute>} />
-        <Route path="/search" element={<LanguageRoute lang="en"><SearchPage /></LanguageRoute>} />
-        <Route path="/write-review" element={<LanguageRoute lang="en"><WriteReviewPage /></LanguageRoute>} />
-        <Route path="/profile" element={<LanguageRoute lang="en"><MyProfilePage /></LanguageRoute>} />
-        <Route path="/lab/:id" element={<LanguageRoute lang="en"><LabDetailPage /></LanguageRoute>} />
-        <Route path="/services/mock-interview" element={<LanguageRoute lang="en"><MockInterviewBookingPage /></LanguageRoute>} />
-        <Route path="/my-sessions" element={<LanguageRoute lang="en"><MySessionsPage /></LanguageRoute>} />
-        <Route path="/news" element={<LanguageRoute lang="en"><NewsPage /></LanguageRoute>} />
+    <ToastProvider>
+      <div className="App">
+        <Routes>
+          {/* English defaults */}
+          <Route path="/" element={<LanguageRoute lang="en"><Homepage /></LanguageRoute>} />
+          <Route path="/sign-in" element={<LanguageRoute lang="en"><SignInPage /></LanguageRoute>} />
+          <Route path="/signup" element={<LanguageRoute lang="en"><SignupPage /></LanguageRoute>} />
+          <Route path="/search" element={<LanguageRoute lang="en"><SearchPage /></LanguageRoute>} />
+          <Route path="/write-review" element={<LanguageRoute lang="en"><WriteReviewPage /></LanguageRoute>} />
+          <Route path="/profile" element={<LanguageRoute lang="en"><MyProfilePage /></LanguageRoute>} />
+          <Route path="/lab/:id" element={<LanguageRoute lang="en"><LabDetailPage /></LanguageRoute>} />
+          <Route path="/services/mock-interview" element={<LanguageRoute lang="en"><MockInterviewBookingPage /></LanguageRoute>} />
+          <Route path="/my-sessions" element={<LanguageRoute lang="en"><MySessionsPage /></LanguageRoute>} />
+          <Route path="/news" element={<LanguageRoute lang="en"><NewsPage /></LanguageRoute>} />
 
-        {/* Korean routes */}
-        <Route path="/kr" element={<LanguageRoute lang="ko"><Homepage /></LanguageRoute>} />
-        <Route path="/kr/sign-in" element={<LanguageRoute lang="ko"><SignInPage /></LanguageRoute>} />
-        <Route path="/kr/signup" element={<LanguageRoute lang="ko"><SignupPage /></LanguageRoute>} />
-        <Route path="/kr/search" element={<LanguageRoute lang="ko"><SearchPage /></LanguageRoute>} />
-        <Route path="/kr/write-review" element={<LanguageRoute lang="ko"><WriteReviewPage /></LanguageRoute>} />
-        <Route path="/kr/profile" element={<LanguageRoute lang="ko"><MyProfilePage /></LanguageRoute>} />
-        <Route path="/kr/lab/:id" element={<LanguageRoute lang="ko"><LabDetailPage /></LanguageRoute>} />
-        <Route path="/kr/services/mock-interview" element={<LanguageRoute lang="ko"><MockInterviewBookingPage /></LanguageRoute>} />
-        <Route path="/kr/my-sessions" element={<LanguageRoute lang="ko"><MySessionsPage /></LanguageRoute>} />
-        <Route path="/kr/news" element={<LanguageRoute lang="ko"><NewsPage /></LanguageRoute>} />
-      </Routes>
-    </div>
+          {/* Korean routes */}
+          <Route path="/kr" element={<LanguageRoute lang="ko"><Homepage /></LanguageRoute>} />
+          <Route path="/kr/sign-in" element={<LanguageRoute lang="ko"><SignInPage /></LanguageRoute>} />
+          <Route path="/kr/signup" element={<LanguageRoute lang="ko"><SignupPage /></LanguageRoute>} />
+          <Route path="/kr/search" element={<LanguageRoute lang="ko"><SearchPage /></LanguageRoute>} />
+          <Route path="/kr/write-review" element={<LanguageRoute lang="ko"><WriteReviewPage /></LanguageRoute>} />
+          <Route path="/kr/profile" element={<LanguageRoute lang="ko"><MyProfilePage /></LanguageRoute>} />
+          <Route path="/kr/lab/:id" element={<LanguageRoute lang="ko"><LabDetailPage /></LanguageRoute>} />
+          <Route path="/kr/services/mock-interview" element={<LanguageRoute lang="ko"><MockInterviewBookingPage /></LanguageRoute>} />
+          <Route path="/kr/my-sessions" element={<LanguageRoute lang="ko"><MySessionsPage /></LanguageRoute>} />
+          <Route path="/kr/news" element={<LanguageRoute lang="ko"><NewsPage /></LanguageRoute>} />
+        </Routes>
+      </div>
+    </ToastProvider>
   </Router>
 );
 
