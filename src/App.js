@@ -10,6 +10,8 @@ import LabDetailPage from './pages/LabDetailPage';
 import MockInterviewBookingPage from './pages/MockInterviewBookingPage';
 import MySessionsPage from './pages/MySessionsPage';
 import NewsPage from './pages/NewsPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import i18n from './i18n';
 import { ToastProvider } from './contexts/ToastContext';
 
@@ -42,6 +44,8 @@ const App = () => (
           <Route path="/services/mock-interview" element={<LanguageRoute lang="en"><MockInterviewBookingPage /></LanguageRoute>} />
           <Route path="/my-sessions" element={<LanguageRoute lang="en"><MySessionsPage /></LanguageRoute>} />
           <Route path="/news" element={<LanguageRoute lang="en"><NewsPage /></LanguageRoute>} />
+          <Route path="/terms" element={<LanguageRoute lang="en"><TermsOfServicePage /></LanguageRoute>} />
+          <Route path="/privacy" element={<LanguageRoute lang="en"><PrivacyPolicyPage /></LanguageRoute>} />
 
           {/* Korean routes */}
           <Route path="/kr" element={<LanguageRoute lang="ko"><Homepage /></LanguageRoute>} />
@@ -54,6 +58,8 @@ const App = () => (
           <Route path="/kr/services/mock-interview" element={<LanguageRoute lang="ko"><MockInterviewBookingPage /></LanguageRoute>} />
           <Route path="/kr/my-sessions" element={<LanguageRoute lang="ko"><MySessionsPage /></LanguageRoute>} />
           <Route path="/kr/news" element={<LanguageRoute lang="ko"><NewsPage /></LanguageRoute>} />
+          <Route path="/kr/terms" element={<LanguageRoute lang="ko"><TermsOfServicePage /></LanguageRoute>} />
+          <Route path="/kr/privacy" element={<LanguageRoute lang="ko"><PrivacyPolicyPage /></LanguageRoute>} />
         </Routes>
       </div>
     </ToastProvider>
