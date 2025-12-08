@@ -24,23 +24,27 @@ const Toast = ({
       case 'success':
         return {
           icon: <CheckCircle size={18} />,
-          backgroundColor: colors.success
+          backgroundColor: '#10b981', // Softer green
+          textColor: 'white'
         };
       case 'error':
         return {
           icon: <XCircle size={18} />,
-          backgroundColor: colors.error
+          backgroundColor: '#f87171', // Softer red
+          textColor: 'white'
         };
       case 'warning':
         return {
           icon: <AlertCircle size={18} />,
-          backgroundColor: colors.warning
+          backgroundColor: '#fbbf24', // Softer yellow
+          textColor: 'white'
         };
       case 'info':
       default:
         return {
           icon: <Info size={18} />,
-          backgroundColor: colors.primary
+          backgroundColor: '#60a5fa', // Softer blue
+          textColor: 'white'
         };
     }
   };
@@ -52,21 +56,33 @@ const Toast = ({
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: spacing[2],
+        gap: spacing[3],
         backgroundColor: config.backgroundColor,
         borderRadius: '8px',
-        padding: `${spacing[2]} ${spacing[3]}`,
+        padding: `${spacing[3]} ${spacing[4]}`,
         minWidth: '300px',
         maxWidth: '500px',
         animation: 'slideDown 0.3s ease-out',
         fontFamily: 'Inter'
       }}
     >
-      <div style={{ color: 'white', flexShrink: 0 }}>
+      <div style={{
+        color: config.textColor,
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center'
+      }}>
         {config.icon}
       </div>
 
-      <div style={{ flex: 1, fontSize: '14px', color: 'white', fontWeight: '500' }}>
+      <div style={{
+        flex: 1,
+        fontSize: '14px',
+        color: config.textColor,
+        fontWeight: '500',
+        display: 'flex',
+        alignItems: 'center'
+      }}>
         {message}
       </div>
 
@@ -76,7 +92,7 @@ const Toast = ({
           background: 'none',
           border: 'none',
           cursor: 'pointer',
-          color: 'white',
+          color: config.textColor,
           padding: '4px',
           borderRadius: '4px',
           display: 'flex',
