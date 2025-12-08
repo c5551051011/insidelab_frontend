@@ -24,386 +24,6 @@ import { useBreakpoint } from '../hooks/useBreakpoint';
 import { trackLabView, trackPageView, AnalyticsEvents, trackEvent } from '../lib/analytics/trackEvent';
 import { useToast } from '../contexts/ToastContext';
 
-// Helper function to add mock publications based on lab/professor name and research areas
-const addMockPublications = (labData) => {
-  if (!labData) return labData;
-
-  // Generate publications based on lab/professor info
-  const professorName = labData.professorName || labData.name;
-  const researchAreas = labData.researchAreas || [];
-
-  // Sample publication templates based on common research areas
-  const publicationTemplates = {
-    'Machine Learning': [
-      {
-        title: 'Deep Learning Approaches for Complex Pattern Recognition',
-        journal: 'Nature Machine Intelligence',
-        year: 2024,
-        volume: '5',
-        issue: '3',
-        pages: '234-251',
-        citations: 127,
-        impact_factor: 15.508,
-        type: 'Journal Article',
-        abstract: 'We present novel deep learning architectures for complex pattern recognition tasks, demonstrating significant improvements over existing methods across multiple benchmarks.',
-        keywords: ['Deep Learning', 'Pattern Recognition', 'Neural Networks', 'Computer Vision'],
-        doi: '10.1038/s42256-024-00000-0',
-        url: 'https://doi.org/10.1038/s42256-024-00000-0',
-        pdf_url: 'https://arxiv.org/pdf/2024.00000.pdf',
-        code_url: 'https://github.com/lab/pattern-recognition',
-        dataset_url: 'https://dataset.example.com/pattern-data'
-      },
-      {
-        title: 'Federated Learning in Healthcare: Privacy and Performance',
-        journal: 'Journal of Medical Internet Research',
-        year: 2023,
-        volume: '25',
-        issue: '8',
-        pages: 'e45123',
-        citations: 89,
-        impact_factor: 7.076,
-        type: 'Journal Article',
-        abstract: 'A comprehensive study on federated learning applications in healthcare, addressing privacy concerns while maintaining model performance.',
-        keywords: ['Federated Learning', 'Healthcare', 'Privacy', 'Medical AI'],
-        doi: '10.2196/45000',
-        url: 'https://doi.org/10.2196/45000',
-        pdf_url: 'https://www.jmir.org/2023/8/e45123/PDF'
-      }
-    ],
-    'Computer Vision': [
-      {
-        title: 'Advanced Object Detection in Real-time Video Streams',
-        journal: 'IEEE Transactions on Pattern Analysis and Machine Intelligence',
-        year: 2024,
-        volume: '46',
-        issue: '7',
-        pages: '3421-3438',
-        citations: 156,
-        impact_factor: 24.314,
-        type: 'Journal Article',
-        abstract: 'Novel real-time object detection algorithms optimized for video stream processing with enhanced accuracy and reduced computational overhead.',
-        keywords: ['Object Detection', 'Real-time Processing', 'Video Analysis', 'Computer Vision'],
-        doi: '10.1109/TPAMI.2024.00000',
-        url: 'https://doi.org/10.1109/TPAMI.2024.00000',
-        pdf_url: 'https://arxiv.org/pdf/2024.cv001.pdf',
-        code_url: 'https://github.com/lab/realtime-detection'
-      },
-      {
-        title: 'Multi-modal Scene Understanding with Transformer Networks',
-        journal: 'Computer Vision and Image Understanding',
-        year: 2023,
-        volume: '231',
-        pages: '103695',
-        citations: 78,
-        impact_factor: 4.886,
-        type: 'Journal Article',
-        abstract: 'A comprehensive approach to scene understanding using multi-modal transformer architectures for enhanced visual reasoning.',
-        keywords: ['Scene Understanding', 'Transformers', 'Multi-modal', 'Visual Reasoning'],
-        doi: '10.1016/j.cviu.2023.00000',
-        url: 'https://doi.org/10.1016/j.cviu.2023.00000'
-      }
-    ],
-    'Artificial Intelligence': [
-      {
-        title: 'Explainable AI for Critical Decision Making Systems',
-        journal: 'Artificial Intelligence',
-        year: 2024,
-        volume: '328',
-        pages: '104078',
-        citations: 203,
-        impact_factor: 14.050,
-        type: 'Journal Article',
-        abstract: 'Developing interpretable AI systems for high-stakes decision making with focus on transparency and accountability.',
-        keywords: ['Explainable AI', 'Decision Making', 'Interpretability', 'AI Ethics'],
-        doi: '10.1016/j.artint.2024.00000',
-        url: 'https://doi.org/10.1016/j.artint.2024.00000',
-        pdf_url: 'https://arxiv.org/pdf/2024.ai001.pdf'
-      },
-      {
-        title: 'Reinforcement Learning in Complex Multi-Agent Environments',
-        journal: 'Journal of Artificial Intelligence Research',
-        year: 2023,
-        volume: '78',
-        pages: '445-482',
-        citations: 134,
-        impact_factor: 4.757,
-        type: 'Journal Article',
-        abstract: 'Advanced reinforcement learning techniques for complex multi-agent systems with emergent behaviors and coordination strategies.',
-        keywords: ['Reinforcement Learning', 'Multi-Agent Systems', 'Coordination', 'Emergent Behavior'],
-        doi: '10.1613/jair.1.00000',
-        url: 'https://doi.org/10.1613/jair.1.00000',
-        code_url: 'https://github.com/lab/multi-agent-rl'
-      }
-    ],
-    'Robotics': [
-      {
-        title: 'Autonomous Navigation in Dynamic Environments',
-        journal: 'IEEE Robotics and Automation Letters',
-        year: 2024,
-        volume: '9',
-        issue: '4',
-        pages: '3567-3574',
-        citations: 92,
-        impact_factor: 5.282,
-        type: 'Journal Article',
-        abstract: 'Novel algorithms for autonomous robot navigation in highly dynamic environments with real-time obstacle avoidance.',
-        keywords: ['Autonomous Navigation', 'Dynamic Environments', 'Robotics', 'Path Planning'],
-        doi: '10.1109/LRA.2024.00000',
-        url: 'https://doi.org/10.1109/LRA.2024.00000',
-        pdf_url: 'https://arxiv.org/pdf/2024.robotics001.pdf',
-        video_url: 'https://youtube.com/watch?v=demo123'
-      },
-      {
-        title: 'Human-Robot Collaboration in Manufacturing',
-        journal: 'International Journal of Robotics Research',
-        year: 2023,
-        volume: '42',
-        issue: '12',
-        pages: '823-841',
-        citations: 167,
-        impact_factor: 6.314,
-        type: 'Journal Article',
-        abstract: 'Investigating safe and efficient human-robot collaboration strategies in industrial manufacturing settings.',
-        keywords: ['Human-Robot Interaction', 'Manufacturing', 'Collaboration', 'Industrial Robotics'],
-        doi: '10.1177/00000000000000',
-        url: 'https://doi.org/10.1177/00000000000000'
-      }
-    ],
-    'Data Science': [
-      {
-        title: 'Large-Scale Data Processing with Distributed Computing',
-        journal: 'IEEE Transactions on Big Data',
-        year: 2024,
-        volume: '10',
-        issue: '2',
-        pages: '156-171',
-        citations: 145,
-        impact_factor: 7.901,
-        type: 'Journal Article',
-        abstract: 'Scalable algorithms and architectures for processing massive datasets using distributed computing frameworks.',
-        keywords: ['Big Data', 'Distributed Computing', 'Scalability', 'Data Processing'],
-        doi: '10.1109/TBDATA.2024.00000',
-        url: 'https://doi.org/10.1109/TBDATA.2024.00000',
-        code_url: 'https://github.com/lab/distributed-processing'
-      },
-      {
-        title: 'Predictive Analytics in Complex Systems',
-        journal: 'Data Mining and Knowledge Discovery',
-        year: 2023,
-        volume: '37',
-        issue: '8',
-        pages: '2134-2158',
-        citations: 98,
-        impact_factor: 3.306,
-        type: 'Journal Article',
-        abstract: 'Advanced predictive modeling techniques for complex systems with applications in various domains.',
-        keywords: ['Predictive Analytics', 'Complex Systems', 'Data Mining', 'Machine Learning'],
-        doi: '10.1007/s10618-023-00000-0',
-        url: 'https://doi.org/10.1007/s10618-023-00000-0',
-        dataset_url: 'https://data.example.com/complex-systems'
-      }
-    ]
-  };
-
-  // Default publications if no specific research areas match
-  const defaultPublications = [
-    {
-      title: 'Novel Computational Methods for Scientific Discovery',
-      journal: 'Science',
-      year: 2024,
-      volume: '384',
-      issue: '6692',
-      pages: '245-251',
-      citations: 342,
-      impact_factor: 63.714,
-      type: 'Journal Article',
-      abstract: 'We introduce novel computational methodologies that accelerate scientific discovery across multiple domains.',
-      keywords: ['Computational Methods', 'Scientific Discovery', 'Interdisciplinary Research'],
-      doi: '10.1126/science.00000',
-      url: 'https://doi.org/10.1126/science.00000',
-      pdf_url: 'https://science.sciencemag.org/content/384/6692/245.full.pdf'
-    },
-    {
-      title: 'Interdisciplinary Approaches to Complex Problem Solving',
-      journal: 'Proceedings of the National Academy of Sciences',
-      year: 2023,
-      volume: '120',
-      issue: '45',
-      pages: 'e2308456120',
-      citations: 198,
-      impact_factor: 12.779,
-      type: 'Journal Article',
-      abstract: 'A comprehensive framework for interdisciplinary collaboration in solving complex scientific and societal challenges.',
-      keywords: ['Interdisciplinary Research', 'Problem Solving', 'Collaboration'],
-      doi: '10.1073/pnas.00000',
-      url: 'https://doi.org/10.1073/pnas.00000'
-    },
-    {
-      title: 'Advancing Research Through Innovative Methodologies',
-      journal: 'Annual Review of Computer Science',
-      year: 2023,
-      volume: '7',
-      pages: '123-145',
-      citations: 156,
-      impact_factor: 8.234,
-      type: 'Review Article',
-      abstract: 'A review of cutting-edge research methodologies transforming computational science and their broader implications.',
-      keywords: ['Research Methodology', 'Innovation', 'Computer Science'],
-      doi: '10.1146/annurev-cs-00000-00000',
-      url: 'https://doi.org/10.1146/annurev-cs-00000-00000'
-    }
-  ];
-
-  // Select publications based on research areas
-  let selectedPublications = [];
-
-  for (const area of researchAreas) {
-    if (publicationTemplates[area]) {
-      selectedPublications = selectedPublications.concat(publicationTemplates[area]);
-    }
-  }
-
-  // If no specific matches, use default publications
-  if (selectedPublications.length === 0) {
-    selectedPublications = defaultPublications;
-  }
-
-  // Add author names and additional fields, limit to 6 publications
-  const publications = selectedPublications.slice(0, 6).map((pub, index) => ({
-    ...pub,
-    id: `pub_${index}`,
-    authors: generateAuthors(professorName),
-    primaryVenueTier: getRandomVenueTier(),
-    isAwardPaper: Math.random() < 0.15, // 15% chance of award paper
-    githubStars: Math.random() < 0.3 ? Math.floor(Math.random() * 500) + 10 : 0, // 30% chance of having GitHub stars
-    arxivId: Math.random() < 0.5 ? `2024.${String(Math.floor(Math.random() * 9999)).padStart(5, '0')}` : null,
-    isOpenAccess: Math.random() < 0.8, // 80% chance of open access
-    additionalNotes: Math.random() < 0.2 ? getRandomNote() : null // 20% chance of having notes
-  }));
-
-  // Add publication stats
-  const totalCitations = publications.reduce((sum, pub) => sum + (pub.citations || 0), 0);
-  const thisYearPubs = publications.filter(pub => pub.year >= new Date().getFullYear() - 1).length;
-  const avgCitations = publications.length > 0 ? (totalCitations / publications.length) : 0;
-  const hIndex = calculateHIndex(publications);
-
-  return {
-    ...labData,
-    publications,
-    publicationStats: {
-      totalPublications: publications.length,
-      totalCitations,
-      thisYearPublications: thisYearPubs,
-      averageCitationsPerPaper: avgCitations,
-      hIndex,
-      openAccessRate: Math.round((publications.filter(p => p.isOpenAccess).length / publications.length) * 100)
-    },
-    yearlyStats: generateYearlyStats()
-  };
-};
-
-// Helper function to get random venue tier
-const getRandomVenueTier = () => {
-  const tiers = ['Top', 'High', 'Medium', 'General'];
-  const weights = [0.2, 0.3, 0.35, 0.15]; // 20% top, 30% high, 35% medium, 15% general
-  const rand = Math.random();
-  let cumulative = 0;
-
-  for (let i = 0; i < tiers.length; i++) {
-    cumulative += weights[i];
-    if (rand <= cumulative) {
-      return tiers[i];
-    }
-  }
-  return 'Medium';
-};
-
-// Helper function to calculate H-index
-const calculateHIndex = (publications) => {
-  if (!publications || publications.length === 0) return 0;
-
-  // Sort publications by citation count in descending order
-  const sortedCitations = publications
-    .map(pub => pub.citations || 0)
-    .sort((a, b) => b - a);
-
-  let hIndex = 0;
-  for (let i = 0; i < sortedCitations.length; i++) {
-    if (sortedCitations[i] >= i + 1) {
-      hIndex = i + 1;
-    } else {
-      break;
-    }
-  }
-
-  return hIndex;
-};
-
-// Helper function to generate yearly publication statistics
-const generateYearlyStats = () => {
-  const currentYear = new Date().getFullYear();
-  const stats = [];
-
-  for (let year = currentYear - 4; year <= currentYear; year++) {
-    const publications = Math.floor(Math.random() * 8) + 1; // 1-8 publications per year
-    const totalCitations = Math.floor(Math.random() * 200) + 20; // 20-220 citations per year
-
-    stats.push({
-      year,
-      publications,
-      citations: totalCitations,
-      h_index: Math.floor(Math.random() * 10) + 1
-    });
-  }
-
-  return stats;
-};
-
-// Helper function to get random additional notes
-const getRandomNote = () => {
-  const notes = [
-    'Best paper award recipient',
-    'Featured in Nature News & Views',
-    'Highlighted in Science Magazine',
-    'Oral presentation at top-tier conference',
-    'Most downloaded paper of the month',
-    'Editor\'s choice article',
-    'Cover story feature',
-    'Invited keynote presentation',
-    'Featured in university press release',
-    'Collaborative work with industry partners'
-  ];
-
-  return notes[Math.floor(Math.random() * notes.length)];
-};
-
-// Helper function to generate realistic author lists
-const generateAuthors = (professorName) => {
-  const authorPools = [
-    'J. Smith', 'A. Johnson', 'M. Davis', 'S. Wilson', 'R. Brown', 'L. Miller',
-    'K. Garcia', 'T. Rodriguez', 'C. Martinez', 'D. Anderson', 'P. Taylor', 'N. Thomas'
-  ];
-
-  const numAuthors = Math.floor(Math.random() * 4) + 2; // 2-5 authors
-  const selectedAuthors = [];
-
-  // Always include the professor as first or last author
-  if (professorName) {
-    const professorInitials = professorName.split(' ')
-      .map(name => name.charAt(0).toUpperCase() + '.')
-      .join(' ') + ' ' + professorName.split(' ').pop();
-    selectedAuthors.push(professorInitials);
-  }
-
-  // Add random co-authors
-  const shuffledPool = [...authorPools].sort(() => 0.5 - Math.random());
-  for (let i = 0; i < numAuthors - 1 && i < shuffledPool.length; i++) {
-    selectedAuthors.push(shuffledPool[i]);
-  }
-
-  return selectedAuthors;
-};
-
 const LabDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -439,6 +59,27 @@ const LabDetailPage = () => {
       return labData;
     }
   }, [id]);
+
+  const fetchPublications = useCallback(async (professorId) => {
+    if (!professorId) return [];
+
+    try {
+      console.log('Fetching publications for professor:', professorId);
+      const response = await ApiService.getPublications({
+        fields: 'minimal',
+        professor: professorId
+      });
+
+      console.log('Publications API response:', response);
+
+      // API returns { results: [...] } or array directly
+      const publications = response.results || response || [];
+      return publications;
+    } catch (err) {
+      console.error('Failed to fetch publications:', err);
+      return [];
+    }
+  }, []);
 
   useEffect(() => {
     const loadLabDetails = async () => {
@@ -480,11 +121,23 @@ const LabDetailPage = () => {
           // Use complete professor data if available, otherwise use original lab data
           const finalLabData = professorData || labData;
           const enrichedLab = await enrichLabWithMinimal(finalLabData);
-          setLab(addMockPublications(enrichedLab));
+
+          // Fetch real publications
+          const publications = await fetchPublications(enrichedLab.professorId);
+          setLab({
+            ...enrichedLab,
+            publications
+          });
         } else {
           // Data is already complete
           const enrichedLab = await enrichLabWithMinimal(labData);
-          setLab(addMockPublications(enrichedLab));
+
+          // Fetch real publications
+          const publications = await fetchPublications(enrichedLab.professorId);
+          setLab({
+            ...enrichedLab,
+            publications
+          });
         }
       } catch (err) {
         console.error('Error loading lab details:', err);
@@ -497,7 +150,7 @@ const LabDetailPage = () => {
     if (id) {
       loadLabDetails();
     }
-  }, [id, enrichLabWithMinimal]);
+  }, [id, enrichLabWithMinimal, fetchPublications]);
 
   // Load bookmark status when lab data is loaded
   useEffect(() => {

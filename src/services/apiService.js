@@ -331,6 +331,35 @@ class ApiService {
       throw error;
     }
   }
+
+  // Publication API methods
+  static async getPublications(params = {}) {
+    try {
+      const queryParams = new URLSearchParams();
+
+      // Add fields parameter (minimal or full)
+      if (params.fields) {
+        queryParams.append('fields', params.fields);
+      }
+
+      // Add search parameter
+      if (params.search) {
+        queryParams.append('search', params.search);
+      }
+
+      // Add professor filter
+      if (params.professor) {
+        queryParams.append('professor', params.professor);
+      }
+
+      const endpoint = `/publications/${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      const response = await this.get(endpoint, false);
+      return response;
+    } catch (error) {
+      console.error('Error fetching publications:', error);
+      throw error;
+    }
+  }
 }
 
 // Custom exception for API errors

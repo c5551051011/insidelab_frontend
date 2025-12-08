@@ -23,28 +23,24 @@ const Toast = ({
     switch (type) {
       case 'success':
         return {
-          icon: <CheckCircle size={20} />,
-          backgroundColor: colors.success,
-          borderColor: colors.success
+          icon: <CheckCircle size={18} />,
+          backgroundColor: colors.success
         };
       case 'error':
         return {
-          icon: <XCircle size={20} />,
-          backgroundColor: colors.error,
-          borderColor: colors.error
+          icon: <XCircle size={18} />,
+          backgroundColor: colors.error
         };
       case 'warning':
         return {
-          icon: <AlertCircle size={20} />,
-          backgroundColor: colors.warning,
-          borderColor: colors.warning
+          icon: <AlertCircle size={18} />,
+          backgroundColor: colors.warning
         };
       case 'info':
       default:
         return {
-          icon: <Info size={20} />,
-          backgroundColor: colors.primary,
-          borderColor: colors.primary
+          icon: <Info size={18} />,
+          backgroundColor: colors.primary
         };
     }
   };
@@ -56,23 +52,21 @@ const Toast = ({
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: spacing[3],
-        backgroundColor: 'white',
-        border: `2px solid ${config.borderColor}`,
+        gap: spacing[2],
+        backgroundColor: config.backgroundColor,
         borderRadius: '8px',
-        padding: `${spacing[3]} ${spacing[4]}`,
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        padding: `${spacing[2]} ${spacing[3]}`,
         minWidth: '300px',
         maxWidth: '500px',
         animation: 'slideDown 0.3s ease-out',
         fontFamily: 'Inter'
       }}
     >
-      <div style={{ color: config.backgroundColor, flexShrink: 0 }}>
+      <div style={{ color: 'white', flexShrink: 0 }}>
         {config.icon}
       </div>
 
-      <div style={{ flex: 1, fontSize: '14px', color: colors.textPrimary }}>
+      <div style={{ flex: 1, fontSize: '14px', color: 'white', fontWeight: '500' }}>
         {message}
       </div>
 
@@ -82,22 +76,23 @@ const Toast = ({
           background: 'none',
           border: 'none',
           cursor: 'pointer',
-          color: colors.textSecondary,
+          color: 'white',
           padding: '4px',
           borderRadius: '4px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           transition: 'all 0.2s ease',
-          flexShrink: 0
+          flexShrink: 0,
+          opacity: 0.8
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = colors.background;
-          e.currentTarget.style.color = colors.textPrimary;
+          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+          e.currentTarget.style.opacity = '1';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = 'transparent';
-          e.currentTarget.style.color = colors.textSecondary;
+          e.currentTarget.style.opacity = '0.8';
         }}
       >
         <X size={16} />
