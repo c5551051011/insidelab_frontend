@@ -19,6 +19,7 @@ import {
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import RecruitmentEditModal from '../components/RecruitmentEditModal';
+import { ActionButton } from '../components/Button';
 import { colors, spacing } from '../theme';
 import { SearchService } from '../services/searchService';
 import { ApiService } from '../services/apiService';
@@ -1152,34 +1153,13 @@ const RecruitmentStatus = ({ lab }) => {
           </h3>
 
           {isUserAuthenticated && (
-            <button
+            <ActionButton
               onClick={handleEditClick}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: spacing[2],
-                padding: `${spacing[2]} ${spacing[3]}`,
-                backgroundColor: 'white',
-                color: colors.primary,
-                border: `2px solid ${colors.primary}`,
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = colors.primary;
-                e.currentTarget.style.color = 'white';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'white';
-                e.currentTarget.style.color = colors.primary;
-              }}
+              icon={Edit2}
+              variant="outline"
             >
-              <Edit2 size={16} />
               Edit
-            </button>
+            </ActionButton>
           )}
         </div>
 
@@ -1804,23 +1784,12 @@ const ReviewsSection = ({ lab, onWriteReview }) => {
             ({reviews.length})
           </span>
         </div>
-        <button
+        <ActionButton
           onClick={onWriteReview}
-          style={{
-            backgroundColor: colors.primary,
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            padding: `${spacing[2]} ${spacing[4]}`,
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            whiteSpace: 'nowrap'
-          }}
+          variant="primary"
         >
           Write Review
-        </button>
+        </ActionButton>
       </div>
 
       {loading ? (

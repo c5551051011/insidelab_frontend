@@ -236,3 +236,87 @@ export const SecondaryButton = ({
     </button>
   );
 };
+
+// Action Button Component - For inline actions like Edit, Save, etc.
+export const ActionButton = ({
+  children,
+  onClick,
+  icon: Icon,
+  variant = 'primary', // 'primary' or 'outline'
+  disabled = false,
+  style,
+  ...props
+}) => {
+  const sizes = {
+    padding: `${spacing[2]} ${spacing[4]}`,
+    fontSize: '14px',
+    iconSize: 16,
+  };
+
+  const variants = {
+    primary: {
+      backgroundColor: colors.primary,
+      color: 'white',
+      border: 'none',
+      hoverBackgroundColor: '#1d4ed8',
+      hoverColor: 'white'
+    },
+    outline: {
+      backgroundColor: 'white',
+      color: colors.primary,
+      border: `2px solid ${colors.primary}`,
+      hoverBackgroundColor: colors.primary,
+      hoverColor: 'white'
+    }
+  };
+
+  const currentVariant = variants[variant];
+
+  const baseStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[2],
+    padding: sizes.padding,
+    backgroundColor: currentVariant.backgroundColor,
+    color: currentVariant.color,
+    border: currentVariant.border,
+    borderRadius: '8px',
+    fontSize: sizes.fontSize,
+    fontWeight: '600',
+    fontFamily: 'Inter',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    transition: 'all 0.2s ease',
+    opacity: disabled ? 0.5 : 1,
+    whiteSpace: 'nowrap',
+    ...style
+  };
+
+  const handleMouseEnter = (e) => {
+    if (!disabled) {
+      e.target.style.backgroundColor = currentVariant.hoverBackgroundColor;
+      e.target.style.color = currentVariant.hoverColor;
+    }
+  };
+
+  const handleMouseLeave = (e) => {
+    if (!disabled) {
+      e.target.style.backgroundColor = currentVariant.backgroundColor;
+      e.target.style.color = currentVariant.color;
+    }
+  };
+
+  return (
+    <button
+      style={baseStyle}
+      onClick={onClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      disabled={disabled}
+      {...props}
+    >
+      {Icon && <Icon size={sizes.iconSize} />}
+      {children}
+    </button>
+  );
+};
