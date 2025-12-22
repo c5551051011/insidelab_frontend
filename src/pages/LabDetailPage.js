@@ -13,13 +13,16 @@ import {
   XCircle,
   MessageCircle,
   ThumbsUp,
-  Clock
+  Clock,
+  Edit2
 } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import RecruitmentEditModal from '../components/RecruitmentEditModal';
 import { colors, spacing } from '../theme';
 import { SearchService } from '../services/searchService';
 import { ApiService } from '../services/apiService';
+import { RecruitmentService } from '../services/recruitmentService';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { trackLabView, trackPageView, AnalyticsEvents, trackEvent } from '../lib/analytics/trackEvent';
 import { useToast } from '../contexts/ToastContext';
@@ -1041,8 +1044,22 @@ const RadarChart = ({ categories, values, maxValue = 5, isMobile = false }) => {
 
 // Recruitment Status Component
 const RecruitmentStatus = ({ lab }) => {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentRecruitmentStatus, setCurrentRecruitmentStatus] = useState(null);
+  const [isUserAuthenticated, setIsUserAuthenticated] = useState(false);
+  const toast = useToast();
+
   // Get recruitment data from API response
-  const recruitmentStatus = lab.recruitment_status || lab.recruitmentStatus;
+  const recruitmentStatus = currentRecruitmentStatus || lab.recruitment_status || lab.recruitmentStatus;
+
+  // Check if user is authenticated
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = ApiService.getAuthToken();
+      setIsUserAuthenticated(!!token);
+    };
+    checkAuth();
+  }, []);
 
   const recruitmentData = [
     {
@@ -1064,23 +1081,107 @@ const RecruitmentStatus = ({ lab }) => {
   const hasOpenPositions = recruitmentData.some(item => item.isRecruiting);
   const recruitmentNotes = recruitmentStatus?.notes;
 
+  const handleEditClick = () => {
+    if (!isUserAuthenticated) {
+      toast.error('Please log in to edit recruitment information');
+      return;
+    }
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveRecruitment = async (formData) => {
+    try {
+      // Try to update first, if fails then create
+      let response;
+      try {
+        response = await RecruitmentService.updateRecruitmentStatus(lab.id, formData);
+      } catch (updateError) {
+        // If update fails (e.g., 404), try creating
+        if (updateError.statusCode === 404) {
+          response = await RecruitmentService.createRecruitmentStatus(lab.id, formData);
+        } else {
+          throw updateError;
+        }
+      }
+
+      // Update local state with new data
+      setCurrentRecruitmentStatus(response);
+      toast.success('Recruitment information updated successfully');
+    } catch (error) {
+      console.error('Error saving recruitment status:', error);
+      if (error.statusCode === 401) {
+        toast.error('Please log in to edit recruitment information');
+      } else if (error.statusCode === 403) {
+        toast.error('You do not have permission to edit this information');
+      } else {
+        toast.error('Failed to update recruitment information. Please try again.');
+      }
+      throw error;
+    }
+  };
+
   return (
-    <div style={{
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: spacing[6],
-      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-      border: `1px solid ${colors.border}`
-    }}>
-      <h3 style={{
-        fontSize: '20px',
-        fontWeight: '700',
-        color: colors.textPrimary,
-        margin: 0,
-        marginBottom: spacing[4]
+    <>
+      <RecruitmentEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleSaveRecruitment}
+        initialData={recruitmentStatus}
+      />
+
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: spacing[6],
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+        border: `1px solid ${colors.border}`
       }}>
-        Recruitment Status
-      </h3>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: spacing[4]
+        }}>
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: '700',
+            color: colors.textPrimary,
+            margin: 0
+          }}>
+            Recruitment Status
+          </h3>
+
+          {isUserAuthenticated && (
+            <button
+              onClick={handleEditClick}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[2],
+                padding: `${spacing[2]} ${spacing[3]}`,
+                backgroundColor: 'white',
+                color: colors.primary,
+                border: `2px solid ${colors.primary}`,
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = colors.primary;
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.color = colors.primary;
+              }}
+            >
+              <Edit2 size={16} />
+              Edit
+            </button>
+          )}
+        </div>
 
       {hasRecruitmentData && hasOpenPositions ? (
         // Show recruitment positions when we have data and open positions
@@ -1193,7 +1294,8 @@ const RecruitmentStatus = ({ lab }) => {
           </div>
         )
       )}
-    </div>
+      </div>
+    </>
   );
 };
 
