@@ -973,8 +973,8 @@ const WriteReviewPage = () => {
 
               <div style={{
                 display: 'flex',
-                gap: isCompact600 ? spacing[1] : spacing[2],
-                maxWidth: isCompact600 ? '280px' : '400px'
+                gap: spacing[2],
+                maxWidth: isCompact600 ? '220px' : '240px'
               }}>
                 {[1, 2, 3, 4, 5].map(rating => (
                   <button
@@ -982,27 +982,24 @@ const WriteReviewPage = () => {
                     type="button"
                     onClick={() => handleRatingChange(rating)}
                     style={{
-                      flex: 1,
+                      width: isCompact600 ? '36px' : '40px',
+                      height: isCompact600 ? '36px' : '40px',
                       display: 'flex',
-                      flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      padding: isCompact600 ? `${spacing[1]} 0` : spacing[2],
-                      border: `2px solid ${formData.overallRating === rating ? colors.primary : colors.border}`,
-                      borderRadius: '6px',
-                      backgroundColor: formData.overallRating === rating ? colors.primary + '10' : colors.background,
+                      border: `1px solid ${formData.overallRating === rating ? colors.primary : colors.border}`,
+                      borderRadius: '50%',
+                      backgroundColor: formData.overallRating === rating ? colors.primary + '15' : colors.background,
                       color: formData.overallRating === rating ? colors.primary : colors.textSecondary,
-                      fontSize: isCompact600 ? '14px' : '16px',
+                      fontSize: '14px',
                       fontWeight: '700',
                       fontFamily: 'Inter',
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      minHeight: isCompact600 ? '36px' : '44px',
-                      minWidth: isCompact600 ? '36px' : '44px'
+                      transition: 'all 0.2s ease'
                     }}
                     onMouseEnter={(e) => {
                       if (formData.overallRating !== rating) {
-                        e.currentTarget.style.backgroundColor = colors.border + '50';
+                        e.currentTarget.style.backgroundColor = colors.border + '40';
                         e.currentTarget.style.borderColor = colors.textSecondary;
                       }
                     }}

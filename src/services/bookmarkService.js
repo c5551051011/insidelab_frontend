@@ -38,26 +38,39 @@ class BookmarkService {
       console.log('DEBUG: Fetching lab interests');
       const response = await ApiService.get('/auth/lab-interests/?fields=minimal', true);
       console.log('DEBUG: Lab interests response:', response);
+      console.log('DEBUG: Response type:', typeof response, 'Is array:', Array.isArray(response));
 
+      // Handle both array responses and object responses with results property
+      let dataArray = [];
       if (Array.isArray(response)) {
-        return response.map(json => {
-          console.log('DEBUG: Raw lab interest data:', json);
-          return {
-            id: json.id,
-            labId: json.lab.toString(),
-            labName: json.lab_name,
-            labProfessor: json.lab_professor,
-            labProfessorId: json.lab_professor_id || json.professor_id, // Add professor ID
-            labUniversity: json.lab_university,
-            labDepartment: json.lab_department,
-            labRating: parseFloat(json.lab_rating),
-            interestType: json.interest_type,
-            notes: json.notes,
-            createdAt: new Date(json.created_at)
-          };
-        });
+        dataArray = response;
+      } else if (response && Array.isArray(response.results)) {
+        dataArray = response.results;
+      } else if (response && response.data && Array.isArray(response.data)) {
+        dataArray = response.data;
+      } else {
+        console.log('DEBUG: Unexpected response format, returning empty array');
+        return [];
       }
-      return [];
+
+      console.log('DEBUG: Processing', dataArray.length, 'interests');
+
+      return dataArray.map(json => {
+        console.log('DEBUG: Raw lab interest data:', json);
+        return {
+          id: json.id,
+          labId: json.lab.toString(),
+          labName: json.lab_name,
+          labProfessor: json.lab_professor,
+          labProfessorId: json.lab_professor_id || json.professor_id, // Add professor ID
+          labUniversity: json.lab_university,
+          labDepartment: json.lab_department,
+          labRating: parseFloat(json.lab_rating),
+          interestType: json.interest_type,
+          notes: json.notes,
+          createdAt: new Date(json.created_at)
+        };
+      });
     } catch (e) {
       console.log('DEBUG: Error fetching lab interests:', e);
       return [];

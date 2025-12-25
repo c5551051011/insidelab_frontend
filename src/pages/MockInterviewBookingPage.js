@@ -220,7 +220,7 @@ const MockInterviewBookingPage = () => {
     'mock_interview': {
       name: 'Mock Interview',
       duration: '60 min',
-      basePrice: 100,
+      basePrice: 80,
       icon: Video,
       description: 'Full interview simulation with detailed feedback',
       features: [
