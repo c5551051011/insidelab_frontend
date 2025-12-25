@@ -1155,7 +1155,6 @@ const RecruitmentStatus = ({ lab }) => {
           {isUserAuthenticated && (
             <ActionButton
               onClick={handleEditClick}
-              icon={Edit2}
               variant="outline"
             >
               Edit

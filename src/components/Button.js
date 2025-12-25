@@ -257,16 +257,18 @@ export const ActionButton = ({
     primary: {
       backgroundColor: colors.primary,
       color: 'white',
-      border: 'none',
+      border: `2px solid ${colors.primary}`,
       hoverBackgroundColor: '#1d4ed8',
-      hoverColor: 'white'
+      hoverColor: 'white',
+      hoverBorderColor: '#1d4ed8'
     },
     outline: {
-      backgroundColor: 'white',
-      color: colors.primary,
+      backgroundColor: colors.primary,
+      color: 'white',
       border: `2px solid ${colors.primary}`,
-      hoverBackgroundColor: colors.primary,
-      hoverColor: 'white'
+      hoverBackgroundColor: '#1d4ed8',
+      hoverColor: 'white',
+      hoverBorderColor: '#1d4ed8'
     }
   };
 
@@ -296,6 +298,7 @@ export const ActionButton = ({
     if (!disabled) {
       e.target.style.backgroundColor = currentVariant.hoverBackgroundColor;
       e.target.style.color = currentVariant.hoverColor;
+      e.target.style.borderColor = currentVariant.hoverBorderColor;
     }
   };
 
@@ -303,6 +306,7 @@ export const ActionButton = ({
     if (!disabled) {
       e.target.style.backgroundColor = currentVariant.backgroundColor;
       e.target.style.color = currentVariant.color;
+      e.target.style.borderColor = colors.primary;
     }
   };
 
@@ -315,7 +319,7 @@ export const ActionButton = ({
       disabled={disabled}
       {...props}
     >
-      {Icon && <Icon size={sizes.iconSize} />}
+      {Icon && <Icon size={sizes.iconSize} color="currentColor" />}
       {children}
     </button>
   );

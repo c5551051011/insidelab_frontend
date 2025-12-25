@@ -544,7 +544,8 @@ const MyProfilePageRefactored = () => {
                     marginBottom: spacing[3],
                     fontFamily: 'Inter',
                     display: 'flex',
-                    alignItems: 'center',
+                    flexDirection: isMobile ? 'column' : 'row',
+                    alignItems: isMobile ? 'flex-start' : 'center',
                     gap: spacing[2]
                   }}>
                     <span>Verification: {user?.verificationStatus || 'Unverified'}</span>
@@ -560,7 +561,8 @@ const MyProfilePageRefactored = () => {
                           fontSize: '12px',
                           fontWeight: '500',
                           cursor: 'pointer',
-                          transition: 'all 0.2s ease'
+                          transition: 'all 0.2s ease',
+                          alignSelf: isMobile ? 'flex-start' : 'auto'
                         }}
                       >
                         Verify Account
@@ -1268,6 +1270,13 @@ const MyProfilePageRefactored = () => {
           onClose={() => setIsResearchModalOpen(false)}
           user={user}
           onUserUpdate={handleUserUpdate}
+        />
+
+        <EmailVerificationModal
+          isOpen={isEmailVerificationOpen}
+          onClose={() => setIsEmailVerificationOpen(false)}
+          user={user}
+          onVerificationComplete={handleEmailVerificationComplete}
         />
       </div>
     );
