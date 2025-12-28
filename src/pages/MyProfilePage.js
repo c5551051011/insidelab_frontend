@@ -610,8 +610,10 @@ const MyProfilePageRefactored = () => {
             }}>
               <div style={{
                 display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
                 justifyContent: 'space-between',
-                alignItems: 'center',
+                alignItems: isMobile ? 'flex-start' : 'center',
+                gap: isMobile ? spacing[3] : 0,
                 marginBottom: spacing[5]
               }}>
                 <h3 style={{
@@ -832,8 +834,10 @@ const MyProfilePageRefactored = () => {
             }}>
               <div style={{
                 display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
                 justifyContent: 'space-between',
-                alignItems: 'center',
+                alignItems: isMobile ? 'flex-start' : 'center',
+                gap: isMobile ? spacing[3] : 0,
                 marginBottom: spacing[5]
               }}>
                 <h3 style={{

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Briefcase, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { colors, spacing, textStyles, sectionSpacing } from '../theme';
 import { RecruitmentService } from '../services/recruitmentService';
 import RecruitmentCard from './RecruitmentCard';
@@ -42,20 +42,6 @@ const ActiveRecruitmentsSection = () => {
     fetchRecruitments();
   }, []);
 
-  const handleScroll = (direction) => {
-    if (!scrollContainerRef.current) return;
-
-    const scrollAmount = 340; // Card width + gap
-    const currentScroll = scrollContainerRef.current.scrollLeft;
-    const targetScroll = direction === 'left'
-      ? currentScroll - scrollAmount
-      : currentScroll + scrollAmount;
-
-    scrollContainerRef.current.scrollTo({
-      left: targetScroll,
-      behavior: 'smooth'
-    });
-  };
 
   const handleCardClick = (recruitment) => {
     navigate(`/lab/${recruitment.labId}`);
@@ -134,71 +120,6 @@ const ActiveRecruitmentsSection = () => {
           </div>
         </div>
 
-        {/* Navigation Controls */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: spacing[3],
-          marginBottom: spacing[6]
-        }}>
-          {!isMobile && (
-            <>
-              <button
-                onClick={() => handleScroll('left')}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  border: `2px solid ${colors.border}`,
-                  backgroundColor: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  color: colors.textSecondary
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.borderColor = colors.primary;
-                  e.target.style.color = colors.primary;
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.borderColor = colors.border;
-                  e.target.style.color = colors.textSecondary;
-                }}
-              >
-                <ChevronLeft size={20} />
-              </button>
-              <button
-                onClick={() => handleScroll('right')}
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '50%',
-                  border: `2px solid ${colors.border}`,
-                  backgroundColor: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  color: colors.textSecondary
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.borderColor = colors.primary;
-                  e.target.style.color = colors.primary;
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.borderColor = colors.border;
-                  e.target.style.color = colors.textSecondary;
-                }}
-              >
-                <ChevronRight size={20} />
-              </button>
-            </>
-          )}
-        </div>
 
         {/* Cards Container */}
         <div

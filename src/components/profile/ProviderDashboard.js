@@ -329,8 +329,10 @@ const ProviderDashboard = ({ user, isMobile = false }) => {
       {/* Header with refresh option */}
       <div style={{
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: isMobile ? 'flex-start' : 'center',
+        justifyContent: 'space-between',
+        gap: isMobile ? spacing[3] : 0
       }}>
         <h2 style={{
           fontSize: isMobile ? '20px' : '24px',

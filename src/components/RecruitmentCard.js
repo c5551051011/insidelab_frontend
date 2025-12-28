@@ -15,14 +15,33 @@ const RecruitmentCard = ({ recruitment, onClick }) => {
     return badges;
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Recently posted';
+
+    const now = new Date();
+    const updateDate = new Date(dateString);
+    const diffTime = Math.abs(now - updateDate);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`;
+
+    return updateDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   const badges = getPositionBadges();
 
   return (
     <div
       onClick={() => onClick(recruitment)}
       style={{
-        minWidth: '300px',
-        maxWidth: '300px',
+        minWidth: '350px',
+        maxWidth: '350px',
         backgroundColor: 'white',
         borderRadius: '16px',
         padding: spacing[5],
@@ -93,17 +112,32 @@ const RecruitmentCard = ({ recruitment, onClick }) => {
         </div>
       </div>
 
-      {/* Open Positions */}
-      <div style={{ marginBottom: spacing[4] }}>
-        <h4 style={{
+      {/* Lab Name */}
+      <div style={{ marginBottom: spacing[3] }}>
+        <p style={{
           ...textStyles.bodyMedium,
-          fontWeight: typography.weights.semibold,
+          fontWeight: typography.weights.medium,
           color: colors.textPrimary,
+          margin: 0,
+          lineHeight: 1.2,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}>
+          {recruitment.labName}
+        </p>
+      </div>
+
+      {/* Available Positions */}
+      <div style={{ marginBottom: spacing[4] }}>
+        <p style={{
+          ...textStyles.bodySmall,
+          color: colors.textSecondary,
           margin: 0,
           marginBottom: spacing[2]
         }}>
-          Open Positions
-        </h4>
+          Currently recruiting for:
+        </p>
         <div style={{
           display: 'flex',
           gap: spacing[2],
@@ -138,9 +172,10 @@ const RecruitmentCard = ({ recruitment, onClick }) => {
           alignItems: 'center',
           gap: spacing[1]
         }}>
-          <Star size={16} fill={recruitment.overallRating > 0 ? "gold" : "none"} color={recruitment.overallRating > 0 ? "gold" : colors.textTertiary} />
+          <Star size={14} fill={recruitment.overallRating > 0 ? "gold" : "none"} color={recruitment.overallRating > 0 ? "gold" : colors.textTertiary} />
           <span style={{
-            ...textStyles.cardTitle,
+            ...textStyles.bodyMedium,
+            fontWeight: typography.weights.semibold,
             color: colors.textPrimary
           }}>
             {recruitment.overallRating > 0 ? recruitment.overallRating.toFixed(1) : 'No rating'}
@@ -151,6 +186,20 @@ const RecruitmentCard = ({ recruitment, onClick }) => {
           color: colors.textTertiary
         }}>
           ({recruitment.reviewCount || 0} reviews)
+        </span>
+      </div>
+
+      {/* Update Date */}
+      <div style={{
+        textAlign: 'right',
+        marginTop: spacing[3]
+      }}>
+        <span style={{
+          ...textStyles.bodySmall,
+          color: colors.textTertiary,
+          fontSize: '11px'
+        }}>
+          Updated {formatDate(recruitment.updatedAt)}
         </span>
       </div>
     </div>

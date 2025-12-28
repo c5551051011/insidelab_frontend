@@ -307,8 +307,10 @@ const InterviewSessionsList = ({ user, isMobile = false }) => {
       {/* Header */}
       <div style={{
         display: 'flex',
-        alignItems: 'center',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: isMobile ? 'flex-start' : 'center',
         justifyContent: 'space-between',
+        gap: isMobile ? spacing[3] : 0,
         marginBottom: spacing[5]
       }}>
         <div style={{
