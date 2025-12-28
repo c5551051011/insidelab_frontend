@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Video, Clock, Users, Award, Play } from 'lucide-react';
-import { PrimaryButton } from './Button';
 import { colors, shadows, spacing, sectionSpacing, borderRadius, textStyles } from '../theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 

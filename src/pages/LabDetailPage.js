@@ -13,8 +13,7 @@ import {
   XCircle,
   MessageCircle,
   ThumbsUp,
-  Clock,
-  Edit2
+  Clock
 } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
