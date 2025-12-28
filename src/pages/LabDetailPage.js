@@ -123,7 +123,11 @@ const LabDetailPage = () => {
           }
 
           // Use complete professor data if available, otherwise use original lab data
-          const finalLabData = professorData || labData;
+          // But preserve the original lab description
+          const finalLabData = professorData ? {
+            ...professorData,
+            description: labData.description // Keep original lab description
+          } : labData;
           const enrichedLab = await enrichLabWithMinimal(finalLabData);
 
           // Fetch real publications
