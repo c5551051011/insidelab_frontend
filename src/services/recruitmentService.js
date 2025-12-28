@@ -80,4 +80,48 @@ export class RecruitmentService {
       throw error;
     }
   }
+
+  // Get all active recruitment listings
+  static async getActiveRecruitments(params = {}) {
+    try {
+      const queryParams = new URLSearchParams();
+
+      // Add filters if provided
+      if (params.recruiting_phd) queryParams.append('recruiting_phd', 'true');
+      if (params.recruiting_postdoc) queryParams.append('recruiting_postdoc', 'true');
+      if (params.recruiting_intern) queryParams.append('recruiting_intern', 'true');
+      if (params.page) queryParams.append('page', params.page);
+      if (params.page_size) queryParams.append('page_size', params.page_size);
+
+      const url = `/labs/recruitment/?${queryParams.toString()}`;
+      console.log('Fetching recruitments from:', url);
+
+      const response = await ApiService.get(url, false);
+      console.log('Recruitment API response:', response);
+
+      // Transform the data to include lab information
+      const recruitments = response.results || response || [];
+
+      return recruitments.map(recruitment => ({
+        id: recruitment.id,
+        labId: recruitment.lab_id || recruitment.lab,
+        labName: recruitment.lab_name || 'Unknown Lab',
+        professorName: recruitment.professor_name || 'Unknown Professor',
+        universityName: recruitment.university_name || 'Unknown University',
+        department: recruitment.department_name || recruitment.department || 'Unknown Department',
+        researchAreas: recruitment.research_areas || [],
+        overallRating: parseFloat(recruitment.overall_rating || 0),
+        reviewCount: parseInt(recruitment.review_count || 0),
+        isRecruitingPhd: recruitment.is_recruiting_phd || false,
+        isRecruitingPostdoc: recruitment.is_recruiting_postdoc || false,
+        isRecruitingIntern: recruitment.is_recruiting_intern || false,
+        notes: recruitment.notes || '',
+        updatedAt: recruitment.updated_at || recruitment.created_at,
+        website: recruitment.website || ''
+      }));
+    } catch (error) {
+      console.error('Error fetching recruitment data:', error);
+      return []; // Return empty array on error
+    }
+  }
 }
