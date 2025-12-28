@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Video, Clock, Users, Award, Play } from 'lucide-react';
 import { PrimaryButton } from './Button';
-import { colors, shadows, spacing, sectionSpacing, borderRadius } from '../theme';
+import { colors, shadows, spacing, sectionSpacing, borderRadius, textStyles } from '../theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const MockInterviewSection = () => {
@@ -92,28 +92,10 @@ const MockInterviewSection = () => {
             position: 'relative',
           }}
         >
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: spacing[2],
-              backgroundColor: colors.primary + '10',
-              color: colors.primary,
-              padding: `${spacing[2]} ${spacing[4]}`,
-              borderRadius: '50px',
-              fontSize: '14px',
-              fontWeight: '600',
-              marginBottom: spacing[6],
-            }}
-          >
-            <Video size={16} />
-            Practice Makes Perfect
-          </div>
 
           <h2
             style={{
-              fontSize: isMobile ? '32px' : '48px',
-              fontWeight: '800',
+              ...(isMobile ? textStyles.sectionTitleMobile : textStyles.sectionTitle),
               color: colors.textPrimary,
               lineHeight: 1.2,
               marginBottom: spacing[6],
@@ -125,7 +107,7 @@ const MockInterviewSection = () => {
 
           <p
             style={{
-              fontSize: isMobile ? '16px' : '20px',
+              ...(isMobile ? textStyles.bodyMedium : textStyles.heroSubtitle),
               color: colors.textSecondary,
               lineHeight: 1.6,
               maxWidth: '680px',
@@ -138,28 +120,56 @@ const MockInterviewSection = () => {
           </p>
 
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: spacing[4], justifyContent: 'center', alignItems: 'center' }}>
-            <PrimaryButton
-              onClick={handleBookInterview}
-              size={isMobile ? 'medium' : 'large'}
-              style={isMobile ? { width: '100%' } : { minWidth: '200px' }}
-            >
-              Book Mock Interview
-            </PrimaryButton>
             <button
+              onClick={handleBookInterview}
               style={{
-                display: 'flex',
+                padding: `${spacing[3]} ${spacing[6]}`,
+                backgroundColor: colors.primary,
+                border: 'none',
+                borderRadius: '8px',
+                color: 'white',
+                ...textStyles.buttonText,
+                cursor: 'pointer',
+                display: 'inline-flex',
                 alignItems: 'center',
                 gap: spacing[2],
-                background: 'none',
-                border: 'none',
-                color: colors.primary,
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                padding: spacing[3],
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = 'none';
               }}
             >
-              <Play size={20} />
+              Book Mock Interview
+            </button>
+            <button
+              style={{
+                padding: `calc(${spacing[3]} - 2px) calc(${spacing[6]} - 2px)`,
+                backgroundColor: 'transparent',
+                border: `2px solid ${colors.primary}`,
+                borderRadius: '8px',
+                color: colors.primary,
+                ...textStyles.buttonText,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: spacing[2],
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.backgroundColor = colors.primary;
+                e.target.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.backgroundColor = 'transparent';
+                e.target.style.color = colors.primary;
+              }}
+            >
+              <Play size={16} />
               Watch Demo
             </button>
           </div>
@@ -170,8 +180,7 @@ const MockInterviewSection = () => {
         <div style={{ marginBottom: spacing[16] }}>
           <h3
             style={{
-              fontSize: isMobile ? '24px' : '32px',
-              fontWeight: '700',
+              ...(isMobile ? textStyles.sectionTitleMobile : textStyles.sectionTitle),
               color: colors.textPrimary,
               textAlign: 'center',
               marginBottom: spacing[10],
@@ -224,8 +233,7 @@ const MockInterviewSection = () => {
                   </div>
                   <h4
                     style={{
-                      fontSize: '16px',
-                      fontWeight: '600',
+                      ...textStyles.cardTitle,
                       color: colors.textPrimary,
                       marginBottom: spacing[3],
                     }}
@@ -234,9 +242,8 @@ const MockInterviewSection = () => {
                   </h4>
                   <p
                     style={{
-                      fontSize: '14px',
+                      ...textStyles.cardDescription,
                       color: colors.textSecondary,
-                      lineHeight: 1.5,
                     }}
                   >
                     {benefit.description}

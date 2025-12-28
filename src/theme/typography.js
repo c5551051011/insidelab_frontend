@@ -133,4 +133,34 @@ export const textStyles = {
     fontWeight: typography.weights.semibold,
     fontFamily: typography.fontFamily,
   },
+
+  // Form Inputs
+  inputText: {
+    fontSize: typography.sizes.lg,
+    fontFamily: typography.fontFamily,
+  },
+
+  inputTextMobile: {
+    fontSize: typography.sizes.base,
+    fontFamily: typography.fontFamily,
+  },
+
+  // Body Text
+  bodyLarge: {
+    fontSize: typography.sizes.lg,
+    lineHeight: typography.lineHeights.relaxed,
+    fontFamily: typography.fontFamily,
+  },
+
+  bodyMedium: {
+    fontSize: typography.sizes.base,
+    lineHeight: typography.lineHeights.relaxed,
+    fontFamily: typography.fontFamily,
+  },
+
+  bodySmall: {
+    fontSize: typography.sizes.sm,
+    lineHeight: typography.lineHeights.normal,
+    fontFamily: typography.fontFamily,
+  },
 };

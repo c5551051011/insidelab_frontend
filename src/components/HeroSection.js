@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { colors, gradients, spacing, sectionSpacing } from '../theme';
+import { colors, gradients, spacing, sectionSpacing, textStyles } from '../theme';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { buildLocalizedPath, isKoreanPath } from '../utils/locale';
 
@@ -80,12 +80,8 @@ const HeroSection = () => {
           >
             <h1
               style={{
-                fontSize: isMobile ? '32px' : '56px',
-                fontWeight: '800',
+                ...(isMobile ? textStyles.heroTitleMobile : textStyles.heroTitle),
                 color: colors.heroText,
-                lineHeight: 1.2,
-                letterSpacing: '-0.02em',
-                fontFamily: 'Inter',
                 marginBottom: isMobile ? spacing[3] : spacing[6],
                 textAlign: 'center',
                 overflow: 'visible',
@@ -97,10 +93,8 @@ const HeroSection = () => {
 
             <p
               style={{
-                fontSize: isMobile ? '16px' : '20px',
+                ...(isMobile ? textStyles.heroSubtitleMobile : textStyles.heroSubtitle),
                 color: colors.heroSubtext,
-                lineHeight: 1.5,
-                fontFamily: 'Inter',
                 maxWidth: isMobile ? '100%' : '760px',
                 margin: '0 auto',
                 padding: isMobile ? '0 16px' : '0',
@@ -154,7 +148,7 @@ const HeroSection = () => {
                   width: '100%',
                   height: isMobile ? '48px' : '60px',
                   padding: isMobile ? `0 ${spacing[3]} 0 ${spacing[10]}` : `0 ${spacing[4]} 0 ${spacing[12]}`,
-                  fontSize: isMobile ? '15px' : '18px',
+                  ...(isMobile ? textStyles.inputTextMobile : textStyles.inputText),
                   border: 'none',
                   borderRadius: isMobile ? '10px' : '12px',
                   outline: 'none',
@@ -164,7 +158,6 @@ const HeroSection = () => {
                     ? '0 12px 40px rgba(0, 0, 0, 0.15)'
                     : '0 8px 32px rgba(0, 0, 0, 0.1)',
                   transition: 'box-shadow 0.2s ease',
-                  fontFamily: 'Inter',
                 }}
               />
             </form>

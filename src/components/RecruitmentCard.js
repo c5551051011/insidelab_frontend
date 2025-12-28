@@ -1,6 +1,6 @@
 import React from 'react';
 import { Star } from 'lucide-react';
-import { colors, spacing } from '../theme';
+import { colors, spacing, textStyles, typography } from '../theme';
 
 const RecruitmentCard = ({ recruitment, onClick }) => {
   const getInitials = (name) => {
@@ -58,8 +58,7 @@ const RecruitmentCard = ({ recruitment, onClick }) => {
           alignItems: 'center',
           justifyContent: 'center',
           color: 'white',
-          fontSize: '18px',
-          fontWeight: '700',
+          ...textStyles.cardTitle,
           flexShrink: 0
         }}>
           {getInitials(recruitment.professorName)}
@@ -68,8 +67,7 @@ const RecruitmentCard = ({ recruitment, onClick }) => {
         {/* Lab Details */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <h3 style={{
-            fontSize: '16px',
-            fontWeight: '600',
+            ...textStyles.cardTitle,
             color: colors.textPrimary,
             margin: 0,
             marginBottom: spacing[1],
@@ -82,7 +80,7 @@ const RecruitmentCard = ({ recruitment, onClick }) => {
           </h3>
 
           <p style={{
-            fontSize: '14px',
+            ...textStyles.bodyMedium,
             color: colors.textSecondary,
             margin: 0,
             lineHeight: 1.2,
@@ -98,8 +96,8 @@ const RecruitmentCard = ({ recruitment, onClick }) => {
       {/* Open Positions */}
       <div style={{ marginBottom: spacing[4] }}>
         <h4 style={{
-          fontSize: '14px',
-          fontWeight: '600',
+          ...textStyles.bodyMedium,
+          fontWeight: typography.weights.semibold,
           color: colors.textPrimary,
           margin: 0,
           marginBottom: spacing[2]
@@ -119,8 +117,7 @@ const RecruitmentCard = ({ recruitment, onClick }) => {
                 color: badge.color,
                 padding: `${spacing[1]} ${spacing[3]}`,
                 borderRadius: '20px',
-                fontSize: '12px',
-                fontWeight: '600',
+                ...textStyles.buttonTextSmall,
                 border: `1px solid ${badge.color}30`
               }}
             >
@@ -143,15 +140,14 @@ const RecruitmentCard = ({ recruitment, onClick }) => {
         }}>
           <Star size={16} fill={recruitment.overallRating > 0 ? "gold" : "none"} color={recruitment.overallRating > 0 ? "gold" : colors.textTertiary} />
           <span style={{
-            fontSize: '16px',
-            fontWeight: '600',
+            ...textStyles.cardTitle,
             color: colors.textPrimary
           }}>
             {recruitment.overallRating > 0 ? recruitment.overallRating.toFixed(1) : 'No rating'}
           </span>
         </div>
         <span style={{
-          fontSize: '14px',
+          ...textStyles.bodyMedium,
           color: colors.textTertiary
         }}>
           ({recruitment.reviewCount || 0} reviews)
