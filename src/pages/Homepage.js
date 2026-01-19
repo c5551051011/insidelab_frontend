@@ -15,7 +15,7 @@ const Homepage = () => {
       <main>
         <HeroSection />
         <TrustedMetricsSection />
-        <ActiveRecruitmentsSection />
+        {/* <ActiveRecruitmentsSection /> */}
         <MockInterviewSection />
         <TestimonialsSection />
         <CtaSection />
