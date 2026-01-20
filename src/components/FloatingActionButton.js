@@ -26,20 +26,20 @@ const FloatingActionButton = () => {
   const menuItems = [
     {
       icon: '📋',
-      text: '설문조사 참여',
-      badge: '스타벅스',
+      text: 'Take Survey',
+      badge: 'Starbucks',
       type: 'link',
       link: 'https://forms.gle/BuzUtnb9iFBHU9en8'
     },
     {
       icon: '💡',
-      text: '기능 추가 요청',
+      text: 'Feature Request',
       type: 'modal',
       modalType: 'feature'
     },
     {
       icon: '💬',
-      text: '문의사항',
+      text: 'Contact Us',
       type: 'modal',
       modalType: 'inquiry'
     }

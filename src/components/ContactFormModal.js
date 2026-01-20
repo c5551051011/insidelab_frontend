@@ -15,16 +15,16 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
 
   const categories = type === 'inquiry'
     ? [
-        { value: 'general', label: '일반 문의' },
-        { value: 'technical', label: '기술 문의' },
-        { value: 'account', label: '계정 문의' },
-        { value: 'other', label: '기타' }
+        { value: 'general', label: 'General Inquiry' },
+        { value: 'technical', label: 'Technical Support' },
+        { value: 'account', label: 'Account Issue' },
+        { value: 'other', label: 'Other' }
       ]
     : [
-        { value: 'feature', label: '새로운 기능' },
-        { value: 'improvement', label: '기능 개선' },
-        { value: 'bug', label: '버그 제보' },
-        { value: 'other', label: '기타' }
+        { value: 'feature', label: 'New Feature' },
+        { value: 'improvement', label: 'Improvement' },
+        { value: 'bug', label: 'Bug Report' },
+        { value: 'other', label: 'Other' }
       ];
 
   const handleChange = (e) => {
@@ -42,7 +42,7 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
     try {
       await ContactService.sendContactEmail({
         ...formData,
-        type: type === 'inquiry' ? '문의사항' : '기능 추가 요청',
+        type: type === 'inquiry' ? 'Contact Us' : 'Feature Request',
         recipient: 'insidelab25@gmail.com'
       });
 
@@ -74,12 +74,12 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
         <button className="contact-modal-close" onClick={onClose}>✕</button>
 
         <h2 className="contact-modal-title">
-          {type === 'inquiry' ? '💬 문의사항' : '💡 기능 추가 요청'}
+          {type === 'inquiry' ? '💬 Contact Us' : '💡 Feature Request'}
         </h2>
 
         <form onSubmit={handleSubmit} className="contact-form">
           <div className="form-group">
-            <label htmlFor="category">분류</label>
+            <label htmlFor="category">Category</label>
             <select
               id="category"
               name="category"
@@ -94,20 +94,20 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="name">이름</label>
+            <label htmlFor="name">Name</label>
             <input
               type="text"
               id="name"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="이름을 입력해주세요"
+              placeholder="Enter your name"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">이메일</label>
+            <label htmlFor="email">Email</label>
             <input
               type="email"
               id="email"
@@ -120,26 +120,26 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="subject">제목</label>
+            <label htmlFor="subject">Subject</label>
             <input
               type="text"
               id="subject"
               name="subject"
               value={formData.subject}
               onChange={handleChange}
-              placeholder="제목을 입력해주세요"
+              placeholder="Enter subject"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="message">내용</label>
+            <label htmlFor="message">Message</label>
             <textarea
               id="message"
               name="message"
               value={formData.message}
               onChange={handleChange}
-              placeholder="내용을 입력해주세요"
+              placeholder="Enter your message"
               rows="6"
               required
             />
@@ -147,13 +147,13 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
 
           {submitStatus === 'success' && (
             <div className="submit-message success">
-              ✓ 성공적으로 전송되었습니다!
+              ✓ Successfully sent!
             </div>
           )}
 
           {submitStatus === 'error' && (
             <div className="submit-message error">
-              ✗ 전송 중 오류가 발생했습니다. 다시 시도해주세요.
+              ✗ An error occurred. Please try again.
             </div>
           )}
 
@@ -164,14 +164,14 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
               onClick={onClose}
               disabled={isSubmitting}
             >
-              취소
+              Cancel
             </button>
             <button
               type="submit"
               className="btn-submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? '전송 중...' : '전송하기'}
+              {isSubmitting ? 'Sending...' : 'Send'}
             </button>
           </div>
         </form>
