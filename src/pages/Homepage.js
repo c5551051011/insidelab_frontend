@@ -7,6 +7,7 @@ import MockInterviewSection from '../components/MockInterviewSection';
 import TestimonialsSection from '../components/TestimonialsSection';
 import CtaSection from '../components/CtaSection';
 import Footer from '../components/Footer';
+import FloatingActionButton from '../components/FloatingActionButton';
 
 const Homepage = () => {
   return (
@@ -21,6 +22,7 @@ const Homepage = () => {
         <CtaSection />
       </main>
       <Footer />
+      <FloatingActionButton />
     </div>
   );
 };
