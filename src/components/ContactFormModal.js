@@ -6,6 +6,7 @@ import { useToast } from '../contexts/ToastContext';
 
 const ContactFormModal = ({ isOpen, onClose, type }) => {
   const [formData, setFormData] = useState({
+    category: type === 'inquiry' ? 'general' : 'feature',
     name: '',
     email: '',
     subject: '',
@@ -14,6 +15,21 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const toast = useToast();
+
+  // Category options based on type
+  const categories = type === 'inquiry'
+    ? [
+        { value: 'general', label: 'General Inquiry' },
+        { value: 'technical', label: 'Technical Support' },
+        { value: 'account', label: 'Account Issue' },
+        { value: 'other', label: 'Other' }
+      ]
+    : [
+        { value: 'feature', label: 'New Feature' },
+        { value: 'improvement', label: 'Improvement' },
+        { value: 'bug', label: 'Bug Report' },
+        { value: 'other', label: 'Other' }
+      ];
 
   // Load user data on mount or when modal opens
   useEffect(() => {
@@ -30,9 +46,15 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
             email: userData.email || ''
           }));
         }
+      } else {
+        // Reset category when modal opens for non-authenticated users
+        setFormData(prev => ({
+          ...prev,
+          category: type === 'inquiry' ? 'general' : 'feature'
+        }));
       }
     }
-  }, [isOpen]);
+  }, [isOpen, type]);
 
   const handleChange = (e) => {
     setFormData({
@@ -46,10 +68,17 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
     setIsSubmitting(true);
 
     try {
-      // Add prefix to subject based on type
-      const subjectPrefix = type === 'feature' ? '[Feature Request] ' : '[Contact] ';
+      // Get category label for prefix
+      const categoryObj = categories.find(cat => cat.value === formData.category);
+      const categoryLabel = categoryObj ? categoryObj.label : '';
+      const typeLabel = type === 'feature' ? 'Feature Request' : 'Contact';
+
+      // Add prefix to subject based on type and category
+      const subjectPrefix = `[${typeLabel}${categoryLabel ? ' - ' + categoryLabel : ''}] `;
       const submissionData = {
-        ...formData,
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
         subject: subjectPrefix + formData.subject
       };
 
@@ -61,6 +90,7 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
         // Reset form only if not authenticated (authenticated users keep their info)
         if (!isAuthenticated) {
           setFormData({
+            category: type === 'inquiry' ? 'general' : 'feature',
             name: '',
             email: '',
             subject: '',
@@ -69,6 +99,7 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
         } else {
           setFormData(prev => ({
             ...prev,
+            category: type === 'inquiry' ? 'general' : 'feature',
             subject: '',
             message: ''
           }));
@@ -107,6 +138,21 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
         </h2>
 
         <form onSubmit={handleSubmit} className="contact-form">
+          <div className="form-group">
+            <label htmlFor="category">Category *</label>
+            <select
+              id="category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              required
+            >
+              {categories.map(cat => (
+                <option key={cat.value} value={cat.value}>{cat.label}</option>
+              ))}
+            </select>
+          </div>
+
           <div className="form-group">
             <label htmlFor="name">Name {!isAuthenticated && '*'}</label>
             <input
