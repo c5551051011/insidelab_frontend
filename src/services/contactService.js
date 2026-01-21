@@ -2,22 +2,35 @@ import { ApiService } from './apiService';
 
 class ContactService {
   /**
-   * Send contact form email
-   * @param {Object} formData - Contact form data
-   * @param {string} formData.type - Type of contact (문의사항 or 기능 추가 요청)
-   * @param {string} formData.category - Category of the message
-   * @param {string} formData.name - Sender's name
-   * @param {string} formData.email - Sender's email
-   * @param {string} formData.subject - Message subject
-   * @param {string} formData.message - Message content
+   * Send feedback to InsideLab
+   * @param {Object} formData - Feedback form data
+   * @param {string} formData.email - Contact email address (required)
+   * @param {string} formData.name - Name (optional, auto-filled for authenticated users)
+   * @param {string} formData.subject - Subject (required)
+   * @param {string} formData.message - Message content (required)
    * @returns {Promise<Object>} Response data
    */
-  static async sendContactEmail(formData) {
+  static async sendFeedback(formData) {
     try {
-      const response = await ApiService.post('/contact/', formData, false);
+      // Check if user is authenticated
+      const isAuthenticated = !!ApiService.getAuthToken();
+
+      // Prepare request payload based on API requirements
+      const payload = {
+        email: formData.email,
+        subject: formData.subject,
+        message: formData.message
+      };
+
+      // Include name for anonymous users or if explicitly provided
+      if (formData.name) {
+        payload.name = formData.name;
+      }
+
+      const response = await ApiService.post('/auth/feedback/', payload, isAuthenticated);
       return response;
     } catch (error) {
-      console.error('Error sending contact email:', error);
+      console.error('Error sending feedback:', error);
       throw error;
     }
   }

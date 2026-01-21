@@ -4,7 +4,6 @@ import ContactService from '../services/contactService';
 
 const ContactFormModal = ({ isOpen, onClose, type }) => {
   const [formData, setFormData] = useState({
-    category: type === 'inquiry' ? 'general' : 'feature',
     name: '',
     email: '',
     subject: '',
@@ -12,20 +11,7 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
-
-  const categories = type === 'inquiry'
-    ? [
-        { value: 'general', label: 'General Inquiry' },
-        { value: 'technical', label: 'Technical Support' },
-        { value: 'account', label: 'Account Issue' },
-        { value: 'other', label: 'Other' }
-      ]
-    : [
-        { value: 'feature', label: 'New Feature' },
-        { value: 'improvement', label: 'Improvement' },
-        { value: 'bug', label: 'Bug Report' },
-        { value: 'other', label: 'Other' }
-      ];
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -38,29 +24,42 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus(null);
+    setErrorMessage('');
 
     try {
-      await ContactService.sendContactEmail({
-        ...formData,
-        type: type === 'inquiry' ? 'Contact Us' : 'Feature Request',
-        recipient: 'insidelab25@gmail.com'
-      });
+      const response = await ContactService.sendFeedback(formData);
 
-      setSubmitStatus('success');
-      setTimeout(() => {
-        onClose();
-        setFormData({
-          category: type === 'inquiry' ? 'general' : 'feature',
-          name: '',
-          email: '',
-          subject: '',
-          message: ''
-        });
-        setSubmitStatus(null);
-      }, 2000);
+      if (response.success) {
+        setSubmitStatus('success');
+        setTimeout(() => {
+          onClose();
+          setFormData({
+            name: '',
+            email: '',
+            subject: '',
+            message: ''
+          });
+          setSubmitStatus(null);
+        }, 2000);
+      } else {
+        setSubmitStatus('error');
+        setErrorMessage(response.error || 'An error occurred. Please try again.');
+      }
     } catch (error) {
       console.error('Error submitting form:', error);
       setSubmitStatus('error');
+
+      // Extract error message from API response if available
+      if (error.statusCode === 400 && error.message) {
+        try {
+          const errorData = JSON.parse(error.message);
+          setErrorMessage(errorData.error || 'An error occurred. Please try again.');
+        } catch {
+          setErrorMessage('An error occurred. Please try again.');
+        }
+      } else {
+        setErrorMessage('Failed to send feedback. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -79,21 +78,6 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
 
         <form onSubmit={handleSubmit} className="contact-form">
           <div className="form-group">
-            <label htmlFor="category">Category</label>
-            <select
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              required
-            >
-              {categories.map(cat => (
-                <option key={cat.value} value={cat.value}>{cat.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
             <label htmlFor="name">Name</label>
             <input
               type="text"
@@ -101,13 +85,12 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Enter your name"
-              required
+              placeholder="Enter your name (optional)"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">Email *</label>
             <input
               type="email"
               id="email"
@@ -120,7 +103,7 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="subject">Subject</label>
+            <label htmlFor="subject">Subject *</label>
             <input
               type="text"
               id="subject"
@@ -133,7 +116,7 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="message">Message</label>
+            <label htmlFor="message">Message *</label>
             <textarea
               id="message"
               name="message"
@@ -147,13 +130,13 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
 
           {submitStatus === 'success' && (
             <div className="submit-message success">
-              ✓ Successfully sent!
+              ✓ Feedback sent successfully. Thank you!
             </div>
           )}
 
           {submitStatus === 'error' && (
             <div className="submit-message error">
-              ✗ An error occurred. Please try again.
+              ✗ {errorMessage}
             </div>
           )}
 
