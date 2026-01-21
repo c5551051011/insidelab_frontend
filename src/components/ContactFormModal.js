@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ContactFormModal.css';
 import ContactService from '../services/contactService';
+import { AuthService } from '../services/authService';
+import { useToast } from '../contexts/ToastContext';
 
 const ContactFormModal = ({ isOpen, onClose, type }) => {
   const [formData, setFormData] = useState({
@@ -10,8 +12,27 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState(null);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const toast = useToast();
+
+  // Load user data on mount or when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const authenticated = AuthService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+
+      if (authenticated) {
+        const userData = AuthService.getUserData();
+        if (userData) {
+          setFormData(prev => ({
+            ...prev,
+            name: userData.name || userData.username || '',
+            email: userData.email || ''
+          }));
+        }
+      }
+    }
+  }, [isOpen]);
 
   const handleChange = (e) => {
     setFormData({
@@ -23,43 +44,52 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setSubmitStatus(null);
-    setErrorMessage('');
 
     try {
-      const response = await ContactService.sendFeedback(formData);
+      // Add prefix to subject based on type
+      const subjectPrefix = type === 'feature' ? '[Feature Request] ' : '[Contact] ';
+      const submissionData = {
+        ...formData,
+        subject: subjectPrefix + formData.subject
+      };
+
+      const response = await ContactService.sendFeedback(submissionData);
 
       if (response.success) {
-        setSubmitStatus('success');
-        setTimeout(() => {
-          onClose();
+        toast.success('Feedback sent successfully. Thank you!');
+        onClose();
+        // Reset form only if not authenticated (authenticated users keep their info)
+        if (!isAuthenticated) {
           setFormData({
             name: '',
             email: '',
             subject: '',
             message: ''
           });
-          setSubmitStatus(null);
-        }, 2000);
+        } else {
+          setFormData(prev => ({
+            ...prev,
+            subject: '',
+            message: ''
+          }));
+        }
       } else {
-        setSubmitStatus('error');
-        setErrorMessage(response.error || 'An error occurred. Please try again.');
+        toast.error(response.error || 'An error occurred. Please try again.');
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      setSubmitStatus('error');
 
       // Extract error message from API response if available
+      let errorMessage = 'Failed to send feedback. Please try again.';
       if (error.statusCode === 400 && error.message) {
         try {
           const errorData = JSON.parse(error.message);
-          setErrorMessage(errorData.error || 'An error occurred. Please try again.');
+          errorMessage = errorData.error || errorMessage;
         } catch {
-          setErrorMessage('An error occurred. Please try again.');
+          // Keep default error message
         }
-      } else {
-        setErrorMessage('Failed to send feedback. Please try again.');
       }
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -78,14 +108,17 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
 
         <form onSubmit={handleSubmit} className="contact-form">
           <div className="form-group">
-            <label htmlFor="name">Name</label>
+            <label htmlFor="name">Name {!isAuthenticated && '*'}</label>
             <input
               type="text"
               id="name"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              placeholder="Enter your name (optional)"
+              placeholder="Enter your name"
+              required={!isAuthenticated}
+              disabled={isAuthenticated}
+              className={isAuthenticated ? 'disabled-input' : ''}
             />
           </div>
 
@@ -99,6 +132,8 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
               onChange={handleChange}
               placeholder="email@example.com"
               required
+              disabled={isAuthenticated}
+              className={isAuthenticated ? 'disabled-input' : ''}
             />
           </div>
 
@@ -127,18 +162,6 @@ const ContactFormModal = ({ isOpen, onClose, type }) => {
               required
             />
           </div>
-
-          {submitStatus === 'success' && (
-            <div className="submit-message success">
-              ✓ Feedback sent successfully. Thank you!
-            </div>
-          )}
-
-          {submitStatus === 'error' && (
-            <div className="submit-message error">
-              ✗ {errorMessage}
-            </div>
-          )}
 
           <div className="form-actions">
             <button

@@ -94,6 +94,13 @@
   min-height: 120px;
 }
 
+.form-group input.disabled-input,
+.form-group input:disabled {
+  background-color: #f5f5f5;
+  color: #666;
+  cursor: not-allowed;
+}
+
 .submit-message {
   padding: 12px;
   border-radius: 8px;
